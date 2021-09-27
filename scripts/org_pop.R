@@ -3,6 +3,8 @@ library(tibble)
 library(reshape2)
 library(dplyr)
 
+'%!in%' <- function(x,y)!('%in%'(x,y))
+
 df <- read_excel("/home/johannes/Dropbox/phd/papers/org_pop/data/Private museum database.xlsx")
 ## removing header stuff 
 nrows <- nrow(df)-1
@@ -98,19 +100,22 @@ max(aggregate(as.integer(as.character(df_gdp_pcap_molt_drop$year)), list(df_gdp_
 
 ## ** merge basic opening data with gdp data
 
-df_anls <- as_tibble(merge(df_country_years, df_gdp_pcap_molt, by=c('country', 'year'), all.x= TRUE))
-na_agg_cnt <- aggregate(df_anls$gdp_pcap, list(df_anls$country), is.na)
+df_anls <- as_tibble(merge(df_country_years[,c('countrycode', 'year', 'nbr_opened')], df_gdp_pcap_molt, by=c('countrycode', 'year'), all.x= TRUE))
 
-aggregate(gdp_pcap ~ country, data = df_anls, function(x){sum(is.na(x))}, na.action = NULL)
+
+
+aggregate(gdp_pcap ~ countrycode, data = df_anls, function(x){sum(is.na(x))}, na.action = NULL)
 ## crappy, names not the same
-## seems best to use country codes, easier across different databases
+## seems best to use country codes, easier across different databases -> done
+## around 10% missing :(
 
-
-'%!in%' <- function(x,y)!('%in%'(x,y))
-
-unique(df$countrycode)[which(unique(df$countrycode) %!in% (unique(df_gdp_pcap_molt$countrycode)))]
+unique(df_open$countrycode)[which(unique(df_open$countrycode) %!in% (unique(df_gdp_pcap_molt$countrycode)))]
 ## seems ok,
 ## taiwan not separate country in WB.. just 1 PM tho, so shouldn't be big impact
+
+
+
+
 
 
 
