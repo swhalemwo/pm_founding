@@ -119,6 +119,27 @@ aggregate(gini ~ country, data = df_wb_gini_molt, function(x){sum(is.na(x))}, na
 ## whole bunch of NAs.. should check aggregation to some spell
 ## will remove many observations tho -> need to have function/systematic
 
+## *** WID
+## country codes
+library(countrycode)
+
+countrycodes2c <- countrycode(unique(df_country_years$countrycode), "iso3c", "iso2c")
+for (code in countrycodes2c){
+    print(code)
+    cry_data <- as_tibble(read.csv(paste("/home/johannes/Dropbox/phd/papers/org_pop/data/wid/WID_data_", code, ".csv", sep=""), sep=";"))
+    }
+
+## variables wanted:
+## - income inequality: top 10%
+## - income inequality: top 1% share
+## - wealth inequality: top 10
+## - wealth inequality: top 1%
+## - per adult national wealth
+
+## https://wid.world/codes-dictionary/#general-presentation
+## unique(unlist(lapply(unique(cry_data$variable), function(x){substr(x,0,1)})))
+
+
 
 ## *** join predictor data together
 # For Inner Join
