@@ -1,3 +1,4 @@
+## ** libraries/opening data
 library("readxl")
 library(tibble)
 library(reshape2)
@@ -76,6 +77,8 @@ df_country_years$nbr_opened[which(is.na(df_country_years$nbr_opened))] <- 0
 ## gdp_pcap: gdp per capita
 ## probably need in long_format
 gdp_pcap <- as_tibble(read.csv("/home/johannes/Dropbox/phd/papers/org_pop/data/wb_gpd_pcap/API_NY.GDP.PCAP.CD_DS2_en_csv_v2_2916517.csv", header = F))
+## no gdp data for 2021 yet, no shit
+## actually fine, don't need that data for now: don't have museums opened in 2022 yet
 
 df_gdp_pcap <- gdp_pcap[3:nrow(gdp_pcap),c(1,2,5:ncol(gdp_pcap))]
 
@@ -98,20 +101,77 @@ max(aggregate(as.integer(as.character(df_gdp_pcap_molt_drop$year)), list(df_gdp_
 ## remove countries with NAs
 ## maybe I can also have different starting dates per country? idk, will see when i check the method
 
-## ** merge basic opening data with gdp data
+## ** merge basic opening data with gdp data, add lagged values
 
-df_anls <- as_tibble(merge(df_country_years[,c('countrycode', 'year', 'nbr_opened')], df_gdp_pcap_molt, by=c('countrycode', 'year'), all.x= TRUE))
+df_anls <- as_tibble(merge(df_country_years[,c('countrycode', 'year', 'nbr_opened')],
+                           df_gdp_pcap_molt,
+                           by=c('countrycode', 'year'),
+                           all.x= TRUE))
 
 
+## lag gdp by a year, also number of openings for good measure, 
+
+df_anls <- df_anls %>% group_by(countrycode) %>% mutate(gdp_pcap_lag1 = lag(gdp_pcap))
+df_anls <- df_anls %>% group_by(countrycode) %>% mutate(nbr_opened_lag1 = lag(nbr_opened))
+
+
+## drop taiwan and other NAs
+df_anls <- df_anls[-which(df_anls$countrycode == "TWN"),]
+df_anls_omit <- na.omit(df_anls)
+
+
+## ** checking NAs
 
 aggregate(gdp_pcap ~ countrycode, data = df_anls, function(x){sum(is.na(x))}, na.action = NULL)
-## crappy, names not the same
-## seems best to use country codes, easier across different databases -> done
 ## around 10% missing :(
+## might have to kick out some countries/years
+
 
 unique(df_open$countrycode)[which(unique(df_open$countrycode) %!in% (unique(df_gdp_pcap_molt$countrycode)))]
 ## seems ok,
 ## taiwan not separate country in WB.. just 1 PM tho, so shouldn't be big impact
+
+## ** PCSE
+
+library(pcse)
+
+found.lm <- lm(nbr_opened ~ nbr_opened_lag1 + gdp_pcap_lag1 + as.factor(year), data = df_anls_omit)
+summary(found.lm)
+screenreg(found.lm)
+
+# necessary to have countrycode as factor
+found.pcse <- pcse(found.lm, groupN=factor(df_anls_omit$countrycode), groupT = df_anls_omit$year)
+summary(found.pcse)
+screenreg(found.pcse)
+
+## what is the interpretation of PCSE?
+
+## ** FE
+library(lme4)
+
+## ** negative binomial
+## https://rdrr.io/cran/lme4/man/glmer.nb.html
+
+set.seed(101)
+dd <- expand.grid(f1 = factor(1:3),
+                  f2 = LETTERS[1:2], g=1:9, rep=1:15,
+          KEEP.OUT.ATTRS=FALSE)
+summary(mu <- 5*(-4 + with(dd, as.integer(f1) + 4*as.numeric(f2))))
+dd$y <- rnbinom(nrow(dd), mu = mu, size = 0.5)
+str(dd)
+require("MASS")## and use its glm.nb() - as indeed we have zero random effect:
+## Not run: 
+m.glm <- glm.nb(y ~ f1*f2, data=dd, trace=TRUE)
+summary(m.glm)
+m.nb <- glmer.nb(y ~ f1*f2 + (1|g), data=dd, verbose=TRUE)
+m.nb
+## The neg.binomial theta parameter:
+getME(m.nb, "glmer.nb.theta")
+LL <- logLik(m.nb)
+## mixed model has 1 additional parameter (RE variance)
+stopifnot(attr(LL,"df")==attr(logLik(m.glm),"df")+1)
+plot(m.nb, resid(.) ~ g)# works, as long as data 'dd' is found
+
 
 
 
