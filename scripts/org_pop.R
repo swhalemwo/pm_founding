@@ -74,7 +74,7 @@ df_country_years$nbr_opened[which(is.na(df_country_years$nbr_opened))] <- 0
 
 
 ## ** read in some wb gdp data for basic testing
-## gdp_pcap: gdp per capita
+## *** gdp_pcap: gdp per capita
 ## probably need in long_format
 gdp_pcap <- as_tibble(read.csv("/home/johannes/Dropbox/phd/papers/org_pop/data/wb_gpd_pcap/API_NY.GDP.PCAP.CD_DS2_en_csv_v2_2916517.csv", header = F))
 ## no gdp data for 2021 yet, no shit
@@ -88,18 +88,48 @@ names(df_gdp_pcap)[3:ncol(df_gdp_pcap)] <- unlist(df_gdp_pcap[1,3:ncol(df_gdp_pc
 df_gdp_pcap_molt <- as_tibble(melt(df_gdp_pcap, id=c('V1', 'V2')))
 names(df_gdp_pcap_molt) <- c('country', 'countrycode', 'year', 'gdp_pcap')
 print(df_gdp_pcap_molt[which(df_gdp_pcap_molt$country == 'United States'),], n=1000)
+df_gdp_pcap_molt <- df_gdp_pcap_molt[which(df_gdp_pcap_molt$country %in% df_country_years$country),]
 
 ## need to check completeness: visualization by line
 ## ehh just do some aggregation
 
-df_gdp_pcap_molt_lmt <- df_gdp_pcap_molt[which(df_gdp_pcap_molt$country %in% df_country_years$country),]
-df_gdp_pcap_molt_drop <- na.omit(df_gdp_pcap_molt_lmt)
-max(aggregate(as.integer(as.character(df_gdp_pcap_molt_drop$year)), list(df_gdp_pcap_molt_drop$country), min)$x)
+## some NA tests
+## df_gdp_pcap_molt_lmt <- df_gdp_pcap_molt[which(df_gdp_pcap_molt$country %in% df_country_years$country),]
+## df_gdp_pcap_molt_drop <- na.omit(df_gdp_pcap_molt_lmt)
+## max(aggregate(as.integer(as.character(df_gdp_pcap_molt_drop$year)), list(df_gdp_pcap_molt_drop$country), min)$x)
+
+
 ## complete data from 1995 onwards
 ## can see what kind of different ways I can use to remove NAs:
 ## remove stuff before 1995
 ## remove countries with NAs
 ## maybe I can also have different starting dates per country? idk, will see when i check the method
+
+## *** gini
+wb_gini <- as_tibble(read.csv("/home/johannes/Dropbox/phd/papers/org_pop/data/wb_gini/API_SI.POV.GINI_DS2_en_csv_v2_2916486.csv", header = F))
+
+df_wb_gini <- wb_gini[3:nrow(wb_gini), c(1,2,5:ncol(wb_gini))]
+names(df_wb_gini)[3:ncol(df_wb_gini)] <- unlist(df_wb_gini[1,3:ncol(df_wb_gini)])
+df_wb_gini_molt <- as_tibble(melt(df_wb_gini, id=c('V1', 'V2')))
+
+names(df_wb_gini_molt) <- c('country', 'countrycode', 'year', 'gini')
+df_wb_gini_molt <- df_wb_gini_molt[which(df_wb_gini_molt$country %in% df_country_years$country),]
+aggregate(gini ~ year, data = df_wb_gini_molt, function(x){sum(is.na(x))}, na.action = NULL)
+aggregate(gini ~ country, data = df_wb_gini_molt, function(x){sum(is.na(x))}, na.action = NULL)
+## whole bunch of NAs.. should check aggregation to some spell
+## will remove many observations tho -> need to have function/systematic
+
+
+## *** join predictor data together
+# For Inner Join
+multi_inner <- as_tibble(Reduce(
+  function(x, y, ...) merge(x, y, ...), 
+  list(df_wb_gini_molt, df_gdp_pcap_molt)
+))
+multi_inner
+## how the fuck does that work? how does it know what variables to use to join?
+## need to check reduce
+
 
 ## ** merge basic opening data with gdp data, add lagged values
 
@@ -107,6 +137,8 @@ df_anls <- as_tibble(merge(df_country_years[,c('countrycode', 'year', 'nbr_opene
                            df_gdp_pcap_molt,
                            by=c('countrycode', 'year'),
                            all.x= TRUE))
+
+
 
 
 ## lag gdp by a year, also number of openings for good measure, 
@@ -118,6 +150,8 @@ df_anls <- df_anls %>% group_by(countrycode) %>% mutate(nbr_opened_lag1 = lag(nb
 ## drop taiwan and other NAs
 df_anls <- df_anls[-which(df_anls$countrycode == "TWN"),]
 df_anls_omit <- na.omit(df_anls)
+
+
 
 
 ## ** checking NAs
