@@ -3,6 +3,8 @@ library("readxl")
 library(tibble)
 library(reshape2)
 library(dplyr)
+library(lme4)
+library(texreg)
 
 '%!in%' <- function(x,y)!('%in%'(x,y))
 
@@ -155,7 +157,7 @@ multi_inner
 ## ** merge basic opening data with gdp data, add lagged values
 
 df_anls <- as_tibble(merge(df_country_years[,c('countrycode', 'year', 'nbr_opened')],
-                           df_gdp_pcap_molt,
+                           multi_inner,
                            by=c('countrycode', 'year'),
                            all.x= TRUE))
 
@@ -164,8 +166,25 @@ df_anls <- as_tibble(merge(df_country_years[,c('countrycode', 'year', 'nbr_opene
 
 ## lag gdp by a year, also number of openings for good measure, 
 
+
+## overly messy way of lagging variables that creates intermediary vars because mutate/lag doesn't accept variablies as input
+for (varx in c("gdp_pcap", "gini")){
+    lag_name = paste(varx, "_lag1", sep = "")
+    ## eval(parse("lag_name"))
+    df_anls$var_to_lag <- df_anls[,c(varx)]
+    df_anls[,"var_lagged"] <- mutate(group_by(df_anls, countrycode), var_lagged = lag(var_to_lag))[,"var_lagged"]
+    df_anls[,lag_name] <- df_anls$var_lagged
+    df_anls <- df_anls[,-which(names(df_anls) %in% c("var_to_lag", "var_lagged"))]
+    }
+
+
+
+lag(group_by(df_anls, countrycode)
+
 df_anls <- df_anls %>% group_by(countrycode) %>% mutate(gdp_pcap_lag1 = lag(gdp_pcap))
 df_anls <- df_anls %>% group_by(countrycode) %>% mutate(nbr_opened_lag1 = lag(nbr_opened))
+df_anls <- 
+
 
 
 ## drop taiwan and other NAs
