@@ -168,7 +168,7 @@ df_anls <- as_tibble(merge(df_country_years[,c('countrycode', 'year', 'nbr_opene
 
 
 ## overly messy way of lagging variables that creates intermediary vars because mutate/lag doesn't accept variablies as input
-for (varx in c("gdp_pcap", "gini")){
+for (varx in c("gdp_pcap", "gini", "nbr_opened")){
     lag_name = paste(varx, "_lag1", sep = "")
     ## eval(parse("lag_name"))
     df_anls$var_to_lag <- df_anls[,c(varx)]
@@ -178,12 +178,6 @@ for (varx in c("gdp_pcap", "gini")){
     }
 
 
-
-lag(group_by(df_anls, countrycode)
-
-df_anls <- df_anls %>% group_by(countrycode) %>% mutate(gdp_pcap_lag1 = lag(gdp_pcap))
-df_anls <- df_anls %>% group_by(countrycode) %>% mutate(nbr_opened_lag1 = lag(nbr_opened))
-df_anls <- 
 
 
 
