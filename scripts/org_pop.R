@@ -215,9 +215,19 @@ screenreg(found.pcse)
 ## what is the interpretation of PCSE?
 
 ## ** FE
-library(lme4)
+
+
+found.fe <- lmer(nbr_opened ~ gdp_pcap_lag1 + nbr_opened_lag1 + gini_lag1 + (1 | countrycode), data = df_anls)
+found.fe_wo_gini <- lmer(nbr_opened ~ gdp_pcap_lag1 + nbr_opened_lag1  + (1 | countrycode), data = df_anls)
+
+summary(found.fe)
+screenreg(found.fe)
+
+screenreg(list(found.fe,found.fe_wo_gini))
+
 
 ## ** negative binomial
+## *** example
 ## https://rdrr.io/cran/lme4/man/glmer.nb.html
 
 set.seed(101)
