@@ -251,11 +251,160 @@ stopifnot(attr(LL,"df")==attr(logLik(m.glm),"df")+1)
 plot(m.nb, resid(.) ~ g)# works, as long as data 'dd' is found
 
 
+## *** application
+found.nb <- glmer.nb(nbr_opened ~ nbr_opened_lag1 + (1 | countrycode), data = df_anls)
+found.nb1 <- glmer.nb(nbr_opened ~ log(gdp_pcap_lag1) + (1 | countrycode), data = df_anls)
+screenreg(found.nb1)
+plot(found.nb1)
 
 
 
 
+## ** poisson
+
+## *** glmer (lme4)
+found.poi <- glmer(nbr_opened ~ nbr_opened_lag1 + log(gdp_pcap_lag1) + (1 | countrycode), data = df_anls, family=poisson)
+
+found.poi1 <- glmer(nbr_opened ~ nbr_opened_lag1 + (1 | countrycode), data = df_anls, family=poisson)
+found.poi2 <- glmer(nbr_opened ~ nbr_opened_lag1  + gdp_pcap_lag1 + (1 | countrycode), data = df_anls, family=poisson)
+found.poi3 <- glmer(nbr_opened ~ nbr_opened_lag1  + log(gdp_pcap_lag1) + (1 | countrycode), data = df_anls, family=poisson)
+
+found.poi4 <- glmer(nbr_opened ~ nbr_opened_lag1  + gini_lag1 + (1 | countrycode), data = df_anls, family=poisson)
+found.poi5 <- glmer(nbr_opened ~ nbr_opened_lag1  + log(gdp_pcap_lag1) + gini_lag1 + (1 | countrycode), data = df_anls, family=poisson)
+
+
+summary(found.poi)
+screenreg(list(found.poi1,found.poi2,found.poi3,found.poi4, found.poi5))
+
+
+## glmmPQL pretty much the same results
+found.poi1b <- glmmPQL(nbr_opened ~ nbr_opened_lag1, random = list(countrycode = ~1), data = df_anls, family=poisson)
+
+found.poi5b <- glmmPQL(nbr_opened ~ nbr_opened_lag1  + log(gdp_pcap_lag1) + gini_lag1, random = list(countrycode = ~1), data = df_anls, family=poisson)
+
+
+screenreg(list(found.poi1, found.poi1b, found.poi5, found.poi5b))
 
 
 
+## *** pglm
+library(plm)
+## seems like poisson/negative binomial is implemented in https://cran.r-project.org/web/packages/pglm/pglm.pdf
+## yves croissant, wrote some b
+
+library(pglm)
+
+found.pglm.poi1 <- pglm(nbr_opened ~ nbr_opened_lag1, data = df_anls,
+                        family=poisson,
+                        model = "within",
+                        index = "countrycode")
+
+found.pglm.poi2 <- pglm(nbr_opened ~ nbr_opened_lag1 + gdp_pcap_lag1, data = df_anls,
+                    family=poisson,
+                    model = "within",
+                    index = "countrycode")
+
+found.pglm.poi3 <- pglm(nbr_opened ~ nbr_opened_lag1 + log(gdp_pcap_lag1), data = df_anls,
+                    family=poisson,
+                    model = "within",
+                    index = "countrycode")
+
+found.pglm.poi4 <- pglm(nbr_opened ~ nbr_opened_lag1 + gini_lag1, data = df_anls,
+                    family=poisson,
+                    model = "within",
+                    index = "countrycode")
+
+found.pglm.poi5 <- pglm(nbr_opened ~ nbr_opened_lag1 + log(gdp_pcap_lag1) + gini_lag1, data = df_anls,
+                    family=poisson,
+                    model = "within",
+                    index = "countrycode")
+
+
+## *** comparison
+
+summary(found.pglm.poi1)
+screenreg(list(found.pglm.poi1,found.poi1))
+
+screenreg(list(found.pglm.poi1,found.poi1,
+               found.pglm.poi2,found.poi2,
+               found.pglm.poi3,found.poi3,
+               found.pglm.poi4,found.poi4,
+               found.pglm.poi5,found.poi5))
+
+## hmm different results
+## overall tendencies are kinda the same, but not always: gini significant in one, not the other
+## also differences in significance of nbr_opened_lag1
+## only aggreement in significance in gdp_pcap_lag1 and log(gdp_pcap_lag1)
+
+
+
+## ** negative binomial
+
+## *** pglm
+
+found.pglm.nb1 <- pglm(nbr_opened ~ nbr_opened_lag1, data = df_anls,
+                        family=negbin,
+                        model = "within",
+                        index = "countrycode")
+
+found.pglm.nb2 <- pglm(nbr_opened ~ nbr_opened_lag1 + gdp_pcap_lag1, data = df_anls,
+                    family=negbin,
+                    model = "within",
+                    index = "countrycode")
+
+found.pglm.nb3 <- pglm(nbr_opened ~ nbr_opened_lag1 + log(gdp_pcap_lag1), data = df_anls,
+                    family=negbin,
+                    model = "within",
+                    index = "countrycode")
+
+found.pglm.nb4 <- pglm(nbr_opened ~ nbr_opened_lag1 + gini_lag1, data = df_anls,
+                    family=negbin,
+                    model = "within",
+                    index = "countrycode")
+
+found.pglm.nb5 <- pglm(nbr_opened ~ nbr_opened_lag1 + log(gdp_pcap_lag1) + gini_lag1, data = df_anls,
+                    family=negbin,
+                    model = "within",
+                    index = "countrycode")
+
+screenreg(list(found.pglm.nb1,found.pglm.nb2,found.pglm.nb3,found.pglm.nb4,found.pglm.nb5))
+
+## *** glmer.nb
+
+found.nb1 <- glmer.nb(nbr_opened ~  + (1 | countrycode), data = df_anls)
+
+found.nb1 <- glmer.nb(nbr_opened ~ nbr_opened_lag1 + (1 | countrycode), data = df_anls)
+found.nb2 <- glmer.nb(nbr_opened ~ nbr_opened_lag1  + gdp_pcap_lag1 + (1 | countrycode), data = df_anls)
+found.nb3 <- glmer.nb(nbr_opened ~ nbr_opened_lag1  + log(gdp_pcap_lag1) + (1 | countrycode), data = df_anls)
+found.nb4 <- glmer.nb(nbr_opened ~ nbr_opened_lag1  + gini_lag1 + (1 | countrycode), data = df_anls)
+found.nb5 <- glmer.nb(nbr_opened ~ nbr_opened_lag1  + log(gdp_pcap_lag1) + gini_lag1 + (1 | countrycode), data = df_anls)
+
+screenreg(list(found.nb1,found.pglm.nb1,found.nb3,found.pglm.nb3,found.nb4,found.pglm.nb4,found.nb5,found.pglm.nb5))
+
+## model 2 (not log-transfomed gdp_pcap) doesn't work
+## think the differences are smaller than in poisson:
+## at least the general direction, but still bunch of differences with significance in nbr_opened_lag1 (between 3 and 4), gini (5)
+
+## but i still don't know what's happening, and why things are different
+## also need to understand the techniques: negative binomial/poisson especially
+
+FIG_DIR = "/home/johannes/Dropbox/phd/papers/org_pop/figures/"
+
+pdf(paste(FIG_DIR, "resids.pdf", sep=""), height = 4, width = 8)
+par(mfrow=(c(1,2)))
+plot(found.nb1)
+plot(found.poi1)
+dev.off()
+
+library(jtools)
+library(ggstance)
+library(broom)
+library(broom.mixed)
+
+plot_summs(found.nb1, found.nb3, found.nb4, found.nb5, plot.distributions = T)
+## plot_summs looks nice, but idk if I shouldn't rather write my own ggplot visualization
+## also no support for the pglm models -> idk if plot_summs has generic class that can be filled wiht arbitrary values
+## also need standardized stuff
+## also not that good at comparing models with different variables
+## plotting distributions gets very full when more than a handful
 
