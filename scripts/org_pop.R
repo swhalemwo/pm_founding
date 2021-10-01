@@ -469,6 +469,40 @@ plot_summs(found.nb1, found.nb3, found.nb4, found.nb5, plot.distributions = T)
 ## also not that good at comparing models with different variables
 ## plotting distributions gets very full when more than a handful
 
+## *** curves
+
+gini_agg <- aggregate(gini ~ countrycode, df_anls, mean)
+names(gini_agg) <- c('countrycode', 'gini_mean')
+df_anls_vis <- as_tibble(merge(df_anls, gini_agg, by='countrycode'))
+df_anls_vis$gini_demeaned <- df_anls_vis$gini - df_anls_vis$gini_mean
+
+df_anls$gdp_pcapk <- df_anls$gdp_pcap/1000
+gdp_pcap_agg <- aggregate(gdp_pcapk ~ countrycode, df_anls, mean)
+
+
+var_means <- aggregate(cbind(gini, gdp_pcapk) ~ countrycode, df_anls, mean)
+names(var_means) <- c("countrycode", "gini_mean", "gdp_pcapk_mean")
+df_anls_vis <- as_tibble(merge(df_anls, var_means, by='countrycode'))
+df_anls_vis$gini_demeaned <- df_anls_vis$gini - df_anls_vis$gini_mean
+df_anls_vis$gdp_pcapk_demeaned <- df_anls_vis$gdp_pcapk - df_anls_vis$gdp_pcapk_mean
+
+
+
+library(ggplot2)
+
+varx <- "gini_demeaned"
+varx <- "gdp_pcapk_demeaned"
+
+ggplot(df_anls_vis, aes(x=year, y=varx, group=countrycode, color = countrycode)) +
+    ## geom_line() +
+    geom_point(df_anls_vis[which(df_anls_vis$nbr_opened > 0),], mapping = aes(x=year, y=eval(parse(text=varx)), size = nbr_opened, color = countrycode))
+
+
+
+## hmm actually you don't need lines
+## raises question of how robust model is: is it all driven by US/Germany?
+
+
 
 ## ** poisson test
 
