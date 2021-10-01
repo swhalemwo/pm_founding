@@ -161,7 +161,9 @@ df_anls <- as_tibble(merge(df_country_years[,c('countrycode', 'year', 'nbr_opene
                            by=c('countrycode', 'year'),
                            all.x= TRUE))
 
-
+## somehow gdp_pcap stuff gets deleted
+## multi_inner$gdp_pcap has 514 NAs
+## df_anls$gdp_pcap has 365 huh
 
 
 ## lag gdp by a year, also number of openings for good measure, 
@@ -183,10 +185,82 @@ for (varx in c("gdp_pcap", "gini", "nbr_opened")){
 
 ## drop taiwan and other NAs
 df_anls <- df_anls[-which(df_anls$countrycode == "TWN"),]
-df_anls_omit <- na.omit(df_anls)
+## df_anls_omit <- na.omit(df_anls)
 
 ## have gpd per capita in 1k
 df_anls$gdp_pcapk <- df_anls$gdp_pcap/1000
+
+## ** test different kinds of aggregation
+
+wave_length <- 2
+wv_ctr <- 0
+wv_nbr <- 1
+
+df_anls$wv <- 0
+
+## label the waves based on wavelength, not super elegant but works
+
+for (yearx in unique(df_anls$year)){
+    wv_ctr <- wv_ctr + 1
+    print(c(wv_ctr, wv_nbr))
+    df_anls[which(df_anls$year == yearx),"wv"] <- wv_nbr
+    if (wv_ctr == wave_length){
+        wv_ctr <- 0
+        wv_nbr <- wv_nbr + 1}
+    }
+
+df_agg_means <- as_tibble(aggregate(cbind(gini, gdp_pcap, gdp_pcapk) ~ countrycode + wv, df_anls, mean))
+df_agg_means <- as_tibble(aggregate(cbind(gini, gdp_pcap, gdp_pcapk) ~ countrycode + wv, df_anls, mean, na.action = NULL))
+## ahh, what happened was that since I aggregated the variables in the same function they all got down to gini level
+df_agg_cnts <- as_tibble(aggregate(nbr_opened ~ countrycode + wv, df_anls, sum))
+
+## ggplot(df_agg_means, aes(x=wv, y=gini, group = countrycode, color = countrycode)) +
+##     geom_line()
+
+df_agg <- as_tibble(merge(df_agg_cnts, df_agg_means, by=c("countrycode", "wv"), all.x = T))
+
+## checking how many museums are covered 
+
+## not removing anything: 449
+sum(df_anls$nbr_opened)
+
+## whenever I do gini with 5 years, I only have 260 or 263?? opening events
+sum(na.omit(df_anls[,c("gini","nbr_opened")])$nbr_opened)
+
+## filtering for gdp_pcap: still 388
+sum(na.omit(df_anls[,c("gdp_pcap","nbr_opened")])$nbr_opened)
+
+## even aggregating gini to 5 years: only get to 345,
+sum(na.omit(df_agg[,c("gini","nbr_opened")])$nbr_opened)
+## with 2: 298
+## with 3: 327
+## with 5: 345
+## with 8 to 345
+## with 10 to 364
+sum(na.omit(df_agg[,c("gdp_pcap","nbr_opened")])$nbr_opened)
+## pcap with 10: 388
+
+## where the fuck are the museums founded for which I don't have data
+
+## ggplot(df_anls, aes(x=year, y=countrycode, size = nbr_opened)) +
+##     geom_point()
+
+df_agg$pm_preds_na <- 0
+df_agg[which(is.na(df_agg$gdp_pcap)),]$pm_preds_na <- 1
+
+ggplot(df_agg[which(df_agg$nbr_opened > 0),], aes(x=wv, y=countrycode, size = nbr_opened, color = factor(pm_preds_na))) +
+    geom_point()
+
+## seems especially Korea, Russia -> country specific, not time-period effect
+## for wave_length 2: also germany, india, japan
+mis <- aggregate(pm_preds_na ~ countrycode, df_agg[which(df_agg$nbr_opened > 0),], sum)
+mis[order(mis$pm_preds_na),]
+
+## gdp_pcap seem to be mostly korea
+
+
+
+
 
 
 ## ** checking NAs
@@ -496,6 +570,8 @@ ggplot(df_anls_vis, aes(x=year, y=eval(parse(text=varx)), group=countrycode, col
     geom_point(df_anls_vis[which(df_anls_vis$nbr_opened > 0),], mapping = aes(x=year, y=eval(parse(text=varx)), size = nbr_opened, color = countrycode))
 
 ## interpretation: the more points are above 0, the stronger the effect of that variable? 
+
+## wow Italian gdp per capita, wtf happened
 
 
 ## maybe can plot hist of those points directly? 
