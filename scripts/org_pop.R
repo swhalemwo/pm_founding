@@ -491,13 +491,22 @@ library(ggplot2)
 varx <- "gini_demeaned"
 varx <- "gdp_pcapk_demeaned"
 
-ggplot(df_anls_vis, aes(x=year, y=varx, group=countrycode, color = countrycode)) +
-    ## geom_line() +
+ggplot(df_anls_vis, aes(x=year, y=eval(parse(text=varx)), group=countrycode, color = countrycode)) + 
+    geom_line(alpha=0.3) + 
     geom_point(df_anls_vis[which(df_anls_vis$nbr_opened > 0),], mapping = aes(x=year, y=eval(parse(text=varx)), size = nbr_opened, color = countrycode))
 
+## interpretation: the more points are above 0, the stronger the effect of that variable? 
 
 
-## hmm actually you don't need lines
+## maybe can plot hist of those points directly? 
+hist(df_anls_vis[which(df_anls_vis$nbr_opened > 0),]$gdp_pcapk_demeaned, breaks = 20)
+hist(df_anls_vis[which(df_anls_vis$nbr_opened > 0),]$gini_demeaned, breaks = 20)
+## makes it looks murky af
+## but wide spread doesn't mean that it can't be distinguished from 0
+## but probably still too visualization-driven: it's a measure I only came up with because of visualization
+
+
+## hmm actually you don't need lines, or can put high alpha there 
 ## raises question of how robust model is: is it all driven by US/Germany?
 
 
