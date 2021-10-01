@@ -369,6 +369,10 @@ found.nb3 <- glmer.nb(nbr_opened ~ nbr_opened_lag1  + log(gdp_pcap_lag1) + (1 | 
 found.nb4 <- glmer.nb(nbr_opened ~ nbr_opened_lag1  + gini_lag1 + (1 | countrycode), data = df_anls)
 found.nb5 <- glmer.nb(nbr_opened ~ nbr_opened_lag1  + log(gdp_pcap_lag1) + gini_lag1 + (1 | countrycode), data = df_anls)
 
+
+
+screenreg(list(found.nb1,found.nb3,found.nb4,found.nb5))
+
 screenreg(list(found.nb1,found.pglm.nb1,found.nb3,found.pglm.nb3,found.nb4,found.pglm.nb4,found.nb5,found.pglm.nb5))
 
 ## model 2 (not log-transfomed gdp_pcap) doesn't work
@@ -377,6 +381,35 @@ screenreg(list(found.nb1,found.pglm.nb1,found.nb3,found.pglm.nb3,found.nb4,found
 
 ## but i still don't know what's happening, and why things are different
 ## also need to understand the techniques: negative binomial/poisson especially
+
+## *** interpreation
+## can exp(coefs) to get ratios with a unit change
+## A country's rate of founding PMs increases by exp(0.78) = 2.18 for each log(GDP) point
+## A country's founding rate of PMs increases by exp(0.07) = 1.07 (7%) for each gini point
+
+df_anls$gdp_pcapk_lag1 <- df_anls$gdp_pcap_lag1/1000
+
+found.nb5x <- glmer.nb(nbr_opened ~ nbr_opened_lag1  + gdp_pcapk_lag1 + gini_lag1 + (1 | countrycode), data = df_anls)
+
+screenreg(found.nb5x)
+## for each 1k increase in average GDP, founding rate increases by exp(0.04) = 1.04 = 4%
+
+
+
+
+## **** noise testing 
+## see if i can get negative results by flipping GDP -> yup
+
+df_anls$gdp_pcap_lag1_noise <- -jitter(df_anls$gdp_pcap_lag1, factor= 1000)
+df_anls$gdp_pcap_lag1_noise <- df_anls$gdp_pcap_lag1_noise+max(df_anls$gdp_pcap_lag1,na.rm = T)
+cor(df_anls$gdp_pcap_lag1_noise,df_anls$gdp_pcap_lag1, use="complete.obs")
+
+found.nb5_noise <- glmer.nb(nbr_opened ~ nbr_opened_lag1  + log(gdp_pcap_lag1) + log(gdp_pcap_lag1_noise) + gini_lag1 + (1 | countrycode), data = df_anls)
+screenreg(list(found.nb5, found.nb5_noise))
+
+
+
+## ** visualization/inspection
 
 FIG_DIR = "/home/johannes/Dropbox/phd/papers/org_pop/figures/"
 
