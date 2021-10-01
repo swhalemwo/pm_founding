@@ -398,3 +398,27 @@ plot_summs(found.nb1, found.nb3, found.nb4, found.nb5, plot.distributions = T)
 ## also not that good at comparing models with different variables
 ## plotting distributions gets very full when more than a handful
 
+
+## ** poisson test
+
+## function is
+x <- seq(1,10,1)
+
+poi.func <- function(x, lambda){
+    return(((lambda^x)/(factorial(x))) * exp(1)^(-lambda))
+    }
+
+
+plot(poi.func(x,1), type='l')
+
+for (i in seq(1,10,1)){
+    lines(poi.func(x,i), type='l')
+    }
+
+
+plot(x/20, col='white')
+lines(poi.func(x,2), type='l')
+plot(2^x, type='l')
+lines(factorial(x))
+
+
