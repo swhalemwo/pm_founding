@@ -185,7 +185,8 @@ for (varx in c("gdp_pcap", "gini", "nbr_opened")){
 df_anls <- df_anls[-which(df_anls$countrycode == "TWN"),]
 df_anls_omit <- na.omit(df_anls)
 
-
+## have gpd per capita in 1k
+df_anls$gdp_pcapk <- df_anls$gdp_pcap/1000
 
 
 ## ** checking NAs
@@ -387,6 +388,7 @@ screenreg(list(found.nb1,found.pglm.nb1,found.nb3,found.pglm.nb3,found.nb4,found
 ## A country's rate of founding PMs increases by exp(0.78) = 2.18 for each log(GDP) point
 ## A country's founding rate of PMs increases by exp(0.07) = 1.07 (7%) for each gini point
 
+## have gdp_pcap in thousands 
 df_anls$gdp_pcapk_lag1 <- df_anls$gdp_pcap_lag1/1000
 
 found.nb5x <- glmer.nb(nbr_opened ~ nbr_opened_lag1  + gdp_pcapk_lag1 + gini_lag1 + (1 | countrycode), data = df_anls)
@@ -471,12 +473,8 @@ plot_summs(found.nb1, found.nb3, found.nb4, found.nb5, plot.distributions = T)
 
 ## *** curves
 
-gini_agg <- aggregate(gini ~ countrycode, df_anls, mean)
-names(gini_agg) <- c('countrycode', 'gini_mean')
-df_anls_vis <- as_tibble(merge(df_anls, gini_agg, by='countrycode'))
-df_anls_vis$gini_demeaned <- df_anls_vis$gini - df_anls_vis$gini_mean
 
-df_anls$gdp_pcapk <- df_anls$gdp_pcap/1000
+
 gdp_pcap_agg <- aggregate(gdp_pcapk ~ countrycode, df_anls, mean)
 
 
