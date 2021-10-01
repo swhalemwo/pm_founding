@@ -395,6 +395,44 @@ screenreg(found.nb5x)
 ## for each 1k increase in average GDP, founding rate increases by exp(0.04) = 1.04 = 4%
 
 
+## **** standardized effect sizes
+## kinda sucks that there is no official way 
+
+## standardized effects from: https://stats.stackexchange.com/questions/123366/lmer-standardized-regression-coefficients
+lm.beta.lmer <- function(mod) {
+   b <- fixef(mod)[-1]
+   sd.x <- apply(getME(mod,"X")[,-1],2,sd)
+   sd.y <- sd(getME(mod,"y"))
+   b*sd.x/sd.y
+}
+
+lm.beta.lmer(found.nb5x)
+
+## https://cran.r-project.org/web/packages/effectsize/vignettes/from_test_statistics.html
+library(effectsize)
+anova(found.nb5x)
+F_to_eta2(5.4014, 1)
+## anova result looks different 
+
+## https://stackoverflow.com/questions/45327217/r-squared-of-lmer-model-fit
+library(MuMIn)
+r.squaredGLMM(found.nb5x)
+## marginal and conditional
+## marginal: variance explained by fixed effects
+## conditional: variance explained by entire model, including both FE/RE
+
+## methods:
+## - delta: for all distributions/links
+## - lognormal, trigamma: only for logarithmic link
+##   no idea if negbin has logarithmic link
+## - trigamma recommended when available
+
+## not all R^2 algorithms make sense?: https://stats.stackexchange.com/questions/250984/pseudo-r2-values-for-negative-binomial-regression-model-in-r-yields-inconsistent
+## stata: https://stats.idre.ucla.edu/stata/output/negative-binomial-regression/: McFadden's pseudo R-squared means something different in negbin than in OLS -> interpret with caution
+
+## why don't we do k-fold validation: precision, recall, and whatever performance techniques ML/AI has come up with
+## https://stackoverflow.com/questions/63208120/how-can-i-use-k-fold-cross-validation-for-negative-binomial-regression-in-sklear
+## could implement 
 
 
 ## **** noise testing 
