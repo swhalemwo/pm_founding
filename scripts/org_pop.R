@@ -37,43 +37,6 @@ df[which(df$country == "England"),]$country <- "United Kingdom"
 df$countrycode <- recode(df$country, "United Kingdom" = "GBR", "Spain" = "ESP", "United States" = "USA", "Switzerland" = "CHE" , "India" = "IND", "Greece" = "GRC", "Lebanon" = "LBN", "France" = "FRA", "Estonia" = "EST", "Azerbaijan" = "AZE", "Latvia" = "LVA", "Madagascar" = "MDG", "Indonesia" = "IDN", "Slovakia" = "SVK", "Romania" = "ROU","Argentina" = "ARG","South Korea" = "KOR", "Japan" = "JPN", "Benin" = "BEN", "Bangladesh" = "BGD", "Australia" = "AUS", "Norway" = "NOR", "New Zealand" = "NZL", "Poland" = "POL", "Nigeria" = "NGA", "Portugal" = "PRT", "Serbia" = "SRB","Czech Republic" = "CZE","Senegal" = "SEN", "Puerto Rico" = "PRI", "Taiwan" = "TWN", "Israel" = "ISR", "England" = "GBR", "China" = "CHN", "Germany" = "DEU", "Netherlands" = "NLD", "Italy" = "ITA", "Russia" = "RUS", "Canada" = "CAN", "Hungary" = "HUN", "Belgium" = "BEL", "Sweden" = "SWE", "Finland" = "FIN","Malaysia" = "MYS","Philippines" = "PHL", "Turkey" = "TUR", "Austria" = "AUT", "South Africa" = "ZAF","Thailand" = "THA", "Denmark" = "DNK",  "Mexico" = "MEX", "United Arab Emirates" = "ARE","Brazil" = "BRA", "Hong Kong" = "HKG", "Ukraine" = "UKR", "Kuwait" = "KWT",  "Cyprus" = "CYP", "Monaco" = "MCO", "Iceland" = "ISL", "Kenya" = "KEN", "Singapore" = "SGP", "Iran" = "IRN", "Lithuania" = "LTU", .default= NA_character_)
 
 
-## ** basic table preparation
-## add year: 
-## just clean everything by taking first 4, drop everything that doesn't work lmao
-df$year_opened_int <- as.integer(lapply(df$year_opened, function(x)(substring(x, 0,4))))
-## have 59 NAs, oh well
-## let's say for now 1985-2021
-# plot(table(df$year_opened_int), type='h')
-
-
-df$year_opened_int2 <- df$year_opened_int
-df$year_opened_int2[which(df$year_opened_int2 < 1985 | df$year_opened_int2 > 2021)] <- NA
-## up to 100 dropped atm 
-
-df_open <- na.omit(df[,c('name', 'country', 'countrycode', 'year_opened_int2')])
-# plot(table(df_open$year_opened_int2), type='l')
-df_open$ctr <- 1
-
-df_country_year_agg <- as_tibble(aggregate(df_open$ctr, by=list(df_open$country, df_open$countrycode, df_open$year_opened_int2), FUN = sum))
-
-names(df_country_year_agg) <- c('country', 'countrycode', 'year', 'nbr_opened')
-
-
-## make some combinations with countries x years join what I have
-df_country_years_empty <- as_tibble(expand.grid(unique(df_open$countrycode), unique(df_open$year_opened_int2)))
-names(df_country_years_empty) <- c('countrycode', 'year')
-df_country_years_empty$countrycode <- as.character(df_country_years_empty$countrycode)
-
-
-df_country_years_empty2 <- as_tibble(merge(df_country_years_empty, unique(df_open[,c('country', 'countrycode')]) , by='countrycode', all.x = TRUE))
-
-
-## join everything nice together
-df_country_years <- as_tibble(merge(df_country_year_agg, df_country_years_empty2, by = c('country', 'countrycode', 'year'), all=TRUE))
-
-## fill up NAs with 0s
-df_country_years$nbr_opened[which(is.na(df_country_years$nbr_opened))] <- 0
-
 
 ## ** read in some wb gdp data for basic testing
 ## *** gdp_pcap: gdp per capita
@@ -82,15 +45,36 @@ gdp_pcap <- as_tibble(read.csv("/home/johannes/Dropbox/phd/papers/org_pop/data/w
 ## no gdp data for 2021 yet, no shit
 ## actually fine, don't need that data for now: don't have museums opened in 2022 yet
 
-df_gdp_pcap <- gdp_pcap[3:nrow(gdp_pcap),c(1,2,5:ncol(gdp_pcap))]
+## -1 at the end to have the weird 2021 column gone that is NA everywhere
+df_gdp_pcap <- gdp_pcap[3:nrow(gdp_pcap),c(1,2,5:ncol(gdp_pcap)-1)]
 
 names(df_gdp_pcap)[3:ncol(df_gdp_pcap)] <- unlist(df_gdp_pcap[1,3:ncol(df_gdp_pcap)])
+## drop first row which has the column names 
+df_gdp_pcap <- df_gdp_pcap[-1,] 
+
+
+## yeeting all the country codes that aren't countries but some larger stuff 
+df_gdp_pcap$countrycode_actual <- countrycode(df_gdp_pcap$V2, "wb", "wb")
+df_gdp_pcap <- df_gdp_pcap[-which(is.na(df_gdp_pcap$countrycode_actual)),]
+## yeet the selection column
+df_gdp_pcap2 <- df_gdp_pcap[,-which(names(df_gdp_pcap) %in% c("countrycode_actual", "Indicator Code"))]
+
 
 ## melting into long format
-df_gdp_pcap_molt <- as_tibble(melt(df_gdp_pcap, id=c('V1', 'V2')))
+df_gdp_pcap_molt <- as_tibble(melt(df_gdp_pcap2, id=c('V1', 'V2')))
 names(df_gdp_pcap_molt) <- c('country', 'countrycode', 'year', 'gdp_pcap')
-print(df_gdp_pcap_molt[which(df_gdp_pcap_molt$country == 'United States'),], n=1000)
-df_gdp_pcap_molt <- df_gdp_pcap_molt[which(df_gdp_pcap_molt$country %in% df_country_years$country),]
+## print(df_gdp_pcap_molt[which(df_gdp_pcap_molt$country == 'United States'),], n=1000)
+## df_gdp_pcap_molt <- df_gdp_pcap_molt[which(df_gdp_pcap_molt$country %in% df_country_years$country),]
+
+## XKX: Kosovo not included in iso3c, gets solved when using worldbank schema
+## countrycode(unique(df_gdp_pcap_molt$countrycode), "wb", "country.name")
+
+## testing of ambiguous country codes
+## ambig_country_codes2 <- c("AFE", "AFW", "ARB", "CEB", "CSS", "EAP", "EAR", "EAS", "ECA", "ECS", "EMU", "EUU", "FCS", "HIC", "HPC", "IBD", "IBT", "IDA", "IDB", "IDX", "INX", "LAC", "LCN", "LDC", "LIC", "LMC", "LMY", "LTE", "MEA", "MIC", "MNA", "NAC", "OED", "OSS", "PRE", "PSS", "PST", "SAS", "SSA", "SSF", "SST", "TEA", "TEC", "TLA", "TMN", "TSA", "TSS", "UMC", "WLD")
+## as.data.frame(df_gdp_pcap[which(df_gdp_pcap$V2 %in% ambig_country_codes2),c("V1", "V2")])
+
+
+
 
 ## need to check completeness: visualization by line
 ## ehh just do some aggregation
@@ -115,7 +99,7 @@ names(df_wb_gini)[3:ncol(df_wb_gini)] <- unlist(df_wb_gini[1,3:ncol(df_wb_gini)]
 df_wb_gini_molt <- as_tibble(melt(df_wb_gini, id=c('V1', 'V2')))
 
 names(df_wb_gini_molt) <- c('country', 'countrycode', 'year', 'gini')
-df_wb_gini_molt <- df_wb_gini_molt[which(df_wb_gini_molt$country %in% df_country_years$country),]
+## df_wb_gini_molt <- df_wb_gini_molt[which(df_wb_gini_molt$country %in% df_country_years$country),]
 aggregate(gini ~ year, data = df_wb_gini_molt, function(x){sum(is.na(x))}, na.action = NULL)
 aggregate(gini ~ country, data = df_wb_gini_molt, function(x){sum(is.na(x))}, na.action = NULL)
 ## whole bunch of NAs.. should check aggregation to some spell
@@ -123,13 +107,13 @@ aggregate(gini ~ country, data = df_wb_gini_molt, function(x){sum(is.na(x))}, na
 
 ## *** WID
 ## country codes
-library(countrycode)
+## library(countrycode)
 
-countrycodes2c <- countrycode(unique(df_country_years$countrycode), "iso3c", "iso2c")
-for (code in countrycodes2c){
-    print(code)
-    cry_data <- as_tibble(read.csv(paste("/home/johannes/Dropbox/phd/papers/org_pop/data/wid/WID_data_", code, ".csv", sep=""), sep=";"))
-    }
+## countrycodes2c <- countrycode(unique(df_country_years$countrycode), "iso3c", "iso2c")
+## for (code in countrycodes2c){
+##     print(code)
+##     cry_data <- as_tibble(read.csv(paste("/home/johannes/Dropbox/phd/papers/org_pop/data/wid/WID_data_", code, ".csv", sep=""), sep=";"))
+##     }
 
 ## variables wanted:
 ## - income inequality: top 10%
@@ -149,9 +133,57 @@ multi_inner <- as_tibble(Reduce(
   function(x, y, ...) merge(x, y, ...), 
   list(df_wb_gini_molt, df_gdp_pcap_molt)
 ))
-multi_inner
+
+multi_inner$year <- as.numeric(as.character(multi_inner$year))
+multi_inner <- multi_inner[which(multi_inner$year >= STARTING_YEAR),]
 ## how the fuck does that work? how does it know what variables to use to join?
 ## need to check reduce
+
+
+## ** basic table preparation
+## add year: 
+## just clean everything by taking first 4, drop everything that doesn't work lmao
+df$year_opened_int <- as.integer(lapply(df$year_opened, function(x)(substring(x, 0,4))))
+## have 59 NAs, oh well
+## let's say for now 1985-2021
+# plot(table(df$year_opened_int), type='h')
+
+STARTING_YEAR <- 1985
+
+df$year_opened_int2 <- df$year_opened_int
+df$year_opened_int2[which(df$year_opened_int2 < STARTING_YEAR | df$year_opened_int2 > 2021)] <- NA
+## up to 100 dropped atm 
+
+df_open <- na.omit(df[,c('name', 'country', 'countrycode', 'year_opened_int2')])
+# plot(table(df_open$year_opened_int2), type='l')
+df_open$ctr <- 1
+
+df_country_year_agg <- as_tibble(aggregate(df_open$ctr, by=list(df_open$country, df_open$countrycode, df_open$year_opened_int2), FUN = sum))
+
+names(df_country_year_agg) <- c('country', 'countrycode', 'year', 'nbr_opened')
+
+
+## make some combinations with countries x years join what I have
+df_country_years_empty <- as_tibble(expand.grid(unique(multi_inner$countrycode),
+                                                unique(multi_inner$year)))
+names(df_country_years_empty) <- c('countrycode', 'year')
+df_country_years_empty$countrycode <- as.character(df_country_years_empty$countrycode)
+
+## df_country_years_empty2 <- as_tibble(merge(df_country_years_empty, unique(df_open[,c('country', 'countrycode')]) , by='countrycode', all.x = TRUE))
+## can get country codes with the library
+
+
+## join everything nice together
+df_country_years <- as_tibble(merge(df_country_year_agg[,c('countrycode', 'year', 'nbr_opened')],
+                                    df_country_years_empty, by = c('countrycode', 'year'),
+                                    all=TRUE))
+
+df_country_years$country <-
+    countrycode(df_country_years$countrycode, "iso3c", "country.name")
+## countrycodes not clearly matched 
+
+## fill up NAs with 0s
+df_country_years$nbr_opened[which(is.na(df_country_years$nbr_opened))] <- 0
 
 
 ## ** merge basic opening data with gdp data, add lagged values
