@@ -5,6 +5,7 @@ library(reshape2)
 library(dplyr)
 library(lme4)
 library(texreg)
+library(ggplot2)
 
 '%!in%' <- function(x,y)!('%in%'(x,y))
 
@@ -257,9 +258,24 @@ df_agg_pcap <- as_tibble(aggregate(gdp_pcap ~ countrycode + wv, df_anls, mean))
 ## merge test end 
 
 
-df_agg_means <- as_tibble(aggregate(cbind(gini, gdp_pcap, gdp_pcapk) ~ countrycode + wv, df_anls, mean))
 ## ahh, what happened was that since I aggregated the variables in the same function they all got down to gini level
 ## yeah even though stuff is not deleted, it still means that all entries are fully complete -> get reduced down to lowest value
+
+## 
+
+agger <- function(varx){
+    ## aggregate varx in df_anls by wv + countrycode
+    df_anls$agg_var <- as.numeric(unlist(df_anls[,c(varx)]))
+    df_aggx <- aggregate(agg_var ~ wv + countrycode, df_anls, mean)
+    df_aggx[,varx] <- df_aggx$agg_var
+    return(as_tibble(df_aggx[,c("countrycode", "wv", varx)]))}
+
+
+## use reduce to join the means together 
+df_agg_means <- as_tibble(Reduce(
+    function(x,y, ...) merge(x,y, all = TRUE),
+    lapply(c("gini", "gdp_pcap", "gdp_pcapk"), agger)
+))
 
 
 df_agg_cnts <- as_tibble(aggregate(nbr_opened ~ countrycode + wv, df_anls, sum))
@@ -268,8 +284,6 @@ df_agg_cnts <- as_tibble(aggregate(nbr_opened ~ countrycode + wv, df_anls, sum))
 ##     geom_line()
 
 df_agg <- as_tibble(merge(df_agg_cnts, df_agg_means, by=c("countrycode", "wv"), all.x = T))
-
-df_agg <- as_tibble(merge(df_agg_cnts, df_agg_gini2, by=c("countrycode", "wv"), all.x = T))
 
 
 ## checking how many museums are covered 
@@ -299,9 +313,11 @@ sum(na.omit(df_agg[,c("gdp_pcap","nbr_opened")])$nbr_opened)
 ##     geom_point()
 
 df_agg$pm_preds_na <- 0
-df_agg[which(is.na(df_agg$gdp_pcap)),]$pm_preds_na <- 1
+df_agg[which(is.na(df_agg$gini)),]$pm_preds_na <- 1
 
-ggplot(df_agg[which(df_agg$nbr_opened > 0),], aes(x=wv, y=countrycode, size = nbr_opened, color = factor(pm_preds_na))) +
+
+
+ggplot(df_agg, aes(x=factor(wv), y=countrycode, size = nbr_opened, color = factor(pm_preds_na))) +
     geom_point()
 
 ## seems especially Korea, Russia -> country specific, not time-period effect
@@ -326,6 +342,31 @@ aggregate(gdp_pcap ~ countrycode, data = df_anls, function(x){sum(is.na(x))}, na
 unique(df_open$countrycode)[which(unique(df_open$countrycode) %!in% (unique(df_gdp_pcap_molt$countrycode)))]
 ## seems ok,
 ## taiwan not separate country in WB.. just 1 PM tho, so shouldn't be big impact
+
+## ** aggregating systematically
+agg_sys <- function(wave_lengthx){
+    
+    dfx <- df_anls
+    wv_ctr <- 0
+    wv_nbr <- 1
+
+    df_anls$wv <- 0
+
+    ## label the waves based on wavelength, not super elegant but works
+
+    for (yearx in unique(dfx$year)){
+        wv_ctr <- wv_ctr + 1
+        print(c(wv_ctr, wv_nbr))
+        dfx[which(dfx$year == yearx),"wv"] <- wv_nbr
+        if (wv_ctr == wave_length){
+            wv_ctr <- 0
+            wv_nbr <- wv_nbr + 1}
+    }
+
+    
+
+    
+
 
 ## ** PCSE
 
