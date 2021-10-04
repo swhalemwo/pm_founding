@@ -74,8 +74,6 @@ names(df_gdp_pcap_molt) <- c('country', 'countrycode', 'year', 'gdp_pcap')
 ## as.data.frame(df_gdp_pcap[which(df_gdp_pcap$V2 %in% ambig_country_codes2),c("V1", "V2")])
 
 
-
-
 ## need to check completeness: visualization by line
 ## ehh just do some aggregation
 
@@ -94,9 +92,13 @@ names(df_gdp_pcap_molt) <- c('country', 'countrycode', 'year', 'gdp_pcap')
 ## *** gini
 wb_gini <- as_tibble(read.csv("/home/johannes/Dropbox/phd/papers/org_pop/data/wb_gini/API_SI.POV.GINI_DS2_en_csv_v2_2916486.csv", header = F))
 
-df_wb_gini <- wb_gini[3:nrow(wb_gini), c(1,2,5:ncol(wb_gini))]
+df_wb_gini <- wb_gini[3:nrow(wb_gini), c(1,2,5:ncol(wb_gini)-1)]
 names(df_wb_gini)[3:ncol(df_wb_gini)] <- unlist(df_wb_gini[1,3:ncol(df_wb_gini)])
-df_wb_gini_molt <- as_tibble(melt(df_wb_gini, id=c('V1', 'V2')))
+df_wb_gini <- df_wb_gini[-1,]
+## more effective way of yeeting all the "countries" that aren't countries
+df_wb_gini2 <- df_wb_gini[which(df_wb_gini$V2 %in% countrycode(unique(df_wb_gini$V2), "wb", "wb")),]
+
+df_wb_gini_molt <- as_tibble(melt(df_wb_gini2[,-3], id=c('V1', 'V2')))
 
 names(df_wb_gini_molt) <- c('country', 'countrycode', 'year', 'gini')
 ## df_wb_gini_molt <- df_wb_gini_molt[which(df_wb_gini_molt$country %in% df_country_years$country),]
@@ -133,11 +135,12 @@ multi_inner <- as_tibble(Reduce(
   function(x, y, ...) merge(x, y, ...), 
   list(df_wb_gini_molt, df_gdp_pcap_molt)
 ))
+## how the fuck does that work? how does it know what variables to use to join?
+## need to check reduce
+
 
 multi_inner$year <- as.numeric(as.character(multi_inner$year))
 multi_inner <- multi_inner[which(multi_inner$year >= STARTING_YEAR),]
-## how the fuck does that work? how does it know what variables to use to join?
-## need to check reduce
 
 
 ## ** basic table preparation
