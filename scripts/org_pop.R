@@ -252,7 +252,7 @@ for (yearx in unique(df_anls$year)){
 ## df_agg_gini2 <- as_tibble(merge(df_agg_cnts, df_agg_gini, by=c('countrycode', 'wv'), all.x = TRUE))
 
 
-df_agg_pcap <- as_tibble(aggregate(gdp_pcap ~ countrycode + wv, df_anls, mean))
+## df_agg_pcap <- as_tibble(aggregate(gdp_pcap ~ countrycode + wv, df_anls, mean))
 
 
 ## merge test end 
@@ -327,11 +327,6 @@ mis[order(mis$pm_preds_na),]
 
 ## gdp_pcap seem to be mostly korea
 
-
-
-
-
-
 ## ** checking NAs
 
 aggregate(gdp_pcap ~ countrycode, data = df_anls, function(x){sum(is.na(x))}, na.action = NULL)
@@ -347,23 +342,54 @@ unique(df_open$countrycode)[which(unique(df_open$countrycode) %!in% (unique(df_g
 agg_sys <- function(wave_lengthx){
     
     dfx <- df_anls
+    nbr_pm_ttl <- sum(dfx$nbr_opened)
+
     wv_ctr <- 0
     wv_nbr <- 1
 
-    df_anls$wv <- 0
+    dfx$wv <- 0
 
     ## label the waves based on wavelength, not super elegant but works
 
     for (yearx in unique(dfx$year)){
         wv_ctr <- wv_ctr + 1
-        print(c(wv_ctr, wv_nbr))
+        ## print(c(wv_ctr, wv_nbr))
         dfx[which(dfx$year == yearx),"wv"] <- wv_nbr
-        if (wv_ctr == wave_length){
+        if (wv_ctr == wave_lengthx){
             wv_ctr <- 0
             wv_nbr <- wv_nbr + 1}
     }
 
+    dfx_agg_means <- as_tibble(Reduce(
+        function(x,y, ...) merge(x,y, all = TRUE),
+        lapply(c("gini", "gdp_pcap", "gdp_pcapk"), agger)
+    ))
+
+
+    dfx_agg_cnts <- as_tibble(aggregate(nbr_opened ~ countrycode + wv, dfx, sum))
+
+    dfx_agg <- na.omit(as_tibble(merge(dfx_agg_cnts, dfx_agg_means, by=c("countrycode", "wv"), all.x = T)))
+    ## percent of entities covered
+    pct_ent_cvrd <- nrow(dfx_agg)/nrow(dfx_agg_cnts)
+    pct_pms_cvrd <- sum(dfx_agg$nbr_opened)/nbr_pm_ttl
+
+    return(list(wave_lengthx = wave_lengthx, pct_ent_cvrd = pct_ent_cvrd, pct_pms_cvrd = pct_pms_cvrd))}
+
+agg_sys(5)
+
+res <- lapply(seq(1,10), agg_sys)
+res_df <- do.call(rbind, res)
+## for some reason necessary to unlist the columns 
+res_df2 <- as.data.frame(apply(res_df, 2, unlist))
+
+res_melt <- melt(res_df2, id="wave_lengthx")
+
+ggplot(res_melt, aes(x=factor(wave_lengthx), y=value, group=variable, color=variable)) +
+    geom_line()
+## hmm for some reason coverage goes down on higher values?
+## could make sense for some differences, but multiples of lower values should be at least as complete as the lower values themselves, e.g. 8 should be as least as complete as 4
     
+
 
     
 
