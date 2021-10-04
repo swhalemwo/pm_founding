@@ -166,35 +166,24 @@ df_country_year_agg <- as_tibble(aggregate(df_open$ctr, by=list(df_open$country,
 names(df_country_year_agg) <- c('country', 'countrycode', 'year', 'nbr_opened')
 
 
-## make some combinations with countries x years join what I have
-df_country_years_empty <- as_tibble(expand.grid(unique(multi_inner$countrycode),
-                                                unique(multi_inner$year)))
-names(df_country_years_empty) <- c('countrycode', 'year')
-df_country_years_empty$countrycode <- as.character(df_country_years_empty$countrycode)
-
-## df_country_years_empty2 <- as_tibble(merge(df_country_years_empty, unique(df_open[,c('country', 'countrycode')]) , by='countrycode', all.x = TRUE))
-## can get country codes with the library
-
-
-## join everything nice together
-df_country_years <- as_tibble(merge(df_country_year_agg[,c('countrycode', 'year', 'nbr_opened')],
-                                    df_country_years_empty, by = c('countrycode', 'year'),
-                                    all=TRUE))
-
-df_country_years$country <-
-    countrycode(df_country_years$countrycode, "iso3c", "country.name")
-## countrycodes not clearly matched 
-
-## fill up NAs with 0s
-df_country_years$nbr_opened[which(is.na(df_country_years$nbr_opened))] <- 0
-
 
 ## ** merge basic opening data with gdp data, add lagged values
 
-df_anls <- as_tibble(merge(df_country_years[,c('countrycode', 'year', 'nbr_opened')],
-                           multi_inner,
+df_anls <- as_tibble(merge(multi_inner, df_country_year_agg[,c("countrycode", "year", "nbr_opened")],
                            by=c('countrycode', 'year'),
                            all.x= TRUE))
+
+## fill up NAs up with 0s
+df_anls$nbr_opened[which(is.na(df_anls$nbr_opened))] <- 0
+
+## check if WB and my country codes are the same, they are 
+## x <- merge(df_gdp_pcap2[,c("V1", "V2")],
+##       unique(df_country_year_agg[,c("country", "countrycode")]),
+##       by.x = c("V2"),
+##       by.y = c("countrycode"))
+## x[which(x$V1 != x$country),]
+
+
 
 ## somehow gdp_pcap stuff gets deleted
 ## multi_inner$gdp_pcap has 514 NAs
