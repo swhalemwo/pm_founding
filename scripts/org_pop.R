@@ -191,10 +191,11 @@ df_anls$nbr_opened[which(is.na(df_anls$nbr_opened))] <- 0
 
 
 ## lag gdp by a year, also number of openings for good measure, 
+df_anls$gdp_pcapk <- df_anls$gdp_pcap/1000
 
 
 ## overly messy way of lagging variables that creates intermediary vars because mutate/lag doesn't accept variablies as input
-for (varx in c("gdp_pcap", "gini", "nbr_opened")){
+for (varx in c("gdp_pcap", "gdp_pcapk", "gini", "nbr_opened")){
     lag_name = paste(varx, "_lag1", sep = "")
     ## eval(parse("lag_name"))
     df_anls$var_to_lag <- df_anls[,c(varx)]
@@ -206,17 +207,16 @@ for (varx in c("gdp_pcap", "gini", "nbr_opened")){
 
 
 
-
-## drop taiwan and other NAs
-df_anls <- df_anls[-which(df_anls$countrycode == "TWN"),]
+## drop taiwan and other NAs, maybe not necessary anymore after using IVs as x/first table when merging
+## df_anls <- df_anls[-which(df_anls$countrycode == "TWN"),]
 ## df_anls_omit <- na.omit(df_anls)
 
 ## have gpd per capita in 1k
-df_anls$gdp_pcapk <- df_anls$gdp_pcap/1000
+
 
 ## ** test different kinds of aggregation
 
-wave_length <- 2
+wave_length <- 4
 wv_ctr <- 0
 wv_nbr <- 1
 
@@ -233,15 +233,44 @@ for (yearx in unique(df_anls$year)){
         wv_nbr <- wv_nbr + 1}
     }
 
+
+
+## merge test start
+## df_agg_test <- as_tibble(cbind(c(1,1,1,2,2,2,3,3,3), c(NA,NA,1,NA,2,3,NA,NA,NA)))
+## names(df_agg_test) <- c("group", "value")
+## df_agg_test$value[which(is.na(df_agg_test$value))] <- "NA"
+## aggregate(value ~ group, df_agg_test, mean)
+
+## ## can't get NAs into the aggregation if there's no non-NA value 
+## ## probably have to aggregate separately with na.omit, and then merge back to overall df
+
+
+## df_agg_gini <- as_tibble(aggregate(gini ~ countrycode + wv, df_anls, mean, na.action = na.omit))
+
+## ## make some arbitrary aggregation to merge other aggregations back to
+## df_agg_gini2 <- as_tibble(merge(df_agg_cnts, df_agg_gini, by=c('countrycode', 'wv'), all.x = TRUE))
+
+
+df_agg_pcap <- as_tibble(aggregate(gdp_pcap ~ countrycode + wv, df_anls, mean))
+
+
+## merge test end 
+
+
 df_agg_means <- as_tibble(aggregate(cbind(gini, gdp_pcap, gdp_pcapk) ~ countrycode + wv, df_anls, mean))
-df_agg_means <- as_tibble(aggregate(cbind(gini, gdp_pcap, gdp_pcapk) ~ countrycode + wv, df_anls, mean, na.action = NULL))
 ## ahh, what happened was that since I aggregated the variables in the same function they all got down to gini level
+## yeah even though stuff is not deleted, it still means that all entries are fully complete -> get reduced down to lowest value
+
+
 df_agg_cnts <- as_tibble(aggregate(nbr_opened ~ countrycode + wv, df_anls, sum))
 
 ## ggplot(df_agg_means, aes(x=wv, y=gini, group = countrycode, color = countrycode)) +
 ##     geom_line()
 
 df_agg <- as_tibble(merge(df_agg_cnts, df_agg_means, by=c("countrycode", "wv"), all.x = T))
+
+df_agg <- as_tibble(merge(df_agg_cnts, df_agg_gini2, by=c("countrycode", "wv"), all.x = T))
+
 
 ## checking how many museums are covered 
 
