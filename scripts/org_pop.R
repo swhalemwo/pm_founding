@@ -210,26 +210,7 @@ df_anls$gdp_pcapk <- df_anls$gdp_pcap/1000
 
 
 
-## ** add lagged values
 
-## overly messy way of lagging variables that creates intermediary vars because mutate/lag doesn't accept variablies as input
-for (varx in c("gdp_pcap", "gdp_pcapk", "gini", "nbr_opened")){
-    lag_name = paste(varx, "_lag1", sep = "")
-    ## eval(parse("lag_name"))
-    df_anls$var_to_lag <- df_anls[,c(varx)]
-    df_anls[,"var_lagged"] <- mutate(group_by(df_anls, countrycode), var_lagged = lag(var_to_lag))[,"var_lagged"]
-    df_anls[,lag_name] <- df_anls$var_lagged
-    df_anls <- df_anls[,-which(names(df_anls) %in% c("var_to_lag", "var_lagged"))]
-    }
-
-
-
-
-## drop taiwan and other NAs, maybe not necessary anymore after using IVs as x/first table when merging
-## df_anls <- df_anls[-which(df_anls$countrycode == "TWN"),]
-## df_anls_omit <- na.omit(df_anls)
-
-## have gpd per capita in 1k
 
 
 ## ** test different kinds of aggregation
@@ -552,19 +533,91 @@ screenreg(list(found.pglm.nb1,found.pglm.nb2,found.pglm.nb3,found.pglm.nb4,found
 
 ## *** glmer.nb
 
-found.nb1 <- glmer.nb(nbr_opened ~  + (1 | countrycode), data = df_anls)
-
-found.nb1 <- glmer.nb(nbr_opened ~ nbr_opened_lag1 + (1 | countrycode), data = df_anls)
-found.nb2 <- glmer.nb(nbr_opened ~ nbr_opened_lag1  + gdp_pcap_lag1 + (1 | countrycode), data = df_anls)
-found.nb3 <- glmer.nb(nbr_opened ~ nbr_opened_lag1  + log(gdp_pcap_lag1) + (1 | countrycode), data = df_anls)
-found.nb4 <- glmer.nb(nbr_opened ~ nbr_opened_lag1  + gini_lag1 + (1 | countrycode), data = df_anls)
-found.nb5 <- glmer.nb(nbr_opened ~ nbr_opened_lag1  + log(gdp_pcap_lag1) + gini_lag1 + (1 | countrycode), data = df_anls)
+TABLE_DIR <- "/home/johannes/Dropbox/phd/papers/org_pop/tables/"
 
 
+found.nb_fe_all <- glmer.nb(nbr_opened ~ (1 | countrycode), data = df_anls)
+found.nb_nbr_all <- glmer.nb(nbr_opened ~ nbr_opened_lag1 + (1 | countrycode), data = df_anls)
+found.nb_gdp_all <- glmer.nb(nbr_opened ~  gdp_pcapk_lag1 + (1 | countrycode), data = df_anls)
+found.nb_gini_all <- glmer.nb(nbr_opened ~ gini_lag1  + (1 | countrycode), data = df_anls)
+found.nb_all_all <- glmer.nb(nbr_opened ~ nbr_opened_lag1  + gdp_pcapk_lag1 + gini_lag1 + (1 | countrycode), data = df_anls)
 
-screenreg(list(found.nb1,found.nb3,found.nb4,found.nb5))
 
-screenreg(list(found.nb1,found.pglm.nb1,found.nb3,found.pglm.nb3,found.nb4,found.pglm.nb4,found.nb5,found.pglm.nb5))
+found.nb_all_all_std <- createTexreg(coef.names = names(fixef(found.nb_all_all))[2:length(names(fixef(found.nb_all_all)))], coef = lm.beta.lmer(found.nb_all_all))
+
+
+model_list_all <- list(found.nb_fe_all, found.nb_nbr_all, found.nb_gdp_all, found.nb_gini_all, found.nb_all_all, found.nb_all_all_std)
+
+
+texreg(model_list_all,
+          custom.gof.rows = list("nbr. PMs founding covered" = c(unlist(lapply(model_list_all[1:5], function(x) sum(x@frame$nbr_opened))), 273)),
+       file = paste0(TABLE_DIR,"nb_all.tex"),
+       label = "nb_all",
+       caption = "Negative Binomial with full DF"
+       )
+
+
+screenreg(model_list_all,
+          custom.gof.rows = list("nbr. PMs founding covered" = c(unlist(lapply(model_list_all[1:5], function(x) sum(x@frame$nbr_opened))), 273)))
+
+
+
+df_lag4 <- df_agg4$df
+for (varx in c("gdp_pcap", "gdp_pcapk", "gini", "nbr_opened")){
+    lag_name = paste(varx, "_lag1", sep = "")
+    ## eval(parse("lag_name"))
+    df_lag4$var_to_lag <- df_lag4[,c(varx)]
+    df_lag4[,"var_lagged"] <- mutate(group_by(df_lag4, countrycode), var_lagged = lag(var_to_lag))[,"var_lagged"]
+    df_lag4[,lag_name] <- df_lag4$var_lagged
+    df_lag4 <- df_lag4[,-which(names(df_lag4) %in% c("var_to_lag", "var_lagged"))]
+    }
+
+
+found.nb_fe <- glmer.nb(nbr_opened ~ (1 | countrycode), data = df_lag4)
+found.nb_nbr <- glmer.nb(nbr_opened ~ nbr_opened_lag1 + (1 | countrycode), data = df_lag4)
+found.nb_gdp <- glmer.nb(nbr_opened ~  gdp_pcapk_lag1 + (1 | countrycode), data = df_lag4)
+found.nb_gini <- glmer.nb(nbr_opened ~ gini_lag1  + (1 | countrycode), data = df_lag4)
+found.nb_all <- glmer.nb(nbr_opened ~ nbr_opened_lag1  + gdp_pcapk_lag1 + gini_lag1 + (1 | countrycode), data = df_lag4)
+
+found.nb_all_std <- createTexreg(coef.names = names(fixef(found.nb_all))[2:length(names(fixef(found.nb_all)))], coef = lm.beta.lmer(found.nb_all))
+
+model_list <- list(found.nb_fe, found.nb_nbr, found.nb_gdp, found.nb_gini, found.nb_all, found.nb_all_std)
+
+screenreg(list(found.nb_fe, found.nb_nbr, found.nb_gdp, found.nb_gini, found.nb_all))
+
+screenreg(model_list, custom.gof.rows = list("nbr. PMs founding covered" = c(unlist(lapply(model_list[1:5], function(x) sum(x@frame$nbr_opened))), 347)))
+
+
+
+texreg(model_list,
+       custom.gof.rows = list("nbr. PMs founding covered" = c(unlist(lapply(model_list[1:5], function(x) sum(x@frame$nbr_opened))), 347)),
+       file = paste0(TABLE_DIR,"nb_agg4.tex"),
+       label = "nb_agg4",
+       caption = "Negative Binomial, aggregated to 4 year intervals"
+       )
+
+
+
+
+
+
+## can add number of museums 
+screenreg(list(found.nb_fe, found.nb_nbr), custom.gof.rows = list("Random effects" = c("YES", "YES")))
+
+## get number of PMs 
+
+
+
+## fastest way of standardized coefs: just add another model 
+
+
+
+
+## screenreg(list(found.nb0, found.nb1, found.nb2,found.nb3,found.nb4,found.nb5))
+
+## screenreg(list(found.nb1,found.pglm.nb1,found.nb3,found.pglm.nb3,found.nb4,found.pglm.nb4,found.nb5,found.pglm.nb5))
+
+
 
 ## model 2 (not log-transfomed gdp_pcap) doesn't work
 ## think the differences are smaller than in poisson:
@@ -597,6 +650,8 @@ lm.beta.lmer <- function(mod) {
    sd.y <- sd(getME(mod,"y"))
    b*sd.x/sd.y
 }
+
+lm.beta.lmer(found.nb_all)
 
 lm.beta.lmer(found.nb5x)
 
