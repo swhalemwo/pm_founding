@@ -6,6 +6,7 @@ library(dplyr)
 library(lme4)
 library(texreg)
 library(ggplot2)
+library(countrycode)
 
 '%!in%' <- function(x,y)!('%in%'(x,y))
 
@@ -162,20 +163,34 @@ df_open <- na.omit(df[,c('name', 'country', 'countrycode', 'year_opened_int2')])
 # plot(table(df_open$year_opened_int2), type='l')
 df_open$ctr <- 1
 
-df_country_year_agg <- as_tibble(aggregate(df_open$ctr, by=list(df_open$country, df_open$countrycode, df_open$year_opened_int2), FUN = sum))
+df_country_year_agg_cnt <- as_tibble(aggregate(ctr ~ countrycode + year_opened_int2, df_open, FUN = sum))
+names(df_country_year_agg_cnt) <- c('countrycode', 'year', 'nbr_opened')
 
-names(df_country_year_agg) <- c('country', 'countrycode', 'year', 'nbr_opened')
+## df_country_year_agg_names <- as_tibble(aggregate(name ~ countrycode + year_opened_int2, df_open, c))
+
+## df_country_year_agg_names <- as_tibble(aggregate(name ~ countrycode + year_opened_int2, df_open, function(x){paste(x, collapse = "----")}))
+
+df_country_year_agg_names <- df_open %>% group_by(countrycode, year_opened_int2) %>% summarise(name = list(name))
+
+
+names(df_country_year_agg_names) <- c("countrycode", "year", "name")
+
+df_country_year_agg <- as_tibble(merge(df_country_year_agg_cnt, df_country_year_agg_names))
 
 
 
-## ** merge basic opening data with gdp data, add lagged values
+## ** merge basic opening data with gdp data
 
-df_anls <- as_tibble(merge(multi_inner, df_country_year_agg[,c("countrycode", "year", "nbr_opened")],
+df_anls <- as_tibble(merge(multi_inner, df_country_year_agg,
                            by=c('countrycode', 'year'),
                            all.x= TRUE))
 
 ## fill up NAs up with 0s
 df_anls$nbr_opened[which(is.na(df_anls$nbr_opened))] <- 0
+
+df_anls$wv <- 0
+
+df_anls$gdp_pcapk <- df_anls$gdp_pcap/1000
 
 ## check if WB and my country codes are the same, they are 
 ## x <- merge(df_gdp_pcap2[,c("V1", "V2")],
@@ -192,8 +207,10 @@ df_anls$nbr_opened[which(is.na(df_anls$nbr_opened))] <- 0
 
 
 ## lag gdp by a year, also number of openings for good measure, 
-df_anls$gdp_pcapk <- df_anls$gdp_pcap/1000
 
+
+
+## ** add lagged values
 
 ## overly messy way of lagging variables that creates intermediary vars because mutate/lag doesn't accept variablies as input
 for (varx in c("gdp_pcap", "gdp_pcapk", "gini", "nbr_opened")){
@@ -263,12 +280,6 @@ for (yearx in unique(df_anls$year)){
 
 ## 
 
-agger <- function(varx){
-    ## aggregate varx in df_anls by wv + countrycode
-    df_anls$agg_var <- as.numeric(unlist(df_anls[,c(varx)]))
-    df_aggx <- aggregate(agg_var ~ wv + countrycode, df_anls, mean)
-    df_aggx[,varx] <- df_aggx$agg_var
-    return(as_tibble(df_aggx[,c("countrycode", "wv", varx)]))}
 
 
 ## use reduce to join the means together 
@@ -339,9 +350,19 @@ unique(df_open$countrycode)[which(unique(df_open$countrycode) %!in% (unique(df_g
 ## taiwan not separate country in WB.. just 1 PM tho, so shouldn't be big impact
 
 ## ** aggregating systematically
+agger <- function(varx, dfx){
+    ## aggregate varx in df_anls by wv + countrycode
+    dfx$agg_var <- as.numeric(unlist(dfx[,c(varx)]))
+    df_aggx <- aggregate(agg_var ~ wv + countrycode, dfx, mean)
+    df_aggx[,varx] <- df_aggx$agg_var
+    return(as_tibble(df_aggx[,c("countrycode", "wv", varx)]))}
+
+
+
 agg_sys <- function(wave_lengthx){
     
     dfx <- df_anls
+
     nbr_pm_ttl <- sum(dfx$nbr_opened)
 
     wv_ctr <- 0
@@ -360,24 +381,81 @@ agg_sys <- function(wave_lengthx){
             wv_nbr <- wv_nbr + 1}
     }
 
+    
     dfx_agg_means <- as_tibble(Reduce(
         function(x,y, ...) merge(x,y, all = TRUE),
-        lapply(c("gini", "gdp_pcap", "gdp_pcapk"), agger)
+        lapply(c("gini", "gdp_pcap", "gdp_pcapk"), agger, dfx=dfx)
     ))
 
 
     dfx_agg_cnts <- as_tibble(aggregate(nbr_opened ~ countrycode + wv, dfx, sum))
 
-    dfx_agg <- na.omit(as_tibble(merge(dfx_agg_cnts, dfx_agg_means, by=c("countrycode", "wv"), all.x = T)))
-    ## percent of entities covered
-    pct_ent_cvrd <- nrow(dfx_agg)/nrow(dfx_agg_cnts)
-    pct_pms_cvrd <- sum(dfx_agg$nbr_opened)/nbr_pm_ttl
+    dfx_agg_names <- dfx %>% group_by(countrycode, wv) %>% summarise(name = list(unlist(name)))
 
-    return(list(wave_lengthx = wave_lengthx, pct_ent_cvrd = pct_ent_cvrd, pct_pms_cvrd = pct_pms_cvrd))}
+    dfx_agg <- as_tibble(Reduce(
+        function(x,y, ...) merge(x,y,all.x=TRUE),
+        list(dfx_agg_means, dfx_agg_cnts, dfx_agg_names)))
+        
+    ## dfx_agg <- as_tibble(merge(dfx_agg_cnts, dfx_agg_means, by=c("countrycode", "wv"), all.x = T))
+
+    
+    return(list(df=dfx_agg,
+                nbr_pm_ttl = nbr_pm_ttl,
+                dfx_agg_cnts = dfx_agg_cnts,
+                wave_lengthx = wave_lengthx,
+                dfx_agg_names = dfx_agg_names,
+                dfx_agg_means = dfx_agg_means
+                ))
+    }
+
+
+df_agg2 <- agg_sys(2)
+df_agg4 <- agg_sys(4)
+df_agg8 <- agg_sys(8)
+
+## could check the museum names in detail, but atm no unexpected behavior, small dips along the may could be longitudinal gerrymandering 
+unlist(na.omit(df_agg2$df)$name)[!is.na(unlist(na.omit(df_agg2$df)$name))]
+unlist(na.omit(df_agg4$df)$name)[!is.na(unlist(na.omit(df_agg4$df)$name))]
+unlist(na.omit(df_agg8$df)$name)[!is.na(unlist(na.omit(df_agg8$df)$name))]
+
+
+score_agg <- function(agg_obj){
+    
+    dfx_agg <- na.omit(agg_obj$df)
+    ## percent of entities covered
+    pct_ent_cvrd <- nrow(dfx_agg)/nrow(agg_obj$dfx_agg_cnts)
+    pct_pms_cvrd <- sum(dfx_agg$nbr_opened)/agg_obj$nbr_pm_ttl
+
+    return(list(wave_lengthx = agg_obj$wave_lengthx, pct_ent_cvrd = pct_ent_cvrd, pct_pms_cvrd = pct_pms_cvrd))
+}
+
+score_agg(df_agg2)
+score_agg(df_agg4)
+score_agg(df_agg8)
+
+## *** aggregation testing: seems I have to use dplyr to aggregate names 
+
+## agg_test <- as.data.frame(cbind(c(1,1,1,2,2,2,3,3,3), c(1,1,1,1,1,1,2,2,2), c("A", "B", "C", "D", "E", "F", NA, NA,NA)))
+## names(agg_test) <- c("group1", "group2", "value")
+## agg_test2 <- aggregate(value ~ group1 + group2, agg_test, list, na.action = NULL)
+## agg_test2 <- agg_test %>% group_by(group1, group2) %>% summarise(value = list(value))
+## agg_test2$value
+
+## agg_test3 <- aggregate(value ~ group2, agg_test2, list_func)
+
+## agg_test3 <- agg_test2 %>% group_by(group2) %>% summarise(dv = list(unlist(value)))
+## agg_test3$dv
+
+## x <- df_anls %>% group_by(country, wv) %>% summarise(name = list(unlist(name)))
+## ## have to use dplyr to be able to aggregate lists of lists
+
+## unlist(x$name)[!is.na(unlist(x$name))]
 
 agg_sys(5)
 
-res <- lapply(seq(1,10), agg_sys)
+## *** evaluating coverage
+
+res <- lapply(lapply(seq(1,10), agg_sys), score_agg)
 res_df <- do.call(rbind, res)
 ## for some reason necessary to unlist the columns 
 res_df2 <- as.data.frame(apply(res_df, 2, unlist))
@@ -389,8 +467,8 @@ ggplot(res_melt, aes(x=factor(wave_lengthx), y=value, group=variable, color=vari
 ## hmm for some reason coverage goes down on higher values?
 ## could make sense for some differences, but multiples of lower values should be at least as complete as the lower values themselves, e.g. 8 should be as least as complete as 4
     
-
-
+## error might have been agger fucking up by using df_anls instead of wave-length specific dfx
+## now small fluctuations (also going down), but i think those should be able to happen
     
 
 
