@@ -472,108 +472,18 @@ ggplot(res_melt, aes(x=factor(wave_lengthx), y=value, group=variable, color=vari
     
 
 
-## ** PCSE
+## ** add lagged values
 
-library(pcse)
+## overly messy way of lagging variables that creates intermediary vars because mutate/lag doesn't accept variablies as input
+for (varx in c("gdp_pcap", "gdp_pcapk", "gini", "nbr_opened")){
+    lag_name = paste(varx, "_lag1", sep = "")
+    ## eval(parse("lag_name"))
+    df_anls$var_to_lag <- df_anls[,c(varx)]
+    df_anls[,"var_lagged"] <- mutate(group_by(df_anls, countrycode), var_lagged = lag(var_to_lag))[,"var_lagged"]
+    df_anls[,lag_name] <- df_anls$var_lagged
+    df_anls <- df_anls[,-which(names(df_anls) %in% c("var_to_lag", "var_lagged"))]
+    }
 
-found.lm <- lm(nbr_opened ~ nbr_opened_lag1 + gdp_pcap_lag1 + as.factor(year), data = df_anls_omit)
-summary(found.lm)
-screenreg(found.lm)
-
-# necessary to have countrycode as factor
-found.pcse <- pcse(found.lm, groupN=factor(df_anls_omit$countrycode), groupT = df_anls_omit$year)
-summary(found.pcse)
-screenreg(found.pcse)
-
-## what is the interpretation of PCSE?
-
-## ** FE
-
-
-found.fe <- lmer(nbr_opened ~ gdp_pcap_lag1 + nbr_opened_lag1 + gini_lag1 + (1 | countrycode), data = df_anls)
-found.fe_wo_gini <- lmer(nbr_opened ~ gdp_pcap_lag1 + nbr_opened_lag1  + (1 | countrycode), data = df_anls)
-
-summary(found.fe)
-screenreg(found.fe)
-
-screenreg(list(found.fe,found.fe_wo_gini))
-
-
-## ** poisson
-
-## *** glmer (lme4)
-found.poi <- glmer(nbr_opened ~ nbr_opened_lag1 + log(gdp_pcap_lag1) + (1 | countrycode), data = df_anls, family=poisson)
-
-found.poi1 <- glmer(nbr_opened ~ nbr_opened_lag1 + (1 | countrycode), data = df_anls, family=poisson)
-found.poi2 <- glmer(nbr_opened ~ nbr_opened_lag1  + gdp_pcap_lag1 + (1 | countrycode), data = df_anls, family=poisson)
-found.poi3 <- glmer(nbr_opened ~ nbr_opened_lag1  + log(gdp_pcap_lag1) + (1 | countrycode), data = df_anls, family=poisson)
-
-found.poi4 <- glmer(nbr_opened ~ nbr_opened_lag1  + gini_lag1 + (1 | countrycode), data = df_anls, family=poisson)
-found.poi5 <- glmer(nbr_opened ~ nbr_opened_lag1  + log(gdp_pcap_lag1) + gini_lag1 + (1 | countrycode), data = df_anls, family=poisson)
-
-
-summary(found.poi)
-screenreg(list(found.poi1,found.poi2,found.poi3,found.poi4, found.poi5))
-
-
-## glmmPQL pretty much the same results
-found.poi1b <- glmmPQL(nbr_opened ~ nbr_opened_lag1, random = list(countrycode = ~1), data = df_anls, family=poisson)
-
-found.poi5b <- glmmPQL(nbr_opened ~ nbr_opened_lag1  + log(gdp_pcap_lag1) + gini_lag1, random = list(countrycode = ~1), data = df_anls, family=poisson)
-
-
-screenreg(list(found.poi1, found.poi1b, found.poi5, found.poi5b))
-
-
-
-## *** pglm
-library(plm)
-## seems like poisson/negative binomial is implemented in https://cran.r-project.org/web/packages/pglm/pglm.pdf
-## yves croissant, wrote some b
-
-library(pglm)
-
-found.pglm.poi1 <- pglm(nbr_opened ~ nbr_opened_lag1, data = df_anls,
-                        family=poisson,
-                        model = "within",
-                        index = "countrycode")
-
-found.pglm.poi2 <- pglm(nbr_opened ~ nbr_opened_lag1 + gdp_pcap_lag1, data = df_anls,
-                    family=poisson,
-                    model = "within",
-                    index = "countrycode")
-
-found.pglm.poi3 <- pglm(nbr_opened ~ nbr_opened_lag1 + log(gdp_pcap_lag1), data = df_anls,
-                    family=poisson,
-                    model = "within",
-                    index = "countrycode")
-
-found.pglm.poi4 <- pglm(nbr_opened ~ nbr_opened_lag1 + gini_lag1, data = df_anls,
-                    family=poisson,
-                    model = "within",
-                    index = "countrycode")
-
-found.pglm.poi5 <- pglm(nbr_opened ~ nbr_opened_lag1 + log(gdp_pcap_lag1) + gini_lag1, data = df_anls,
-                    family=poisson,
-                    model = "within",
-                    index = "countrycode")
-
-
-## *** comparison
-
-summary(found.pglm.poi1)
-screenreg(list(found.pglm.poi1,found.poi1))
-
-screenreg(list(found.pglm.poi1,found.poi1,
-               found.pglm.poi2,found.poi2,
-               found.pglm.poi3,found.poi3,
-               found.pglm.poi4,found.poi4,
-               found.pglm.poi5,found.poi5))
-
-## hmm different results
-## overall tendencies are kinda the same, but not always: gini significant in one, not the other
-## also differences in significance of nbr_opened_lag1
-## only aggreement in significance in gdp_pcap_lag1 and log(gdp_pcap_lag1)
 
 
 
@@ -806,5 +716,110 @@ plot(x/20, col='white')
 lines(poi.func(x,2), type='l')
 plot(2^x, type='l')
 lines(factorial(x))
+
+
+## ** PCSE
+
+library(pcse)
+
+found.lm <- lm(nbr_opened ~ nbr_opened_lag1 + gdp_pcap_lag1 + as.factor(year), data = df_anls_omit)
+summary(found.lm)
+screenreg(found.lm)
+
+# necessary to have countrycode as factor
+found.pcse <- pcse(found.lm, groupN=factor(df_anls_omit$countrycode), groupT = df_anls_omit$year)
+summary(found.pcse)
+screenreg(found.pcse)
+
+## what is the interpretation of PCSE?
+
+## ** FE
+
+
+found.fe <- lmer(nbr_opened ~ gdp_pcap_lag1 + nbr_opened_lag1 + gini_lag1 + (1 | countrycode), data = df_anls)
+found.fe_wo_gini <- lmer(nbr_opened ~ gdp_pcap_lag1 + nbr_opened_lag1  + (1 | countrycode), data = df_anls)
+
+summary(found.fe)
+screenreg(found.fe)
+
+screenreg(list(found.fe,found.fe_wo_gini))
+
+
+## ** poisson
+
+## *** glmer (lme4)
+found.poi <- glmer(nbr_opened ~ nbr_opened_lag1 + log(gdp_pcap_lag1) + (1 | countrycode), data = df_anls, family=poisson)
+
+found.poi1 <- glmer(nbr_opened ~ nbr_opened_lag1 + (1 | countrycode), data = df_anls, family=poisson)
+found.poi2 <- glmer(nbr_opened ~ nbr_opened_lag1  + gdp_pcap_lag1 + (1 | countrycode), data = df_anls, family=poisson)
+found.poi3 <- glmer(nbr_opened ~ nbr_opened_lag1  + log(gdp_pcap_lag1) + (1 | countrycode), data = df_anls, family=poisson)
+
+found.poi4 <- glmer(nbr_opened ~ nbr_opened_lag1  + gini_lag1 + (1 | countrycode), data = df_anls, family=poisson)
+found.poi5 <- glmer(nbr_opened ~ nbr_opened_lag1  + log(gdp_pcap_lag1) + gini_lag1 + (1 | countrycode), data = df_anls, family=poisson)
+
+
+summary(found.poi)
+screenreg(list(found.poi1,found.poi2,found.poi3,found.poi4, found.poi5))
+
+
+## glmmPQL pretty much the same results
+found.poi1b <- glmmPQL(nbr_opened ~ nbr_opened_lag1, random = list(countrycode = ~1), data = df_anls, family=poisson)
+
+found.poi5b <- glmmPQL(nbr_opened ~ nbr_opened_lag1  + log(gdp_pcap_lag1) + gini_lag1, random = list(countrycode = ~1), data = df_anls, family=poisson)
+
+
+screenreg(list(found.poi1, found.poi1b, found.poi5, found.poi5b))
+
+
+
+## *** pglm
+library(plm)
+## seems like poisson/negative binomial is implemented in https://cran.r-project.org/web/packages/pglm/pglm.pdf
+## yves croissant, wrote some b
+
+library(pglm)
+
+found.pglm.poi1 <- pglm(nbr_opened ~ nbr_opened_lag1, data = df_anls,
+                        family=poisson,
+                        model = "within",
+                        index = "countrycode")
+
+found.pglm.poi2 <- pglm(nbr_opened ~ nbr_opened_lag1 + gdp_pcap_lag1, data = df_anls,
+                    family=poisson,
+                    model = "within",
+                    index = "countrycode")
+
+found.pglm.poi3 <- pglm(nbr_opened ~ nbr_opened_lag1 + log(gdp_pcap_lag1), data = df_anls,
+                    family=poisson,
+                    model = "within",
+                    index = "countrycode")
+
+found.pglm.poi4 <- pglm(nbr_opened ~ nbr_opened_lag1 + gini_lag1, data = df_anls,
+                    family=poisson,
+                    model = "within",
+                    index = "countrycode")
+
+found.pglm.poi5 <- pglm(nbr_opened ~ nbr_opened_lag1 + log(gdp_pcap_lag1) + gini_lag1, data = df_anls,
+                    family=poisson,
+                    model = "within",
+                    index = "countrycode")
+
+
+## *** comparison
+
+summary(found.pglm.poi1)
+screenreg(list(found.pglm.poi1,found.poi1))
+
+screenreg(list(found.pglm.poi1,found.poi1,
+               found.pglm.poi2,found.poi2,
+               found.pglm.poi3,found.poi3,
+               found.pglm.poi4,found.poi4,
+               found.pglm.poi5,found.poi5))
+
+## hmm different results
+## overall tendencies are kinda the same, but not always: gini significant in one, not the other
+## also differences in significance of nbr_opened_lag1
+## only aggreement in significance in gdp_pcap_lag1 and log(gdp_pcap_lag1)
+
 
 
