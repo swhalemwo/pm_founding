@@ -665,25 +665,55 @@ plot_summs(found.nb1, found.nb3, found.nb4, found.nb5, plot.distributions = T)
 
 
 
-gdp_pcap_agg <- aggregate(gdp_pcapk ~ countrycode, df_anls, mean)
+gdp_pcap_agg <- as_tibble(aggregate(gdp_pcapk ~ countrycode, df_anls, mean))
+gini_agg <- as_tibble(aggregate(gini ~ countrycode, df_anls, mean))
 
+var_means <- as_tibble(merge(gdp_pcap_agg, gini_agg, all.x = TRUE))
 
-var_means <- aggregate(cbind(gini, gdp_pcapk) ~ countrycode, df_anls, mean)
-names(var_means) <- c("countrycode", "gini_mean", "gdp_pcapk_mean")
-df_anls_vis <- as_tibble(merge(df_anls, var_means, by='countrycode'))
+names(var_means) <- c("countrycode", "gdp_pcapk_mean", "gini_mean")
+
+df_anls_vis <- as_tibble(merge(df_anls[,c("countrycode", "year", "nbr_opened", "gini", "gdp_pcapk")] , var_means, by='countrycode'))
 df_anls_vis$gini_demeaned <- df_anls_vis$gini - df_anls_vis$gini_mean
 df_anls_vis$gdp_pcapk_demeaned <- df_anls_vis$gdp_pcapk - df_anls_vis$gdp_pcapk_mean
 
-
+## sum(df_anls_vis[which(df_anls_vis$countrycode == "DEU"),]$gdp_pcapk_demeaned)
 
 library(ggplot2)
 
-varx <- "gini_demeaned"
-varx <- "gdp_pcapk_demeaned"
 
-ggplot(df_anls_vis, aes(x=year, y=eval(parse(text=varx)), group=countrycode, color = countrycode)) + 
-    geom_line(alpha=0.3) + 
-    geom_point(df_anls_vis[which(df_anls_vis$nbr_opened > 0),], mapping = aes(x=year, y=eval(parse(text=varx)), size = nbr_opened, color = countrycode))
+
+
+library(gridExtra)
+
+
+plt1 <- ggplot(df_anls_vis, aes(x=year, y=gdp_pcapk_demeaned, group=countrycode, color = countrycode)) + 
+    geom_line(alpha=0.15) +
+    geom_line(df_anls_vis[which(df_anls_vis$countrycode %in% c("DEU", "ITA", "USA", "KOR", "ESP", "FRA", "CHN")),], mapping = aes(x=year, y=gdp_pcapk_demeaned, group=countrycode, color = countrycode), alpha = 0.8) +
+    scale_color_discrete(breaks = c("DEU", "ITA", "USA", "KOR", "ESP", "FRA", "CHN")) + 
+    geom_point(df_anls_vis[which(df_anls_vis$nbr_opened > 0),], mapping = aes(x=year, y=gdp_pcapk_demeaned, size = nbr_opened, color = countrycode), alpha = 0.8) +
+    labs(y = "gdp_pcapk_demeaned")
+plt1
+
+
+plt2 <- ggplot(df_anls_vis, aes(x=year, y=gini_demeaned, group=countrycode, color = countrycode)) + 
+    geom_line(alpha=0.15) +
+    geom_line(df_anls_vis[which(df_anls_vis$countrycode %in% c("DEU", "ITA", "USA", "KOR", "ESP", "FRA", "CHN")),], mapping = aes(x=year, y=gini_demeaned, group=countrycode, color = countrycode), alpha = 0.8) +
+    scale_color_discrete(breaks = c("DEU", "ITA", "USA", "KOR", "ESP", "FRA", "CHN")) + 
+    geom_point(df_anls_vis[which(df_anls_vis$nbr_opened > 0),], mapping = aes(x=year, y=gini_demeaned, size = nbr_opened, color = countrycode), alpha = 0.8) +
+    labs(y = "gini_demeaned")
+plt2
+
+pdf(paste0(FIG_DIR, "fe_viz.pdf"), height = 9, width = 9)
+grid.arrange(plt1,plt2)
+dev.off()
+
+
+colors = rep("#111111", 6)
+
+
+
+    geom_line(df_anls_vis[which(df_anls_vis$countrycode %in% c("DEU", "ITA", "USA", "KOR", "ESP", "FRA")),], mapping = aes(x=year, y=eval(parse(text=varx)), group = countrycode)) + 
+
 
 ## interpretation: the more points are above 0, the stronger the effect of that variable? 
 
