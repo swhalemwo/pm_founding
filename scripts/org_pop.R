@@ -459,11 +459,19 @@ res <- lapply(lapply(seq(1,10), agg_sys), score_agg)
 res_df <- do.call(rbind, res)
 ## for some reason necessary to unlist the columns 
 res_df2 <- as.data.frame(apply(res_df, 2, unlist))
+names(res_df2) <- c("wave_length", "prop. spells covered", "prop. PM founding covered")
 
-res_melt <- melt(res_df2, id="wave_lengthx")
 
-ggplot(res_melt, aes(x=factor(wave_lengthx), y=value, group=variable, color=variable)) +
-    geom_line()
+res_melt <- melt(res_df2, id="wave_length")
+
+pdf(paste(FIG_DIR,"completeness.pdf", sep = ""), height = 2.5, width = 5)
+
+ggplot(res_melt, aes(x=factor(wave_length), y=value, group=variable, color=variable)) +
+    geom_line() +
+    labs(x = "wave length", y="coverage")
+
+dev.off()
+
 ## hmm for some reason coverage goes down on higher values?
 ## could make sense for some differences, but multiples of lower values should be at least as complete as the lower values themselves, e.g. 8 should be as least as complete as 4
     
