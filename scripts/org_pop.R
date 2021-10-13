@@ -362,8 +362,13 @@ unique(df_open$countrycode)[which(unique(df_open$countrycode) %!in% (unique(df_g
 ## ** aggregating systematically
 
 
-agg_sys <- function(wave_lengthx){
-    
+agg_sys <- function(wave_lengthx, vrbls){
+    ## wave_lengthx: spell length
+    ## vrbls: vrbls to consider
+
+    print(wave_lengthx)
+    print(vrbls)
+
     dfx <- df_anls
 
     nbr_pm_ttl <- sum(dfx$nbr_opened)
@@ -386,7 +391,8 @@ agg_sys <- function(wave_lengthx){
 
     dfx_agg_means <- as_tibble(Reduce(
         function(x,y, ...) merge(x,y, all = TRUE),
-        lapply(c("gini", "gdp_pcap", "gdp_pcapk"), agger, dfx=dfx)
+        ## lapply(c("gini", "gdp_pcap", "gdp_pcapk"), agger, dfx=dfx)
+        lapply(vrbls, agger, dfx=dfx)
     ))
 
     dfx_agg_cnts <- as_tibble(aggregate(nbr_opened ~ countrycode + wv, dfx, sum))
@@ -401,6 +407,7 @@ agg_sys <- function(wave_lengthx){
 
     
     return(list(df=dfx_agg,
+                vrbls=vrbls,
                 nbr_pm_ttl = nbr_pm_ttl,
                 dfx_agg_cnts = dfx_agg_cnts,
                 wave_lengthx = wave_lengthx,
@@ -410,9 +417,11 @@ agg_sys <- function(wave_lengthx){
     }
 
 
-df_agg2 <- agg_sys(2)
-df_agg4 <- agg_sys(4)
-df_agg8 <- agg_sys(8)
+df_agg2 <- agg_sys(2, c("gini", "gdp_pcapk"))
+df_agg4 <- agg_sys(4, c("gini", "gdp_pcapk"))
+df_agg8 <- agg_sys(8, c("gini", "gdp_pcapk"))
+
+
 
 ## could check the museum names in detail, but atm no unexpected behavior, small dips along the may could be longitudinal gerrymandering 
 ## unlist(na.omit(df_agg2$df)$name)[!is.na(unlist(na.omit(df_agg2$df)$name))]
@@ -427,49 +436,45 @@ score_agg <- function(agg_obj){
     pct_ent_cvrd <- nrow(dfx_agg)/nrow(agg_obj$dfx_agg_cnts)
     pct_pms_cvrd <- sum(dfx_agg$nbr_opened)/agg_obj$nbr_pm_ttl
 
-    return(list(wave_lengthx = agg_obj$wave_lengthx, pct_ent_cvrd = pct_ent_cvrd, pct_pms_cvrd = pct_pms_cvrd))
+    return(list(wave_lengthx = agg_obj$wave_lengthx,
+                pct_ent_cvrd = pct_ent_cvrd,
+                pct_pms_cvrd = pct_pms_cvrd,
+                vrbls = paste(agg_obj$vrbls, collapse = "-")
+                ))
 }
 
 score_agg(df_agg2)
 score_agg(df_agg4)
 score_agg(df_agg8)
 
-## *** aggregation testing: seems I have to use dplyr to aggregate names 
-
-## agg_test <- as.data.frame(cbind(c(1,1,1,2,2,2,3,3,3), c(1,1,1,1,1,1,2,2,2), c("A", "B", "C", "D", "E", "F", NA, NA,NA)))
-## names(agg_test) <- c("group1", "group2", "value")
-## agg_test2 <- aggregate(value ~ group1 + group2, agg_test, list, na.action = NULL)
-## agg_test2 <- agg_test %>% group_by(group1, group2) %>% summarise(value = list(value))
-## agg_test2$value
-
-## agg_test3 <- aggregate(value ~ group2, agg_test2, list_func)
-
-## agg_test3 <- agg_test2 %>% group_by(group2) %>% summarise(dv = list(unlist(value)))
-## agg_test3$dv
-
-## x <- df_anls %>% group_by(country, wv) %>% summarise(name = list(unlist(name)))
-## ## have to use dplyr to be able to aggregate lists of lists
-
-## unlist(x$name)[!is.na(unlist(x$name))]
-
-
 
 ## *** evaluating coverage
 
-res <- lapply(lapply(seq(1,10), agg_sys), score_agg)
-res_df <- do.call(rbind, res)
+
+vrbls <- c("gini", "gdp_pcapk")
+cbns <- do.call("c", lapply(seq_along(vrbls), function(i) combn(vrbls, i, FUN = list)))
+
+cfgs <- expand.grid(cbns, seq(1,10))
+names(cfgs) <- c("vrbls", "wavelength")
+
+cover_res <- apply(cfgs, 1, function(x) score_agg(agg_sys(x$wavelength, x$vrbls)))
+res_df <- do.call(rbind, cover_res)
+
 ## for some reason necessary to unlist the columns 
 res_df2 <- as.data.frame(apply(res_df, 2, unlist))
-names(res_df2) <- c("wave_length", "prop. spells covered", "prop. PM founding covered")
+
+names(res_df2) <- c("wave_length", "prop. spells covered", "prop. PM founding covered", "vrbls")
 
 
-res_melt <- melt(res_df2, id="wave_length")
+res_melt <- melt(res_df2, id=c("wave_length", "vrbls"))
+res_melt$value <- as.numeric(res_melt$value)
+res_melt$wave_length <- as.numeric(res_melt$wave_length)
 
 pdf(paste(FIG_DIR,"completeness.pdf", sep = ""), height = 2.5, width = 5)
 
-ggplot(res_melt, aes(x=factor(wave_length), y=value, group=variable, color=variable)) +
-    geom_line() +
-    labs(x = "wave length", y="coverage")
+ggplot(res_melt, aes(x=factor(wave_length), y=value, group=interaction(variable, vrbls))) +
+    geom_line(size=2, mapping = aes(linetype = variable, color = vrbls)) +
+    labs(x = "wave length", y="coverage") 
 
 dev.off()
 
@@ -588,7 +593,7 @@ texreg(model_list_all,
 ## **** aggregate 4
 
 df_lag4 <- df_agg4$df
-for (varx in c("gdp_pcap", "gdp_pcapk", "gini", "nbr_opened")){
+for (varx in c("gdp_pcapk", "gini", "nbr_opened")){
     lag_name = paste(varx, "_lag1", sep = "")
     ## eval(parse("lag_name"))
     df_lag4$var_to_lag <- df_lag4[,c(varx)]
