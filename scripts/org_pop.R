@@ -40,6 +40,35 @@ df$countrycode <- recode(df$country, "United Kingdom" = "GBR", "Spain" = "ESP", 
 
 
 
+## ** set static vars
+FIG_DIR <- "/home/johannes/Dropbox/phd/papers/org_pop/figures/"
+TABLE_DIR <- "/home/johannes/Dropbox/phd/papers/org_pop/tables/"
+STARTING_YEAR <- 1985
+
+## ** custom funcs
+
+agger <- function(varx, dfx){
+    ## aggregate varx in df_anls by wv + countrycode
+    ## dfx$agg_var <- as.numeric(unlist(dfx[,c(varx)]))
+    dfx$agg_var <- as.numeric(unlist(dfx[,c(varx)]))
+    df_aggx <- aggregate(agg_var ~ wv + countrycode, dfx, mean)
+    df_aggx[,varx] <- df_aggx$agg_var
+    return(as_tibble(df_aggx[,c("countrycode", "wv", varx)]))}
+
+
+
+## https://stats.stackexchange.com/questions/123366/lmer-standardized-regression-coefficients
+lm.beta.lmer <- function(mod) {
+    ## extract standardized effects
+   b <- fixef(mod)[-1]
+   sd.x <- apply(getME(mod,"X")[,-1],2,sd)
+   sd.y <- sd(getME(mod,"y"))
+   b*sd.x/sd.y
+}
+
+
+
+
 ## ** read in some wb gdp data for basic testing
 ## *** gdp_pcap: gdp per capita
 ## probably need in long_format
@@ -145,7 +174,7 @@ multi_inner$year <- as.numeric(as.character(multi_inner$year))
 multi_inner <- multi_inner[which(multi_inner$year >= STARTING_YEAR),]
 
 
-## ** basic table preparation
+## ** basic DV table preparation
 ## add year: 
 ## just clean everything by taking first 4, drop everything that doesn't work lmao
 df$year_opened_int <- as.integer(lapply(df$year_opened, function(x)(substring(x, 0,4))))
@@ -153,7 +182,7 @@ df$year_opened_int <- as.integer(lapply(df$year_opened, function(x)(substring(x,
 ## let's say for now 1985-2021
 # plot(table(df$year_opened_int), type='h')
 
-STARTING_YEAR <- 1985
+
 
 df$year_opened_int2 <- df$year_opened_int
 df$year_opened_int2[which(df$year_opened_int2 < STARTING_YEAR | df$year_opened_int2 > 2021)] <- NA
@@ -215,22 +244,22 @@ df_anls$gdp_pcapk <- df_anls$gdp_pcap/1000
 
 ## ** test different kinds of aggregation
 
-wave_length <- 4
-wv_ctr <- 0
-wv_nbr <- 1
+## wave_length <- 4
+## wv_ctr <- 0
+## wv_nbr <- 1
 
-df_anls$wv <- 0
+## df_anls$wv <- 0
 
-## label the waves based on wavelength, not super elegant but works
+## ## label the waves based on wavelength, not super elegant but works
 
-for (yearx in unique(df_anls$year)){
-    wv_ctr <- wv_ctr + 1
-    print(c(wv_ctr, wv_nbr))
-    df_anls[which(df_anls$year == yearx),"wv"] <- wv_nbr
-    if (wv_ctr == wave_length){
-        wv_ctr <- 0
-        wv_nbr <- wv_nbr + 1}
-    }
+## for (yearx in unique(df_anls$year)){
+##     wv_ctr <- wv_ctr + 1
+##     print(c(wv_ctr, wv_nbr))
+##     df_anls[which(df_anls$year == yearx),"wv"] <- wv_nbr
+##     if (wv_ctr == wave_length){
+##         wv_ctr <- 0
+##         wv_nbr <- wv_nbr + 1}
+##     }
 
 
 
@@ -263,61 +292,61 @@ for (yearx in unique(df_anls$year)){
 
 
 
-## use reduce to join the means together 
-df_agg_means <- as_tibble(Reduce(
-    function(x,y, ...) merge(x,y, all = TRUE),
-    lapply(c("gini", "gdp_pcap", "gdp_pcapk"), agger)
-))
+## ## use reduce to join the means together 
+## df_agg_means <- as_tibble(Reduce(
+##     function(x,y, ...) merge(x,y, all = TRUE),
+##     lapply(c("gini", "gdp_pcap", "gdp_pcapk"), agger, )
+## ))
 
 
-df_agg_cnts <- as_tibble(aggregate(nbr_opened ~ countrycode + wv, df_anls, sum))
+## df_agg_cnts <- as_tibble(aggregate(nbr_opened ~ countrycode + wv, df_anls, sum))
 
-## ggplot(df_agg_means, aes(x=wv, y=gini, group = countrycode, color = countrycode)) +
-##     geom_line()
+## ## ggplot(df_agg_means, aes(x=wv, y=gini, group = countrycode, color = countrycode)) +
+## ##     geom_line()
 
-df_agg <- as_tibble(merge(df_agg_cnts, df_agg_means, by=c("countrycode", "wv"), all.x = T))
+## df_agg <- as_tibble(merge(df_agg_cnts, df_agg_means, by=c("countrycode", "wv"), all.x = T))
 
 
-## checking how many museums are covered 
+## ## checking how many museums are covered 
 
-## not removing anything: 449
-sum(df_anls$nbr_opened)
+## ## not removing anything: 449
+## sum(df_anls$nbr_opened)
 
-## whenever I do gini with 5 years, I only have 260 or 263?? opening events
-sum(na.omit(df_anls[,c("gini","nbr_opened")])$nbr_opened)
+## ## whenever I do gini with 5 years, I only have 260 or 263?? opening events
+## sum(na.omit(df_anls[,c("gini","nbr_opened")])$nbr_opened)
 
-## filtering for gdp_pcap: still 388
-sum(na.omit(df_anls[,c("gdp_pcap","nbr_opened")])$nbr_opened)
+## ## filtering for gdp_pcap: still 388
+## sum(na.omit(df_anls[,c("gdp_pcap","nbr_opened")])$nbr_opened)
 
-## even aggregating gini to 5 years: only get to 345,
-sum(na.omit(df_agg[,c("gini","nbr_opened")])$nbr_opened)
-## with 2: 298
-## with 3: 327
-## with 5: 345
-## with 8 to 345
-## with 10 to 364
-sum(na.omit(df_agg[,c("gdp_pcap","nbr_opened")])$nbr_opened)
-## pcap with 10: 388
+## ## even aggregating gini to 5 years: only get to 345,
+## sum(na.omit(df_agg[,c("gini","nbr_opened")])$nbr_opened)
+## ## with 2: 298
+## ## with 3: 327
+## ## with 5: 345
+## ## with 8 to 345
+## ## with 10 to 364
+## sum(na.omit(df_agg[,c("gdp_pcap","nbr_opened")])$nbr_opened)
+## ## pcap with 10: 388
 
-## where the fuck are the museums founded for which I don't have data
+## ## where the fuck are the museums founded for which I don't have data
 
-## ggplot(df_anls, aes(x=year, y=countrycode, size = nbr_opened)) +
+## ## ggplot(df_anls, aes(x=year, y=countrycode, size = nbr_opened)) +
+## ##     geom_point()
+
+## df_agg$pm_preds_na <- 0
+## df_agg[which(is.na(df_agg$gini)),]$pm_preds_na <- 1
+
+
+
+## ggplot(df_agg, aes(x=factor(wv), y=countrycode, size = nbr_opened, color = factor(pm_preds_na))) +
 ##     geom_point()
 
-df_agg$pm_preds_na <- 0
-df_agg[which(is.na(df_agg$gini)),]$pm_preds_na <- 1
+## ## seems especially Korea, Russia -> country specific, not time-period effect
+## ## for wave_length 2: also germany, india, japan
+## mis <- aggregate(pm_preds_na ~ countrycode, df_agg[which(df_agg$nbr_opened > 0),], sum)
+## mis[order(mis$pm_preds_na),]
 
-
-
-ggplot(df_agg, aes(x=factor(wv), y=countrycode, size = nbr_opened, color = factor(pm_preds_na))) +
-    geom_point()
-
-## seems especially Korea, Russia -> country specific, not time-period effect
-## for wave_length 2: also germany, india, japan
-mis <- aggregate(pm_preds_na ~ countrycode, df_agg[which(df_agg$nbr_opened > 0),], sum)
-mis[order(mis$pm_preds_na),]
-
-## gdp_pcap seem to be mostly korea
+## ## gdp_pcap seem to be mostly korea
 
 ## ** checking NAs
 
@@ -331,13 +360,6 @@ unique(df_open$countrycode)[which(unique(df_open$countrycode) %!in% (unique(df_g
 ## taiwan not separate country in WB.. just 1 PM tho, so shouldn't be big impact
 
 ## ** aggregating systematically
-agger <- function(varx, dfx){
-    ## aggregate varx in df_anls by wv + countrycode
-    dfx$agg_var <- as.numeric(unlist(dfx[,c(varx)]))
-    df_aggx <- aggregate(agg_var ~ wv + countrycode, dfx, mean)
-    df_aggx[,varx] <- df_aggx$agg_var
-    return(as_tibble(df_aggx[,c("countrycode", "wv", varx)]))}
-
 
 
 agg_sys <- function(wave_lengthx){
@@ -362,12 +384,10 @@ agg_sys <- function(wave_lengthx){
             wv_nbr <- wv_nbr + 1}
     }
 
-    
     dfx_agg_means <- as_tibble(Reduce(
         function(x,y, ...) merge(x,y, all = TRUE),
         lapply(c("gini", "gdp_pcap", "gdp_pcapk"), agger, dfx=dfx)
     ))
-
 
     dfx_agg_cnts <- as_tibble(aggregate(nbr_opened ~ countrycode + wv, dfx, sum))
 
@@ -395,9 +415,9 @@ df_agg4 <- agg_sys(4)
 df_agg8 <- agg_sys(8)
 
 ## could check the museum names in detail, but atm no unexpected behavior, small dips along the may could be longitudinal gerrymandering 
-unlist(na.omit(df_agg2$df)$name)[!is.na(unlist(na.omit(df_agg2$df)$name))]
-unlist(na.omit(df_agg4$df)$name)[!is.na(unlist(na.omit(df_agg4$df)$name))]
-unlist(na.omit(df_agg8$df)$name)[!is.na(unlist(na.omit(df_agg8$df)$name))]
+## unlist(na.omit(df_agg2$df)$name)[!is.na(unlist(na.omit(df_agg2$df)$name))]
+## unlist(na.omit(df_agg4$df)$name)[!is.na(unlist(na.omit(df_agg4$df)$name))]
+## unlist(na.omit(df_agg8$df)$name)[!is.na(unlist(na.omit(df_agg8$df)$name))]
 
 
 score_agg <- function(agg_obj){
@@ -432,7 +452,7 @@ score_agg(df_agg8)
 
 ## unlist(x$name)[!is.na(unlist(x$name))]
 
-agg_sys(5)
+
 
 ## *** evaluating coverage
 
@@ -481,72 +501,81 @@ for (varx in c("gdp_pcap", "gdp_pcapk", "gini", "nbr_opened")){
 ## *** example
 ## https://rdrr.io/cran/lme4/man/glmer.nb.html
 
-set.seed(101)
-dd <- expand.grid(f1 = factor(1:3),
-                  f2 = LETTERS[1:2], g=1:9, rep=1:15,
-          KEEP.OUT.ATTRS=FALSE)
-summary(mu <- 5*(-4 + with(dd, as.integer(f1) + 4*as.numeric(f2))))
-dd$y <- rnbinom(nrow(dd), mu = mu, size = 0.5)
-str(dd)
-require("MASS")## and use its glm.nb() - as indeed we have zero random effect:
-## Not run: 
-m.glm <- glm.nb(y ~ f1*f2, data=dd, trace=TRUE)
-summary(m.glm)
-m.nb <- glmer.nb(y ~ f1*f2 + (1|g), data=dd, verbose=TRUE)
-m.nb
-## The neg.binomial theta parameter:
-getME(m.nb, "glmer.nb.theta")
-LL <- logLik(m.nb)
-## mixed model has 1 additional parameter (RE variance)
-stopifnot(attr(LL,"df")==attr(logLik(m.glm),"df")+1)
-plot(m.nb, resid(.) ~ g)# works, as long as data 'dd' is found
+## set.seed(101)
+## dd <- expand.grid(f1 = factor(1:3),
+##                   f2 = LETTERS[1:2], g=1:9, rep=1:15,
+##           KEEP.OUT.ATTRS=FALSE)
+## summary(mu <- 5*(-4 + with(dd, as.integer(f1) + 4*as.numeric(f2))))
+## dd$y <- rnbinom(nrow(dd), mu = mu, size = 0.5)
+## str(dd)
+## require("MASS")## and use its glm.nb() - as indeed we have zero random effect:
+## ## Not run: 
+## m.glm <- glm.nb(y ~ f1*f2, data=dd, trace=TRUE)
+## summary(m.glm)
+## m.nb <- glmer.nb(y ~ f1*f2 + (1|g), data=dd, verbose=TRUE)
+## m.nb
+## ## The neg.binomial theta parameter:
+## getME(m.nb, "glmer.nb.theta")
+## LL <- logLik(m.nb)
+## ## mixed model has 1 additional parameter (RE variance)
+## stopifnot(attr(LL,"df")==attr(logLik(m.glm),"df")+1)
+## plot(m.nb, resid(.) ~ g)# works, as long as data 'dd' is found
 
 
 ## *** pglm
 
-found.pglm.nb1 <- pglm(nbr_opened ~ nbr_opened_lag1, data = df_anls,
-                        family=negbin,
-                        model = "within",
-                        index = "countrycode")
+## found.pglm.nb1 <- pglm(nbr_opened ~ nbr_opened_lag1, data = df_anls,
+##                         family=negbin,
+##                         model = "within",
+##                         index = "countrycode")
 
-found.pglm.nb2 <- pglm(nbr_opened ~ nbr_opened_lag1 + gdp_pcap_lag1, data = df_anls,
-                    family=negbin,
-                    model = "within",
-                    index = "countrycode")
+## found.pglm.nb2 <- pglm(nbr_opened ~ nbr_opened_lag1 + gdp_pcap_lag1, data = df_anls,
+##                     family=negbin,
+##                     model = "within",
+##                     index = "countrycode")
 
-found.pglm.nb3 <- pglm(nbr_opened ~ nbr_opened_lag1 + log(gdp_pcap_lag1), data = df_anls,
-                    family=negbin,
-                    model = "within",
-                    index = "countrycode")
+## found.pglm.nb3 <- pglm(nbr_opened ~ nbr_opened_lag1 + log(gdp_pcap_lag1), data = df_anls,
+##                     family=negbin,
+##                     model = "within",
+##                     index = "countrycode")
 
-found.pglm.nb4 <- pglm(nbr_opened ~ nbr_opened_lag1 + gini_lag1, data = df_anls,
-                    family=negbin,
-                    model = "within",
-                    index = "countrycode")
+## found.pglm.nb4 <- pglm(nbr_opened ~ nbr_opened_lag1 + gini_lag1, data = df_anls,
+##                     family=negbin,
+##                     model = "within",
+##                     index = "countrycode")
 
-found.pglm.nb5 <- pglm(nbr_opened ~ nbr_opened_lag1 + log(gdp_pcap_lag1) + gini_lag1, data = df_anls,
-                    family=negbin,
-                    model = "within",
-                    index = "countrycode")
+## found.pglm.nb5 <- pglm(nbr_opened ~ nbr_opened_lag1 + log(gdp_pcap_lag1) + gini_lag1, data = df_anls,
+##                     family=negbin,
+##                     model = "within",
+##                     index = "countrycode")
 
-screenreg(list(found.pglm.nb1,found.pglm.nb2,found.pglm.nb3,found.pglm.nb4,found.pglm.nb5))
+## screenreg(list(found.pglm.nb1,found.pglm.nb2,found.pglm.nb3,found.pglm.nb4,found.pglm.nb5))
 
 ## *** glmer.nb
 
-TABLE_DIR <- "/home/johannes/Dropbox/phd/papers/org_pop/tables/"
 
-
+## **** full df
+print("nb df_anls 1")
 found.nb_fe_all <- glmer.nb(nbr_opened ~ (1 | countrycode), data = df_anls)
+print("nb df_anls 2")
 found.nb_nbr_all <- glmer.nb(nbr_opened ~ nbr_opened_lag1 + (1 | countrycode), data = df_anls)
+print("nb df_anls 3")
 found.nb_gdp_all <- glmer.nb(nbr_opened ~  gdp_pcapk_lag1 + (1 | countrycode), data = df_anls)
+print("nb df_anls 4")
 found.nb_gini_all <- glmer.nb(nbr_opened ~ gini_lag1  + (1 | countrycode), data = df_anls)
+print("nb df_anls 5")
 found.nb_all_all <- glmer.nb(nbr_opened ~ nbr_opened_lag1  + gdp_pcapk_lag1 + gini_lag1 + (1 | countrycode), data = df_anls)
 
 
-found.nb_all_all_std <- createTexreg(coef.names = names(fixef(found.nb_all_all))[2:length(names(fixef(found.nb_all_all)))], coef = lm.beta.lmer(found.nb_all_all))
+found.nb_all_all_std <- createTexreg(coef.names = names(fixef(found.nb_all_all))[2:length(names(fixef(found.nb_all_all)))],
+                                     coef = lm.beta.lmer(found.nb_all_all))
 
 
 model_list_all <- list(found.nb_fe_all, found.nb_nbr_all, found.nb_gdp_all, found.nb_gini_all, found.nb_all_all, found.nb_all_all_std)
+
+
+screenreg(model_list_all,
+          custom.gof.rows = list("nbr. PMs founding covered" = c(unlist(lapply(model_list_all[1:5], function(x) sum(x@frame$nbr_opened))), 273)))
 
 
 texreg(model_list_all,
@@ -556,11 +585,7 @@ texreg(model_list_all,
        caption = "Negative Binomial with full DF"
        )
 
-
-screenreg(model_list_all,
-          custom.gof.rows = list("nbr. PMs founding covered" = c(unlist(lapply(model_list_all[1:5], function(x) sum(x@frame$nbr_opened))), 273)))
-
-
+## **** aggregate 4
 
 df_lag4 <- df_agg4$df
 for (varx in c("gdp_pcap", "gdp_pcapk", "gini", "nbr_opened")){
@@ -572,18 +597,20 @@ for (varx in c("gdp_pcap", "gdp_pcapk", "gini", "nbr_opened")){
     df_lag4 <- df_lag4[,-which(names(df_lag4) %in% c("var_to_lag", "var_lagged"))]
     }
 
-
+print("lag4 1")
 found.nb_fe <- glmer.nb(nbr_opened ~ (1 | countrycode), data = df_lag4)
+print("lag4 2")
 found.nb_nbr <- glmer.nb(nbr_opened ~ nbr_opened_lag1 + (1 | countrycode), data = df_lag4)
+print("lag4 3")
 found.nb_gdp <- glmer.nb(nbr_opened ~  gdp_pcapk_lag1 + (1 | countrycode), data = df_lag4)
+print("lag4 4")
 found.nb_gini <- glmer.nb(nbr_opened ~ gini_lag1  + (1 | countrycode), data = df_lag4)
+print("lag4 5")
 found.nb_all <- glmer.nb(nbr_opened ~ nbr_opened_lag1  + gdp_pcapk_lag1 + gini_lag1 + (1 | countrycode), data = df_lag4)
 
 found.nb_all_std <- createTexreg(coef.names = names(fixef(found.nb_all))[2:length(names(fixef(found.nb_all)))], coef = lm.beta.lmer(found.nb_all))
 
 model_list <- list(found.nb_fe, found.nb_nbr, found.nb_gdp, found.nb_gini, found.nb_all, found.nb_all_std)
-
-screenreg(list(found.nb_fe, found.nb_nbr, found.nb_gdp, found.nb_gini, found.nb_all))
 
 screenreg(model_list, custom.gof.rows = list("nbr. PMs founding covered" = c(unlist(lapply(model_list[1:5], function(x) sum(x@frame$nbr_opened))), 347)))
 
@@ -598,25 +625,10 @@ texreg(model_list,
 
 
 
-
-
-
-## can add number of museums 
-screenreg(list(found.nb_fe, found.nb_nbr), custom.gof.rows = list("Random effects" = c("YES", "YES")))
-
-## get number of PMs 
-
-
-
 ## fastest way of standardized coefs: just add another model 
 
-
-
-
 ## screenreg(list(found.nb0, found.nb1, found.nb2,found.nb3,found.nb4,found.nb5))
-
 ## screenreg(list(found.nb1,found.pglm.nb1,found.nb3,found.pglm.nb3,found.nb4,found.pglm.nb4,found.nb5,found.pglm.nb5))
-
 
 
 ## model 2 (not log-transfomed gdp_pcap) doesn't work
@@ -631,39 +643,16 @@ screenreg(list(found.nb_fe, found.nb_nbr), custom.gof.rows = list("Random effect
 ## A country's rate of founding PMs increases by exp(0.78) = 2.18 for each log(GDP) point
 ## A country's founding rate of PMs increases by exp(0.07) = 1.07 (7%) for each gini point
 
-## have gdp_pcap in thousands 
-df_anls$gdp_pcapk_lag1 <- df_anls$gdp_pcap_lag1/1000
-
-found.nb5x <- glmer.nb(nbr_opened ~ nbr_opened_lag1  + gdp_pcapk_lag1 + gini_lag1 + (1 | countrycode), data = df_anls)
-
-screenreg(found.nb5x)
-## for each 1k increase in average GDP, founding rate increases by exp(0.04) = 1.04 = 4%
-
-
-## **** standardized effect sizes
-## kinda sucks that there is no official way 
-
-## standardized effects from: https://stats.stackexchange.com/questions/123366/lmer-standardized-regression-coefficients
-lm.beta.lmer <- function(mod) {
-   b <- fixef(mod)[-1]
-   sd.x <- apply(getME(mod,"X")[,-1],2,sd)
-   sd.y <- sd(getME(mod,"y"))
-   b*sd.x/sd.y
-}
-
-lm.beta.lmer(found.nb_all)
-
-lm.beta.lmer(found.nb5x)
 
 ## https://cran.r-project.org/web/packages/effectsize/vignettes/from_test_statistics.html
 library(effectsize)
-anova(found.nb5x)
-F_to_eta2(5.4014, 1)
+anova(found.nb_all)
+
 ## anova result looks different 
 
 ## https://stackoverflow.com/questions/45327217/r-squared-of-lmer-model-fit
-library(MuMIn)
-r.squaredGLMM(found.nb5x)
+## library(MuMIn)
+## r.squaredGLMM(found.nb5x)
 ## marginal and conditional
 ## marginal: variance explained by fixed effects
 ## conditional: variance explained by entire model, including both FE/RE
@@ -682,34 +671,19 @@ r.squaredGLMM(found.nb5x)
 ## could implement 
 
 
-## **** noise testing 
-## see if i can get negative results by flipping GDP -> yup
-
-df_anls$gdp_pcap_lag1_noise <- -jitter(df_anls$gdp_pcap_lag1, factor= 1000)
-df_anls$gdp_pcap_lag1_noise <- df_anls$gdp_pcap_lag1_noise+max(df_anls$gdp_pcap_lag1,na.rm = T)
-cor(df_anls$gdp_pcap_lag1_noise,df_anls$gdp_pcap_lag1, use="complete.obs")
-
-found.nb5_noise <- glmer.nb(nbr_opened ~ nbr_opened_lag1  + log(gdp_pcap_lag1) + log(gdp_pcap_lag1_noise) + gini_lag1 + (1 | countrycode), data = df_anls)
-screenreg(list(found.nb5, found.nb5_noise))
 
 
 
 ## ** visualization/inspection
 
-FIG_DIR = "/home/johannes/Dropbox/phd/papers/org_pop/figures/"
 
-pdf(paste(FIG_DIR, "resids.pdf", sep=""), height = 4, width = 8)
-par(mfrow=(c(1,2)))
-plot(found.nb1)
-plot(found.poi1)
-dev.off()
 
 library(jtools)
 library(ggstance)
 library(broom)
 library(broom.mixed)
 
-plot_summs(found.nb1, found.nb3, found.nb4, found.nb5, plot.distributions = T)
+## plot_summs(found.nb1, found.nb3, found.nb4, found.nb5, plot.distributions = T)
 ## plot_summs looks nice, but idk if I shouldn't rather write my own ggplot visualization
 ## also no support for the pglm models -> idk if plot_summs has generic class that can be filled wiht arbitrary values
 ## also need standardized stuff
@@ -719,7 +693,7 @@ plot_summs(found.nb1, found.nb3, found.nb4, found.nb5, plot.distributions = T)
 ## *** curves
 
 
-
+## *** plot country trajectories with PM foundings
 gdp_pcap_agg <- as_tibble(aggregate(gdp_pcapk ~ countrycode, df_anls, mean))
 gini_agg <- as_tibble(aggregate(gini ~ countrycode, df_anls, mean))
 
@@ -734,8 +708,6 @@ df_anls_vis$gdp_pcapk_demeaned <- df_anls_vis$gdp_pcapk - df_anls_vis$gdp_pcapk_
 ## sum(df_anls_vis[which(df_anls_vis$countrycode == "DEU"),]$gdp_pcapk_demeaned)
 
 library(ggplot2)
-
-
 
 
 library(gridExtra)
@@ -763,11 +735,7 @@ grid.arrange(plt1,plt2)
 dev.off()
 
 
-colors = rep("#111111", 6)
-
-
-
-    geom_line(df_anls_vis[which(df_anls_vis$countrycode %in% c("DEU", "ITA", "USA", "KOR", "ESP", "FRA")),], mapping = aes(x=year, y=eval(parse(text=varx)), group = countrycode)) + 
+stop("plots and tables done")
 
 
 ## interpretation: the more points are above 0, the stronger the effect of that variable? 
@@ -776,8 +744,8 @@ colors = rep("#111111", 6)
 
 
 ## maybe can plot hist of those points directly? 
-hist(df_anls_vis[which(df_anls_vis$nbr_opened > 0),]$gdp_pcapk_demeaned, breaks = 20)
-hist(df_anls_vis[which(df_anls_vis$nbr_opened > 0),]$gini_demeaned, breaks = 20)
+## hist(df_anls_vis[which(df_anls_vis$nbr_opened > 0),]$gdp_pcapk_demeaned, breaks = 20)
+## hist(df_anls_vis[which(df_anls_vis$nbr_opened > 0),]$gini_demeaned, breaks = 20)
 ## makes it looks murky af
 ## but wide spread doesn't mean that it can't be distinguished from 0
 ## but probably still too visualization-driven: it's a measure I only came up with because of visualization
@@ -811,58 +779,6 @@ plot(2^x, type='l')
 lines(factorial(x))
 
 
-## ** PCSE
-
-library(pcse)
-
-found.lm <- lm(nbr_opened ~ nbr_opened_lag1 + gdp_pcap_lag1 + as.factor(year), data = df_anls_omit)
-summary(found.lm)
-screenreg(found.lm)
-
-# necessary to have countrycode as factor
-found.pcse <- pcse(found.lm, groupN=factor(df_anls_omit$countrycode), groupT = df_anls_omit$year)
-summary(found.pcse)
-screenreg(found.pcse)
-
-## what is the interpretation of PCSE?
-
-## ** FE
-
-
-found.fe <- lmer(nbr_opened ~ gdp_pcap_lag1 + nbr_opened_lag1 + gini_lag1 + (1 | countrycode), data = df_anls)
-found.fe_wo_gini <- lmer(nbr_opened ~ gdp_pcap_lag1 + nbr_opened_lag1  + (1 | countrycode), data = df_anls)
-
-summary(found.fe)
-screenreg(found.fe)
-
-screenreg(list(found.fe,found.fe_wo_gini))
-
-
-## ** poisson
-
-## *** glmer (lme4)
-found.poi <- glmer(nbr_opened ~ nbr_opened_lag1 + log(gdp_pcap_lag1) + (1 | countrycode), data = df_anls, family=poisson)
-
-found.poi1 <- glmer(nbr_opened ~ nbr_opened_lag1 + (1 | countrycode), data = df_anls, family=poisson)
-found.poi2 <- glmer(nbr_opened ~ nbr_opened_lag1  + gdp_pcap_lag1 + (1 | countrycode), data = df_anls, family=poisson)
-found.poi3 <- glmer(nbr_opened ~ nbr_opened_lag1  + log(gdp_pcap_lag1) + (1 | countrycode), data = df_anls, family=poisson)
-
-found.poi4 <- glmer(nbr_opened ~ nbr_opened_lag1  + gini_lag1 + (1 | countrycode), data = df_anls, family=poisson)
-found.poi5 <- glmer(nbr_opened ~ nbr_opened_lag1  + log(gdp_pcap_lag1) + gini_lag1 + (1 | countrycode), data = df_anls, family=poisson)
-
-
-summary(found.poi)
-screenreg(list(found.poi1,found.poi2,found.poi3,found.poi4, found.poi5))
-
-
-## glmmPQL pretty much the same results
-found.poi1b <- glmmPQL(nbr_opened ~ nbr_opened_lag1, random = list(countrycode = ~1), data = df_anls, family=poisson)
-
-found.poi5b <- glmmPQL(nbr_opened ~ nbr_opened_lag1  + log(gdp_pcap_lag1) + gini_lag1, random = list(countrycode = ~1), data = df_anls, family=poisson)
-
-
-screenreg(list(found.poi1, found.poi1b, found.poi5, found.poi5b))
-
 
 
 ## *** pglm
@@ -872,7 +788,8 @@ library(plm)
 
 library(pglm)
 
-found.pglm.poi1 <- pglm(nbr_opened ~ nbr_opened_lag1, data = df_anls,
+found.pglm.poi1 <- pglm(nbr_opened ~ nbr_opened_lag1,
+                        data = na.omit(df_anls[,c("countrycode", "nbr_opened", "nbr_opened_lag1")]),
                         family=poisson,
                         model = "within",
                         index = "countrycode")
