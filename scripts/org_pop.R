@@ -371,25 +371,32 @@ score_agg(df_agg8)
 
 ## *** evaluating coverage
 
+cvrg_evaluation <- function(vrbls, wvlen_start, wvlen_end){
+    ## vrbls <- c("gini", "gdp_pcapk", "nbr_opened_cum")
+    cbns <- do.call("c", lapply(seq_along(vrbls), function(i) combn(vrbls, i, FUN = list)))
+
+    ## cfgs <- expand.grid(cbns, seq(1,10))
+    cfgs <- expand.grid(cbns, seq(wvlen_start,wvlen_end))
+    names(cfgs) <- c("vrbls", "wavelength")
+
+    cover_res <- apply(cfgs, 1, function(x) score_agg(agg_sys(x$wavelength, x$vrbls)))
+    res_df <- do.call(rbind, cover_res)
+
+    ## for some reason necessary to unlist the columns 
+    res_df2 <- as.data.frame(apply(res_df, 2, unlist))
+
+    names(res_df2) <- c("wave_length", "prop. spells covered", "prop. PM founding covered", "vrbls")
+
+
+    res_melt <- melt(res_df2, id=c("wave_length", "vrbls"))
+    res_melt$value <- as.numeric(res_melt$value)
+    res_melt$wave_length <- as.numeric(res_melt$wave_length)
+
+    return(res_melt)
+}
 
 vrbls <- c("gini", "gdp_pcapk", "nbr_opened_cum")
-cbns <- do.call("c", lapply(seq_along(vrbls), function(i) combn(vrbls, i, FUN = list)))
-
-cfgs <- expand.grid(cbns, seq(1,10))
-names(cfgs) <- c("vrbls", "wavelength")
-
-cover_res <- apply(cfgs, 1, function(x) score_agg(agg_sys(x$wavelength, x$vrbls)))
-res_df <- do.call(rbind, cover_res)
-
-## for some reason necessary to unlist the columns 
-res_df2 <- as.data.frame(apply(res_df, 2, unlist))
-
-names(res_df2) <- c("wave_length", "prop. spells covered", "prop. PM founding covered", "vrbls")
-
-
-res_melt <- melt(res_df2, id=c("wave_length", "vrbls"))
-res_melt$value <- as.numeric(res_melt$value)
-res_melt$wave_length <- as.numeric(res_melt$wave_length)
+res_melt <- cvrg_evaluation(vrbls, 1, 10)
 
 pdf(paste(FIG_DIR,"completeness.pdf", sep = ""), height = 2.5, width = 5)
 
@@ -421,8 +428,8 @@ for (varx in c("gdp_pcap", "gdp_pcapk", "gini", "nbr_opened")){
     df_anls <- df_anls[,-which(names(df_anls) %in% c("var_to_lag", "var_lagged"))]
     }
 
+filter(df_anls[,c("countrycode", "year", "nbr_opened", "nbr_opened_lag1")], countrycode == "USA")
 
-stop("meeeeeeee")
 
 ## ** negative binomial
 
@@ -529,20 +536,17 @@ df_lag4 <- df_agg4$df
 for (varx in c("gdp_pcapk", "gini", "nbr_opened")){
     lag_name = paste(varx, "_lag1", sep = "")
     ## eval(parse("lag_name"))
-    ## df_lag4$var_to_lag <- df_lag4[,c(varx)]
-    df_lag4$var_to_lag <- unlist(df_lag4[,varx])
+    df_lag4$var_to_lag <- df_lag4[,c(varx)]
+    ## df_lag4$var_to_lag <- unlist(df_lag4[,varx])
 
     df_lag4[,"var_lagged"] <- mutate(group_by(df_lag4, countrycode), var_lagged = lag(var_to_lag))[,"var_lagged"]
     df_lag4[,lag_name] <- df_lag4$var_lagged
     df_lag4 <- df_lag4[,-which(names(df_lag4) %in% c("var_to_lag", "var_lagged"))]
 }
 
-group_by(df_lag4, countrycode) %>% mutate(var_lagged = lag(var_to_lag))
-[,"var_lagged"]
+filter(df_lag4, countrycode=="USA")[,c("nbr_opened", "nbr_opened_lag1", "gini", "gini_lag1", "gdp_pcapk", "gdp_pcapk_lag1")]
 
-stop("lag me")
 
-filter(df_lag4, countrycode == "USA")
 
 print("lag4 1")
 found.nb_fe <- glmer.nb(nbr_opened ~ (1 | countrycode), data = df_lag4)
