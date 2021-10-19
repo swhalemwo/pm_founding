@@ -8,6 +8,9 @@ library(texreg)
 library(ggplot2)
 library(countrycode)
 
+options(show.error.messages = TRUE)
+options(show.error.locations = TRUE)
+
 '%!in%' <- function(x,y)!('%in%'(x,y))
 
 df <- read_excel("/home/johannes/Dropbox/phd/papers/org_pop/data/Private museum database.xlsx")
@@ -47,13 +50,6 @@ STARTING_YEAR <- 1985
 
 ## ** custom funcs
 
-agger <- function(varx, dfx){
-    ## aggregate varx in df_anls by wv + countrycode
-    ## dfx$agg_var <- as.numeric(unlist(dfx[,c(varx)]))
-    dfx$agg_var <- as.numeric(unlist(dfx[,c(varx)]))
-    df_aggx <- aggregate(agg_var ~ wv + countrycode, dfx, mean)
-    df_aggx[,varx] <- df_aggx$agg_var
-    return(as_tibble(df_aggx[,c("countrycode", "wv", varx)]))}
 
 
 
@@ -65,8 +61,6 @@ lm.beta.lmer <- function(mod) {
    sd.y <- sd(getME(mod,"y"))
    b*sd.x/sd.y
 }
-
-
 
 
 ## ** read in some wb gdp data for basic testing
@@ -228,7 +222,9 @@ df_anls$gdp_pcapk <- df_anls$gdp_pcap/1000
 ##       by.y = c("countrycode"))
 ## x[which(x$V1 != x$country),]
 
-
+## cumulative number of opened
+df_anls$nbr_opened_cum <- ave(df_anls$nbr_opened, df_anls$countrycode, FUN = cumsum)
+df_anls$nbr_opened_cum_sqrd <- (df_anls$nbr_opened_cum^2)/100
 
 ## somehow gdp_pcap stuff gets deleted
 ## multi_inner$gdp_pcap has 514 NAs
@@ -238,115 +234,6 @@ df_anls$gdp_pcapk <- df_anls$gdp_pcap/1000
 ## lag gdp by a year, also number of openings for good measure, 
 
 
-
-
-
-
-## ** test different kinds of aggregation
-
-## wave_length <- 4
-## wv_ctr <- 0
-## wv_nbr <- 1
-
-## df_anls$wv <- 0
-
-## ## label the waves based on wavelength, not super elegant but works
-
-## for (yearx in unique(df_anls$year)){
-##     wv_ctr <- wv_ctr + 1
-##     print(c(wv_ctr, wv_nbr))
-##     df_anls[which(df_anls$year == yearx),"wv"] <- wv_nbr
-##     if (wv_ctr == wave_length){
-##         wv_ctr <- 0
-##         wv_nbr <- wv_nbr + 1}
-##     }
-
-
-
-## merge test start
-## df_agg_test <- as_tibble(cbind(c(1,1,1,2,2,2,3,3,3), c(NA,NA,1,NA,2,3,NA,NA,NA)))
-## names(df_agg_test) <- c("group", "value")
-## df_agg_test$value[which(is.na(df_agg_test$value))] <- "NA"
-## aggregate(value ~ group, df_agg_test, mean)
-
-## ## can't get NAs into the aggregation if there's no non-NA value 
-## ## probably have to aggregate separately with na.omit, and then merge back to overall df
-
-
-## df_agg_gini <- as_tibble(aggregate(gini ~ countrycode + wv, df_anls, mean, na.action = na.omit))
-
-## ## make some arbitrary aggregation to merge other aggregations back to
-## df_agg_gini2 <- as_tibble(merge(df_agg_cnts, df_agg_gini, by=c('countrycode', 'wv'), all.x = TRUE))
-
-
-## df_agg_pcap <- as_tibble(aggregate(gdp_pcap ~ countrycode + wv, df_anls, mean))
-
-
-## merge test end 
-
-
-## ahh, what happened was that since I aggregated the variables in the same function they all got down to gini level
-## yeah even though stuff is not deleted, it still means that all entries are fully complete -> get reduced down to lowest value
-
-## 
-
-
-
-## ## use reduce to join the means together 
-## df_agg_means <- as_tibble(Reduce(
-##     function(x,y, ...) merge(x,y, all = TRUE),
-##     lapply(c("gini", "gdp_pcap", "gdp_pcapk"), agger, )
-## ))
-
-
-## df_agg_cnts <- as_tibble(aggregate(nbr_opened ~ countrycode + wv, df_anls, sum))
-
-## ## ggplot(df_agg_means, aes(x=wv, y=gini, group = countrycode, color = countrycode)) +
-## ##     geom_line()
-
-## df_agg <- as_tibble(merge(df_agg_cnts, df_agg_means, by=c("countrycode", "wv"), all.x = T))
-
-
-## ## checking how many museums are covered 
-
-## ## not removing anything: 449
-## sum(df_anls$nbr_opened)
-
-## ## whenever I do gini with 5 years, I only have 260 or 263?? opening events
-## sum(na.omit(df_anls[,c("gini","nbr_opened")])$nbr_opened)
-
-## ## filtering for gdp_pcap: still 388
-## sum(na.omit(df_anls[,c("gdp_pcap","nbr_opened")])$nbr_opened)
-
-## ## even aggregating gini to 5 years: only get to 345,
-## sum(na.omit(df_agg[,c("gini","nbr_opened")])$nbr_opened)
-## ## with 2: 298
-## ## with 3: 327
-## ## with 5: 345
-## ## with 8 to 345
-## ## with 10 to 364
-## sum(na.omit(df_agg[,c("gdp_pcap","nbr_opened")])$nbr_opened)
-## ## pcap with 10: 388
-
-## ## where the fuck are the museums founded for which I don't have data
-
-## ## ggplot(df_anls, aes(x=year, y=countrycode, size = nbr_opened)) +
-## ##     geom_point()
-
-## df_agg$pm_preds_na <- 0
-## df_agg[which(is.na(df_agg$gini)),]$pm_preds_na <- 1
-
-
-
-## ggplot(df_agg, aes(x=factor(wv), y=countrycode, size = nbr_opened, color = factor(pm_preds_na))) +
-##     geom_point()
-
-## ## seems especially Korea, Russia -> country specific, not time-period effect
-## ## for wave_length 2: also germany, india, japan
-## mis <- aggregate(pm_preds_na ~ countrycode, df_agg[which(df_agg$nbr_opened > 0),], sum)
-## mis[order(mis$pm_preds_na),]
-
-## ## gdp_pcap seem to be mostly korea
 
 ## ** checking NAs
 
@@ -360,6 +247,30 @@ unique(df_open$countrycode)[which(unique(df_open$countrycode) %!in% (unique(df_g
 ## taiwan not separate country in WB.. just 1 PM tho, so shouldn't be big impact
 
 ## ** aggregating systematically
+
+## specify variable-specific aggregation function 
+vrbl_agg_func_dict <- list(gini=mean,
+                           gdp_pcap=mean,
+                           gdp_pcapk = mean, 
+                           nbr_opened = sum,
+                           nbr_opened_cum = max,
+                           nbr_opened_cum_sqrd = max
+                           )
+
+
+agger <- function(varx, dfx){
+
+    ## aggregate varx in df_anls by wv + countrycode, use aggregation function specified in vrbl_agg_func_dict
+    ## dfx$agg_var <- as.numeric(unlist(dfx[,c(varx)]))
+    funx <- vrbl_agg_func_dict[varx][[1]]
+    dfx$agg_var <- as.numeric(unlist(dfx[,c(varx)]))
+    ## df_aggx <- aggregate(agg_var ~ wv + countrycode, dfx, mean) ## old version with only mean 
+    df_aggx <- aggregate(agg_var ~ wv + countrycode, dfx, FUN = funx)
+    df_aggx[,varx] <- df_aggx$agg_var
+    return(as_tibble(df_aggx[,c("countrycode", "wv", varx)]))}
+
+
+## agger("nbr_opened_cum", filter(dfx, countrycode == "USA"))
 
 
 agg_sys <- function(wave_lengthx, vrbls){
@@ -389,19 +300,24 @@ agg_sys <- function(wave_lengthx, vrbls){
             wv_nbr <- wv_nbr + 1}
     }
 
-    dfx_agg_means <- as_tibble(Reduce(
+    ## add nbr_opened by default 
+    vrbls_all <- c("nbr_opened", vrbls)
+
+    ## aggregate the variables duh 
+    dfx_agg_vrbls <- as_tibble(Reduce(
         function(x,y, ...) merge(x,y, all = TRUE),
         ## lapply(c("gini", "gdp_pcap", "gdp_pcapk"), agger, dfx=dfx)
-        lapply(vrbls, agger, dfx=dfx)
+        lapply(vrbls_all, agger, dfx=dfx)
     ))
 
-    dfx_agg_cnts <- as_tibble(aggregate(nbr_opened ~ countrycode + wv, dfx, sum))
+    ## dfx_agg_cnts <- as_tibble(aggregate(nbr_opened ~ countrycode + wv, dfx, sum))
 
     dfx_agg_names <- dfx %>% group_by(countrycode, wv) %>% summarise(name = list(unlist(name)))
 
     dfx_agg <- as_tibble(Reduce(
         function(x,y, ...) merge(x,y,all.x=TRUE),
-        list(dfx_agg_means, dfx_agg_cnts, dfx_agg_names)))
+        ## list(dfx_agg_means, dfx_agg_cnts, dfx_agg_names)))
+        list(dfx_agg_vrbls, dfx_agg_names)))
         
     ## dfx_agg <- as_tibble(merge(dfx_agg_cnts, dfx_agg_means, by=c("countrycode", "wv"), all.x = T))
 
@@ -409,17 +325,21 @@ agg_sys <- function(wave_lengthx, vrbls){
     return(list(df=dfx_agg,
                 vrbls=vrbls,
                 nbr_pm_ttl = nbr_pm_ttl,
-                dfx_agg_cnts = dfx_agg_cnts,
                 wave_lengthx = wave_lengthx,
                 dfx_agg_names = dfx_agg_names,
-                dfx_agg_means = dfx_agg_means
+                dfx_agg_vrbls = dfx_agg_vrbls
                 ))
     }
 
 
-df_agg2 <- agg_sys(2, c("gini", "gdp_pcapk"))
+
+
+df_agg2 <- agg_sys(2, c("gdp_pcapk", "gini"))
+filter(df_agg2$dfx_agg_vrbls, countrycode == "USA")
 df_agg4 <- agg_sys(4, c("gini", "gdp_pcapk"))
 df_agg8 <- agg_sys(8, c("gini", "gdp_pcapk"))
+
+
 
 
 
@@ -433,7 +353,8 @@ score_agg <- function(agg_obj){
     
     dfx_agg <- na.omit(agg_obj$df)
     ## percent of entities covered
-    pct_ent_cvrd <- nrow(dfx_agg)/nrow(agg_obj$dfx_agg_cnts)
+    pct_ent_cvrd <- nrow(dfx_agg)/nrow(agg_obj$dfx_agg_vrbls)
+    ## pct_ent_cvrd <- nrow(dfx_agg)/nrow(agg_obj$dfx_agg_cnts)
     pct_pms_cvrd <- sum(dfx_agg$nbr_opened)/agg_obj$nbr_pm_ttl
 
     return(list(wave_lengthx = agg_obj$wave_lengthx,
@@ -451,7 +372,7 @@ score_agg(df_agg8)
 ## *** evaluating coverage
 
 
-vrbls <- c("gini", "gdp_pcapk")
+vrbls <- c("gini", "gdp_pcapk", "nbr_opened_cum")
 cbns <- do.call("c", lapply(seq_along(vrbls), function(i) combn(vrbls, i, FUN = list)))
 
 cfgs <- expand.grid(cbns, seq(1,10))
@@ -473,10 +394,12 @@ res_melt$wave_length <- as.numeric(res_melt$wave_length)
 pdf(paste(FIG_DIR,"completeness.pdf", sep = ""), height = 2.5, width = 5)
 
 ggplot(res_melt, aes(x=factor(wave_length), y=value, group=interaction(variable, vrbls))) +
-    geom_line(size=2, mapping = aes(linetype = variable, color = vrbls)) +
+    geom_line(size=2, position=position_jitter(w=0.15, h=0.015), mapping = aes(linetype = variable, color = vrbls)) +
     labs(x = "wave length", y="coverage") 
 
 dev.off()
+
+
 
 ## hmm for some reason coverage goes down on higher values?
 ## could make sense for some differences, but multiples of lower values should be at least as complete as the lower values themselves, e.g. 8 should be as least as complete as 4
@@ -499,7 +422,7 @@ for (varx in c("gdp_pcap", "gdp_pcapk", "gini", "nbr_opened")){
     }
 
 
-
+stop("meeeeeeee")
 
 ## ** negative binomial
 
@@ -560,10 +483,18 @@ for (varx in c("gdp_pcap", "gdp_pcapk", "gini", "nbr_opened")){
 
 
 ## **** full df
+
+## have to divide by 100 otherwise R glmer.nb complains
+
+
 print("nb df_anls 1")
 found.nb_fe_all <- glmer.nb(nbr_opened ~ (1 | countrycode), data = df_anls)
 print("nb df_anls 2")
 found.nb_nbr_all <- glmer.nb(nbr_opened ~ nbr_opened_lag1 + (1 | countrycode), data = df_anls)
+found.nb_cum_all <- glmer.nb(nbr_opened ~ nbr_opened_cum + (1 | countrycode),  data = df_anls)
+found.nb_cum_all_sqrd <- glmer.nb(nbr_opened ~ nbr_opened_cum + nbr_opened_cum_sqrd + (1 | countrycode),  data = df_anls)
+found.nb_org_pop <- glmer.nb(nbr_opened ~ nbr_opened_lag1 + nbr_opened_cum + nbr_opened_cum_sqrd + (1 | countrycode),  data = df_anls)
+
 print("nb df_anls 3")
 found.nb_gdp_all <- glmer.nb(nbr_opened ~  gdp_pcapk_lag1 + (1 | countrycode), data = df_anls)
 print("nb df_anls 4")
@@ -571,6 +502,8 @@ found.nb_gini_all <- glmer.nb(nbr_opened ~ gini_lag1  + (1 | countrycode), data 
 print("nb df_anls 5")
 found.nb_all_all <- glmer.nb(nbr_opened ~ nbr_opened_lag1  + gdp_pcapk_lag1 + gini_lag1 + (1 | countrycode), data = df_anls)
 
+screenreg(list(found.nb_nbr_all, found.nb_cum_all, found.nb_cum_all_sqrd, found.nb_org_pop))
+stargazer(list(found.nb_nbr_all, found.nb_cum_all, found.nb_cum_all_sqrd, found.nb_org_pop), type = "text")
 
 found.nb_all_all_std <- createTexreg(coef.names = names(fixef(found.nb_all_all))[2:length(names(fixef(found.nb_all_all)))],
                                      coef = lm.beta.lmer(found.nb_all_all))
@@ -596,11 +529,20 @@ df_lag4 <- df_agg4$df
 for (varx in c("gdp_pcapk", "gini", "nbr_opened")){
     lag_name = paste(varx, "_lag1", sep = "")
     ## eval(parse("lag_name"))
-    df_lag4$var_to_lag <- df_lag4[,c(varx)]
+    ## df_lag4$var_to_lag <- df_lag4[,c(varx)]
+    df_lag4$var_to_lag <- unlist(df_lag4[,varx])
+
     df_lag4[,"var_lagged"] <- mutate(group_by(df_lag4, countrycode), var_lagged = lag(var_to_lag))[,"var_lagged"]
     df_lag4[,lag_name] <- df_lag4$var_lagged
     df_lag4 <- df_lag4[,-which(names(df_lag4) %in% c("var_to_lag", "var_lagged"))]
-    }
+}
+
+group_by(df_lag4, countrycode) %>% mutate(var_lagged = lag(var_to_lag))
+[,"var_lagged"]
+
+stop("lag me")
+
+filter(df_lag4, countrycode == "USA")
 
 print("lag4 1")
 found.nb_fe <- glmer.nb(nbr_opened ~ (1 | countrycode), data = df_lag4)
@@ -743,6 +685,13 @@ dev.off()
 stop("plots and tables done")
 
 
+
+
+
+
+## ** robust SEs
+## https://stackoverflow.com/questions/26412581/robust-standard-errors-for-mixed-effects-models-in-lme4-package-of-r
+
 ## interpretation: the more points are above 0, the stronger the effect of that variable? 
 
 ## wow Italian gdp per capita, wtf happened
@@ -837,4 +786,113 @@ screenreg(list(found.pglm.poi1,found.poi1,
 ## only aggreement in significance in gdp_pcap_lag1 and log(gdp_pcap_lag1)
 
 
+
+
+
+## * scrap
+## ** test different kinds of aggregation
+
+## wave_length <- 4
+## wv_ctr <- 0
+## wv_nbr <- 1
+
+## df_anls$wv <- 0
+
+## ## label the waves based on wavelength, not super elegant but works
+
+## for (yearx in unique(df_anls$year)){
+##     wv_ctr <- wv_ctr + 1
+##     print(c(wv_ctr, wv_nbr))
+##     df_anls[which(df_anls$year == yearx),"wv"] <- wv_nbr
+##     if (wv_ctr == wave_length){
+##         wv_ctr <- 0
+##         wv_nbr <- wv_nbr + 1}
+##     }
+
+
+
+## merge test start
+## df_agg_test <- as_tibble(cbind(c(1,1,1,2,2,2,3,3,3), c(NA,NA,1,NA,2,3,NA,NA,NA)))
+## names(df_agg_test) <- c("group", "value")
+## df_agg_test$value[which(is.na(df_agg_test$value))] <- "NA"
+## aggregate(value ~ group, df_agg_test, mean)
+
+## ## can't get NAs into the aggregation if there's no non-NA value 
+## ## probably have to aggregate separately with na.omit, and then merge back to overall df
+
+
+## df_agg_gini <- as_tibble(aggregate(gini ~ countrycode + wv, df_anls, mean, na.action = na.omit))
+
+## ## make some arbitrary aggregation to merge other aggregations back to
+## df_agg_gini2 <- as_tibble(merge(df_agg_cnts, df_agg_gini, by=c('countrycode', 'wv'), all.x = TRUE))
+
+
+## df_agg_pcap <- as_tibble(aggregate(gdp_pcap ~ countrycode + wv, df_anls, mean))
+
+
+## merge test end 
+
+
+## ahh, what happened was that since I aggregated the variables in the same function they all got down to gini level
+## yeah even though stuff is not deleted, it still means that all entries are fully complete -> get reduced down to lowest value
+
+## 
+
+
+
+## ## use reduce to join the means together 
+## df_agg_means <- as_tibble(Reduce(
+##     function(x,y, ...) merge(x,y, all = TRUE),
+##     lapply(c("gini", "gdp_pcap", "gdp_pcapk"), agger, )
+## ))
+
+
+## df_agg_cnts <- as_tibble(aggregate(nbr_opened ~ countrycode + wv, df_anls, sum))
+
+## ## ggplot(df_agg_means, aes(x=wv, y=gini, group = countrycode, color = countrycode)) +
+## ##     geom_line()
+
+## df_agg <- as_tibble(merge(df_agg_cnts, df_agg_means, by=c("countrycode", "wv"), all.x = T))
+
+
+## ## checking how many museums are covered 
+
+## ## not removing anything: 449
+## sum(df_anls$nbr_opened)
+
+## ## whenever I do gini with 5 years, I only have 260 or 263?? opening events
+## sum(na.omit(df_anls[,c("gini","nbr_opened")])$nbr_opened)
+
+## ## filtering for gdp_pcap: still 388
+## sum(na.omit(df_anls[,c("gdp_pcap","nbr_opened")])$nbr_opened)
+
+## ## even aggregating gini to 5 years: only get to 345,
+## sum(na.omit(df_agg[,c("gini","nbr_opened")])$nbr_opened)
+## ## with 2: 298
+## ## with 3: 327
+## ## with 5: 345
+## ## with 8 to 345
+## ## with 10 to 364
+## sum(na.omit(df_agg[,c("gdp_pcap","nbr_opened")])$nbr_opened)
+## ## pcap with 10: 388
+
+## ## where the fuck are the museums founded for which I don't have data
+
+## ## ggplot(df_anls, aes(x=year, y=countrycode, size = nbr_opened)) +
+## ##     geom_point()
+
+## df_agg$pm_preds_na <- 0
+## df_agg[which(is.na(df_agg$gini)),]$pm_preds_na <- 1
+
+
+
+## ggplot(df_agg, aes(x=factor(wv), y=countrycode, size = nbr_opened, color = factor(pm_preds_na))) +
+##     geom_point()
+
+## ## seems especially Korea, Russia -> country specific, not time-period effect
+## ## for wave_length 2: also germany, india, japan
+## mis <- aggregate(pm_preds_na ~ countrycode, df_agg[which(df_agg$nbr_opened > 0),], sum)
+## mis[order(mis$pm_preds_na),]
+
+## ## gdp_pcap seem to be mostly korea
 
