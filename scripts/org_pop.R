@@ -554,6 +554,8 @@ filter(df_lag4, countrycode=="USA")[,c("nbr_opened", "nbr_opened_lag1", "gini", 
 
 
 
+
+
 print("lag4 1")
 found.nb_fe <- glmer.nb(nbr_opened ~ (1 | countrycode), data = df_lag4)
 print("lag4 2")
@@ -579,6 +581,17 @@ texreg(model_list,
        label = "nb_agg4",
        caption = "Negative Binomial, aggregated to 4 year intervals"
        )
+
+stop("models done")
+
+## *** parallelization test 
+
+## https://nceas.github.io/oss-lessons/parallel-computing-in-r/parallel-computing-in-r.html
+reg_obj <- nbr_opened ~ nbr_opened_lag1 + (1 | countrycode)
+reg_objs <- rep(list(reg_obj), 4)
+
+library(parallel)
+res_objs <- mclapply(reg_objs, glmer.nb, data = df_lag4, mc.cores = 4)
 
 
 
