@@ -7,6 +7,9 @@ library(lme4)
 library(texreg)
 library(ggplot2)
 library(countrycode)
+library(stargazer)
+library(gridExtra)
+
 
 options(show.error.messages = TRUE)
 options(show.error.locations = TRUE)
@@ -49,8 +52,6 @@ TABLE_DIR <- "/home/johannes/Dropbox/phd/papers/org_pop/tables/"
 STARTING_YEAR <- 1985
 
 ## ** custom funcs
-
-
 
 
 ## https://stats.stackexchange.com/questions/123366/lmer-standardized-regression-coefficients
@@ -336,7 +337,7 @@ agg_sys <- function(wave_lengthx, vrbls){
 
 df_agg2 <- agg_sys(2, c("gdp_pcapk", "gini"))
 filter(df_agg2$dfx_agg_vrbls, countrycode == "USA")
-df_agg4 <- agg_sys(4, c("gini", "gdp_pcapk"))
+df_agg4 <- agg_sys(4, c("gini", "gdp_pcap", "gdp_pcapk"))
 df_agg8 <- agg_sys(8, c("gini", "gdp_pcapk"))
 
 
@@ -419,16 +420,30 @@ dev.off()
 ## ** add lagged values
 
 ## overly messy way of lagging variables that creates intermediary vars because mutate/lag doesn't accept variablies as input
-for (varx in c("gdp_pcap", "gdp_pcapk", "gini", "nbr_opened")){
-    lag_name = paste(varx, "_lag1", sep = "")
-    ## eval(parse("lag_name"))
-    df_anls$var_to_lag <- df_anls[,c(varx)]
-    df_anls[,"var_lagged"] <- mutate(group_by(df_anls, countrycode), var_lagged = lag(var_to_lag))[,"var_lagged"]
-    df_anls[,lag_name] <- df_anls$var_lagged
-    df_anls <- df_anls[,-which(names(df_anls) %in% c("var_to_lag", "var_lagged"))]
-    }
 
-filter(df_anls[,c("countrycode", "year", "nbr_opened", "nbr_opened_lag1")], countrycode == "USA")
+lagger <- function(dfx, vrbls_to_lag){
+    for (varx in vrbls_to_lag){
+        lag_name = paste(varx, "_lag1", sep = "")
+        ## eval(parse("lag_name"))
+        ## df_anls$var_to_lag <- df_anls[,c(varx)]
+        ## df_anls[,"var_lagged"] <- mutate(group_by(df_anls, countrycode), var_lagged = lag(var_to_lag))[,"var_lagged"]
+        ## df_anls[,lag_name] <- df_anls$var_lagged
+        ## df_anls <- df_anls[,-which(names(df_anls) %in% c("var_to_lag", "var_lagged"))]
+
+        dfx[,"var_to_lag"] <- dfx[,c(varx)]
+        dfx[,"var_lagged"] <- mutate(group_by(dfx, countrycode), var_lagged = lag(var_to_lag))[,"var_lagged"]
+        dfx[,lag_name] <- dfx[,"var_lagged"]
+
+        dfx <- dfx[,-which(names(dfx) %in% c("var_to_lag", "var_lagged"))]
+    }
+    return(dfx)
+}
+
+vrbls_to_lag <- c("gdp_pcap", "gdp_pcapk", "gini", "nbr_opened")
+
+df_anls <- lagger(df_anls, vrbls_to_lag)
+
+filter(df_anls[,c("countrycode", "year", "nbr_opened", "nbr_opened_lag1", "gini", "gini_lag1")], countrycode == "USA")
 
 
 ## ** negative binomial
@@ -533,16 +548,7 @@ texreg(model_list_all,
 ## **** aggregate 4
 
 df_lag4 <- df_agg4$df
-for (varx in c("gdp_pcapk", "gini", "nbr_opened")){
-    lag_name = paste(varx, "_lag1", sep = "")
-    ## eval(parse("lag_name"))
-    df_lag4$var_to_lag <- df_lag4[,c(varx)]
-    ## df_lag4$var_to_lag <- unlist(df_lag4[,varx])
-
-    df_lag4[,"var_lagged"] <- mutate(group_by(df_lag4, countrycode), var_lagged = lag(var_to_lag))[,"var_lagged"]
-    df_lag4[,lag_name] <- df_lag4$var_lagged
-    df_lag4 <- df_lag4[,-which(names(df_lag4) %in% c("var_to_lag", "var_lagged"))]
-}
+df_lag4 <- lagger(df_lag4, vrbls_to_lag)
 
 filter(df_lag4, countrycode=="USA")[,c("nbr_opened", "nbr_opened_lag1", "gini", "gini_lag1", "gdp_pcapk", "gdp_pcapk_lag1")]
 
@@ -658,10 +664,6 @@ df_anls_vis$gdp_pcapk_demeaned <- df_anls_vis$gdp_pcapk - df_anls_vis$gdp_pcapk_
 
 ## sum(df_anls_vis[which(df_anls_vis$countrycode == "DEU"),]$gdp_pcapk_demeaned)
 
-library(ggplot2)
-
-
-library(gridExtra)
 
 
 plt1 <- ggplot(df_anls_vis, aes(x=year, y=gdp_pcapk_demeaned, group=countrycode, color = countrycode)) + 
