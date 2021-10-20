@@ -379,8 +379,10 @@ cvrg_evaluation <- function(vrbls, wvlen_start, wvlen_end){
     ## cfgs <- expand.grid(cbns, seq(1,10))
     cfgs <- expand.grid(cbns, seq(wvlen_start,wvlen_end))
     names(cfgs) <- c("vrbls", "wavelength")
+    cfg_list <- apply(cfgs, 1, c)
+    cover_res <- mclapply(cfg_list, function(x) score_agg(agg_sys(x$wavelength, x$vrbls)), mc.cores = 4)
 
-    cover_res <- apply(cfgs, 1, function(x) score_agg(agg_sys(x$wavelength, x$vrbls)))
+    ## cover_res <- apply(cfgs, 1, function(x) score_agg(agg_sys(x$wavelength, x$vrbls)))
     res_df <- do.call(rbind, cover_res)
 
     ## for some reason necessary to unlist the columns 
@@ -397,12 +399,15 @@ cvrg_evaluation <- function(vrbls, wvlen_start, wvlen_end){
 }
 
 vrbls <- c("gini", "gdp_pcapk", "nbr_opened_cum")
-res_melt <- cvrg_evaluation(vrbls, 1, 10)
+wvlen_start <- 1
+wvlen_end <- 10
+res_melt <- cvrg_evaluation(vrbls, wvlen_start, wvlen_end)
 
 pdf(paste(FIG_DIR,"completeness.pdf", sep = ""), height = 2.5, width = 5)
 
 ggplot(res_melt, aes(x=factor(wave_length), y=value, group=interaction(variable, vrbls))) +
-    geom_line(size=2, position=position_jitter(w=0.15, h=0.015), mapping = aes(linetype = variable, color = vrbls)) +
+    geom_line(size=2, alpha = 0.6, position=position_jitter(w=0.15, h=0.015),
+              mapping = aes(linetype = variable, color = vrbls)) +
     labs(x = "wave length", y="coverage") 
 
 dev.off()
