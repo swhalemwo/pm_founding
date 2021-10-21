@@ -519,15 +519,21 @@ regger.nb <- function(list_of_models, data){
     return(reg_res)
 }
 
+df_anls$gdp_pcapd <- df_anls$gdp_pcap/100000
+
 reg_res <- regger.nb(list(
     nbr_opened ~ (1 | countrycode),
     nbr_opened ~ nbr_opened_cum + (1 | countrycode),
+    nbr_opened ~ gdp_pcapd + (1 | countrycode),
     nbr_opened ~ nbr_opened_cum + nbr_opened_cum_sqrd + (1 | countrycode),
     nbr_opened ~ nbr_opened_lag1 + gini_lag1 + (1 | countrycode),
     nbr_opened ~ nbr_opened_lag1 + nbr_opened_cum + nbr_opened_cum_sqrd + (1 | countrycode)),
     df_anls)
 
 
+
+x <- glmer.nb(nbr_opened ~ gdp_pcapd + (1 | countrycode), data = df_anls)
+screenreg(x)
 
 screenreg(reg_res)
 mod <- reg_res[[1]]
@@ -561,16 +567,29 @@ add_beta_modelsummary <- function(mod){
 mods_stds <- mclapply(reg_res, add_beta_modelsummary)
 coef_map <- c("(Intercept)", "nbr_opened_cum", "nbr_opened_cum_sqrd", "gini_lag1", "nbr_opened_lag1",
               "SD (Intercept)", "SD (Observations)")
-modelsummary(mods_stds, 
+
+modelsummary(mods_stds[2:5], 
              estimate = "{estimate}[{statistic}]{stars}",
              coef_map = coef_map,
              output = "markdown")
 
 
+## **** visualization
+library(jtools)
+library(ggstance)
+library(broom)
+library(broom.mixed)
+
+plot_summs(reg_res[c(2,4:6)], exp=F)
+plot_coefs(reg_res[3:6], facet.rows = 5)
+
+
+## **** manual regression 
+
 
 
 stop("functionalized models done")
-
+## clean up the non-functionalized regressions below when I actually do them 
 
 print("nb df_anls 1")
 found.nb_fe_all <- glmer.nb(nbr_opened ~ (1 | countrycode), data = df_anls)
