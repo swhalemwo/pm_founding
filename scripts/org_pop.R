@@ -51,6 +51,8 @@ df$countrycode <- recode(df$country, "United Kingdom" = "GBR", "Spain" = "ESP", 
 FIG_DIR <- "/home/johannes/Dropbox/phd/papers/org_pop/figures/"
 TABLE_DIR <- "/home/johannes/Dropbox/phd/papers/org_pop/tables/"
 STARTING_YEAR <- 1985
+WID_DIR = "/home/johannes/Dropbox/phd/papers/org_pop/data/wid/"
+WID_FILES <- list.files(WID_DIR)
 
 ## ** custom funcs
 
@@ -136,13 +138,70 @@ aggregate(gini ~ country, data = df_wb_gini_molt, function(x){sum(is.na(x))}, na
 
 ## *** WID
 ## country codes
-## library(countrycode)
+library(countrycode)
 
-## countrycodes2c <- countrycode(unique(df_country_years$countrycode), "iso3c", "iso2c")
-## for (code in countrycodes2c){
-##     print(code)
-##     cry_data <- as_tibble(read.csv(paste("/home/johannes/Dropbox/phd/papers/org_pop/data/wid/WID_data_", code, ".csv", sep=""), sep=";"))
-##     }
+countrycodes2c <- na.omit(countrycode(unique(df_gdp_pcap_molt$countrycode), "iso3c", "iso2c"))
+
+con <- DBI::dbConnect(RClickhouse::clickhouse(), host="localhost", db = "org_pop")
+
+countrycodes3c <- na.omit(unique(df_gdp_pcap_molt$countrycode))
+
+## issues with CHI and XKX
+## need to check what they actually refer in WB data
+## then probably write some manual exceptions so that they get correctly translated from WB to WDI
+## also need to check whether there are other mismatches between iso2c(wb) and WDI -> paste WDI (https://wid.world/codes-dictionary/#country-code)
+
+
+for (code in ){
+    cry_code2c <- countrycode(code, "iso3c", "iso2c")
+    print(code)
+    filename <- paste0("WID_data_", code, ".csv")
+
+    if (filename %in% WID_files){
+
+        cry_data <- as_tibble(read.csv(paste(WID_DIR, "WID_data_", code, ".csv", sep=""), sep=";"))
+
+        cry_data$varx <- substring(cry_data$variable, 2, 6)
+        cry_data$first_letter <- substring(cry_data$variable, 1,1)
+
+        ## only write schema with first table, otherwise append
+        if (code == "AW"){
+            DBI::dbWriteTable(con, "wdi", cry_data)
+        }
+        else {
+            if (code == "NA"){
+                cry_data$country <- "NA"
+                
+            DBI::dbWriteTable(con, "wdi", cry_data, append=TRUE)
+            
+        }
+    }
+}
+print("done")
+
+## cry_rel_vars_df <- filter(cry_data, varx == "labsh" | varx == "wealp" | varx == "wealg")
+## cry_dfs[[code]] <- cry_rel_vars_df
+
+
+## percentile table
+pctl_tbl <- table(cry_data$percentile)
+pctl_tbl[rev(order(pctl_tbl))]
+
+ggplot(filter(cry_data, varx=="wealg"), aes(x=year, y=value)) +
+    geom_line()
+
+library(RClickhouse)
+## should make new database
+
+
+dbDisconnect(con)
+## db_write_table(con,
+DBI::dbWriteTable(con, "wdi", cry_data, append=TRUE)
+
+dbListTables(con)
+
+
+
 
 ## variables wanted:
 ## - income inequality: top 10%
