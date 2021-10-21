@@ -9,12 +9,13 @@ library(ggplot2)
 library(countrycode)
 library(stargazer)
 library(gridExtra)
-
+library(parallel)
 
 options(show.error.messages = TRUE)
 options(show.error.locations = TRUE)
 
 '%!in%' <- function(x,y)!('%in%'(x,y))
+len <- length
 
 df <- read_excel("/home/johannes/Dropbox/phd/papers/org_pop/data/Private museum database.xlsx")
 ## removing header stuff 
@@ -226,13 +227,8 @@ df_anls$gdp_pcapk <- df_anls$gdp_pcap/1000
 ## cumulative number of opened
 df_anls$nbr_opened_cum <- ave(df_anls$nbr_opened, df_anls$countrycode, FUN = cumsum)
 df_anls$nbr_opened_cum_sqrd <- (df_anls$nbr_opened_cum^2)/100
+## have to divide by 100 otherwise R glmer.nb complains
 
-## somehow gdp_pcap stuff gets deleted
-## multi_inner$gdp_pcap has 514 NAs
-## df_anls$gdp_pcap has 365 huh
-
-
-## lag gdp by a year, also number of openings for good measure, 
 
 
 
@@ -506,12 +502,74 @@ filter(df_anls[,c("countrycode", "year", "nbr_opened", "nbr_opened_lag1", "gini"
 
 ## screenreg(list(found.pglm.nb1,found.pglm.nb2,found.pglm.nb3,found.pglm.nb4,found.pglm.nb5))
 
+
+
 ## *** glmer.nb
 
 
 ## **** full df
 
-## have to divide by 100 otherwise R glmer.nb complains
+
+library(docstring)
+ds <- docstring
+
+regger.nb <- function(list_of_models, data){
+    #' batch processing of mah negative binomial regression models
+    reg_res <- mclapply(list_of_models, glmer.nb, data = data, mc.cores = 6)
+    return(reg_res)
+}
+
+reg_res <- regger.nb(list(
+    nbr_opened ~ (1 | countrycode),
+    nbr_opened ~ nbr_opened_cum + (1 | countrycode),
+    nbr_opened ~ nbr_opened_cum + nbr_opened_cum_sqrd + (1 | countrycode),
+    nbr_opened ~ nbr_opened_lag1 + gini_lag1 + (1 | countrycode),
+    nbr_opened ~ nbr_opened_lag1 + nbr_opened_cum + nbr_opened_cum_sqrd + (1 | countrycode)),
+    df_anls)
+
+
+
+screenreg(reg_res)
+mod <- reg_res[[1]]
+
+screenreg(mod)
+
+add_beta_modelsummary <- function(mod){
+    #' add standardized effect to model in normal SE spot, use t/z stat
+    bs <- fixef(mod)
+    if (len(bs) > 2){
+        betas <- c(NA, lm.beta.lmer(mod))
+        names(betas) <- names(bs)
+
+    ## add some NA entries for "SD (Intercept)" and "SD (Observations)"
+        betas_padded <- c(betas, NA, NA)
+        names(betas_padded)[(len(betas_padded)-1):len(betas_padded)] <- c("SD (Intercept)", "SD (Observations)")
+    }
+    else {
+        betas_padded <- c(rep(NA, len(bs)), NA, NA)
+        names(betas_padded) <- c(names(bs), c("SD (Intercept)", "SD (Observations)"))
+    }
+    modsum_std <- modelsummary(mod,
+                               vcov = list(betas_padded),
+                               output = "modelsummary_list")
+
+    return(modsum_std)
+        
+}
+
+
+mods_stds <- mclapply(reg_res, add_beta_modelsummary)
+coef_map <- c("(Intercept)", "nbr_opened_cum", "nbr_opened_cum_sqrd", "gini_lag1", "nbr_opened_lag1",
+              "SD (Intercept)", "SD (Observations)")
+modelsummary(mods_stds, 
+             estimate = "{estimate}[{statistic}]{stars}",
+             coef_map = coef_map,
+             output = "markdown")
+
+
+
+
+stop("functionalized models done")
 
 
 print("nb df_anls 1")
@@ -589,14 +647,6 @@ texreg(model_list,
 
 stop("models done")
 
-## *** parallelization test 
-
-## https://nceas.github.io/oss-lessons/parallel-computing-in-r/parallel-computing-in-r.html
-reg_obj <- nbr_opened ~ nbr_opened_lag1 + (1 | countrycode)
-reg_objs <- rep(list(reg_obj), 4)
-
-library(parallel)
-res_objs <- mclapply(reg_objs, glmer.nb, data = df_lag4, mc.cores = 4)
 
 
 
@@ -920,3 +970,25 @@ screenreg(list(found.pglm.poi1,found.poi1,
 
 ## ## gdp_pcap seem to be mostly korea
 
+## ** gtsummary: written for rstudio 
+## mod1 <- glm(response ~ trt + age + grade, trial, family = binomial)
+## t1 <- tbl_regression(mod1, exponentiate = TRUE)
+## gtsave(t1, filename = paste0(TABLE_DIR, "gtsummarytest.tex"))
+
+
+## library(gtsummary); library(gt); library(dplyr)
+
+## trial %>%
+##   select(trt, age, grade) %>%
+##   tbl_summary(by = trt) %>%
+##     add_p() %>%
+##     gt::gtsave(filename = paste0(TABLE_DIR, "gtsummarytest.tex")
+
+## ** parallelization test 
+
+## https://nceas.github.io/oss-lessons/parallel-computing-in-r/parallel-computing-in-r.html
+## reg_obj <- nbr_opened ~ nbr_opened_lag1 + (1 | countrycode)
+## reg_objs <- rep(list(reg_obj), 4)
+
+## library(parallel)
+## res_objs <- mclapply(reg_objs, glmer.nb, data = df_lag4, mc.cores = 4)
