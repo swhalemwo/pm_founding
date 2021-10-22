@@ -223,50 +223,6 @@ print("done")
 ##     geom_line()
 
 
-x <- tbl(con, "wdi") %>%
-    filter(varx == "hweal") %>%
-    group_by(percentile) %>%
-    summarise(length(percentile))
-x
-
-
-res <- as_tibble(DBI::dbGetQuery(con, "SELECT country, variable, percentile, year, varx, value from wdi WHERE varx = 'hweal' and year >= 1985 and (percentile = 'p95p100' or percentile = 'p0p100')"))
-
-
-
-tbl <- table(res$percentile)
-tbl[rev(order(tbl))]
-
-len(table(res$country))
-
-
-## dbDisconnect(con)
-
-
-dbListTables(con)
-
-
-## checking whether i don't accidentally skip some country-years, apparently not
-## aggregate(year ~ country, multi_inner, max)
-## aggregate(year ~ country, multi_inner, min)
-## aggregate(year ~ country, multi_inner, len)
-
-
-
-
-
-## variables wanted:
-## - income inequality: top 10%
-## - income inequality: top 1% share
-## - wealth inequality: top 10
-## - wealth inequality: top 1%
-## - per adult national wealth
-
-## https://wid.world/codes-dictionary/#general-presentation
-## unique(unlist(lapply(unique(cry_data$variable), function(x){substr(x,0,1)})))
-
-
-
 ## *** join predictor data together
 # For Inner Join
 multi_inner <- as_tibble(Reduce(
@@ -354,6 +310,101 @@ aggregate(gdp_pcap ~ countrycode, data = df_anls, function(x){sum(is.na(x))}, na
 unique(df_open$countrycode)[which(unique(df_open$countrycode) %!in% (unique(df_gdp_pcap_molt$countrycode)))]
 ## seems ok,
 ## taiwan not separate country in WB.. just 1 PM tho, so shouldn't be big impact
+
+
+
+
+## *** WDI completeness checks
+x <- tbl(con, "wdi") %>%
+    filter(varx == "hweal") %>%
+    group_by(percentile) %>%
+    summarise(length(percentile))
+
+
+check_wdi_cpltns <- function(varx){
+    #' check how well WID variables cover PM foundings
+    cmd <- paste0("SELECT country as countrycode, variable, percentile, year, varx, value from wdi WHERE varx = '",
+                  varx,"' and year >= 1985")
+
+    ## res <- as_tibble(DBI::dbGetQuery(con, "SELECT country as countrycode, variable, percentile, year, varx, value from wdi WHERE varx = 'labsh' and year >= 1985"))
+    res <- as_tibble(DBI::dbGetQuery(con,cmd))
+
+    ## for wealth stuff 
+    ## and (percentile = 'p95p100' or percentile = 'p0p100')
+
+
+    ## tbl <- table(res$percentile)
+    ## tbl[rev(order(tbl))]
+
+    ## make df base to merge WDI data to 
+    dfb <- df_anls[,c("countrycode", "year", "nbr_opened")]
+
+    dfc <- as_tibble(merge(dfb, res, by = c("year", "countrycode"), all.x = TRUE))
+    cry_cvrg <- aggregate(year ~ countrycode, na.omit(dfc), length)
+    crys_geq3 <- cry_cvrg[which(cry_cvrg$year >= 3),]$countrycode
+
+    ## country-year coverage of countries which have at least 3 WDI observations AND which have WDI data for that year
+    PMs_covered_raw <- sum(na.omit(dfc[which(dfc$countrycode %in% crys_geq3),])$nbr_opened)
+    ## huh 280 for labsh, not too bad
+
+
+    ## coverage of countries which have at least three values, even if they don't have WDI data for years of museum founding
+    cry_cvrg_geq3 <- sum(filter(dfc, countrycode %in% crys_geq3)$nbr_opened)
+
+    nbr_of_crys_geq3 <- len(crys_geq3)
+
+    ## how many of crys_geq3 that have at least one PM founded, maybe relevant for comparative purposes 
+    nbr_of_crys_geq1pm <- filter(aggregate(nbr_opened ~ countrycode, dfc, sum), countrycode %in% crys_geq3) %>%
+        filter(nbr_opened >= 1) %>%
+        nrow()
+
+    return(list(PMs_covered_raw=PMs_covered_raw,
+                cry_cvrg_geq3=cry_cvrg_geq3,
+                nbr_of_crys_geq3=nbr_of_crys_geq3,
+                nbr_of_crys_geq1pm=nbr_of_crys_geq1pm))
+}
+
+check_wdi_cpltns("wealg")
+
+
+
+## dbDisconnect(con)
+
+
+dbListTables(con)
+
+
+## checking whether i don't accidentally skip some country-years, apparently not
+## aggregate(year ~ country, multi_inner, max)
+## aggregate(year ~ country, multi_inner, min)
+## aggregate(year ~ country, multi_inner, len)
+
+
+
+
+
+## variables wanted:
+## - income inequality: top 10%
+## - income inequality: top 1% share
+## - wealth inequality: top 10
+## - wealth inequality: top 1%
+## - per adult national wealth
+
+## https://wid.world/codes-dictionary/#general-presentation
+## unique(unlist(lapply(unique(cry_data$variable), function(x){substr(x,0,1)})))
+
+## **** done: check how DEU has shweal992j, but only p0p100 percentiles: is because metadata is for all countries even if they don't have that data, actual data only there for handful of countries
+## wealth_check <- as_tibble(DBI::dbGetQuery(con, "select distinct(varx) as varx from wdi where country='DEU' and varx like '%weal%'"))
+
+
+## res <- as_tibble(DBI::dbGetQuery(con, "select variable, percentile, year, varx, value from wdi where varx like '%weal%' and country = 'DEU' and year >= 1985"))
+
+## res <- as_tibble(DBI::dbGetQuery(con, "select variable, percentile, year, varx, value from wdi where first_letter='s' and country = 'DEU' and year >= 1985"))
+
+
+## table(res$variable, res$percentile)
+
+
 
 ## ** aggregating systematically
 
