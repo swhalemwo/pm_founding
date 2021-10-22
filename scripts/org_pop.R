@@ -10,6 +10,8 @@ library(countrycode)
 library(stargazer)
 library(gridExtra)
 library(parallel)
+library(RClickhouse)
+
 
 options(show.error.messages = TRUE)
 options(show.error.locations = TRUE)
@@ -137,7 +139,8 @@ aggregate(gini ~ country, data = df_wb_gini_molt, function(x){sum(is.na(x))}, na
 ## will remove many observations tho -> need to have function/systematic
 
 ## *** WID
-## country codes
+
+## **** setting up CH
 library(countrycode)
 
 countrycodes2c <- na.omit(countrycode(unique(df_gdp_pcap_molt$countrycode), "iso3c", "iso2c"))
@@ -151,9 +154,7 @@ countrycodes3c <- na.omit(unique(df_gdp_pcap_molt$countrycode))
 ## then probably write some manual exceptions so that they get correctly translated from WB to WDI
 ## also need to check whether there are other mismatches between iso2c(wb) and WDI -> paste WDI (https://wid.world/codes-dictionary/#country-code)
 
-
-
-
+## **** check country codes compatibility between WID and WB 
 df_crycd <- unique(df_gdp_pcap_molt[,c("country", "countrycode")])
 df_crycd$iso2c <- countrycode(df_crycd$countrycode, "wb", "iso2c")
 
@@ -168,7 +169,9 @@ as.data.frame(df_crycd_mrg[which(df_crycd_mrg$wid_cry != df_crycd_mrg$country),]
 ## results: WID and WB data seem to be in agreement: possible to use iso2c of WB codes for WID
 ## just need manual exceptions for Kosovo and Channel Islands
 
-## only re-read CH data when especially asking for it 
+## only re-read CH data when especially asking for it
+
+## **** read into CH
 READ_IN_CH <- FALSE
 if (READ_IN_CH == TRUE){
 
@@ -213,21 +216,41 @@ print("done")
 
 
 ## percentile table
-pctl_tbl <- table(cry_data$percentile)
-pctl_tbl[rev(order(pctl_tbl))]
+## pctl_tbl <- table(cry_data$percentile)
+## pctl_tbl[rev(order(pctl_tbl))]
 
-ggplot(filter(cry_data, varx=="wealg"), aes(x=year, y=value)) +
-    geom_line()
-
-library(RClickhouse)
-## should make new database
+## ggplot(filter(cry_data, varx=="wealg"), aes(x=year, y=value)) +
+##     geom_line()
 
 
-dbDisconnect(con)
-## db_write_table(con,
-DBI::dbWriteTable(con, "wdi", cry_data, append=TRUE)
+x <- tbl(con, "wdi") %>%
+    filter(varx == "hweal") %>%
+    group_by(percentile) %>%
+    summarise(length(percentile))
+x
+
+
+res <- as_tibble(DBI::dbGetQuery(con, "SELECT country, variable, percentile, year, varx, value from wdi WHERE varx = 'hweal' and year >= 1985 and (percentile = 'p95p100' or percentile = 'p0p100')"))
+
+
+
+tbl <- table(res$percentile)
+tbl[rev(order(tbl))]
+
+len(table(res$country))
+
+
+## dbDisconnect(con)
+
 
 dbListTables(con)
+
+
+## checking whether i don't accidentally skip some country-years, apparently not
+## aggregate(year ~ country, multi_inner, max)
+## aggregate(year ~ country, multi_inner, min)
+## aggregate(year ~ country, multi_inner, len)
+
 
 
 
@@ -275,6 +298,7 @@ df$year_opened_int2[which(df$year_opened_int2 < STARTING_YEAR | df$year_opened_i
 df_open <- na.omit(df[,c('name', 'country', 'countrycode', 'year_opened_int2')])
 # plot(table(df_open$year_opened_int2), type='l')
 df_open$ctr <- 1
+
 
 df_country_year_agg_cnt <- as_tibble(aggregate(ctr ~ countrycode + year_opened_int2, df_open, FUN = sum))
 names(df_country_year_agg_cnt) <- c('countrycode', 'year', 'nbr_opened')
