@@ -152,30 +152,59 @@ countrycodes3c <- na.omit(unique(df_gdp_pcap_molt$countrycode))
 ## also need to check whether there are other mismatches between iso2c(wb) and WDI -> paste WDI (https://wid.world/codes-dictionary/#country-code)
 
 
-for (code in ){
-    cry_code2c <- countrycode(code, "iso3c", "iso2c")
-    print(code)
-    filename <- paste0("WID_data_", code, ".csv")
 
-    if (filename %in% WID_files){
 
-        cry_data <- as_tibble(read.csv(paste(WID_DIR, "WID_data_", code, ".csv", sep=""), sep=";"))
+df_crycd <- unique(df_gdp_pcap_molt[,c("country", "countrycode")])
+df_crycd$iso2c <- countrycode(df_crycd$countrycode, "wb", "iso2c")
 
-        cry_data$varx <- substring(cry_data$variable, 2, 6)
-        cry_data$first_letter <- substring(cry_data$variable, 1,1)
 
-        ## only write schema with first table, otherwise append
-        if (code == "AW"){
-            DBI::dbWriteTable(con, "wdi", cry_data)
+wid_crycds <- as_tibble(read.csv(paste0(WID_DIR, "countrycodes.csv"), sep = "\t", header = F))[,c("V1", "V2")]
+names(wid_crycds) <- c("countrycode", "wid_cry")
+
+## idk why this doesn't work, dfs are all string values, should be just fine
+df_crycd_mrg <- as_tibble(merge(wid_crycds, df_crycd, by.x = "countrycode", by.y = "iso2c"))
+## manual inspection
+as.data.frame(df_crycd_mrg[which(df_crycd_mrg$wid_cry != df_crycd_mrg$country),])
+## results: WID and WB data seem to be in agreement: possible to use iso2c of WB codes for WID
+## just need manual exceptions for Kosovo and Channel Islands
+
+## only re-read CH data when especially asking for it 
+READ_IN_CH <- FALSE
+if (READ_IN_CH == TRUE){
+
+    for (code in countrycodes3c){
+        ## manual exceptions for channel 
+        if (code == "XKX") {
+            cry_code2c <- "KV"
+        } else if (code == "CHI"){
+            cry_code2c <- "XI"
+        } else {
+            cry_code2c <- countrycode(code, "iso3c", "iso2c")
         }
-        else {
-            if (code == "NA"){
-                cry_data$country <- "NA"
+        
+        print(code)
+        
+        filename <- paste0("WID_data_", cry_code2c, ".csv")
+
+        if (filename %in% WID_FILES){
+
+            cry_data <- as_tibble(read.csv(paste(WID_DIR, "WID_data_", cry_code2c, ".csv", sep=""), sep=";"))
+
+            cry_data$country <- code
+            cry_data$varx <- substring(cry_data$variable, 2, 6)
+            cry_data$first_letter <- substring(cry_data$variable, 1,1)
+
+            ## only write schema with first table, otherwise append
+            if (code == "ABW"){
+                DBI::dbWriteTable(con, "wdi", cry_data)
+            }
+            else {
+                DBI::dbWriteTable(con, "wdi", cry_data, append=TRUE)
                 
-            DBI::dbWriteTable(con, "wdi", cry_data, append=TRUE)
-            
+            }
         }
     }
+
 }
 print("done")
 
