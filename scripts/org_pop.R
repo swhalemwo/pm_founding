@@ -12,6 +12,7 @@ library(gridExtra)
 library(parallel)
 library(RClickhouse)
 library(docstring)
+library(DBI)
 ds <- docstring
 
 
@@ -226,7 +227,7 @@ print("done")
 
 
 ## *** join predictor data together
-# For Inner Join
+## For Inner Join
 multi_inner <- as_tibble(Reduce(
   function(x, y, ...) merge(x, y, ...), 
   list(df_wb_gini_molt, df_gdp_pcap_molt)
@@ -323,39 +324,58 @@ x <- tbl(con, "wdi") %>%
     summarise(length(percentile))
 
 
-perc1 <- "p90p100"
-perc2 <- "p0p100"
 
-check_wdi_cpltns <- function(varx, perc1, perc2){
+base_cmd <- "select country as countrycode, variable, percentile, year, first_letter, varx, value from wdi where year >= 1985"
+
+base_df <- as_tibble(dbGetQuery(con, base_cmd))
+
+
+check_wdi_cpltns <- function(varx, percentile){
     #' check how well WID variables cover PM foundings
 
-    ## if no share calculation 
-    if(missing(perc1)){
-        cmd <- paste0("SELECT country as countrycode, variable, percentile, year, varx, value from wdi WHERE varx = '",
-                      varx,"' and year >= 1985")
-        res <- as_tibble(DBI::dbGetQuery(con,cmd))
+    print(varx)
+    varz <- varx ## need to assign to own objects to be able to filter on them 
+
+    if(missing(percentile)){
+
+        res <- filter(base_df, varx==varz)
+    
     } else {
         
-        cmd <- paste0("SELECT country as countrycode, variable, percentile, year, first_letter, varx, value from wdi where varx='", varx,
-                      "' and (percentile='", perc1, "' or percentile='", perc2,
-                      "') and year >= 1985",
-                      " and pop='j'")
+        print(percentile)
         
-        res <- as_tibble(DBI::dbGetQuery(con,cmd))
+        pctz <- percentile
+        res <- filter(base_df, variable == varz & percentile == pctz)
+       
+    }
 
-    ## for wealth stuff 
-    ## and (percentile = 'p95p100' or percentile = 'p0p100')
+    ## some exception to throw when too many variables
+    if (length(table(res$variable)) > 1){
+        print(varx)
+        stop("too many variables")
+    }
 
-
-    ## tbl <- table(res$percentile)
-    ## tbl[rev(order(tbl))]
-
+    print(nrow(res))
+    if (nrow(res)!=0){
+        
     ## make df base to merge WDI data to 
     dfb <- df_anls[,c("countrycode", "year", "nbr_opened")]
 
     dfc <- as_tibble(merge(dfb, res, by = c("year", "countrycode"), all.x = TRUE))
     cry_cvrg <- aggregate(year ~ countrycode, na.omit(dfc), length)
     crys_geq3 <- cry_cvrg[which(cry_cvrg$year >= 3),]$countrycode
+
+    cry_pm_crvg_actual <- aggregate(nbr_opened ~ countrycode, na.omit(dfc), sum)
+    cry_pm_crvg_ideal <- aggregate(nbr_opened ~ countrycode, dfc, sum)
+    names(cry_pm_crvg_ideal) <- c("countrycode", "nbr_opened_ideal")
+    
+    cry_pm_cvrg_cprn <- as_tibble(merge(cry_pm_crvg_ideal, cry_pm_crvg_actual, all.x = TRUE))
+    cry_pm_cvrg_cprn$nbr_opened[which(is.na(cry_pm_cvrg_cprn$nbr_opened))] <- 0
+    cry_pm_cvrg_cprn$diff <- cry_pm_cvrg_cprn$nbr_opened - cry_pm_cvrg_cprn$nbr_opened_ideal
+
+    ## maybe need to collapse them instead of having them as vector 
+    most_affected_crys <- unlist(lapply(sort(cry_pm_cvrg_cprn$diff)[1:4],
+                                        function(x) (filter(cry_pm_cvrg_cprn, diff == x)$countrycode)))
 
     ## country-year coverage of countries which have at least 3 WDI observations AND which have WDI data for that year
     PMs_covered_raw <- sum(na.omit(dfc[which(dfc$countrycode %in% crys_geq3),])$nbr_opened)
@@ -372,26 +392,118 @@ check_wdi_cpltns <- function(varx, perc1, perc2){
         filter(nbr_opened >= 1) %>%
         nrow()
 
-    return(list(PMs_covered_raw=PMs_covered_raw,
-                cry_cvrg_geq3=cry_cvrg_geq3,
-                nbr_of_crys_geq3=nbr_of_crys_geq3,
-                nbr_of_crys_geq1pm=nbr_of_crys_geq1pm))
-    }}
-
-check_wdi_cpltns("wealg")
-check_wdi_cpltns("labsh")
-check_wdi_cpltns("wealpt")
-check_wdi_cpltns("weali")
-check_wdi_cpltns("wealc")
-check_wdi_cpltns("wealh")
+    return(list(
+        variable = varx,
+        PMs_covered_raw=PMs_covered_raw,
+        cry_cvrg_geq3=cry_cvrg_geq3,
+        most_affected_crys = paste(most_affected_crys, collapse = "--"),
+        nbr_of_crys_geq3=nbr_of_crys_geq3,
+        nbr_of_crys_geq1pm=nbr_of_crys_geq1pm))
+    }
+}
 
 
+REDO_WDI_CPLTNS_CHK <- FALSE
+if (REDO_WDI_CPLTNS_CHK){
+
+
+    check_wdi_cpltns("wealg")
+    check_wdi_cpltns("labsh")
+    check_wdi_cpltns("wealp")
+    check_wdi_cpltns("weali")
+    check_wdi_cpltns("wealc")
+    check_wdi_cpltns("wealh")
+    check_wdi_cpltns("sfiinc992i", "p90p100")
+    check_wdi_cpltns("sfiinc992j", "p90p100")
+
+    con <- DBI::dbConnect(RClickhouse::clickhouse(), host="localhost", db = "org_pop")
+
+    shr_variables <- dbGetQuery(con, "select distinct(variable) from wdi where percentile='p90p100' and first_letter='s'")[[1]]
+
+
+    wdi_cpltns_res_90 <- lapply(as.list(shr_variables), check_wdi_cpltns, "p90p100")
+    wdi_df_res_90 <- do.call(rbind.data.frame, wdi_cpltns_res_90)
+    wdi_df_res_90[,-c(which(names(wdi_df_res_90) == "most_affected_crys"))]
+
+    library(xtable)
+    print(
+        xtable(
+            wdi_df_res_90[,-c(which(names(wdi_df_res_90) == "most_affected_crys"))],
+            label="wdi_cpltns",
+            caption = "coverage of variables in WDI",
+            digits=0),
+        file = paste0(TABLE_DIR, "wdi_cpltns.text"),
+        )
+
+}
+                    
+## **** check whether coverage depends on percentile chosen, doesn't really
+
+pctl_checker <- function(percentile){
+    #' next level wrapper function: just use shr variables
+    wdi_cpltns_x <- lapply(as.list(shr_variables), check_wdi_cpltns, percentile)
+    wdi_res_df <- do.call(rbind.data.frame, wdi_cpltns_x)
+    wdi_res_df$percentile <- percentile
+    
+    return(wdi_res_df)
+}
+
+## pctl_checker("p99.5p100")
+
+
+if (REDO_WDI_CPLTNS_CHK){
+    ## could have been that some variables are good at some exotic percentages, but they aren't
+    ## sptinc992j still the only variable with decent coverage 
+
+    percentiles <- as_tibble(dbGetQuery(con, "select percentile, count(percentile) as cnt from wdi where first_letter='s' group by percentile order by cnt desc"))
+
+    pctls_cry <- as_tibble(dbGetQuery(con, "select percentile, count(distinct(country)) as cnt from wdi where first_letter='s' group by percentile order by cnt desc"))
+
+    ## just select a bunch of percentiles for coverage checks?
+    ## nah that would be stupid, there could be some good coverage in some that i'd miss
+    ## use all that have first percentile above 80 and second == 100
+
+    pctls_cry$pct1 <- as.numeric(unlist(lapply(pctls_cry$percentile, function(x) {strsplit(x, "p")[[1]][2]})))
+    pctls_cry$pct2 <- as.numeric(unlist(lapply(pctls_cry$percentile, function(x) {strsplit(x, "p")[[1]][3]})))
+
+    pctls_relevant <- filter(pctls_cry, pct1 >=80 & pct2==100)$percentile
+
+
+
+    pctl_cpltns_res <- mclapply(pctls_relevant, pctl_checker, mc.cores = 6)
+    
+    pctl_cpltns_df <- as_tibble(Reduce(function(x,y,...) rbind(x,y,...), pctl_cpltns_res))
+
+    as.data.frame(filter(pctl_cpltns_df, PMs_covered_raw > 250))[,-c(which(names(wdi_df_res_90) == "most_affected_crys"))]
+
+    aggregate(PMs_covered_raw ~ variable, pctl_cpltns_df, max)
+    aggregate(PMs_covered_raw ~ variable, pctl_cpltns_df, mean)
+
+    as.data.frame(filter(pctl_cpltns_df, variable == "sptinc992j"))
+}
+
+
+## **** gini variables
+if (REDO_WDI_CPLTNS_CHK == TRUE){
+    con <- DBI::dbConnect(RClickhouse::clickhouse(), host="localhost", db = "org_pop")
+    gini_variables <- dbGetQuery(con, "select distinct(variable) from wdi where first_letter=='g'")
+
+    gini_data <- as_tibble(dbGetQuery(con, "select country as countrycode, variable, percentile, year, first_letter, varx, value from wdi where first_letter='g'"))
+
+    table(gini_data$percentile)
+    check_wdi_cpltns("gptinc992j", "p0p100")
+
+    gini_res <- lapply(as.list(gini_variables$variable), check_wdi_cpltns, "p0p100")
+    gini_res_df <- do.call(rbind.data.frame,gini_res)
+}
+
+## same with share data: only sufficient global coverage for ptinc992j, diinc992j second 
 
 
 ## dbDisconnect(con)
 
 
-dbListTables(con)
+## dbListTables(con)
 
 
 ## checking whether i don't accidentally skip some country-years, apparently not
@@ -400,18 +512,6 @@ dbListTables(con)
 ## aggregate(year ~ country, multi_inner, len)
 
 
-
-
-
-## variables wanted:
-## - income inequality: top 10%
-## - income inequality: top 1% share
-## - wealth inequality: top 10
-## - wealth inequality: top 1%
-## - per adult national wealth
-
-## https://wid.world/codes-dictionary/#general-presentation
-## unique(unlist(lapply(unique(cry_data$variable), function(x){substr(x,0,1)})))
 
 ## **** done: check how DEU has shweal992j, but only p0p100 percentiles: is because metadata is for all countries even if they don't have that data, actual data only there for handful of countries
 ## wealth_check <- as_tibble(DBI::dbGetQuery(con, "select distinct(varx) as varx from wdi where country='DEU' and varx like '%weal%'"))
@@ -791,7 +891,7 @@ filter(df_anls[,c("countrycode", "year", "nbr_opened", "nbr_opened_lag1", "gini"
 
 ## **** full df
 
-
+stop("before models")
 
 regger.nb <- function(list_of_models, data){
     #' batch processing of mah negative binomial regression models
