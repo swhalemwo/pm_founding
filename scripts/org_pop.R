@@ -431,98 +431,98 @@ dbListTables(con)
 ## see if shares are always there when there are averages, turns out it's the other way around: there are shares, but not always the averages to compute them
 ## -> sticking to shares is fine: more complete and easier to handle
 
-con <- DBI::dbConnect(RClickhouse::clickhouse(), host="localhost", db = "org_pop")
+## con <- DBI::dbConnect(RClickhouse::clickhouse(), host="localhost", db = "org_pop")
 
-cmd_cplt_check <- "select country as countrycode, variable, percentile, year, first_letter, varx, value from wdi where (percentile='p90p100' or percentile='p0p90') and year>=1985"
+## cmd_cplt_check <- "select country as countrycode, variable, percentile, year, first_letter, varx, value from wdi where (percentile='p90p100' or percentile='p0p90') and year>=1985"
 
-res_cplt_check <- as_tibble(dbGetQuery(con, cmd_cplt_check))
+## res_cplt_check <- as_tibble(dbGetQuery(con, cmd_cplt_check))
 
-res_s_p90p100 <- filter(res_cplt_check, first_letter=="s" & percentile=="p90p100")
-res_a_p0p90 <- filter(res_cplt_check, first_letter=="a" & percentile=="p0p90")
-res_a_p90p100 <- filter(res_cplt_check, first_letter=="a" & percentile=="p90p100")
-res_a_mrg <- as_tibble(merge(res_a_p0p90, res_a_p90p100, by=c("countrycode", "variable", "year")))
-res_a_mrg$ratio <- res_a_mrg$value.y/(9*res_a_mrg$value.x + res_a_mrg$value.y)
+## res_s_p90p100 <- filter(res_cplt_check, first_letter=="s" & percentile=="p90p100")
+## res_a_p0p90 <- filter(res_cplt_check, first_letter=="a" & percentile=="p0p90")
+## res_a_p90p100 <- filter(res_cplt_check, first_letter=="a" & percentile=="p90p100")
+## res_a_mrg <- as_tibble(merge(res_a_p0p90, res_a_p90p100, by=c("countrycode", "variable", "year")))
+## res_a_mrg$ratio <- res_a_mrg$value.y/(9*res_a_mrg$value.x + res_a_mrg$value.y)
 
-res_a_mrg_cut <- res_a_mrg[,c("countrycode", "variable", "year", "ratio")]
-res_a_mrg_cut$varx <- res_a_mrg$varx.x
-
-
-## there are only 16k with top 10, but 1.2m with entire population
-
-## make ratio
-## actually average is not good for making top 10% concentration ratios: average of p0p100 is lower than p90p100 -> that's why ratio was negative
-## would either need total of p90p100 and p0p100
-## or average of p0p90 -> can calculate top10 ratio as p90p100/(9*p0p90 + p90p100)
-## maybe first casting is better? then column filtering is easier 
-
-table(res_s_p90p100$variable, res_s_p90p100$varx)
-table(res_a_mrg_cut$variable, res_a_mrg_cut$varx)
-## varx only differ from variables in that variables sometimes are measured on different levels of analysis
-## -> can do varx2: only remove the first letter
-res_s_p90p100$varx2 <- substring(res_s_p90p100$variable, 2, 100)
-res_a_mrg_cut$varx2 <- substring(res_a_mrg_cut$variable, 2, 100)
+## res_a_mrg_cut <- res_a_mrg[,c("countrycode", "variable", "year", "ratio")]
+## res_a_mrg_cut$varx <- res_a_mrg$varx.x
 
 
-cpr_shrs <- as_tibble(merge(res_s_p90p100, res_a_mrg_cut, by=c("countrycode", "varx2", "year")))
-cor(cpr_shrs$ratio, cpr_shrs$value, use = "complete.obs")
-## nice now correlation is pretty much 1
-## res_s_p90p100 has more observations (14.7k) than res_a_mrg_cut (11.9k), res_a_mrg_cut also has 90 NAs
-## which observations (countries, variables, years) have shares but not complete averages?
-## multiple aggregations
+## ## there are only 16k with top 10, but 1.2m with entire population
 
-agg_s_year <- as.data.frame(table(res_s_p90p100$year))
-names(agg_s_year) <- c("year", "share_cnt")
-agg_r_year <- as.data.frame(table(res_a_mrg_cut$year))
-names(agg_r_year) <- c("year", "ratio_cnt")
+## ## make ratio
+## ## actually average is not good for making top 10% concentration ratios: average of p0p100 is lower than p90p100 -> that's why ratio was negative
+## ## would either need total of p90p100 and p0p100
+## ## or average of p0p90 -> can calculate top10 ratio as p90p100/(9*p0p90 + p90p100)
+## ## maybe first casting is better? then column filtering is easier 
 
-year_comparison <- merge(agg_s_year, agg_r_year, using = c("year"))
-year_cprn_melt <- melt(year_comparison, id="year")
+## table(res_s_p90p100$variable, res_s_p90p100$varx)
+## table(res_a_mrg_cut$variable, res_a_mrg_cut$varx)
+## ## varx only differ from variables in that variables sometimes are measured on different levels of analysis
+## ## -> can do varx2: only remove the first letter
+## res_s_p90p100$varx2 <- substring(res_s_p90p100$variable, 2, 100)
+## res_a_mrg_cut$varx2 <- substring(res_a_mrg_cut$variable, 2, 100)
 
-ggplot(year_cprn_melt, aes(x=year, y=value, group=variable, color=variable)) +
-    geom_line()
-## tbh differences are not that big, maybe 20-30 per year  -> 10% difference
 
-res_s_p90p100[,c("countrycode", "variable", "year")]
+## cpr_shrs <- as_tibble(merge(res_s_p90p100, res_a_mrg_cut, by=c("countrycode", "varx2", "year")))
+## cor(cpr_shrs$ratio, cpr_shrs$value, use = "complete.obs")
+## ## nice now correlation is pretty much 1
+## ## res_s_p90p100 has more observations (14.7k) than res_a_mrg_cut (11.9k), res_a_mrg_cut also has 90 NAs
+## ## which observations (countries, variables, years) have shares but not complete averages?
+## ## multiple aggregations
 
-## could combine, remove all that occur twice
+## agg_s_year <- as.data.frame(table(res_s_p90p100$year))
+## names(agg_s_year) <- c("year", "share_cnt")
+## agg_r_year <- as.data.frame(table(res_a_mrg_cut$year))
+## names(agg_r_year) <- c("year", "ratio_cnt")
 
-s_r_cbin <- rbind(res_s_p90p100[,c("countrycode", "varx2", "year")], res_a_mrg_cut[,c("countrycode", "varx2", "year")])
-s_r_cbin$ctr <- 1
+## year_comparison <- merge(agg_s_year, agg_r_year, using = c("year"))
+## year_cprn_melt <- melt(year_comparison, id="year")
 
-sr_cbin_agg <- as_tibble(aggregate(ctr ~ countrycode + varx2 + year, s_r_cbin, sum))
-plot(table(filter(sr_cbin_agg, ctr==1)$year), type='l')
-## year: seems kinda stable, but decreaes in recent years
-table(filter(sr_cbin_agg, ctr==1)$varx2)
+## ggplot(year_cprn_melt, aes(x=year, y=value, group=variable, color=variable)) +
+##     geom_line()
+## ## tbh differences are not that big, maybe 20-30 per year  -> 10% difference
 
-## most differences in variables about "fiinc": fiscal income: there in share, but not in average
-## fiinc992i
-## fiinc992j
-## fiinc992t
+## res_s_p90p100[,c("countrycode", "variable", "year")]
 
-## also some in others
-## diinc992i
-## diinc992t
-## fiinc999t
-## hweal992i
-## ptinc992j 
-table(filter(sr_cbin_agg, ctr==1)$countrycode)
+## ## could combine, remove all that occur twice
 
-cry_cnt_a <- as.data.frame(table(res_a_mrg_cut$countrycode))
-names(cry_cnt_a) <- c("countrycode", "count")
-cry_cnt_a$countrycode <- as.character(cry_cnt_a$countrycode)
-cry_cnt_a$condition <- "ratio"
+## s_r_cbin <- rbind(res_s_p90p100[,c("countrycode", "varx2", "year")], res_a_mrg_cut[,c("countrycode", "varx2", "year")])
+## s_r_cbin$ctr <- 1
 
-cry_cnt_s <- as.data.frame(table(res_s_p90p100$countrycode))
-names(cry_cnt_s) <- c("countrycode", "count")
-cry_cnt_s$countrycode <- as.character(cry_cnt_s$countrycode)
-cry_cnt_s$condition <- "share"
+## sr_cbin_agg <- as_tibble(aggregate(ctr ~ countrycode + varx2 + year, s_r_cbin, sum))
+## plot(table(filter(sr_cbin_agg, ctr==1)$year), type='l')
+## ## year: seems kinda stable, but decreaes in recent years
+## table(filter(sr_cbin_agg, ctr==1)$varx2)
 
-cry_cnt_cbn <- rbind(cry_cnt_a, cry_cnt_s)
+## ## most differences in variables about "fiinc": fiscal income: there in share, but not in average
+## ## fiinc992i
+## ## fiinc992j
+## ## fiinc992t
 
-ggplot(cry_cnt_cbn, aes(x=countrycode, fill=condition, y=count)) +
-    geom_bar(position = "dodge", stat="identity")
+## ## also some in others
+## ## diinc992i
+## ## diinc992t
+## ## fiinc999t
+## ## hweal992i
+## ## ptinc992j 
+## table(filter(sr_cbin_agg, ctr==1)$countrycode)
 
-## most countries have just 35 observations, differences is only for the countries that have more: more shares than ratios
+## cry_cnt_a <- as.data.frame(table(res_a_mrg_cut$countrycode))
+## names(cry_cnt_a) <- c("countrycode", "count")
+## cry_cnt_a$countrycode <- as.character(cry_cnt_a$countrycode)
+## cry_cnt_a$condition <- "ratio"
+
+## cry_cnt_s <- as.data.frame(table(res_s_p90p100$countrycode))
+## names(cry_cnt_s) <- c("countrycode", "count")
+## cry_cnt_s$countrycode <- as.character(cry_cnt_s$countrycode)
+## cry_cnt_s$condition <- "share"
+
+## cry_cnt_cbn <- rbind(cry_cnt_a, cry_cnt_s)
+
+## ggplot(cry_cnt_cbn, aes(x=countrycode, fill=condition, y=count)) +
+##     geom_bar(position = "dodge", stat="identity")
+
+## ## most countries have just 35 observations, differences is only for the countries that have more: more shares than ratios
 
 
 ## ** aggregating systematically
