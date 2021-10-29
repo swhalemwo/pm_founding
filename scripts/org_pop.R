@@ -755,7 +755,8 @@ summary(df_anls2$geo_neib_opened)
 
 df_anls <- df_anls2
 
-
+## *** world values survey
+df_wvs <- as_tibble(readRDS("/home/johannes/ownCloud/WVS/WVS_TimeSeries_1981_2020_R_v2_0.rds"))
 
     
 ## ** aggregating systematically
