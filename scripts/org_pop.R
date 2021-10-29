@@ -754,6 +754,9 @@ df_anls2$geo_neib_opened[which(is.na(df_anls2$geo_neib_opened))] <- 0
 summary(df_anls2$geo_neib_opened)
 
 df_anls <- df_anls2
+
+
+
     
 ## ** aggregating systematically
 
@@ -1390,6 +1393,32 @@ screenreg(list(found.pglm.poi1,found.poi1,
 
 
 
+
+
+
+## ** visualization
+
+
+df_plt <- df_anls
+df_plt$region <- countrycode(df_plt$countrycode, "iso3c", "region")
+
+
+year_selector <- function(x)(
+    # convert cuts back to years
+    substring(x, 2,5))
+
+
+df_plt$cut <- cut(df_plt$year, seq(min(df_plt$year), max(df_plt$year)+5, by = 3))
+df_plt$cut2 <- as.numeric(sapply(as.character(df_plt$cut), year_selector))
+
+df_viz <- aggregate(nbr_opened ~ region + cut2, df_plt, sum)
+
+ggplot(df_viz, aes(x=cut2, y=nbr_opened, group = region, color = region)) +
+    geom_line(size=1) +
+    scale_color_brewer(palette="Dark2") 
+
+## hehehe Europe super strong
+## weird how active Europe europe is in 80s
 
 
 ## * scrap
