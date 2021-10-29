@@ -674,6 +674,38 @@ filter(df_egmus, Country == "Italy")$private_num
 
 
 
+## *** diffusion
+## **** geographical proximity: use country boundaries
+library(rgdal)
+spdf <- readOGR(dsn = "/home/johannes/Dropbox/phd/papers/org_pop/data/boundaries/World_EEZ_v11_20191118/")
+
+spdf_fltrd <- as_tibble(unique(spdf@data[,c("SOVEREIGN1", "SOVEREIGN2")]))
+names(spdf_fltrd) <- c("cry1", "cry2")
+## duplicate boundaries, turn to have alphabetically higher country first 
+spdf_fltrd$cry1_cd <- countrycode(spdf_fltrd$cry1, "country.name", "iso3c", custom_match = c("Comores" = "COM", "Micronesia" = "FSM"))
+spdf_fltrd$cry2_cd <- countrycode(spdf_fltrd$cry2, "country.name", "iso3c", custom_match = c("Comores" = "COM", "Micronesia" = "FSM"))
+
+sea_boundaries <- rbind(spdf_fltrd[,c("cry1_cd", "cry2_cd")], spdf_fltrd[,c("cry2_cd", "cry1_cd")])
+sea_boundaries <- na.omit(sea_boundaries)
+sea_boundaries <- filter(sea_boundaries, cry1_cd < cry2_cd)
+
+
+
+
+land_boundaries <- as_tibble(read.csv("/home/johannes/Dropbox/phd/papers/org_pop/data/boundaries/geodatasource_land_boundaries.csv"))
+
+land_boundaries$cry1_cd <- countrycode(land_boundaries$country_name, "country.name", "iso3c")
+land_boundaries$cry2_cd <- countrycode(land_boundaries$country_border_name, "country.name", "iso3c")
+land_boundaries <- na.omit(land_boundaries)
+land_boundaries <- rbind(land_boundaries[,c("cry1_cd", "cry2_cd")], land_boundaries[,c("cry2_cd", "cry1_cd")])
+land_boundaries <- unique(filter(land_boundaries, cry1_cd < cry2_cd))
+
+all_boundaries <- unique(rbind(sea_boundaries, land_boundaries))
+
+
+
+    
+    
 ## ** aggregating systematically
 
 ## specify variable-specific aggregation function 
