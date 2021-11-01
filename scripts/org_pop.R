@@ -330,7 +330,7 @@ base_cmd <- "select country as countrycode, variable, percentile, year, first_le
 base_df <- as_tibble(dbGetQuery(con, base_cmd))
 
 
-check_wdi_cpltns <- function(varx, percentile){
+check_wid_cpltns <- function(varx, percentile){
     #' check how well WID variables cover PM foundings
 
     print(varx)
@@ -403,36 +403,57 @@ check_wdi_cpltns <- function(varx, percentile){
 }
 
 
-REDO_WDI_CPLTNS_CHK <- FALSE
-if (REDO_WDI_CPLTNS_CHK){
+REDO_WID_CPLTNS_CHK <- FALSE
+if (REDO_WID_CPLTNS_CHK){
 
 
-    check_wdi_cpltns("wealg")
-    check_wdi_cpltns("labsh")
-    check_wdi_cpltns("wealp")
-    check_wdi_cpltns("weali")
-    check_wdi_cpltns("wealc")
-    check_wdi_cpltns("wealh")
-    check_wdi_cpltns("sfiinc992i", "p90p100")
-    check_wdi_cpltns("sfiinc992j", "p90p100")
+    check_wid_cpltns("wealg")
+    check_wid_cpltns("labsh")
+    check_wid_cpltns("wealp")
+    check_wid_cpltns("weali")
+    check_wid_cpltns("wealc")
+    check_wid_cpltns("wealh")
+    check_wid_cpltns("sfiinc992i", "p90p100")
+    check_wid_cpltns("sfiinc992j", "p90p100")
 
     con <- DBI::dbConnect(RClickhouse::clickhouse(), host="localhost", db = "org_pop")
 
     shr_variables <- dbGetQuery(con, "select distinct(variable) from wdi where percentile='p90p100' and first_letter='s'")[[1]]
 
 
-    wdi_cpltns_res_90 <- lapply(as.list(shr_variables), check_wdi_cpltns, "p90p100")
-    wdi_df_res_90 <- do.call(rbind.data.frame, wdi_cpltns_res_90)
-    wdi_df_res_90[,-c(which(names(wdi_df_res_90) == "most_affected_crys"))]
+    wid_cpltns_res_90 <- lapply(as.list(shr_variables), check_wid_cpltns, "p90p100")
+    wid_df_res_90 <- do.call(rbind.data.frame, wid_cpltns_res_90)
+    wid_df_res_90_tbl <- wid_df_res_90[,-c(which(names(wid_df_res_90) == "most_affected_crys"))]
+
+    wid_df_res_90_tbl <- wid_df_res_90_tbl[rev(order(wid_df_res_90_tbl$PMs_covered_raw))[c(1:10)],]
+    names(wid_df_res_90_tbl) <- c("variable", "PM foundings\n covered directly", "PM foundings in countries with data for at least 3 years", "number of countries with data for at least 3 years", "number of countries with data and at least 1 PM founding")
+
+    wid_df_res_90_tbl$variable <- recode(wid_df_res_90_tbl$variable, 
+           "sptinc992j" = "pretax income (equal-split adults = based on household)",
+           "sdiinc992j" = "post-tax income (equal-split adults)",
+           "scainc992j"= "post-tax disposable income (equal-split adults)",
+           "sfiinc992t"= "fiscal income (threshold)",
+           "sfiinc992j"= "fiscal income (equal-split adults)",
+           "sfiinc992i"= "fiscal income (individuals)",
+           "shweal992j"= "net wealth (equal-split adults)",
+           "sptinc992i"= "pretax income (individuals)",
+           "sdiinc992i"= "post-tax income (individuals)",
+           "sfiinc999t"= "fiscal income (threshold)")
+    
+    xtbl <- xtable(
+        wid_df_res_90_tbl,
+        label="wid_cpltns",
+        caption = "coverage variables for top decile in WID",
+        align = c("l", "p{5.5cm}","p{2cm}", rep("p{3cm}", 3)),
+        digits=0)
+
+    
 
     library(xtable)
     print(
-        xtable(
-            wdi_df_res_90[,-c(which(names(wdi_df_res_90) == "most_affected_crys"))],
-            label="wdi_cpltns",
-            caption = "coverage of variables in WDI",
-            digits=0),
-        file = paste0(TABLE_DIR, "wdi_cpltns.text"),
+        xtbl,
+        include.rownames = F,
+        file = paste0(TABLE_DIR, "wid_cpltns.tex"),
         )
 
 }
