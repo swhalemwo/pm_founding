@@ -418,12 +418,29 @@ if (REDO_WID_CPLTNS_CHK){
 
     con <- DBI::dbConnect(RClickhouse::clickhouse(), host="localhost", db = "org_pop")
 
-    shr_variables <- dbGetQuery(con, "select distinct(variable) from wdi where percentile='p90p100' and first_letter='s'")[[1]]
-
-
-    wid_cpltns_res_90 <- lapply(as.list(shr_variables), check_wid_cpltns, "p90p100")
+    shr_variables_p90 <- dbGetQuery(con, "select distinct(variable) from wdi where percentile='p90p100' and first_letter='s'")[[1]]
+    wid_cpltns_res_90 <- lapply(as.list(shr_variables_p90), check_wid_cpltns, "p90p100")
     wid_df_res_90 <- do.call(rbind.data.frame, wid_cpltns_res_90)
     wid_df_res_90_tbl <- wid_df_res_90[,-c(which(names(wid_df_res_90) == "most_affected_crys"))]
+    names(wid_df_res_90_tbl)[c(2:5)] <- lapply(names(wid_df_res_90_tbl)[c(2:5)], function(x) paste0(x, "_90"))
+
+
+    shr_variables_p99 <- dbGetQuery(con, "select distinct(variable) from wdi where percentile='p99p100' and first_letter='s'")[[1]]
+    wid_cpltns_res_99 <- lapply(as.list(shr_variables_p99), check_wid_cpltns, "p90p100")
+    wid_df_res_99 <- do.call(rbind.data.frame, wid_cpltns_res_99)
+    wid_df_res_99_tbl <- wid_df_res_99[,-c(which(names(wid_df_res_99) == "most_affected_crys"))]
+    names(wid_df_res_99_tbl)[c(2:5)] <- lapply(names(wid_df_res_99_tbl)[c(2:5)], function(x) paste0(x, "_99"))
+
+    wid_tbl <- merge(wid_df_res_90_tbl, wid_df_res_99_tbl, by=c("variable"))
+
+
+    ## manual check that 99% percentile is as good as 90% percentile 
+    wid_tbl[,c("variable", "PMs_covered_raw_90", "PMs_covered_raw_99",
+               "cry_cvrg_geq3_90", "cry_cvrg_geq3_99",
+               "nbr_of_crys_geq3_90", "nbr_of_crys_geq3_99",
+               "nbr_of_crys_geq1pm_90", "nbr_of_crys_geq1pm_99")]
+    ## but don't go further into putting it into table
+                  
 
     wid_df_res_90_tbl <- wid_df_res_90_tbl[rev(order(wid_df_res_90_tbl$PMs_covered_raw))[c(1:10)],]
     names(wid_df_res_90_tbl) <- c("variable", "PM foundings\n covered directly", "PM foundings in countries with data for at least 3 years", "number of countries with data for at least 3 years", "number of countries with data and at least 1 PM founding")
