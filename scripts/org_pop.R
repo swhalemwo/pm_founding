@@ -1589,3 +1589,147 @@ ggplot(df_viz, aes(x=cut2, y=nbr_opened, group = region, color = region)) +
 
 ## library(parallel)
 ## res_objs <- mclapply(reg_objs, glmer.nb, data = df_lag4, mc.cores = 4)
+
+## * literature table
+con_obvz <- DBI::dbConnect(RClickhouse::clickhouse(), host="localhost", db = "obvz")
+
+dbSendQuery(con_obvz, "set joined_subquery_requires_alias=0")
+
+lit_df <- as_tibble(dbGetQuery(con_obvz, "SELECT child, parent FROM (
+    SELECT DISTINCT(child) AS child FROM bc WHERE parent IN ['ecology', 'legitimation', 'competition', 'founding', 'contagion', 'diffusion', 'density']
+  ) JOIN (SELECT parent, child FROM bc WHERE parent NOT IN ['cls_papers', 'cls_toread', 'sbcls_B', 'sbcls_A', 'sbcls_C', 'cls_orgform']) USING child"))
+
+
+lit_df$ctr <- 1
+
+
+lit_df_cast <- as_tibble(dcast(lit_df, child ~ parent, fill=0))
+
+
+## only selecting top 100 terms 
+colsums <- apply(lit_df_cast[,c(2:len(lit_df_cast))], 2, sum)
+colnames <-names(colsums[rev(order(colsums))][c(1:50)])
+colpos <- which(names(lit_df_cast) %in% colnames)
+
+rowsums <- apply(lit_df_cast[,c(2:len(lit_df_cast))], 1, sum)
+
+lit_df_cast2 <- lit_df_cast[rev(order(rowsums))[c(1:100)],c(1,colpos)]
+
+lit_df_melt <- as_tibble(melt(lit_df_cast2, id=c('child')))
+
+
+## idk if much value
+## doesn't help that paper titles are hard af to read, fucking hurts my eyes
+## probably should use Holst directly, not some shitty wrapper like cluster_matrix
+## also these manual reordering is bloat
+
+lit_df_cast3 <- as.data.frame(lit_df_cast2)
+
+rownames(lit_df_cast3) <- lit_df_cast3$child
+lit_df_cast3 <- lit_df_cast3[,-1]
+
+
+d_papers <- dist(lit_df_cast3)
+d_tags <- dist(t(lit_df_cast3))
+clust_papers <- hclust(d_papers, method = "ward.D2")
+clust_tags <- hclust(d_tags, method = "ward.D2")
+
+
+clust_cut_papers <- cutree(clust_papers,8)
+clust_cut_tags <- cutree(clust_tags,6)
+
+table(clust_cut_papers)
+table(clust_cut_tags)
+
+## should be able to change the factor order to that they correspond to clusters
+lit_df_melt$child_srt <- factor(lit_df_melt$child, levels=names(clust_cut_papers[order(clust_cut_papers)]))
+lit_df_melt$variable_srt <- factor(lit_df_melt$variable, levels=names(clust_cut_tags[order(clust_cut_tags)]))
+
+
+## can draw boundaries now, still need function to calculate them properly 
+
+boundary_df <- data.frame(matrix(ncol=4, nrow=0))
+names(boundary_df) <- c("xmin", "ymin", "xmax", "ymax")
+
+for (i in seq(1, max(clust_cut_papers))){
+    for (k in seq(1, max(clust_cut_tags))) {
+        xmin <- len(which(clust_cut_tags < k)) + 0.5
+        ymin <- len(which(clust_cut_papers < i)) + 0.5
+
+        xmax <- len(which(clust_cut_tags < k+1)) + 0.5
+        ymax <- len(which(clust_cut_papers < i+1)) + 0.5
+
+        boundary_df[nrow(boundary_df)+1,] <- c(xmin, ymin, xmax, ymax)
+    }
+}
+
+## geom_rect(mapping = aes(xmin=0.5,xmax=50, ymin=0.5,ymax=10), size=0.1, fill=alpha("grey", 0), color="green")
+
+
+p1 <- ggplot(NULL)+
+    geom_tile(data=lit_df_melt, mapping = aes(x = variable_srt, y=child_srt, fill=value)) +
+    geom_rect(data=boundary_df, mapping = aes(xmin=xmin, xmax=xmax, ymin=ymin, ymax=ymax), fill=alpha("grey", 0), color="grey") +
+    theme(axis.text.x = element_text(angle = 45, vjust=1, hjust=1), axis.title.x = element_blank())
+
+pdf(paste0(FIG_DIR, "lit_table.pdf"), width=12,  height = 12)
+print(p1)
+dev.off()
+   
+
+
+## flipped version 
+ggplot(NULL)+
+    geom_tile(data=lit_df_melt, mapping = aes(x = child_srt, y=variable_srt, fill=value))+
+    geom_rect(data=boundary_df, mapping = aes(xmin=ymin, xmax=ymax, ymin=xmin, ymax=xmax), fill=alpha("grey", 0), color="grey") +
+    theme(axis.text.x = element_text(angle = 45, vjust=1, hjust=1), axis.title.x = element_blank())
+
+
+hist(aggregate(value ~ variable, lit_df_melt, sum)$value)
+
+
+## some fit stats
+## 
+
+
+wss2 <- function(d) {
+      sum(scale(d, scale = FALSE)^2)
+  }
+
+
+wrap <- function(i, hc, x) {
+    cl <- cutree(hc, i)
+    spl <- split(x, cl)
+    wss <- sum(sapply(spl, wss2))
+    wss
+}
+
+hclustAIC <- function(to_cut, n, dfx){
+    ## n2 <- nrow(clust.df)
+    n2 <- len(clust_papers[[2]])
+    m <- 2
+    D <- wrap(n, hc=to_cut, x=dfx)
+
+    return(data.frame(
+        n = n,
+        AIC = D + 2*m*n,
+        BIC = D + log(n2)*m*n))
+}
+
+
+
+
+clust_res_papers <- lapply(seq(1,12), function(x) hclustAIC(clust_papers, x, lit_df_cast3))
+clust_res_papers2 <- do.call(rbind, clust_res_papers)
+clust_res_papers2$topic <- "papers"
+
+clust_res_tags <-  lapply(seq(1,12), function(x) hclustAIC(clust_tags, x, t(lit_df_cast3)))
+clust_res_tags2 <- do.call(rbind, clust_res_tags)
+clust_res_tags2$topic <- "tags"
+
+clust_res_cbn <- rbind(clust_res_papers2, clust_res_tags2)
+clust_res_melt <- as_tibble(melt(clust_res_cbn, id=c("n", "topic")))
+
+
+ggplot(clust_res_melt, aes(x=n, y=value, group=interaction(topic, variable), color=interaction(topic, variable))) +
+    geom_line()
+
