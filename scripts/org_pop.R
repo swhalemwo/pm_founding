@@ -400,6 +400,12 @@ df_anls$nbr_opened_cum_sqrd <- (df_anls$nbr_opened_cum^2)/100
 
 
 
+## ** directions of trade
+
+
+
+
+
 ## ** checking NAs
 
 aggregate(gdp_pcap ~ countrycode, data = df_anls, function(x){sum(is.na(x))}, na.action = NULL)
