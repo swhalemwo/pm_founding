@@ -43,6 +43,49 @@ df$museum_closed <- df$"Museum closed"
 ## tbl2
 
 
+df$"Collection genre focus"
+summary(df$"Collection genre focus")
+table(is.na(df$"Collection genre focus"))
+
+table(is.na(df$"Floor size"))
+
+df$"Floor size"[!is.na(df$"Floor size")]
+
+df$floor_size <- df$"Floor size"
+
+df[which(df$floor_size == "NA"),]$floor_size <- NA
+
+table(df$floor_size)
+
+df$collection_genre_focus <- df$"Collection genre focus"
+
+
+
+
+df$activities <- df$"Educational / outreach / social / artistic programs"
+strsplit(df$activities, split=c(",|:|;"))
+strsplit(df$activities[553], ',')
+lapply(df$activities, strsplit, split=c(","))
+
+strsplit("asdf,jk;l:l", c(",|;|:"))
+
+strsplit2 <- function(x, min_len){
+    chars <- c()
+    ## for (i in (nchar(x)-min_len -1):nchar(x)){
+    for (end in min_len:nchar(x)){
+        chars <- c(chars, substring(x, 1:(nchar(x)-min_len +1), end))
+    }
+    return(unique(chars[which(lapply(chars, nchar) >= min_len)]))
+}
+         
+strsplit2("abcdefg", 3)
+## strsplit2(df$activities[553], 3)[4728]
+## x <- df$activities[553]
+
+
+
+
+
 df[which(df$country == "USA"),]$country <- "United States"
 df[which(df$country == "Missouri"),]$country <- "United States"
 df[which(df$country == "England"),]$country <- "United Kingdom"
