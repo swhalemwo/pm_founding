@@ -83,7 +83,61 @@ strsplit2("abcdefg", 3)
 ## x <- df$activities[553]
 
 
+df$mission <- df$"Mission / vision"
+hist(unlist(lapply(df$mission, nchar)), breaks = 40)
 
+library(topicmodels)
+library(tm)
+
+vector_source <- VectorSource(df$mission)
+corpus <- Corpus(vector_source)
+
+review_corpus = tm_map(corpus, content_transformer(tolower))
+review_corpus = tm_map(review_corpus, removeNumbers)
+review_corpus = tm_map(review_corpus, removePunctuation)
+review_corpus = tm_map(review_corpus, removeWords, c("the", "and", stopwords("english")))
+## review_corpus = tm_map(review_corpus, removeWords, c("art", "museum", "contemporary", "collection", "artists", "exhibitions", "works"))
+review_corpus = tm_map(review_corpus, removeWords, c(stopwords("german")))
+review_corpus =  tm_map(review_corpus, stripWhitespace)
+
+dtm <- DocumentTermMatrix(review_corpus)
+## dropping documents with 0 terms
+dtm <- dtm[which(apply(dtm, 1, sum) !=0),]
+
+lda_res <- LDA(dtm, k=2)
+
+library(tidytext)
+lda_topics <- tidy(lda_res, matrix = "beta")
+
+top_terms <- lda_topics %>%
+  group_by(topic) %>%
+  slice_max(beta, n = 10) %>% 
+  ungroup() %>%
+  arrange(topic, -beta)
+
+## top_terms %>%
+##   mutate(term = reorder_within(term, beta, topic)) %>%
+##   ggplot(aes(beta, term, fill = factor(topic))) +
+##   geom_col(show.legend = FALSE) +
+##   facet_wrap(~ topic, scales = "free") +
+##   scale_y_reordered()
+
+
+beta_wide <- lda_topics %>%
+  mutate(topic = paste0("topic", topic)) %>%
+  pivot_wider(names_from = topic, values_from = beta) %>% 
+  filter(topic1 > .001 | topic2 > .001) %>%
+  mutate(log_ratio = log2(topic2 / topic1))
+
+beta_wide2 <- rbind(beta_wide[order(beta_wide$log_ratio)[c(1:10)],],
+                    beta_wide[rev(order(beta_wide$log_ratio))[c(1:10)],])
+
+beta_wide2 <- beta_wide2[order(beta_wide2$log_ratio),]
+beta_wide2$term <- factor(beta_wide2$term, levels = beta_wide2$term[order(beta_wide2$log_ratio)])
+
+## ggplot(beta_wide2, aes(x=term, y=log_ratio)) +
+##     geom_bar(stat="identity") +
+##     coord_flip()
 
 
 df[which(df$country == "USA"),]$country <- "United States"
