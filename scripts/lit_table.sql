@@ -54,6 +54,18 @@ SELECT DISTINCT(CONCAT(country_name, '-', counterpart_country_name)) AS pair, no
 
 SELECT tpl.1 AS ccd, tpl.2 AS ctrccd FROM (SELECT  Distinct(country_code, counterpart_country_code) AS tpl from dots_prep where time_period = '2020' group by country_code, counterpart_country_code)
 
+
 SELECT notEmpty('asd'), country_name FROM dots_prep
 
 SELECT DISTINCT(country_name) from dots_prep
+
+-- **
+
+insert into dots
+select country_name, country_code, indicator_name, indicator_code, counterpart_country_name, counterpart_country_code, toInt16(time_period) as year, value, status from dots_prep
+WHERE LENGTH(time_period)=4
+
+
+-- CREATE TABLE dots (country_name String, country_code Int8, indicator_name String, indicator_code String, counterpart_country_name String, counterpart_country_code String, year Int16, value Float32, status String) engine=MergeTree() partition BY year ORDER BY tuple()
+
+SELECT COUNT(*) FROM dots

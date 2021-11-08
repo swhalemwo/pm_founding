@@ -401,7 +401,8 @@ df_anls$nbr_opened_cum_sqrd <- (df_anls$nbr_opened_cum^2)/100
 
 
 ## ** directions of trade
-
+## *** exploring completeness
+## **** across years
 ## compare degree of coverage across years
 
 con <- DBI::dbConnect(RClickhouse::clickhouse(), host="localhost", db = "org_pop")
@@ -417,6 +418,8 @@ sample(unique_pairs_1985$pair, 200)
 tbl_imf <- table(countrycode(unlist(strsplit(unique_pairs_1985$pair, '-')), 'imf', 'country.name'))
 tbl_imf[rev(order(tbl_imf))][c(0:30)]
 
+## **** country coded completeness check: done 
+
 ## hmm a bunch of country codes don't get clearly matched
 ## maybe i can group by country_code and counterpart_country_code rather than by my string stuff
 ## also easier to which countrycodes produce mistakes in conversion
@@ -428,11 +431,14 @@ unq_crys2 <- as_tibble(dbGetQuery(con, "SELECT tpl.1 AS country_name, tpl.2 AS c
 unq_crys <- unique(rbind(unq_crys1, unq_crys2))
 unq_crys$conversion <- countrycode(unq_crys$country_code, "imf", "country.name")
 
-as.data.frame(unq_crys[which(!is.na(unq_crys$conversion)),c("country_name", "conversion")])
-
 
 as.data.frame(unq_crys[which(is.na(unq_crys$conversion)),])
 ## conversion problems mostly about regional groupings/associations (USSR, world, Emerging countries, Asia not specified) etc
+
+as.data.frame(unq_crys[which(!is.na(unq_crys$conversion)),c("country_name", "conversion")])
+## conversion between imf countrycode and name seems to work well 
+
+## **** type of time period: done
 
 ## also need to compare coverage across time intervals
 
@@ -474,6 +480,16 @@ sum(dots_cpltns_df$yearly_unique)
 sum(dots_cpltns_df$quarterly_unique)
 ## using yearly data seems ok, quarterly has slightly more unique, but could easily be that coverage is not complete for all quartiles
 ## could check but don't think there's much need at this stage
+## could also rewrite function to save df R objects, but really no need atm
+
+
+
+
+
+## *** computation
+
+vlu_cmd <- "SELECT * from dots where 
+
 
 
 ## ** checking NAs
