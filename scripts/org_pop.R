@@ -402,8 +402,78 @@ df_anls$nbr_opened_cum_sqrd <- (df_anls$nbr_opened_cum^2)/100
 
 ## ** directions of trade
 
+## compare degree of coverage across years
+
+con <- DBI::dbConnect(RClickhouse::clickhouse(), host="localhost", db = "org_pop")
+
+pairs_1985 <- as_tibble(dbGetQuery(con, "SELECT DISTINCT(CONCAT(toString(country_code), '-', toString(counterpart_country_code))) AS pair from dots_prep WHERE time_period='1985'"))
+
+pairs_2020 <- as_tibble(dbGetQuery(con, "SELECT DISTINCT(CONCAT(toString(country_code), '-', toString(counterpart_country_code))) AS pair from dots_prep WHERE time_period='2020'"))
+
+unique_pairs_1985 <- pairs_1985[which(pairs_1985$pair %!in% pairs_2020$pair),]
+sample(unique_pairs_1985$pair, 200)
+## seems mostly countries that don't exist anymore in 2020: USSR, East Germany, Czechoslovakia
+
+tbl_imf <- table(countrycode(unlist(strsplit(unique_pairs_1985$pair, '-')), 'imf', 'country.name'))
+tbl_imf[rev(order(tbl_imf))][c(0:30)]
+
+## hmm a bunch of country codes don't get clearly matched
+## maybe i can group by country_code and counterpart_country_code rather than by my string stuff
+## also easier to which countrycodes produce mistakes in conversion
+
+unq_crys1 <- as_tibble(dbGetQuery(con, "SELECT tpl.1 AS country_name, tpl.2 AS country_code FROM (SELECT DISTINCT(country_name, country_code) AS tpl FROM dots_prep GROUP BY country_name, country_code)"))
+
+unq_crys2 <- as_tibble(dbGetQuery(con, "SELECT tpl.1 AS country_name, tpl.2 AS country_code FROM (SELECT DISTINCT(counterpart_country_name, counterpart_country_code) AS tpl FROM dots_prep GROUP BY counterpart_country_name, counterpart_country_code)"))
+
+unq_crys <- unique(rbind(unq_crys1, unq_crys2))
+unq_crys$conversion <- countrycode(unq_crys$country_code, "imf", "country.name")
+
+as.data.frame(unq_crys[which(!is.na(unq_crys$conversion)),c("country_name", "conversion")])
 
 
+as.data.frame(unq_crys[which(is.na(unq_crys$conversion)),])
+## conversion problems mostly about regional groupings/associations (USSR, world, Emerging countries, Asia not specified) etc
+
+## also need to compare coverage across time intervals
+
+
+dots_time_cprn <- function(year){
+    pairs_yx_qs <- as.data.frame(matrix(ncol = 2, nrow = 0))
+    names(pairs_yx_qs) <- c("ccd", "ctrccd")
+
+    print(year)
+
+    for (i in seq(4)){
+        cmd <- "SELECT tpl.1 AS ccd, tpl.2 AS ctrccd FROM (SELECT  Distinct(country_code, counterpart_country_code) AS tpl from dots_prep where time_period = '{year}Q{i}' group by country_code, counterpart_country_code)"
+
+        pairs_yx_qx <- as_tibble(dbGetQuery(con, glue(cmd)))
+        pairs_yx_qs <- rbind(pairs_yx_qs, pairs_yx_qx)
+    }
+    
+    
+    pairs_yx_qs <- unique(pairs_yx_qs)
+
+    year_cmd <- "SELECT tpl.1 AS ccd, tpl.2 AS ctrccd FROM (SELECT  Distinct(country_code, counterpart_country_code) AS tpl from dots_prep where time_period = '{year}' group by country_code, counterpart_country_code)"
+    pairs_yx <- as_tibble(dbGetQuery(con, glue(year_cmd)))
+
+    names(pairs_yx) <- names(pairs_yx_qs)
+    
+    return(list(
+        year=year,
+        yearly_pairs= nrow(pairs_yx),
+        quarter_pairs= nrow(pairs_yx_qs),
+        yearly_unique= nrow(setdiff(pairs_yx, pairs_yx_qs)),
+        quarterly_unique= nrow(setdiff(pairs_yx_qs, pairs_yx)),
+        common_pairs= nrow(union(pairs_yx_qs, pairs_yx))))
+}
+
+dots_cpltns_res <- lapply(seq(1985,2020), dots_time_cprn)
+
+dots_cpltns_df <- do.call(rbind.data.frame, dots_cpltns_res)
+sum(dots_cpltns_df$yearly_unique)
+sum(dots_cpltns_df$quarterly_unique)
+## using yearly data seems ok, quarterly has slightly more unique, but could easily be that coverage is not complete for all quartiles
+## could check but don't think there's much need at this stage
 
 
 ## ** checking NAs
