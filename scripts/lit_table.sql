@@ -59,13 +59,32 @@ SELECT notEmpty('asd'), country_name FROM dots_prep
 
 SELECT DISTINCT(country_name) from dots_prep
 
--- **
+-- ** inserting yearly data 
+
+CREATE TABLE dots (country_name String, country_code Int16, indicator_name String, indicator_code String, counterpart_country_name String, counterpart_country_code String, year Int16, value Float32, status String) engine=MergeTree() partition BY year ORDER BY tuple()
+
 
 insert into dots
 select country_name, country_code, indicator_name, indicator_code, counterpart_country_name, counterpart_country_code, toInt16(time_period) as year, value, status from dots_prep
 WHERE LENGTH(time_period)=4
 
 
--- CREATE TABLE dots (country_name String, country_code Int8, indicator_name String, indicator_code String, counterpart_country_name String, counterpart_country_code String, year Int16, value Float32, status String) engine=MergeTree() partition BY year ORDER BY tuple()
 
 SELECT COUNT(*) FROM dots
+
+SELECT * from dots where country_code=134
+
+SELECT * FROM dots LIMIT 10
+
+or (country_code='138' and counterpart_country_code='134')
+
+SELECT indicator_code, indicator_name, cnt FROM (
+SELECT tpl.1 AS indicator_name, tpl.2 AS indicator_code FROM (
+  SELECT DISTINCT(indicator_name, indicator_code) AS tpl FROM dots GROUP BY indicator_name, indicator_code)
+) JOIN (SELECT indicator_code, COUNT(indicator_code) AS cnt FROM dots GROUP BY indicator_code
+) USING indicator_code
+									       
+									       
+select country_code, counterpart_country_code, concat(toString(country_code), '-', toString(counterpart_country_code)), year, indicator_code, value from dots where year='2000'
+
+SELECT country_code, counterpart_country_code, concat(toString(country_code), '-', toString(counterpart_country_code)) AS link1, concat(toString(counterpart_country_code), '-', toString(country_code)) AS link2, year, indicator_code, value FROM dots WHERE year='2000'

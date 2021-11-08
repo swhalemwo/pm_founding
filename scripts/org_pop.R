@@ -431,6 +431,9 @@ unq_crys2 <- as_tibble(dbGetQuery(con, "SELECT tpl.1 AS country_name, tpl.2 AS c
 unq_crys <- unique(rbind(unq_crys1, unq_crys2))
 unq_crys$conversion <- countrycode(unq_crys$country_code, "imf", "country.name")
 
+imf_list <- apply(unq_crys, 1, function(x) c(x))
+imf_list <- unq_crys$country_name
+names(imf_list) <- unq_crys$country_code
 
 as.data.frame(unq_crys[which(is.na(unq_crys$conversion)),])
 ## conversion problems mostly about regional groupings/associations (USSR, world, Emerging countries, Asia not specified) etc
@@ -488,7 +491,103 @@ sum(dots_cpltns_df$quarterly_unique)
 
 ## *** computation
 
-vlu_cmd <- "SELECT * from dots where 
+## figuring out meaning
+
+vlu_cmd <- "SELECT * from dots 
+where ((country_code='134' and counterpart_country_code='138') 
+or (country_code='138' and counterpart_country_code='134')) and year=2020"
+
+dots_test <- as_tibble(dbGetQuery(con, vlu_cmd))
+
+as.data.frame(dots_test)
+
+dots_test[,c("country_name", "counterpart_country_name", "indicator_code", "value")]
+
+(filter(dots_test, country_name == "Germany" & indicator_code == "TXG_FOB_USD")$value - filter(dots_test, country_name == "Germany" & indicator_code == "TMG_CIF_USD")$value)/filter(dots_test, country_name == "Germany" & indicator_code == "TBG_USD")$value
+
+
+vlu_cmd2 <- "SELECT country_code, counterpart_country_code, concat(toString(country_code), '-', toString(counterpart_country_code)) AS link1, concat(toString(counterpart_country_code), '-', toString(country_code)) AS link2, year, indicator_code, value FROM dots WHERE year='2020'"
+
+fob_cif_cprn <- as_tibble(dbGetQuery(con, vlu_cmd2))
+
+fob_df <- filter(fob_cif_cprn, indicator_code=="TXG_FOB_USD")[,c("country_code", "counterpart_country_code", "year", "value")]
+names(fob_df) <- c("country_code", "counterpart_country_code", "year", "fob_value")
+cif_df <- filter(fob_cif_cprn, indicator_code=="TMG_CIF_USD")[,c("country_code", "counterpart_country_code", "year", "value")]
+## somehow need to change direction,
+## try first with renaming
+## then with link columns
+names(cif_df) <- c("counterpart_country_code", "country_code", "year", "cif_value")
+
+fob_cif_cprn2 <- as_tibble(merge(fob_df, cif_df))
+
+dots_test[,c("country_name", "counterpart_country_name", "indicator_code", "value")]
+
+filter(fob_cif_cprn2, (country_code==134 & counterpart_country_code==138) |  (country_code==138 & counterpart_country_code==134))
+## huh NL imports more to DE than DE to NL, pattern also elsewhere: 
+## https://tradingeconomics.com/netherlands/exports/germany
+## https://tradingeconomics.com/germany/exports/netherlands
+## numbers are off tho
+
+
+
+
+fob_cif_cprn2$diff <- fob_cif_cprn2$fob_value - fob_cif_cprn2$cif_value
+fob_cif_cprn2$diff_log <- log(fob_cif_cprn2$fob_value) - log(fob_cif_cprn2$cif_value)
+hist(fob_cif_cprn2$diff_log, breaks = 1000)
+summary(fob_cif_cprn2$diff)
+hist(fob_cif_cprn2$diff, breaks = 1000)
+boxplot(fob_cif_cprn2$diff, breaks = 500)
+
+iqr <- IQR(fob_cif_cprn2$diff)
+Q <- quantile(fob_cif_cprn2$diff, probs = c(0.25, 0.75))
+up <-  Q[2]+1.5*iqr # Upper Range  
+low<- Q[1]-1.5*iqr # Lower Range﻿
+
+eliminated <- subset(fob_cif_cprn2, fob_cif_cprn2$diff > (Q[1] - 1.5*iqr) & fob_cif_cprn2$diff < (Q[2]+1.5*iqr))
+hist(eliminated$diff, breaks = 50)
+
+## wide range of FOB and CIF diffs, most in ones/tens of millions, but some also hundreds of billions
+
+
+
+## largest ones:
+
+
+
+## first exclude regions/entities that don't translate properly, it's mostly regional groupings that don't make much sense anyways
+fob_cif_cprn2$country_name <- countrycode(fob_cif_cprn2$country_code, 'imf', 'country.name')
+fob_cif_cprn2$counterpart_country_name <- countrycode(fob_cif_cprn2$counterpart_country_code, 'imf', 'country.name')
+
+fob_cif_cprn2_naomit <- na.omit(fob_cif_cprn2)
+hist(fob_cif_cprn2_naomit$diff, breaks = 500)
+
+top_diffs <- c(order(fob_cif_cprn2_naomit$diff)[c(1:15)], rev(order(fob_cif_cprn2_naomit$diff))[c(1:15)])
+as.data.frame(fob_cif_cprn2_naomit[top_diffs,c("country_name", "counterpart_country_name", "diff")])
+
+## whole bunch of China in both plus and minus on, also on both sides
+## but also large differences between Canada/US, US/Mexico, Malaysia/US, Russia/NL
+## but really seems like ~25/30 are about China
+
+
+countrycode(c("DEU", "NLD"), "iso3c", "imf")
+
+
+fob_cif_cprn2_naomit$ratio <- fob_cif_cprn2_naomit$fob_value/fob_cif_cprn2_naomit$cif_value
+fob_cif_cprn2_naomit$ratio2 <- fob_cif_cprn2_naomit$cif_value/fob_cif_cprn2_naomit$fob_value
+hist(fob_cif_cprn2_naomit$ratio, breaks = 1000)
+hist(fob_cif_cprn2_naomit$ratio2, breaks = 1000)
+
+summary(fob_cif_cprn2_naomit$ratio)
+
+hist(fob_cif_cprn2_naomit$ratio[which(fob_cif_cprn2_naomit$ratio < 4)], breaks = 400)
+## largest peak actually not at 1, but slightly below, maybe ~0.95
+
+nrow(filter(fob_cif_cprn2_naomit, ratio < 0.5 | ratio > 2))/nrow(fob_cif_cprn2_naomit)
+## 33% of observations have ratio <0.5 or >2
+
+
+ifs <- read.csv("/home/johannes/Downloads/ifs/IFS_11-08-2021 14-30-52-56.csv")
+## oof 1.5k indicators -> won't have bilateral values
 
 
 
