@@ -1,6 +1,6 @@
 set joined_subquery_requires_alias=0
 
-set output_format_pretty_max_rows=30
+set output_format_pretty_max_rows=200
 
 show tables
 
@@ -88,3 +88,21 @@ SELECT tpl.1 AS indicator_name, tpl.2 AS indicator_code FROM (
 select country_code, counterpart_country_code, concat(toString(country_code), '-', toString(counterpart_country_code)), year, indicator_code, value from dots where year='2000'
 
 SELECT country_code, counterpart_country_code, concat(toString(country_code), '-', toString(counterpart_country_code)) AS link1, concat(toString(counterpart_country_code), '-', toString(country_code)) AS link2, year, indicator_code, value FROM dots WHERE year='2000'
+
+SELECT parent, COUNT(parent) AS cnt FROM (
+SELECT child, parent FROM (
+  SELECT child FROM bc WHERE parent='private-museum')
+  JOIN (SELECT child, parent FROM bc)
+  USING child
+  ) GROUP BY parent ORDER BY cnt DESC
+
+
+SELECT child, parent, 
+SELECT child, parent FROM (
+  SELECT child, parent FROM bc
+   WHERE parent IN ['state-support', 'subsidies', 'finance', 'policy', 'donation', 'tax-deduction', 'cls_papers', 'cls_toread']) JOIN 
+   (SELECT DISTINCT(child) FROM bc WHERE parent='private-museum') USING child
+
+
+
+   'incentives', 'philanthropy',

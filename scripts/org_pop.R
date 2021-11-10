@@ -2021,3 +2021,24 @@ clust_res_melt <- as_tibble(melt(clust_res_cbn, id=c("n", "topic")))
 ggplot(clust_res_melt, aes(x=n, y=value, group=interaction(topic, variable), color=interaction(topic, variable))) +
     geom_line()
 
+
+subsidies_lit_df <- as_tibble(dbGetQuery(con_obvz, "SELECT child, parent FROM (
+  SELECT child, parent FROM bc
+   WHERE parent IN ['state-support', 'subsidies', 'finance', 'policy', 'donation', 'tax-deduction', 'cls_papers', 'cls_toread']) JOIN 
+   (SELECT DISTINCT(child) FROM bc WHERE parent='private-museum') USING child"))
+
+
+subs_cast <- dcast(subsidies_lit_df, child ~ parent)
+subs_cast$fully_read <- subs_cast$cls_papers
+subs_cast <- subs_cast[,-c(which(names(subs_cast) %in% c("cls_papers", "cls_toread")))]
+
+subs_cast_fltrd <- subs_cast[which(rowSums(subs_cast[,c(2:7)]) > 0),]
+nrow(subs_cast_fltrd)
+
+write.csv(subs_cast_fltrd, paste0(TABLE_DIR, "subsidies_lit.csv"))
+
+
+
+
+## should also add tags -> columns
+## also whether fully read or not 
