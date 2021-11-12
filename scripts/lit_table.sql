@@ -1,6 +1,6 @@
 set joined_subquery_requires_alias=0
 
-set output_format_pretty_max_rows=200
+set output_format_pretty_max_rows=30
 
 show tables
 
@@ -105,4 +105,18 @@ SELECT child, parent FROM (
 
 
 
-   'incentives', 'philanthropy',
+'incentives', 'philanthropy',
+
+show tables
+
+SELECT * FROM wdi WHERE varx='popul'
+
+SELECT COUNT(DISTINCT(variable)) FROM wdi WHERE varx='popul'
+
+SELECT variable, COUNT(variable) FROM wdi WHERE varx='popul' GROUP BY variable
+
+
+
+SELECT age, COUNT(age) FROM wdi WHERE varx='popul' AND percentile='p0p100' AND year>1985 GROUP BY age
+-- seems as if all age groups are equally well covered
+-- but only for popul generally 
