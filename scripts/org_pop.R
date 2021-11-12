@@ -238,6 +238,26 @@ aggregate(gini ~ country, data = df_wb_gini_molt, function(x){sum(is.na(x))}, na
 ## whole bunch of NAs.. should check aggregation to some spell
 ## will remove many observations tho -> need to have function/systematic
 
+## *** population
+wb_population <- as_tibble(read.csv("/home/johannes/Dropbox/phd/papers/org_pop/data/wb_population/API_SP.POP.TOTL_DS2_en_csv_v2_3158886.csv", header = F))
+df_wb_population <- wb_population[3:nrow(wb_population), c(1,2,5:ncol(wb_population)-1)]
+
+names(df_wb_population)[3:ncol(df_wb_population)] <- unlist(df_wb_population[1,3:ncol(df_wb_population)])
+df_wb_population <- df_wb_population[-1,]
+## more effective way of yeeting all the "countries" that aren't countries
+df_wb_population2 <- df_wb_population[which(df_wb_population$V2 %in% countrycode(unique(df_wb_population$V2), "wb", "wb")),]
+
+df_wb_population_molt <- as_tibble(melt(df_wb_population2[,-3], id=c('V1', 'V2')))
+
+names(df_wb_population_molt) <- c('country', 'countrycode', 'year', 'population')
+
+aggregate(population ~ year, data = df_wb_population_molt, function(x){sum(is.na(x))}, na.action = NULL)
+aggregate(population ~ country, data = df_wb_population_molt, function(x){sum(is.na(x))}, na.action = NULL)
+## population seems good, some missing stuff for Gaza/Kuwait, nobody cares
+
+
+
+
 ## *** WID
 
 ## **** setting up CH
@@ -327,7 +347,7 @@ print("done")
 ## For Inner Join
 multi_inner <- as_tibble(Reduce(
   function(x, y, ...) merge(x, y, ...), 
-  list(df_wb_gini_molt, df_gdp_pcap_molt)
+  list(df_wb_gini_molt, df_wb_population_molt, df_gdp_pcap_molt)
 ))
 ## how the fuck does that work? how does it know what variables to use to join?
 ## need to check reduce
@@ -335,6 +355,9 @@ multi_inner <- as_tibble(Reduce(
 
 multi_inner$year <- as.numeric(as.character(multi_inner$year))
 multi_inner <- multi_inner[which(multi_inner$year >= STARTING_YEAR),]
+
+filter(multi_inner, is.na(population))
+## population only missing for stuff where I don't have gdp/gini data anyways
 
 
 ## ** basic DV table preparation
@@ -396,6 +419,13 @@ df_anls$gdp_pcapk <- df_anls$gdp_pcap/1000
 df_anls$nbr_opened_cum <- ave(df_anls$nbr_opened, df_anls$countrycode, FUN = cumsum)
 df_anls$nbr_opened_cum_sqrd <- (df_anls$nbr_opened_cum^2)/100
 ## have to divide by 100 otherwise R glmer.nb complains
+
+
+## PMs opened per 1m people -> rate
+df_anls$nbr_opened_prop <- df_anls$nbr_opened/(df_anls$population/1000000)
+
+## iceland, monaco, cyprus LUL
+filter(df_anls, nbr_opened_prop > 1)
 
 
 
@@ -1000,6 +1030,7 @@ filter(df_egmus, Country == "Italy")$private_num
 
 
 
+
 ## *** diffusion
 ## **** geographical proximity: use country boundaries
 library(rgdal)
@@ -1370,12 +1401,12 @@ reg_res <- regger.nb(list(
     nbr_opened ~ nbr_opened_lag1 + nbr_opened_cum + nbr_opened_cum_sqrd + (1 | countrycode)),
     df_anls)
 
+screenreg(reg_res)
 
-
-x <- glmer.nb(nbr_opened ~ gdp_pcapd + (1 | countrycode), data = df_anls)
+x <- glmer.nb(nbr_opened ~ gdp_pcapk + (1 | countrycode), data = df_anls)
 screenreg(x)
 
-screenreg(reg_res)
+
 mod <- reg_res[[1]]
 
 screenreg(mod)
