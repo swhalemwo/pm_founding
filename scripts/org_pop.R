@@ -1769,11 +1769,48 @@ year_selector <- function(x)(
 df_plt$cut <- cut(df_plt$year, seq(min(df_plt$year), max(df_plt$year)+5, by = 3))
 df_plt$cut2 <- as.numeric(sapply(as.character(df_plt$cut), year_selector))
 
-df_viz <- aggregate(nbr_opened ~ region + cut2, df_plt, sum)
+df_viz <- as_tibble(aggregate(nbr_opened ~ region + cut2, df_plt, sum))
 
-ggplot(df_viz, aes(x=cut2, y=nbr_opened, group = region, color = region)) +
+
+## founding rates
+## first country mean per cut
+## then region sum 
+df_viz_pop1 <- as_tibble(aggregate(population ~ countrycode + cut2 , df_plt, mean))
+filter(df_viz_pop1, countrycode == "DEU")
+df_viz_pop1$region <- countrycode(df_viz_pop1$countrycode, "iso3c", "region")
+
+countrycode(unique(filter(df_viz_pop1, region == "South Asia")$countrycode), "iso3c", "country.name")
+
+
+df_viz_pop2 <- as_tibble(aggregate(population ~ region + cut2, df_viz_pop1, sum))
+
+## ggplot(df_viz_pop2, aes(x=cut2, y=population, group=region, color=region)) +
+##     geom_line()
+
+
+
+df_viz_pop3 <- as_tibble(merge(df_viz, df_viz_pop2))
+df_viz_pop3$rate <- df_viz_pop3$nbr_opened/(df_viz_pop3$population/1e+8)
+
+
+p_abs <- ggplot(df_viz, aes(x=cut2, y=nbr_opened, group = region, color = region)) +
     geom_line(size=1) +
     scale_color_brewer(palette="Dark2") 
+
+p_rel <- ggplot(df_viz_pop3, aes(x=cut2, y=rate, group = region, color = region)) +
+    geom_line(size=1) +
+    scale_color_brewer(palette="Dark2") 
+
+library(ggpubr)
+ggarrange(p_abs, p_rel, nrow = 2)
+
+
+
+## atm it's per hundred million
+## even the absolute peak of founding was less than 5 per 100 million
+## could even do per billion
+## but not good: US/EU don't have more than a billion -> hard to understand what 30 per billion means; 3 per 100 million is much easier to imagine 
+
 
 ## hehehe Europe super strong
 ## weird how active Europe europe is in 80s
