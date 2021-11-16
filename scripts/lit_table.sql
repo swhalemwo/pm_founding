@@ -1,6 +1,6 @@
 set joined_subquery_requires_alias=0
 
-set output_format_pretty_max_rows=30
+set output_format_pretty_max_rows=40
 
 show tables
 
@@ -120,3 +120,9 @@ SELECT variable, COUNT(variable) FROM wdi WHERE varx='popul' GROUP BY variable
 SELECT age, COUNT(age) FROM wdi WHERE varx='popul' AND percentile='p0p100' AND year>1985 GROUP BY age
 -- seems as if all age groups are equally well covered
 -- but only for popul generally 
+
+DESCRIBE wdi
+
+SELECT DISTINCT(variable), varx FROM wdi WHERE ilike(varx, '%weal%' )
+
+SELECT country, value FROM wdi WHERE variable='mnweal999i' AND year > 1985

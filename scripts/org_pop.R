@@ -61,6 +61,8 @@ STARTING_YEAR <- 1985
 WID_DIR = "/home/johannes/Dropbox/phd/papers/org_pop/data/wid/"
 WID_FILES <- list.files(WID_DIR)
 
+con <- DBI::dbConnect(RClickhouse::clickhouse(), host="localhost", db = "org_pop")
+
 ## ** custom funcs
 
 
@@ -617,6 +619,7 @@ check_wid_cpltns <- function(varx, percentile){
 
     return(list(
         variable = varx,
+        percentile = percentile,
         PMs_covered_raw=PMs_covered_raw,
         cry_cvrg_geq3=cry_cvrg_geq3,
         most_affected_crys = paste(most_affected_crys, collapse = "--"),
@@ -624,6 +627,56 @@ check_wid_cpltns <- function(varx, percentile){
         nbr_of_crys_geq1pm=nbr_of_crys_geq1pm))
     }
 }
+
+## could add something like how complete the countries are that are not fully complete to assess how difficult imputation will be 
+
+
+wid_wealth_vars_cmd <- "SELECT DISTINCT(variable), percentile FROM wdi WHERE ilike(varx, '%weal%' )"
+wid_wealth_vars <- as_tibble(dbGetQuery(con, wid_wealth_vars_cmd))
+unique(wid_wealth_vars)
+
+check_wid_cpltns("mgweal999i", "p0p100")
+
+
+combos <- split(wid_wealth_vars, seq(nrow(wid_wealth_vars)))
+
+wid_cpltns_check_wrapper <- function(combo){
+    print(combo)
+    return(check_wid_cpltns(combo$variable, combo$percentile))
+}
+
+
+check_wid_cpltns(combos[[1]][[1]][1], combos[[1]][[1]][2])
+wid_cpltns_check_wrapper(combos[[1]])
+
+wealth_res <- mclapply(combos, wid_cpltns_check_wrapper, mc.cores = 6)
+wealth_res_df <- as_tibble(apply(Reduce(function(x,y,...) rbind(x,y,...), wealth_res), 2, unlist))
+## sloppy converting numbers back to numeric
+wealth_res_df[c("PMs_covered_raw", "cry_cvrg_geq3", "nbr_of_crys_geq3", "nbr_of_crys_geq1pm")] <- apply(wealth_res_df[c("PMs_covered_raw", "cry_cvrg_geq3", "nbr_of_crys_geq3", "nbr_of_crys_geq1pm")], 2, as.numeric)
+
+
+wealth_res_df2 <- as.data.frame(filter(wealth_res_df, PMs_covered_raw > 250))[,-c(which(names(wealth_res_df) == "most_affected_crys"))]
+
+wealth_res_df2$variable_label <- recode(wealth_res_df2$variable,
+      "apweal999i" = "average individual wealth of combined sector (households, NPISH)",
+      "anweal999i" = "average individual wealth of national economy",
+      "wwealn999i" = "wealth-to-income ratio of national economy",
+      "mpweal999i" = "total wealth of combined sector",
+      "apweal992i" = "average individual wealth of combined sector (above 20 y/o)",
+      "mgweal999i" = "total net wealth of general government",
+      "wwealg999i" = "wealth-to-income ratio of national economy",
+      "wwealp999i" = "net private wealth to net national income ratio",
+      "anweal992i" = "average individual wealth of national economy (above 20 y/o)",
+      "agweal999i" = "average individual net wealth of general government",
+      "mnweal999i" = "total individual wealth of national economy",
+      "agweal992i" = "average individual net wealth of general government")
+
+
+
+
+
+
+
 
 
 REDO_WID_CPLTNS_CHK <- FALSE
@@ -2148,3 +2201,4 @@ write.csv(subs_cast_fltrd, paste0(TABLE_DIR, "subsidies_lit.csv"))
 
 ## should also add tags -> columns
 ## also whether fully read or not 
+
