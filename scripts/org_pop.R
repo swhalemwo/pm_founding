@@ -13,6 +13,9 @@ library(parallel)
 library(RClickhouse)
 library(docstring)
 library(DBI)
+library(TTR)
+library(ggpubr)
+
 ds <- docstring
 
 
@@ -1697,14 +1700,52 @@ df_viz_pop3$rate <- df_viz_pop3$nbr_opened/(df_viz_pop3$population/1e+8)
 
 p_abs <- ggplot(df_viz, aes(x=cut2, y=nbr_opened, group = region, color = region)) +
     geom_line(size=1) +
-    scale_color_brewer(palette="Dark2") 
+    scale_color_brewer(palette="Dark2") +
+    labs(x="year (3 year aggregate)", y= "number opened", title = 'absolute')
 
 p_rel <- ggplot(df_viz_pop3, aes(x=cut2, y=rate, group = region, color = region)) +
     geom_line(size=1) +
-    scale_color_brewer(palette="Dark2") 
+    scale_color_brewer(palette="Dark2") +
+    labs(y="foundings per 100m", x="year (3 year aggregate)", title = 'relative')
 
-library(ggpubr)
+
+pdf(paste0(FIG_DIR, "foundings_cut3.pdf"), height = 9, width = 9)
 ggarrange(p_abs, p_rel, nrow = 2)
+dev.off()
+
+
+df_viz_rol1 <- aggregate(cbind(population, nbr_opened) ~ region + year, df_plt[,c("countrycode", "year", "region", "population", "nbr_opened")], sum)
+
+ROLLING_AVG_LEN <- 4
+
+df_viz_rol2 <- df_viz_rol1  %>% group_by(region) %>% mutate(nbr_opened_rollavg = runMean(nbr_opened, ROLLING_AVG_LEN))
+df_viz_rol2 <- df_viz_rol2  %>% group_by(region) %>% mutate(population_rollavg = runMean(population, ROLLING_AVG_LEN))
+
+df_viz_rol2$rate_rollavg <- df_viz_rol2$nbr_opened_rollavg/(df_viz_rol2$population_rollavg/1e+8)
+
+p_ra_abs <- ggplot(df_viz_rol2, aes(x=year, y=nbr_opened_rollavg, group=region, color=region)) + 
+    geom_line(size=1) +
+    scale_color_brewer(palette="Dark2") +
+    labs (y = "number opened (4 year rolling average)", title = "absolute")
+
+p_ra_rel <- ggplot(df_viz_rol2, aes(x=year, y=rate_rollavg, group=region, color=region)) + 
+    geom_line(size=1) +
+    scale_color_brewer(palette="Dark2") +
+    labs(y="foundings per 100m (4 year rolling average)", title = "relative")
+
+pdf(paste0(FIG_DIR, "foundings_ra4.pdf"), height = 9, width = 9)
+ggarrange(p_ra_abs, p_ra_rel, nrow = 2)
+dev.off()
+
+
+filter(df_viz_rol2, year > 2017 & region == "Middle East & North Africa")
+
+
+
+
+
+
+
 
 
 
