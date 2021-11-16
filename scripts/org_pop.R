@@ -51,104 +51,6 @@ df[which(df$country == "England"),]$country <- "United Kingdom"
 
 df$countrycode <- recode(df$country, "United Kingdom" = "GBR", "Spain" = "ESP", "United States" = "USA", "Switzerland" = "CHE" , "India" = "IND", "Greece" = "GRC", "Lebanon" = "LBN", "France" = "FRA", "Estonia" = "EST", "Azerbaijan" = "AZE", "Latvia" = "LVA", "Madagascar" = "MDG", "Indonesia" = "IDN", "Slovakia" = "SVK", "Romania" = "ROU","Argentina" = "ARG","South Korea" = "KOR", "Japan" = "JPN", "Benin" = "BEN", "Bangladesh" = "BGD", "Australia" = "AUS", "Norway" = "NOR", "New Zealand" = "NZL", "Poland" = "POL", "Nigeria" = "NGA", "Portugal" = "PRT", "Serbia" = "SRB","Czech Republic" = "CZE","Senegal" = "SEN", "Puerto Rico" = "PRI", "Taiwan" = "TWN", "Israel" = "ISR", "England" = "GBR", "China" = "CHN", "Germany" = "DEU", "Netherlands" = "NLD", "Italy" = "ITA", "Russia" = "RUS", "Canada" = "CAN", "Hungary" = "HUN", "Belgium" = "BEL", "Sweden" = "SWE", "Finland" = "FIN","Malaysia" = "MYS","Philippines" = "PHL", "Turkey" = "TUR", "Austria" = "AUT", "South Africa" = "ZAF","Thailand" = "THA", "Denmark" = "DNK",  "Mexico" = "MEX", "United Arab Emirates" = "ARE","Brazil" = "BRA", "Hong Kong" = "HKG", "Ukraine" = "UKR", "Kuwait" = "KWT",  "Cyprus" = "CYP", "Monaco" = "MCO", "Iceland" = "ISL", "Kenya" = "KEN", "Singapore" = "SGP", "Iran" = "IRN", "Lithuania" = "LTU", .default= NA_character_)
 
-## ** looking into how messy variables can be sanitized automatically, little success so far
-df$"Collection genre focus"
-summary(df$"Collection genre focus")
-table(is.na(df$"Collection genre focus"))
-
-table(is.na(df$"Floor size"))
-
-df$"Floor size"[!is.na(df$"Floor size")]
-
-df$floor_size <- df$"Floor size"
-
-df[which(df$floor_size == "NA"),]$floor_size <- NA
-
-table(df$floor_size)
-
-df$collection_genre_focus <- df$"Collection genre focus"
-
-df$activities <- df$"Educational / outreach / social / artistic programs"
-strsplit(df$activities, split=c(",|:|;"))
-strsplit(df$activities[553], ',')
-lapply(df$activities, strsplit, split=c(","))
-
-strsplit("asdf,jk;l:l", c(",|;|:"))
-
-strsplit2 <- function(x, min_len){
-    chars <- c()
-    ## for (i in (nchar(x)-min_len -1):nchar(x)){
-    for (end in min_len:nchar(x)){
-        chars <- c(chars, substring(x, 1:(nchar(x)-min_len +1), end))
-    }
-    return(unique(chars[which(lapply(chars, nchar) >= min_len)]))
-}
-         
-strsplit2("abcdefg", 3)
-## strsplit2(df$activities[553], 3)[4728]
-## x <- df$activities[553]
-
-
-df$mission <- df$"Mission / vision"
-hist(unlist(lapply(df$mission, nchar)), breaks = 40)
-
-library(topicmodels)
-library(tm)
-
-vector_source <- VectorSource(df$mission)
-corpus <- Corpus(vector_source)
-
-review_corpus = tm_map(corpus, content_transformer(tolower))
-review_corpus = tm_map(review_corpus, removeNumbers)
-review_corpus = tm_map(review_corpus, removePunctuation)
-review_corpus = tm_map(review_corpus, removeWords, c("the", "and", stopwords("english")))
-## review_corpus = tm_map(review_corpus, removeWords, c("art", "museum", "contemporary", "collection", "artists", "exhibitions", "works"))
-review_corpus = tm_map(review_corpus, removeWords, c(stopwords("german")))
-review_corpus =  tm_map(review_corpus, stripWhitespace)
-
-dtm <- DocumentTermMatrix(review_corpus)
-## dropping documents with 0 terms
-dtm <- dtm[which(apply(dtm, 1, sum) !=0),]
-
-lda_res <- LDA(dtm, k=2)
-
-library(tidytext)
-lda_topics <- tidy(lda_res, matrix = "beta")
-
-top_terms <- lda_topics %>%
-  group_by(topic) %>%
-  slice_max(beta, n = 10) %>% 
-  ungroup() %>%
-  arrange(topic, -beta)
-
-## top_terms %>%
-##   mutate(term = reorder_within(term, beta, topic)) %>%
-##   ggplot(aes(beta, term, fill = factor(topic))) +
-##   geom_col(show.legend = FALSE) +
-##   facet_wrap(~ topic, scales = "free") +
-##   scale_y_reordered()
-
-
-beta_wide <- lda_topics %>%
-  mutate(topic = paste0("topic", topic)) %>%
-  pivot_wider(names_from = topic, values_from = beta) %>% 
-  filter(topic1 > .001 | topic2 > .001) %>%
-  mutate(log_ratio = log2(topic2 / topic1))
-
-beta_wide2 <- rbind(beta_wide[order(beta_wide$log_ratio)[c(1:10)],],
-                    beta_wide[rev(order(beta_wide$log_ratio))[c(1:10)],])
-
-beta_wide2 <- beta_wide2[order(beta_wide2$log_ratio),]
-beta_wide2$term <- factor(beta_wide2$term, levels = beta_wide2$term[order(beta_wide2$log_ratio)])
-
-## ggplot(beta_wide2, aes(x=term, y=log_ratio)) +
-##     geom_bar(stat="identity") +
-##     coord_flip()
-
-
-
-
-
 ## ** set static vars
 FIG_DIR <- "/home/johannes/Dropbox/phd/papers/org_pop/figures/"
 TABLE_DIR <- "/home/johannes/Dropbox/phd/papers/org_pop/tables/"
@@ -1814,6 +1716,101 @@ ggarrange(p_abs, p_rel, nrow = 2)
 
 ## hehehe Europe super strong
 ## weird how active Europe europe is in 80s
+
+
+## ** looking into how messy variables can be sanitized automatically, little success so far
+df$"Collection genre focus"
+summary(df$"Collection genre focus")
+table(is.na(df$"Collection genre focus"))
+
+table(is.na(df$"Floor size"))
+
+df$"Floor size"[!is.na(df$"Floor size")]
+
+df$floor_size <- df$"Floor size"
+
+df[which(df$floor_size == "NA"),]$floor_size <- NA
+
+table(df$floor_size)
+
+df$collection_genre_focus <- df$"Collection genre focus"
+
+df$activities <- df$"Educational / outreach / social / artistic programs"
+strsplit(df$activities, split=c(",|:|;"))
+strsplit(df$activities[553], ',')
+lapply(df$activities, strsplit, split=c(","))
+
+strsplit("asdf,jk;l:l", c(",|;|:"))
+
+strsplit2 <- function(x, min_len){
+    chars <- c()
+    ## for (i in (nchar(x)-min_len -1):nchar(x)){
+    for (end in min_len:nchar(x)){
+        chars <- c(chars, substring(x, 1:(nchar(x)-min_len +1), end))
+    }
+    return(unique(chars[which(lapply(chars, nchar) >= min_len)]))
+}
+         
+strsplit2("abcdefg", 3)
+## strsplit2(df$activities[553], 3)[4728]
+## x <- df$activities[553]
+
+
+df$mission <- df$"Mission / vision"
+hist(unlist(lapply(df$mission, nchar)), breaks = 40)
+
+library(topicmodels)
+library(tm)
+
+vector_source <- VectorSource(df$mission)
+corpus <- Corpus(vector_source)
+
+review_corpus = tm_map(corpus, content_transformer(tolower))
+review_corpus = tm_map(review_corpus, removeNumbers)
+review_corpus = tm_map(review_corpus, removePunctuation)
+review_corpus = tm_map(review_corpus, removeWords, c("the", "and", stopwords("english")))
+## review_corpus = tm_map(review_corpus, removeWords, c("art", "museum", "contemporary", "collection", "artists", "exhibitions", "works"))
+review_corpus = tm_map(review_corpus, removeWords, c(stopwords("german")))
+review_corpus =  tm_map(review_corpus, stripWhitespace)
+
+dtm <- DocumentTermMatrix(review_corpus)
+## dropping documents with 0 terms
+dtm <- dtm[which(apply(dtm, 1, sum) !=0),]
+
+lda_res <- LDA(dtm, k=2)
+
+library(tidytext)
+lda_topics <- tidy(lda_res, matrix = "beta")
+
+top_terms <- lda_topics %>%
+  group_by(topic) %>%
+  slice_max(beta, n = 10) %>% 
+  ungroup() %>%
+  arrange(topic, -beta)
+
+## top_terms %>%
+##   mutate(term = reorder_within(term, beta, topic)) %>%
+##   ggplot(aes(beta, term, fill = factor(topic))) +
+##   geom_col(show.legend = FALSE) +
+##   facet_wrap(~ topic, scales = "free") +
+##   scale_y_reordered()
+
+
+beta_wide <- lda_topics %>%
+  mutate(topic = paste0("topic", topic)) %>%
+  pivot_wider(names_from = topic, values_from = beta) %>% 
+  filter(topic1 > .001 | topic2 > .001) %>%
+  mutate(log_ratio = log2(topic2 / topic1))
+
+beta_wide2 <- rbind(beta_wide[order(beta_wide$log_ratio)[c(1:10)],],
+                    beta_wide[rev(order(beta_wide$log_ratio))[c(1:10)],])
+
+beta_wide2 <- beta_wide2[order(beta_wide2$log_ratio),]
+beta_wide2$term <- factor(beta_wide2$term, levels = beta_wide2$term[order(beta_wide2$log_ratio)])
+
+## ggplot(beta_wide2, aes(x=term, y=log_ratio)) +
+##     geom_bar(stat="identity") +
+##     coord_flip()
 
 
 ## * scrap
