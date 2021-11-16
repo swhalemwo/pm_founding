@@ -1740,6 +1740,8 @@ df_plt <- df_anls
 df_plt$region <- countrycode(df_plt$countrycode, "iso3c", "region")
 
 
+## *** n-year cuts
+
 year_selector <- function(x)(
     # convert cuts back to years
     substring(x, 2,5))
