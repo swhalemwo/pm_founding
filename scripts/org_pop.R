@@ -1787,8 +1787,10 @@ pdf(paste0(FIG_DIR, "foundings_cut3.pdf"), height = 9, width = 9)
 ggarrange(p_abs, p_rel, nrow = 2)
 dev.off()
 
+## *** rolling average
 
-df_viz_rol1 <- aggregate(cbind(population, nbr_opened) ~ region + year, df_plt[,c("countrycode", "year", "region", "population", "nbr_opened")], sum)
+
+df_viz_rol1 <- as_tibble(aggregate(cbind(population, nbr_opened) ~ region + year, df_plt[,c("countrycode", "year", "region", "population", "nbr_opened")], sum))
 
 ROLLING_AVG_LEN <- 4
 
@@ -1815,14 +1817,6 @@ dev.off()
 filter(df_viz_rol2, year > 2017 & region == "Middle East & North Africa")
 
 
-
-
-
-
-
-
-
-
 ## atm it's per hundred million
 ## even the absolute peak of founding was less than 5 per 100 million
 ## could even do per billion
@@ -1831,6 +1825,85 @@ filter(df_viz_rol2, year > 2017 & region == "Middle East & North Africa")
 
 ## hehehe Europe super strong
 ## weird how active Europe europe is in 80s
+
+## *** cumulative
+
+df_viz_rol1$nbr_opened_cum <- ave(df_viz_rol1$nbr_opened, df_viz_rol1$region, FUN = cumsum)
+
+df_viz_rol1 <- df_viz_rol1 %>%
+    group_by(region) %>%
+    mutate(nbr_opened_max = max(nbr_opened_cum))
+
+df_viz_rol1 <- mutate(df_viz_rol1, prop_cum = nbr_opened_cum/nbr_opened_max)
+
+df_viz_rol1$alpha <- 1
+df_viz_rol1[which(df_viz_rol1$nbr_opened_max < 50),'alpha'] <- 0.9
+
+
+p_cum_abs <- ggplot(df_viz_rol1, aes(x=year, y=nbr_opened_cum, group=region, color=region)) + 
+    geom_line(size=1) +
+    scale_color_brewer(palette="Dark2") +
+    labs(y="number opened (cumulative)")
+
+p_cum_rel <-
+    ggplot(df_viz_rol1, aes(x=year, y=prop_cum, group=region, color=region, alpha=alpha)) + 
+    geom_line(size=1) +
+    scale_alpha_continuous(range = c(0.3, 1), guide=FALSE) + 
+    scale_color_brewer(palette="Dark2") +
+    labs(y="proportion opened", caption = "regions with less PMs de-emphasized")
+
+
+pdf(paste0(FIG_DIR, "foundings_cum.pdf"), height = 9, width = 9)
+ggarrange(p_cum_abs, p_cum_rel, nrow = 2)
+dev.off()
+
+## europe slightly in front of NA, but East Asia (Korea, China) at same stage/ahead of Europe
+## maybe due to korea? 
+aggregate(nbr_opened ~ country, filter(df_plt, region == "East Asia & Pacific"), sum)
+## -> do for countries with most PMs
+
+country_max <- aggregate(nbr_opened_cum ~ countrycode, df_plt, max)
+country_max_codes <- country_max[rev(order(country_max$nbr_opened_cum))[c(1:12)],]$countrycode
+
+df_plt_cry <- filter(df_plt, countrycode %in% country_max_codes)
+
+df_plt_cry <- df_plt_cry %>%
+    group_by(countrycode) %>%
+    mutate(nbr_opened_max = max(nbr_opened_cum))
+
+df_plt_cry$prop_cum <- df_plt_cry$nbr_opened_cum/df_plt_cry$nbr_opened_max
+
+df_plt_cry$lt <- recode(df_plt_cry$region,
+    "Europe & Central Asia" = "twodash",
+    "East Asia & Pacific" = "solid",
+    "North America" = "F1")
+
+
+p_cry_cum_abs <- ggplot(df_plt_cry, aes(x=year, y=nbr_opened_cum, group=country, color=country)) +
+    geom_line(size=2) +
+    scale_color_brewer(palette = "Set3") +
+    labs(y="number opened (cumulative)")
+
+p_cry_cum_rel <-
+    ggplot(df_plt_cry, aes(x=year, y=prop_cum, group=country, color=country, linetype=region)) +
+    geom_line(size=1) +
+    scale_color_brewer(palette = "Set3") +
+    labs(y="proportion opened", caption = "12 countries with most PMs (70% of PMs)") +
+    theme_dark()
+
+
+pdf(paste0(FIG_DIR, "foundings_country_cumulative.pdf"), height = 9, width = 9)
+ggarrange(p_cry_cum_abs, p_cry_cum_rel, nrow = 2)
+dev.off()
+
+## China really late, Korea really early -> there's much variation within region
+## but no idea how to visualize that.. ribbons? it's not an uncertainty estimate, i know the numbers
+## think it makes rather sense to plot countries individually, maybe line-type by region 
+## I don't trust these korea numbers
+## US/Germany: have the most, and are weirdly in the middle, would have expected them to be leaders
+## could be data issue: only good for them, and for the others the curves are fluctuating randomly because coverage incomplete
+
+
 
 
 ## ** looking into how messy variables can be sanitized automatically, little success so far
