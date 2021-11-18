@@ -2134,6 +2134,7 @@ beta_wide2$term <- factor(beta_wide2$term, levels = beta_wide2$term[order(beta_w
 ## res_objs <- mclapply(reg_objs, glmer.nb, data = df_lag4, mc.cores = 4)
 
 ## * literature table
+## ** organizational population
 con_obvz <- DBI::dbConnect(RClickhouse::clickhouse(), host="localhost", db = "obvz")
 
 dbSendQuery(con_obvz, "set joined_subquery_requires_alias=0")
@@ -2276,6 +2277,9 @@ clust_res_melt <- as_tibble(melt(clust_res_cbn, id=c("n", "topic")))
 ggplot(clust_res_melt, aes(x=n, y=value, group=interaction(topic, variable), color=interaction(topic, variable))) +
     geom_line()
 
+## ** subsidies
+
+                        
 
 subsidies_lit_df <- as_tibble(dbGetQuery(con_obvz, "SELECT child, parent FROM (
   SELECT child, parent FROM bc
@@ -2283,7 +2287,7 @@ subsidies_lit_df <- as_tibble(dbGetQuery(con_obvz, "SELECT child, parent FROM (
    (SELECT DISTINCT(child) FROM bc WHERE parent='private-museum') USING child"))
 
 
-subs_cast <- dcast(subsidies_lit_df, child ~ parent)
+subs_cast <- dcast(subsidies_lit_df, child ~ parent, length)
 subs_cast$fully_read <- subs_cast$cls_papers
 subs_cast <- subs_cast[,-c(which(names(subs_cast) %in% c("cls_papers", "cls_toread")))]
 
@@ -2291,6 +2295,41 @@ subs_cast_fltrd <- subs_cast[which(rowSums(subs_cast[,c(2:7)]) > 0),]
 nrow(subs_cast_fltrd)
 
 write.csv(subs_cast_fltrd, paste0(TABLE_DIR, "subsidies_lit.csv"))
+
+## ** functionalization
+
+lit_tbl_gnrtr <- function(query, labelx) {
+    lit_df <- as_tibble(dbGetQuery(con_obvz, query))
+    lit_df_cast <- dcast(lit_df, child ~ parent)
+    lit_df_cast$fully_read <- lit_df_cast$cls_papers
+    
+    lit_df_cast <- lit_df_cast[,-c(which(names(lit_df_cast) %in% c("cls_papers", "cls_toread")))]
+    print(nrow(lit_df_cast))
+    ## lit_df_cast
+    ## rowSums doesn't work with just one colunm
+
+    if (ncol(lit_df_cast)>3){
+        lit_df_cast_fltrd <- lit_df_cast[which(rowSums(lit_df_cast[,c(2:(ncol(lit_df_cast)-1))]) > 0),]
+    } else {
+
+        lit_df_cast_fltrd <- lit_df_cast[which(lit_df_cast[,c(2:(ncol(lit_df_cast)-1))] > 0),]
+    }
+    ## print(nrow(lit_df_cast_fltrd))
+     lit_df_cast_fltrd
+    ## write.csv(lit_df_cast_fltrd, paste0(TABLE_DIR, paste0(labelx, ".csv")))
+}
+
+## ** inequality 
+ineq_query <- "SELECT child, parent FROM (
+  SELECT child, parent FROM bc
+   WHERE parent IN ['inequality', 'cls_papers', 'cls_toread']) JOIN 
+   (SELECT DISTINCT(child) FROM bc WHERE parent='private-museum') USING child"
+
+lit_df_cast <- 0
+lit_df <- 0
+
+
+lit_tbl_gnrtr(ineq_query, "inequality_lit")
 
 
 

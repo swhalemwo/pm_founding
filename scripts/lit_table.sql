@@ -97,11 +97,18 @@ SELECT child, parent FROM (
   ) GROUP BY parent ORDER BY cnt DESC
 
 
-SELECT child, parent, 
+
 SELECT child, parent FROM (
   SELECT child, parent FROM bc
    WHERE parent IN ['state-support', 'subsidies', 'finance', 'policy', 'donation', 'tax-deduction', 'cls_papers', 'cls_toread']) JOIN 
    (SELECT DISTINCT(child) FROM bc WHERE parent='private-museum') USING child
+
+SELECT DISTINCT(child) FROM (
+SELECT child, parent FROM (
+  SELECT child, parent FROM bc
+   WHERE parent IN ['inequality', 'cls_papers', 'cls_toread']) JOIN 
+   (SELECT DISTINCT(child) FROM bc WHERE parent='private-museum') USING child)
+
 
 
 
@@ -126,3 +133,5 @@ DESCRIBE wdi
 SELECT DISTINCT(variable), varx FROM wdi WHERE ilike(varx, '%weal%' )
 
 SELECT country, value FROM wdi WHERE variable='mnweal999i' AND year > 1985
+
+
