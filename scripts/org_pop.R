@@ -2299,14 +2299,23 @@ write.csv(subs_cast_fltrd, paste0(TABLE_DIR, "subsidies_lit.csv"))
 ## ** functionalization
 
 lit_tbl_gnrtr <- function(query, labelx) {
+    #' generates lit table from clickhouse query
+    #' "SELECT child, parent FROM (
+    #' SELECT child, parent FROM bc
+    #' WHERE parent IN ['list', 'of', 'tags', 'cls_papers', 'cls_toread']) JOIN 
+    #' (SELECT DISTINCT(child) FROM bc WHERE parent='private-museum') USING child"
+    
     lit_df <- as_tibble(dbGetQuery(con_obvz, query))
-    lit_df_cast <- dcast(lit_df, child ~ parent)
+    lit_df_cast <- dcast(lit_df, child ~ parent, length)
     lit_df_cast$fully_read <- lit_df_cast$cls_papers
     
     lit_df_cast <- lit_df_cast[,-c(which(names(lit_df_cast) %in% c("cls_papers", "cls_toread")))]
     print(nrow(lit_df_cast))
     ## lit_df_cast
     ## rowSums doesn't work with just one colunm
+
+    ## have to filter because getting fully read indicator means I have to have cls_toread/cls_papers 
+    ## -> then gets all the entries regardless of tag
 
     if (ncol(lit_df_cast)>3){
         lit_df_cast_fltrd <- lit_df_cast[which(rowSums(lit_df_cast[,c(2:(ncol(lit_df_cast)-1))]) > 0),]
@@ -2315,25 +2324,33 @@ lit_tbl_gnrtr <- function(query, labelx) {
         lit_df_cast_fltrd <- lit_df_cast[which(lit_df_cast[,c(2:(ncol(lit_df_cast)-1))] > 0),]
     }
     ## print(nrow(lit_df_cast_fltrd))
-     lit_df_cast_fltrd
-    ## write.csv(lit_df_cast_fltrd, paste0(TABLE_DIR, paste0(labelx, ".csv")))
+    print(lit_df_cast_fltrd)
+    write.csv(lit_df_cast_fltrd, paste0(TABLE_DIR, paste0(labelx, ".csv")))
 }
 
 ## ** inequality 
 ineq_query <- "SELECT child, parent FROM (
   SELECT child, parent FROM bc
-   WHERE parent IN ['inequality', 'cls_papers', 'cls_toread']) JOIN 
+   WHERE parent IN ['inequality', 'elites', 'concentration', 'cls_papers', 'cls_toread']) JOIN 
    (SELECT DISTINCT(child) FROM bc WHERE parent='private-museum') USING child"
-
-lit_df_cast <- 0
-lit_df <- 0
 
 
 lit_tbl_gnrtr(ineq_query, "inequality_lit")
 
+## *** looking for general mechanisms of inequality motivating elites to do stuf
+ineq_query2 <- "SELECT child, parent FROM (
+  SELECT child, parent FROM bc
+   WHERE parent IN ['inequality', 'elites', 'concentration', 'cls_papers', 'cls_toread']) JOIN 
+   (SELECT DISTINCT(child) FROM bc WHERE parent='legitimation' or parent='legitimacy') USING child"
+
+lit_tbl_gnrtr(ineq_query2, "inequality_lit2")
 
 
+## ** status 
+status_query <- "SELECT child, parent FROM (
+  SELECT child, parent FROM bc
+   WHERE parent IN ['status', 'reputation', 'cls_papers', 'cls_toread']) JOIN 
+   (SELECT DISTINCT(child) FROM bc WHERE parent='private-museum') USING child"
 
-## should also add tags -> columns
-## also whether fully read or not 
+lit_tbl_gnrtr(status_query, "status_lit")
 
