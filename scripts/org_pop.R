@@ -2354,3 +2354,20 @@ status_query <- "SELECT child, parent FROM (
 
 lit_tbl_gnrtr(status_query, "status_lit")
 
+## ** isomorphism
+isomorphism_query <- "SELECT child, parent FROM (
+  SELECT child, parent FROM bc
+   WHERE parent IN ['isomorphism', 'cls_papers', 'cls_toread']) JOIN 
+   (SELECT DISTINCT(child) FROM bc WHERE parent='private-museum') USING child"
+
+lit_tbl_gnrtr(isomorphism_query, "isomorphism_lit")
+
+## * pdf stuff
+library(pdftools)
+READINGS_DIR <- "/home/johannes/Dropbox/readings/"
+x <- pdf_text(paste0(READINGS_DIR, "Walker_2019_collector.pdf"))
+
+some_page <- x[[1]]
+
+## would be necessary to make all the aliases of museum names
+
