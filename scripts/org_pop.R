@@ -543,6 +543,8 @@ unique(df_open$countrycode)[which(unique(df_open$countrycode) %!in% (unique(df_g
 
 
 ## *** WDI completeness checks
+## **** income
+
 x <- tbl(con, "wdi") %>%
     filter(varx == "hweal") %>%
     group_by(percentile) %>%
@@ -558,7 +560,7 @@ base_df <- as_tibble(dbGetQuery(con, base_cmd))
 check_wid_cpltns <- function(varx, percentile){
     #' check how well WID variables cover PM foundings
 
-    print(varx)
+    ## print(varx)
     varz <- varx ## need to assign to own objects to be able to filter on them 
 
     if(missing(percentile)){
@@ -567,7 +569,7 @@ check_wid_cpltns <- function(varx, percentile){
     
     } else {
         
-        print(percentile)
+        ## print(percentile)
         
         pctz <- percentile
         res <- filter(base_df, variable == varz & percentile == pctz)
@@ -576,11 +578,11 @@ check_wid_cpltns <- function(varx, percentile){
 
     ## some exception to throw when too many variables
     if (length(table(res$variable)) > 1){
-        print(varx)
+        ## print(varx)
         stop("too many variables")
     }
 
-    print(nrow(res))
+    ## print(nrow(res))
     if (nrow(res)!=0){
         
     ## make df base to merge WDI data to 
@@ -706,6 +708,14 @@ if (REDO_WID_CPLTNS_CHK){
 
 }
 
+## **** wealth 
+
+wid_cpltns_check_wrapper <- function(combo){
+    ## print(combo)
+    return(check_wid_cpltns(combo$variable, combo$percentile))
+}
+
+
 REDO_WID_WEALTH_CHECKS <- FALSE
 if (REDO_WID_WEALTH_CHECKS){
 
@@ -715,13 +725,7 @@ if (REDO_WID_WEALTH_CHECKS){
 
     check_wid_cpltns("mgweal999i", "p0p100")
 
-
     combos <- split(wid_wealth_vars, seq(nrow(wid_wealth_vars)))
-
-    wid_cpltns_check_wrapper <- function(combo){
-        print(combo)
-        return(check_wid_cpltns(combo$variable, combo$percentile))
-    }
 
 
     check_wid_cpltns(combos[[1]][[1]][1], combos[[1]][[1]][2])
@@ -770,6 +774,133 @@ if (REDO_WID_WEALTH_CHECKS){
         )
 }
 
+## **** middle classes
+## ***** pre-checking the variables to do, not much decrease
+wid_inc_vars_cmd <- "SELECT DISTINCT(variable), percentile FROM wdi WHERE ilike(varx, '%inc%' )"
+wid_inc_vars <- as_tibble(dbGetQuery(con, wid_inc_vars_cmd))
+unique(wid_inc_vars)
+
+perc_splits <- as_tibble(do.call(rbind.data.frame, strsplit(wid_inc_vars$percentile, "p")))[,c(2,3)]
+names(perc_splits) <- c("perc_low", "perc_high")
+
+wid_inc_vars$perc_low <- as.numeric(perc_splits$perc_low)
+wid_inc_vars$perc_high <- as.numeric(perc_splits$perc_high)
+wid_inc_vars
+
+filter(wid_inc_vars, perc_high == 100)
+
+filter(wid_inc_vars, perc_high < 100)$percentile
+
+inc_table <- table(wid_inc_vars$percentile)
+inc_table[rev(order(inc_table))][c(0:100)]
+
+wid_inc_vars$diff <- mutate(wid_inc_vars, diff=perc_high-perc_low)$diff
+hist(wid_inc_vars$diff, breaks=50)
+
+ggplot(filter(wid_inc_vars, perc_high < 100 & diff < 30), aes(y=perc_high, x=perc_low)) +
+    geom_jitter(width=3, height=3, size=0.2)
+
+## most percentiles are about very small steps
+## -> need even additional step of seeing how well variables are covered in terms of percentiles
+##
+
+list_of_ranges <- list(c(1,40), c(30,40), c(80,90))
+
+
+x <- head(wid_inc_vars)$percentile
+
+split_percs <- function(percentile){
+    
+    print('------')
+    print(length(percentile))
+    perc_splits2 <- do.call(rbind.data.frame, strsplit(percentile, "p"))[c(2,3)]
+
+    
+    names(perc_splits2) <- c("low", "high")
+    perc_splits2 <- apply(perc_splits2, 2, as.numeric)
+
+    print(perc_splits2)
+
+    nrox <- nrow(perc_splits2)
+    groups <- seq(nrox)
+    print(nrox)
+    print(groups)
+    if (length(percentile) ==1) {
+        list_of_ranges <- list(perc_splits2)
+    } else {
+        list_of_ranges <- split(perc_splits2, groups)
+    }
+    return (list_of_ranges)
+    }
+    
+split_percs("p99p100")
+
+split_percs(c("p99p100","p1p2"))
+
+list_of_ranges <- split_percs(wid_inc_vars$percentile[c(0:5)])
+check_ranges(list_of_ranges)
+
+
+check_ranges <- function(list_of_ranges){
+    #' see how well a variable is covered
+    cvrg <- length(which(c(0:100) %in% unique(unlist(lapply(list_of_ranges, function(x) (c(x[1]:x[2])))))))
+    ## print(cvrg)
+    nbr_ranges <- length(list_of_ranges)
+    ## print(nbr_ranges)
+    avg_len <- mean(unlist(lapply(list_of_ranges, function(x) x[2]-x[1])))
+    ## print(avg_len)
+    return(list(cvrg = cvrg,
+           nbr_ranges = nbr_ranges,
+           avg_len = avg_len))
+    }
+        
+check_cvrg <- function(percentile){
+    list_of_ranges <- split_percs(percentile)
+    cvrg_res <- check_ranges(list_of_ranges)
+    ## print(list_of_ranges)
+    print(cvrg_res)
+    ## return(paste0('c', 'b'))
+    return(paste0(cvrg_res, collapse="--"))
+    
+}
+
+check_cvrg(list("p0p30"))
+
+
+aggregate(percentile ~ variable, filter(wid_inc_vars, variable == "sptinc992j", diff < 20), check_cvrg)
+
+wid_inc_var_cvrg <- as_tibble(aggregate(percentile ~ variable, filter(wid_inc_vars, diff < 20), check_cvrg))
+
+## splitting results back, assigning to results
+wid_inc_var_cvrg_split <- apply(do.call(rbind, strsplit(wid_inc_var_cvrg$percentile, '--')), 2, as.numeric)
+wid_inc_var_cvrg$cvrg <- wid_inc_var_cvrg_split[,1]
+wid_inc_var_cvrg$nbr_ranges <- wid_inc_var_cvrg_split[,2]
+wid_inc_var_cvrg$avg_len <- wid_inc_var_cvrg_split[,3]
+wid_inc_var_cvrg <- wid_inc_var_cvrg[,-c(2)]
+filter(wid_inc_var_cvrg, cvrg > 80)$cvrg
+## down from 62 to 39
+
+
+filter(wid_inc_vars, variable %in% filter(wid_inc_var_cvrg, cvrg > 80)$variable)
+## hmm ok not that great a reduction: from 12.4k to 10.7k
+
+## fuck i'll still have to check all the subscale variables separately
+## but can still help to do variable completeness first to reduce number of sub-variables I have to run
+## also probably similar infrastructure
+
+## ***** actual running the checks
+    
+combos_inc <- split(wid_inc_vars, seq(nrow(wid_inc_vars)))
+inc_res <- mclapply(combos_inc, wid_cpltns_check_wrapper, mc.cores = 4)
+
+inc_res_df <- as_tibble(apply(Reduce(function(x,y,...) rbind(x,y,...), inc_res), 2, unlist))
+    ## sloppy converting numbers back to numeric
+
+inc_res_df[c("PMs_covered_raw", "cry_cvrg_geq3", "nbr_of_crys_geq3", "nbr_of_crys_geq1pm")] <- apply(inc_res_df[c("PMs_covered_raw", "cry_cvrg_geq3", "nbr_of_crys_geq3", "nbr_of_crys_geq1pm")], 2, as.numeric)
+
+
+
+check_wid_cpltns("sptinc992j", "p60p70")    
 
                     
 ## **** check whether coverage depends on percentile chosen, doesn't really
