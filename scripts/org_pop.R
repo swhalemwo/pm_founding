@@ -898,6 +898,22 @@ inc_res_df <- as_tibble(apply(Reduce(function(x,y,...) rbind(x,y,...), inc_res),
 
 inc_res_df[c("PMs_covered_raw", "cry_cvrg_geq3", "nbr_of_crys_geq3", "nbr_of_crys_geq1pm")] <- apply(inc_res_df[c("PMs_covered_raw", "cry_cvrg_geq3", "nbr_of_crys_geq3", "nbr_of_crys_geq1pm")], 2, as.numeric)
 
+## write.csv(inc_res_df, file = paste0(TABLE_DIR, "inc_res_df.csv"))
+
+ggplot(inc_res_df, aes(x=variable, y=PMs_covered_raw)) +
+    geom_boxplot() 
+    ## geom_jitter(width = 0.1, size=0.5)
+## ok there are like 11 variables that have good coverage
+## hope they have good coverage in terms of percentiles covered
+
+inc_res_tbl <- aggregate(PMs_covered_raw ~ variable, inc_res_df, mean)
+ttl_cvrg_good <- filter(inc_res_tbl, PMs_covered_raw > 400)$variable
+
+pctl_cvrg_good <- filter(wid_inc_var_cvrg, cvrg > 80)$variable
+
+intersect(ttl_cvrg_good, pctl_cvrg_good)
+## all about pre-tax income
+## but there I have average, share and thresholds -> should be sufficient to get some estimates of middle class
 
 
 check_wid_cpltns("sptinc992j", "p60p70")    

@@ -1,6 +1,6 @@
 set joined_subquery_requires_alias=0
 
-set output_format_pretty_max_rows=40
+set output_format_pretty_max_rows=100
 
 show tables
 
