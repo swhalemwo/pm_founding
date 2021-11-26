@@ -1,3 +1,15 @@
+#+latex_class: article_usual2
+# erases make title
+# #+BIND: org-export-latex-title-command ""
+
+# fucks all the maketitlestuff just to be sure
+#+OPTIONS: num:nil
+#+OPTIONS: toc:nil
+#+OPTIONS: h:5
+
+# -*- org-export-babel-evaluate: nil -*-
+
+
 * hypotheses
 ** introduction
 Many different causes have been argued to contribute to the founding of private museums.
@@ -31,5 +43,141 @@ Similarly, as the complex organizational structure of private museums in which d
 
 [[cite:&EFC_2015_comparative]]
 
-** overall wealth
+** wealth
+overall wealth: this could also go through audiences: middle class
+wealth of elites
+private/public ratio
+"inequality"
+
+Wealth is hypothesized to contribute to the founding of private museums in different ways.
+#
+In this section I focus on different material components of wealth; I discuss status dynamics separately in the next section. 
+
+*** overall wealth
+# Overall wealth is particularly in China seen as contributing to the increase in museums through economic development  and increases in people's standards of living [[
+#
+# Lu: mechanism is government spending, there's no argument e.g. about emerging middle class -> demand side
+# also not even about PMs -> can't make argument
+# Song is about collections, not museums
+
+However, general wealth might increase private museums indirectly, such as through an increase in museums generally (i.e., not just private ones cite:&Lu_2014_museums) and private collections parencite:&Song_2008_private.
+
+*** wealth of elites
+The founding of private museums has been associated with the rise of (Ultra) High Net Worth Individuals [[parencite:&Walker_2019_collector p.15/39]] as these "spaces generate costs and mostly no incomes" (cite:&Gnyp_2015_collectors p.236, cite:&Zorloni_Resch_2016_opportunities p.16).
+#
+However, there have also been calls to caution against an exclusive focus on "super rich collectors who attract so much attention [as] there are many others that have made and still make things possible with comparatively small means" [[parencite:&Bechtler_Imhof_2018_future p.12]].
+#
+# i am also
+
+**** Data
+# 
+Systematic wealth data is rather sparse, presumably as, unlike income, it is much less subject to taxation.
+#
+While in recent years the wealth databases have been established such as as the Luxembourg Wealth Study [[parencite:&LWS_2020_LWS]], the World Inequality Database [[parencite:&WID_2021_WID]] or the OECD Wealth Distribution Database [[parencite:&OECD_2021_WDD]], the coverage of wealth measures still falls far behind that of income both in terms of country and time coverage.
+#
+With Wealth-X, a commercial service dedicated has been founded in around 2010 that focuses on (Ultra) High Net Worth Individuals, but due to its focus on advertisting, customer acquisition for luxury products and donor recruitment I have doubts that much effort has been dedicated towards time periods before its foundation.
+#
+Furthermore, some reviews have noted familiarity with the Forbes list and a over-representation of "big names" such as Bill Gates.
+#
+It also seems fairly expensive; no direct pricing information is provided on the website but on an other site it is listed as 15k per company per year [fn::https://appexchange.salesforce.com/listingDetail?listingId=a0N3A00000EO62PUAT#:~:text=%2415%2C000%20USD%20per%20company%20per,data%20licence%20is%20also%20required.&text=Access%20to%20the%20world's%20most,through%20your%20existing%20Salesforce%20interface.]
+#
+Credit Suisse has been publishing Global Wealth Reports, but also only from around 2010 onwards. 
+
+
+***** Forbes
+I'm not sure yet how much value the Forbes billionaire list would be.
+#
+The focus on extreme wealth might fail to capture the large (larger?) number of private museums that aren't founded by billionaires (although it wouldn't surprise me if billionaires have much higher individual chances of founding a private museum than e.g. an individual with a wealth of 'only' 30 million).
+# 
+This cutoff seems the more severe the more one goes back in time, as Forbes always has used the cutoff of one billion while the relative value of money decreases over time. 
+#
+Furthermore, it seems the website has been changed every couple of years, and just through a cursory search I 
+couldn't find the lists of the pre-internet era online. 
+#
+Editions until 2000 should be included in EBSCO [fn::https://www.ebsco.com/products/magazine-archives/forbes-magazine-archive], but it doesn't seem the UvA has access. 
+#
+However, it still seems to be a quite valuable datasource due to its long observation period and (theoretically) global focus.
+#
+Furthermore, it might be possible to estimate the validity by comparing the number of billionaires with more standardized wealth measures for the countries/years for which these are available, thus gaining insights into how well number of billionaires can be used as a proxies for countries/years where the standardized measures are absent (however,
+
+*** mechanism
+I'm also not quite clear about the mechanism of wealth.
+#
+I'm not quite sure if it is wealth per se, simply because there are relatively few private museums even when only considering the elite population:
+#
+There are around 50 million millionaires (wikipedia), but only some hundred private museums.
+#
+Even if the bar is pushed higher, I think there should still be at least some millions of individuals who could potentially found a private museum based on their wealth (not everybody could found a mega museum with a several hundred million dollar endowment, but I think they are the outliers in our database as well).
+#
+Even in the late 80s and 90s, I think there were the resources to found orders of magnitude more museums than ended up being founded.
+#
+Of course the wealth argument can be understood as "a UHNWI has a certain chance to found a private museum", and then more UHNWI would result in more museums being founded. 
+
+In particular the decline of founding in the last 5 years or 
+
+
+
+*** Distribution
+Less emphasis than to absolute levels/amounts of wealth has been given to wealth distribution.
+#
+While distributional characteristics sometimes mentioned in passing [[cite:&Gnyp_2015_collectors;&KalbCosmo_2020_museum]], an explicit argument is only made by [[cite:&Brown_2019_private]], who points out parallels to previous periods of wealth accumulation by arguing that "the founding of private museums appeals to the rhetoric of social obligation that sustained the accumulation of capital early in the twentieth century" (p.15).
+#
+However, the extent is qualified as "in the context of the century [a shifting of public heritage into private hands] does not equate to the pairing of patrimonial capital with the fulfillment of social obligation that characterized smaller, more cohesive societies prior to the first world war" (p.8).
+#
+Thus there is only little argument for or investigation into private museums "covering up" larger societal inequalities.
+
+
+*** founder status
+Unlike confidence/legitimacy of the wider socio-economic system, improving individual founder status has been widely suggested as a motivation for collectors to establish a private museum [[parencite:&Zorloni_Resch_2016_opportunities;&Frey_Meier_2003_beyeler;&Walker_2019_collector;&Brown_2019_private;&Durand_2018_jumex;&KalbCosmo_2020_museum;&Gnyp_2015_collectors]].
+#
+Sometimes private museums are associated specifically with the nouveau rich, for example in China [[parencite:&DeNigris_2018_museums;&Lu_2014_museums]] or the American gilded age [[parencite:&Duncan_1995_civilizing;&Walker_2019_collector;&Higonnet_2003_sight;&Higonnet_2007_selfportrait]].
+#
+
+
+**** Data
+To systematically investigate whether private museums are founded with the intention to increase the status of their founders it would be necessary to compare founders with art collectors who do no found museums and see if differences in the motivation to achieve high status exist.
+#
+As direct measures of "status orientation" are not available, it would be necessary to use some such as media attention (under the assumption that collectors who are looking for status will generally behave in a way that results in them receiving media attention).
+#
+However, lack of media attention might also reflect failure to attract status, which could be imagined to be compensated through a private museum.
+#
+Furthermore, attention by the media might not be the kind of recognition that collectors want to attain, as less public recognition by peers might be more relevant.
+
+Testing the nouveau rich hypothesis would require wealth data, which involves the problems discussed above.
+
+*** state retreat
+Another argument for the emergence of private museums has been the decline or absence of state support for the arts, particularly the acquisition budgets for public museums, either in absolute terms or relatively to the (ostensibly strongly increasing) prices for contemporary art [[parencite:&Bechtler_Imhof_2018_future;&Walker_2019_collector;&Song_2008_private;&StylianouLambert_etal_2014_museums;&Zorloni_Resch_2016_opportunities;&Gnyp_2015_collectors;&Clarke_1991_UK;&Brown_2019_private;&Durand_2018_jumex;&Franklin_Papastergiadis_2017_anti;&Quemin_2020_power]].
+# 
+On the contrary, the acquisition budgets of private museums are characterized as much less restricted, enabling them to outbid their public counterparts [[parencite:&Durand_2018_jumex;&Bechtler_Imhof_2018_future;&Gnyp_2015_collectors]].
+#
+However, neither prices for contemporary, public subsidies generally or acquisition budgets of museums (both public and private) have been systematically analyzed.
+
+**** Data
+The OECD has a database on national accounts for its member state the most detailed item of which are "cultural services", reaching back until the late 1990s/early 2000s (at least for the countries I checked).
+#
+The UN and the IMF have database on government expenditure, but they are less fine-grained; the most detailed item is "recreation, culture and religion" (which "cultural services" in the OECD database is a sub-item of, alongside "Recreational and sporting services", "Broadcasting and Publishing Services", "Religious and other Community Services", "R&D recreation, culture and recognition" (?), and "Recreation, culture and religion n.e.c." (?))
+
+(The World Bank does not have any items on culture, and while the UN also maintains a database of national accounts, it is not very fine-grained).
+#
+However, I'm not sure if even the more fine-grained "cultural services" is sufficiently de-aggregated and cross-nationally comparable:
+#
+Cultural Services includes a wide range of actors ranging from  "publicly-funded museums and heritage sites to large private firms such as Netflix or Spotify to micro-firms and freelancers, such as designers, artists and musicians" [[cite:&OECD_2020_creative p.4]].
+#
+Furthermore, countries differ in the extent to which they "include gastronomy, indigenous
+heritage, fashion, software and games industry, or virtual/artificial reality in their national CCS definitions" (ibid.)
+
+
+
+
+
+*** some reflection
+The emphasis on case studies of individual collectors also tends to focus on what may be called supply factors, such as collector motivation or government policy.
+#
+"Demand factors", such as emerging middle classes as the customer base of museums [[parencite:&Bourdieu_Darbel_Schnapper_1991_museums]] have received much less attention, but see [[parencite:&Durand_2018_jumex]].
+
+
+* References :ignhead:
+#+Latex: \begin{sloppypar}
+#+Latex: \printbibliography
+#+Latex: \end{sloppypar}
 
