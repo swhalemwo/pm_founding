@@ -155,16 +155,27 @@ However, neither prices for contemporary, public subsidies generally or acquisit
 **** Data
 The OECD has a database on national accounts for its member state the most detailed item of which are "cultural services", reaching back until the late 1990s/early 2000s (at least for the countries I checked).
 #
-The UN and the IMF have database on government expenditure, but they are less fine-grained; the most detailed item is "recreation, culture and religion" (which "cultural services" in the OECD database is a sub-item of, alongside "Recreational and sporting services", "Broadcasting and Publishing Services", "Religious and other Community Services", "R&D recreation, culture and recognition" (?), and "Recreation, culture and religion n.e.c." (?))
-
-(The World Bank does not have any items on culture, and while the UN also maintains a database of national accounts, it is not very fine-grained).
-#
+The UN and the IMF have database on government expenditure (The World Bank does not have any items on culture), but they are less fine-grained; the most detailed item is "recreation, culture and religion" (which "cultural services" in the OECD database is a sub-item of, alongside "Recreational and sporting services", "Broadcasting and Publishing Services", "Religious and other Community Services", "R&D recreation, culture and recognition" (?), and "Recreation, culture and religion n.e.c." (?))
+# 
 However, I'm not sure if even the more fine-grained "cultural services" is sufficiently de-aggregated and cross-nationally comparable:
 #
 Cultural Services includes a wide range of actors ranging from  "publicly-funded museums and heritage sites to large private firms such as Netflix or Spotify to micro-firms and freelancers, such as designers, artists and musicians" [[cite:&OECD_2020_creative p.4]].
 #
 Furthermore, countries differ in the extent to which they "include gastronomy, indigenous
-heritage, fashion, software and games industry, or virtual/artificial reality in their national CCS definitions" (ibid.)
+heritage, fashion, software and games industry, or virtual/artificial reality in their national CCS definitions" (ibid.), the OECD thus warns itself that "care is needed in international comparisons".
+#
+There has been an [[textcite:&OECD_2020_shock]] report in response to the Covid Pandemic that distinguishes employment in cultural services in more detail with the more fine-grained category of "libraries, archives, museums and other cultural activities" (alongside "printing and reproduction of recorded media", "publishing activities", "books and software", "motion picture, video TV, radio", "creative, arts and entertainment activities"); however the data collection for this report is described as ad-hoc, i.e. based on the respective national statistical agencies of the countries investigated as no standardized database for employment in cultural sectors exist.
+#
+My hunch is that it is too much work to do for the scope of the project as not only do countries use different classifications, but at least some countries provide yearbooks rather than time-series, and furthermore it is not clear if all countries provide relevant data for the time-period in question (the report itself is only interested with the most recent data to study Covid policy responses).
+
+#
+Eurostat has data on cultural employment in Europe, [[parencite:&Eurostat_2021_employment]], and while it has very fine-grained geographical resolution (regions/provinces/states within countries), its longitudinal scope is limited to from 2014 onwards.
+
+
+
+Another possibility to measure cultural spending would be to use the Museums of the World database [[parencite:&deGruyter_2021_MOW]], which claims to have 55k museums in 202 countries, and also included academic staff.
+#
+However, since I don't have access to that database yet, I don't know how complete the coverage is both in terms of time and staff coverage. 
 
 
 
