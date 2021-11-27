@@ -6,6 +6,13 @@ from urllib.request import Request
 import pandas as pd
 from collections import Counter
 
+from time import sleep
+
+def flatten_list(t):
+    flat_list = [item for sublist in t for item in sublist]
+    return flat_list
+
+
 
 url = 'http://stats.oecd.org/sdmx-json/data/QNA/AUS+AUT.GDP+B1_GE.CUR+VOBARSA.Q/all?startTime=2009-Q2&endTime=2011-Q4&dimensionAtObservation=allDimensions'
 
@@ -40,6 +47,12 @@ pd.DataFrame(res_proc)
 url_all = 'http://stats.oecd.org/sdmx-json/data/STANI4_2020/all/all?startTime=1985&endTime=1985&dimensionAtObservation=allDimensions'
 # try only one year for now
 
+
+# would be most comfy if I can use one query for all years, then wouldn't have to reconstruct my converter dicts
+url_all = 'http://stats.oecd.org/sdmx-json/data/STANI4_2020/all/all?startTime=2017&endTime=2017&dimensionAtObservation=allDimensions'
+# nope won't work: total database has like 2m observations, can only get 1m per query 
+# should i functionalize my converter dict queries? answer is yes...
+
 x = requests.get(url_all, verify=False)
 res = json.loads(x.text)
 
@@ -57,17 +70,19 @@ res['structure']['dimensions']['observation'][3] # time period
 
 # converter dict for id needs to be in string format
 
-c = 0
-converter_dict_id = {}
-for i in res['structure']['dimensions']['observation']:
-    converter_dict_id[c] = {}
-    c2 = 0
-    for k in i['values']:
-        converter_dict_id[c][str(c2)] = k['id'] 
-        c2+=1
-    c+=1
+def get_converter_dict_id(res):
+    c = 0
+    converter_dict_id = {}
+    for i in res['structure']['dimensions']['observation']:
+        converter_dict_id[c] = {}
+        c2 = 0
+        for k in i['values']:
+            converter_dict_id[c][str(c2)] = k['id'] 
+            c2+=1
+        c+=1
+    return converter_dict_id
 
-
+        
 res['structure']['attributes'] # some weird stuff with all kinds of information, e.g. origin of data, also something about currencies? 
 # the actual values lists have a bunch of other values (5 actually) -> are they the attributes? 
 res['dataSets'][0]['observations']['20:10:10:0']
@@ -85,40 +100,43 @@ res['structure']['attributes']['observation'][4] # reference period, seems to be
 # should be possible to convert all attribute information in one go
 # dict seems best format?
 
+def get_converter_dict(res):
+    c = 0
+    converter_dict = {}
+    for i in res['structure']['attributes']['observation']:
+        converter_dict[c] = {}
+        c2 = 0
+        for k in i['values']:
+            converter_dict[c][c2] = k['id']
+            c2 +=1
 
-c = 0
-converter_dict = {}
-for i in res['structure']['attributes']['observation']:
-    converter_dict[c] = {}
-    c2 = 0
-    for k in i['values']:
-        converter_dict[c][c2] = k['id']
-        c2 +=1
+        converter_dict[c][None] = None
 
-    converter_dict[c][None] = None
+        c+=1
+    return converter_dict
 
-    c+=1
-    
     # should have option to manually specify which attribute columns I want converted,
     # think that's doable in my processing list comprehension tho
     # especially for the annotations, but actually the codes for them are just single letters, just not clear what their meaning is
     # but can look that up later when debugging
 
-    
-res_proc = [{
-    # 'idx': idx, 
-    'country': converter_dict_id[0][idx.split(":")[0]],
-    'variable_table': converter_dict_id[1][idx.split(":")[1]],
-    'industry': converter_dict_id[2][idx.split(":")[2]],
-             'time_period': converter_dict_id[3][idx.split(":")[3]],
-    'value': value[0],
-    'time_format': converter_dict[0][value[1]],
-    'observation_status': converter_dict[1][value[2]],
-    'currency': converter_dict[2][value[3]],
-    'multiplier': converter_dict[3][value[4]],
-    'reference_period': converter_dict[4][value[5]]
-}
-            for idx, value in res['dataSets'][0]['observations'].items()]
+def proc_res(res, converter_dict, converter_dict_id):
+
+    res_proc = [{
+        # 'idx': idx, 
+        'country': converter_dict_id[0][idx.split(":")[0]],
+        'variable_table': converter_dict_id[1][idx.split(":")[1]],
+        'industry': converter_dict_id[2][idx.split(":")[2]],
+        'time_period': converter_dict_id[3][idx.split(":")[3]],
+        'value': value[0],
+        'time_format': converter_dict[0][value[1]],
+        'observation_status': converter_dict[1][value[2]],
+        'currency': converter_dict[2][value[3]],
+        'multiplier': converter_dict[3][value[4]],
+        'reference_period': converter_dict[4][value[5]]
+    }
+                for idx, value in res['dataSets'][0]['observations'].items()]
+    return res_proc
 
 
 df = pd.DataFrame(res_proc)
@@ -129,8 +147,25 @@ Counter(df_ccs['country'])
 
 
 
+overall_res = []
 
+for year in range(1985, 1990):
+    url_year = 'http://stats.oecd.org/sdmx-json/data/STANI4_2020/all/all?startTime={year}&endTime={year}&dimensionAtObservation=allDimensions'.format(year=year)
+    
+    req_res = requests.get(url_year, verify=False)
+    res = json.loads(req_res.text)
 
+    converter_dict = get_converter_dict(res)
+    converter_dict_id = get_converter_dict_id(res)
+
+    res_proc = proc_res(res, converter_dict, converter_dict_id)
+    
+    overall_res.append(res_proc)
+    sleep(5)
+    
+
+res_flat = flatten_list(overall_res)
+df=pd.DataFrame(res_flat)
 
 
 
