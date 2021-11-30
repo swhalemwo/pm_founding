@@ -146,20 +146,35 @@ Furthermore, attention by the media might not be the kind of recognition that co
 Testing the nouveau rich hypothesis would require wealth data, which involves the problems discussed above.
 
 *** state retreat
-Another argument for the emergence of private museums has been the decline or absence of state support for the arts, particularly the acquisition budgets for public museums, either in absolute terms or relatively to the (ostensibly strongly increasing) prices for contemporary art [[parencite:&Bechtler_Imhof_2018_future;&Walker_2019_collector;&Song_2008_private;&StylianouLambert_etal_2014_museums;&Zorloni_Resch_2016_opportunities;&Gnyp_2015_collectors;&Clarke_1991_UK;&Brown_2019_private;&Durand_2018_jumex;&Franklin_Papastergiadis_2017_anti;&Quemin_2020_power]].
+Another argument for the emergence of private museums has been the decline or absence of state support for the arts, particularly the acquisition budgets for public museums, either in absolute terms or relatively to the (ostensibly strongly increasing) prices for contemporary art [[parencite:&Bechtler_Imhof_2018_future;&Walker_2019_collector;&Song_2008_private;&StylianouLambert_etal_2014_museums;&Zorloni_Resch_2016_opportunities;&Gnyp_2015_collectors;&Clarke_1991_UK;&Brown_2019_private;&Franklin_Papastergiadis_2017_anti;&Quemin_2020_power]].
+# 
+(Relatedly, textcite:&Durand_2018_jumex considers the opaqueness and unresponsiveness of public institutions as the context to which private museums could contrast themselves as more dynamic.)
+# breaks flow 
 # 
 On the contrary, the acquisition budgets of private museums are characterized as much less restricted, enabling them to outbid their public counterparts [[parencite:&Durand_2018_jumex;&Bechtler_Imhof_2018_future;&Gnyp_2015_collectors]].
+# 
+Public museums thus constitute less attractive partners for private collectors for loaning, storing, and buying their collections; private museums are thus in turn incentivized to establish their own institutions. 
 #
-However, neither prices for contemporary, public subsidies generally or acquisition budgets of museums (both public and private) have been systematically analyzed.
+However, a rather supportive state might also be 'instrumentalized' by private collectors to direct public funds towards their own institutions [[parencite:&Walker_2019_collector]], which would constitute a mechanism in the other direction. 
+# do we still count this as private tho?
+Even if no public funds are directed towards private museums, the presence of a strong cultural scene might make a private museum an attractive move precisely because contemporary art is valued elsewhere as well.
+# there's no reference for that 
+#
+However, neither prices for contemporary, public subsidies generally or acquisition budgets of museums (both public and private) have been systematically analyzed in the existing literature on private museums.
+
+
+
 
 **** Data
+Ideally it would be nice to have financial information on both public and private museums; but although some institutions publish yearly financial reports, to my knowledge no systematic database exists. 
+# 
 The OECD has a database on national accounts for its member state the most detailed item of which are "cultural services", reaching back until the late 1990s/early 2000s (at least for the countries I checked).
 #
-The UN and the IMF have database on government expenditure (The World Bank does not have any items on culture), but they are less fine-grained; the most detailed item is "recreation, culture and religion" (which "cultural services" in the OECD database is a sub-item of, alongside "Recreational and sporting services", "Broadcasting and Publishing Services", "Religious and other Community Services", "R&D recreation, culture and recognition" (?), and "Recreation, culture and religion n.e.c." (?))
+The UN and the IMF also have database on government cultural spending (The World Bank does not have any items on culture), but they are less fine-grained; the most detailed item is "recreation, culture and religion" (which "cultural services" in the OECD database is a sub-item of, alongside "Recreational and sporting services", "Broadcasting and Publishing Services", "Religious and other Community Services", "R&D recreation, culture and recognition" (?), and "Recreation, culture and religion n.e.c." (?))
 # 
-However, I'm not sure if even the more fine-grained "cultural services" is sufficiently de-aggregated and cross-nationally comparable:
+However, I'm not sure if even the more fine-grained "cultural services" of the OECD database is sufficiently de-aggregated and cross-nationally comparable:
 #
-Cultural Services includes a wide range of actors ranging from  "publicly-funded museums and heritage sites to large private firms such as Netflix or Spotify to micro-firms and freelancers, such as designers, artists and musicians" [[cite:&OECD_2020_creative p.4]].
+Cultural Services includes a wide range of actors ranging from  "publicly-funded museums and heritage sites to large private firms such as Netflix or Spotify to micro-firms and freelancers, such as designers, artists and musicians" [[parencite:&OECD_2020_creative p.4]].
 #
 Furthermore, countries differ in the extent to which they "include gastronomy, indigenous
 heritage, fashion, software and games industry, or virtual/artificial reality in their national CCS definitions" (ibid.), the OECD thus warns itself that "care is needed in international comparisons".
