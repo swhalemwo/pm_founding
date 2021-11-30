@@ -107,13 +107,14 @@ I'm not quite sure if it is wealth per se, simply because there are relatively f
 #
 There are around 50 million millionaires (wikipedia), but only some hundred private museums.
 #
-Even if the bar is pushed higher, I think there should still be at least some millions of individuals who could potentially found a private museum based on their wealth (not everybody could found a mega museum with a several hundred million dollar endowment, but I think they are the outliers in our database as well).
+Even if the threshold is pushed higher to some several millions, I think there should still be at least some millions of individuals who could potentially found a private museum based on their wealth (not everybody could found a mega museum with a several hundred million dollar endowment, but I think those are the outliers in our database as well).
 #
-Even in the late 80s and 90s, I think there were the resources to found orders of magnitude more museums than ended up being founded.
+Even in the late 80s and 90s, I think there were the resources to found orders of magnitude more museums than ended up being founded at the peak in the 2010s.
 #
-Of course the wealth argument can be understood as "a UHNWI has a certain chance to found a private museum", and then more UHNWI would result in more museums being founded. 
-
-In particular the decline of founding in the last 5 years or 
+However, the wealth argument can be understood probabilistically as "an UHNWI has a certain chance to found a private museum", and then more UHNWIs would result in more museums being founded. 
+# 
+# Furthermore, founding has declined in recent years,
+# not an argument, just means there are other factors as well
 
 
 
