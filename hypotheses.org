@@ -120,15 +120,15 @@ In particular the decline of founding in the last 5 years or
 *** Distribution
 Less emphasis than to absolute levels/amounts of wealth has been given to wealth distribution.
 #
-While distributional characteristics sometimes mentioned in passing [[cite:&Gnyp_2015_collectors;&KalbCosmo_2020_museum]], an explicit argument is only made by [[cite:&Brown_2019_private]], who points out parallels to previous periods of wealth accumulation by arguing that "the founding of private museums appeals to the rhetoric of social obligation that sustained the accumulation of capital early in the twentieth century" (p.15).
+While distributional characteristics sometimes mentioned in passing [[cite:&Gnyp_2015_collectors;&KalbCosmo_2020_museum]], the only explicit argument regarding wealth /inequality/ on its own (separate from the high absolute sums of wealth) is made by [[textcite:&Brown_2019_private]], who points out parallels to previous periods of wealth accumulation by arguing that "the founding of private museums appeals to the rhetoric of social obligation that sustained the accumulation of capital early in the twentieth century" (p.15).
 #
-However, the extent is qualified as "in the context of the century [a shifting of public heritage into private hands] does not equate to the pairing of patrimonial capital with the fulfillment of social obligation that characterized smaller, more cohesive societies prior to the first world war" (p.8).
+However, the extent to which private museums legitimate inequality in a similar way as in the gilded age, where "philanthropic giving on the part of a close-knit community of wealthy individuals functioned as a means by which to maintain widespread confidence" (p.3), is qualified as it is argued that "in the context of the twenty-first century art world [a shifting of public heritage into private hands] does not equate to the pairing of patrimonial capital with the fulfillment of social obligation that characterized smaller, more cohesive societies prior to the first world war" (p.8).
 #
 Thus there is only little argument for or investigation into private museums "covering up" larger societal inequalities.
 
 
 *** founder status
-Unlike confidence/legitimacy of the wider socio-economic system, improving individual founder status has been widely suggested as a motivation for collectors to establish a private museum [[parencite:&Zorloni_Resch_2016_opportunities;&Frey_Meier_2003_beyeler;&Walker_2019_collector;&Brown_2019_private;&Durand_2018_jumex;&KalbCosmo_2020_museum;&Gnyp_2015_collectors]].
+Unlike confidence/legitimacy of the wider socio-economic system, improving individual founder status has been widely suggested as a motivation for collectors to establish a private museum [[parencite:&Zorloni_Resch_2016_opportunities;&Frey_Meier_2002_beyeler;&Walker_2019_collector;&Brown_2019_private;&Durand_2018_jumex;&KalbCosmo_2020_museum;&Gnyp_2015_collectors]].
 #
 Sometimes private museums are associated specifically with the nouveau rich, for example in China [[parencite:&DeNigris_2018_museums;&Lu_2014_museums]] or the American gilded age [[parencite:&Duncan_1995_civilizing;&Walker_2019_collector;&Higonnet_2003_sight;&Higonnet_2007_selfportrait]].
 #
