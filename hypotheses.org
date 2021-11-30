@@ -182,24 +182,22 @@ heritage, fashion, software and games industry, or virtual/artificial reality in
 There has been an [[textcite:&OECD_2020_shock]] report in response to the Covid Pandemic that distinguishes employment in cultural services in more detail with the more fine-grained category of "libraries, archives, museums and other cultural activities" (alongside "printing and reproduction of recorded media", "publishing activities", "books and software", "motion picture, video TV, radio", "creative, arts and entertainment activities"); however the data collection for this report is described as ad-hoc, i.e. based on the respective national statistical agencies of the countries investigated as no standardized database for employment in cultural sectors exist.
 #
 My hunch is that it is too much work to do for the scope of the project as not only do countries use different classifications, but at least some countries provide yearbooks rather than time-series, and furthermore it is not clear if all countries provide relevant data for the time-period in question (the report itself is only interested with the most recent data to study Covid policy responses).
-
 #
-Eurostat has data on cultural employment in Europe, [[parencite:&Eurostat_2021_employment]], and while it has very fine-grained geographical resolution (regions/provinces/states within countries), its longitudinal scope is limited to from 2014 onwards.
+Eurostat has data on cultural employment in Europe, [[parencite:&Eurostat_2021_employment]], and while it has very fine-grained geographical resolution (regions/provinces/states within countries), its longitudinal scope is limited to 2011 or 2014  onwards (depending on the specific indicator).
 
 
+Another possibility to measure cultural spending via proxy would be to use the Museums of the World database [[parencite:&deGruyter_2021_MOW]], which claims to have 55k museums in 202 countries, and also includes academic staff.
+# 
 
-Another possibility to measure cultural spending would be to use the Museums of the World database [[parencite:&deGruyter_2021_MOW]], which claims to have 55k museums in 202 countries, and also included academic staff.
 #
 However, since I don't have access to that database yet, I don't know how complete the coverage is both in terms of time and staff coverage. 
-
-
 
 
 
 *** some reflection
 The emphasis on case studies of individual collectors also tends to focus on what may be called supply factors, such as collector motivation or government policy.
 #
-"Demand factors", such as emerging middle classes as the customer base of museums [[parencite:&Bourdieu_Darbel_Schnapper_1991_museums]] have received much less attention, but see [[parencite:&Durand_2018_jumex]].
+"Demand factors", such as emerging middle classes as the customer base of museums [[parencite:&Bourdieu_Darbel_Schnapper_1991_museums]] have received much less attention, however  textcite:&Durand_2018_jumex argues that Jumex "addresses an elite group of aspirational upper-middle-class and specialized audiences within the art world and market" (p.14).
 
 
 * References :ignhead:
