@@ -27,7 +27,7 @@ State support in the form of tax breaks or provision of land have been argued to
 #
 However, the impact of tax benefits is also explicitly de-emphasized as insignificant compared to other collector motivations parencite:&Zorloni_Resch_2016_opportunities, as too limited to have an effect, particularly in the cases of Germany parencite:&Walker_2019_collector or Europe parencite:&KalbCosmo_2020_museum, or as too difficult to attain in the case of China which "lacks a comprehensive tax structure" [[parencite:&DeNigris_2018_museums p.222]].
 #
-Occasionally, tax breaks are discussed regarding private museums without discussing a causal direction [[parencite:&Brown_2019_private;&Camarero_etal_2018_marketing;&Frey_Meier_2003_beyeler]]. 
+Occasionally, tax breaks are discussed regarding private museums without discussing a causal direction [[parencite:&Brown_2019_private;&Camarero_etal_2018_marketing;&Frey_Meier_2002_beyeler]]. 
 # 
 In the case of China, explicit political encouragement by inclusion in the five-year plan has also been hypothesized to contribute to the founding of (private) museums as part of urban development projects, the promotion of tourism and soft power projections [[parencite:&Song_2008_private;&Zennaro_2017_shanghai;&Zhao_2018_westbund;&Kiowski_2017_museum;&Zhang_Courty_2020_china;&Bechtler_Imhof_2018_future;&Lu_2014_museums]]. [fn::Whether museums are actually an efficient measure for economic growth has been questioned by [[textcite:&Frey_Meier_2006_economics]] who argue that "there are generally much better means, such as opening a theme park, to [stimulate the economy]" (p.403).]
 # something about Crystal Bridges? Walker? as in government also doing stuff elsewhere
@@ -71,7 +71,7 @@ However, there have also been calls to caution against an exclusive focus on "su
 
 **** Data
 # 
-Systematic wealth data is rather sparse, presumably as, unlike income, it is much less subject to taxation.
+Systematic wealth data is rather sparse as, unlike income, it is much less subject to taxation [[parencite:&WID_2018_inequality]].
 #
 While in recent years the wealth databases have been established such as as the Luxembourg Wealth Study [[parencite:&LWS_2020_LWS]], the World Inequality Database [[parencite:&WID_2021_WID]] or the OECD Wealth Distribution Database [[parencite:&OECD_2021_WDD]], the coverage of wealth measures still falls far behind that of income both in terms of country and time coverage.
 #
