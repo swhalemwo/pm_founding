@@ -96,7 +96,11 @@ This in turn limits their countries for which they consider wealth estimates suf
 This cutoff seems the more severe the more one goes back in time, as Forbes always has used the cutoff of one billion while the relative value of money decreases over time. 
 #
 Furthermore, it seems the website has been changed every couple of years, and just through a cursory search I 
-couldn't find the lists of the pre-internet era online. 
+couldn't find the lists of the pre-internet era online.
+#
+[[textcite:&WID_2018_inequality]] seem to also use the Forbes list, but it is not included in the current database, and the material section of the report itself doesn't work anymore.
+#
+I have written an e-mail to the WID, but so far I've not heard back.
 #
 Editions until 2000 should be included in EBSCO [fn::https://www.ebsco.com/products/magazine-archives/forbes-magazine-archive], but it doesn't seem the UvA has access. 
 #
