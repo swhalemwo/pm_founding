@@ -88,6 +88,10 @@ Credit Suisse has been publishing Global Wealth Reports, but also only from arou
 I'm not sure yet how much value the Forbes billionaire list would be.
 #
 The focus on extreme wealth might fail to capture the large (larger?) number of private museums that aren't founded by billionaires (although it wouldn't surprise me if billionaires have much higher individual chances of founding a private museum than e.g. an individual with a wealth of 'only' 30 million).
+#
+This argument is also made by [[textcite:&WID_2018_inequality]], who on top of it stress the intransparency of the way the Forbes list is generated and for these reason only use it in combination if other data sources (household surveys, administrative fiscal data on income (capitalization method?) and inheritance tax (estate multiplier method?)) are also available.
+#
+This in turn limits their countries for which they consider wealth estimates sufficient to the US, China and France, the UK and Spain, the latter three being argued to be "broadly representative" (p.199) of Europe as whole. 
 # 
 This cutoff seems the more severe the more one goes back in time, as Forbes always has used the cutoff of one billion while the relative value of money decreases over time. 
 #
