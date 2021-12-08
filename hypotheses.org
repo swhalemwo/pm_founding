@@ -165,7 +165,7 @@ Another argument for the emergence of private museums has been the decline or ab
 # 
 On the contrary, the acquisition budgets of private museums are characterized as much less restricted, enabling them to outbid their public counterparts [[parencite:&Durand_2018_jumex;&Bechtler_Imhof_2018_future;&Gnyp_2015_collectors]].
 # 
-Public museums thus constitute less attractive partners for private collectors for loaning, storing, and buying their collections; private museums are thus in turn incentivized to establish their own institutions. 
+As public museums constitute less attractive partners for private collectors for loaning, storing, and buying their collections; it is argued that private collectors are in turn incentivized to establish their own institutions. 
 #
 However, a rather supportive state might also be 'instrumentalized' by private collectors to direct public funds towards their own institutions [[parencite:&Walker_2019_collector]], which would constitute a mechanism in the other direction. 
 # do we still count this as private tho?
@@ -191,7 +191,7 @@ Cultural Services includes a wide range of actors ranging from  "publicly-funded
 Furthermore, countries differ in the extent to which they "include gastronomy, indigenous
 heritage, fashion, software and games industry, or virtual/artificial reality in their national CCS definitions" (ibid.), the OECD thus warns itself that "care is needed in international comparisons".
 #
-There has been an [[textcite:&OECD_2020_shock]] report in response to the Covid Pandemic that distinguishes employment in cultural services in more detail with the more fine-grained category of "libraries, archives, museums and other cultural activities" (alongside "printing and reproduction of recorded media", "publishing activities", "books and software", "motion picture, video TV, radio", "creative, arts and entertainment activities"); however the data collection for this report is described as ad-hoc, i.e. based on the respective national statistical agencies of the countries investigated as no standardized database for employment in cultural sectors exist.
+There has been an OECD report [[citeyear:&OECD_2020_shock]] in response to the Covid Pandemic that distinguishes employment in cultural services in more detail with the more fine-grained category of "libraries, archives, museums and other cultural activities" (alongside "printing and reproduction of recorded media", "publishing activities", "books and software", "motion picture, video TV, radio", "creative, arts and entertainment activities"); however the data collection for this report is described as "ad-hoc" (p.7), i.e. based on the respective national statistical agencies of the countries investigated, presumably as no standardized database for employment in cultural sectors exist.
 #
 My hunch is that it is too much work to do for the scope of the project as not only do countries use different classifications, but at least some countries provide yearbooks rather than time-series, and furthermore it is not clear if all countries provide relevant data for the time-period in question (the report itself is only interested with the most recent data to study Covid policy responses).
 #
@@ -200,8 +200,6 @@ Eurostat has data on cultural employment in Europe, [[parencite:&Eurostat_2021_e
 
 Another possibility to measure cultural spending via proxy would be to use the Museums of the World database [[parencite:&deGruyter_2021_MOW]], which claims to have 55k museums in 202 countries, and also includes academic staff.
 # 
-
-#
 However, since I don't have access to that database yet, I don't know how complete the coverage is both in terms of time and staff coverage. 
 
 
