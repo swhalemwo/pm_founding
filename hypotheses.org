@@ -157,7 +157,7 @@ Furthermore, attention by the media might not be the kind of recognition that co
 
 Testing the nouveau rich hypothesis would require wealth data, which involves the problems discussed above.
 
-*** state retreat
+*** state absence/retreat
 Another argument for the emergence of private museums has been the decline or absence of state support for the arts, particularly the acquisition budgets for public museums, either in absolute terms or relatively to the (ostensibly strongly increasing) prices for contemporary art [[parencite:&Bechtler_Imhof_2018_future;&Walker_2019_collector;&Song_2008_private;&StylianouLambert_etal_2014_museums;&Zorloni_Resch_2016_opportunities;&Gnyp_2015_collectors;&Clarke_1991_UK;&Brown_2019_private;&Franklin_Papastergiadis_2017_anti;&Quemin_2020_power]].
 # 
 (Relatedly, textcite:&Durand_2018_jumex considers the opaqueness and unresponsiveness of public institutions as the context to which private museums could contrast themselves as more dynamic.)
@@ -208,6 +208,8 @@ However, since I don't have access to that database yet, I don't know how comple
 The emphasis on case studies of individual collectors also tends to focus on what may be called supply factors, such as collector motivation or government policy.
 #
 "Demand factors", such as emerging middle classes as the customer base of museums [[parencite:&Bourdieu_Darbel_Schnapper_1991_museums]] have received much less attention, however  textcite:&Durand_2018_jumex argues that Jumex "addresses an elite group of aspirational upper-middle-class and specialized audiences within the art world and market" (p.14).
+
+The case-study based studies also have sampled on the dependent variable by tracing one or several private museums, and based on that data argued whether any factor played or didn't play a role, but so far there is no research that looks at cases where there are no private museums.
 
 
 * References :ignhead:
