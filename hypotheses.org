@@ -21,20 +21,22 @@ Furthermore, it is often not clear if the existing date warrants the often wide-
 # need to evaluate the merit of each statement? 
 
 ** state support
+*** tax, land provision
 State support in the form of tax breaks or provision of land have been argued to contribute to the founding of private museums [[parencite:&Walker_2019_collector;&Kiowski_2017_museum;&Bechtler_Imhof_2018_future]].
 #
-[[textcite:&Gnyp_2015_collectors]] argues that changes in tax law that limited donations to public museums encouraged the founding of private spaces (p.165) [fn::I think she reads too much into her source]. 
+[[textcite:&Gnyp_2015_collectors]] argues that changes in tax law that limited donations to public museums encouraged the founding of private spaces (p.165) [fn::I think she reads too much into her source [[parencite:&Kahn_2006_fractional]], who only argues that due to changes in tax law fractional donations become less likely thus leaving more works in estates, but doesn't mention private museums]. 
 #
+
 However, the impact of tax benefits is also explicitly de-emphasized as insignificant compared to other collector motivations parencite:&Zorloni_Resch_2016_opportunities, as too limited to have an effect, particularly in the cases of Germany parencite:&Walker_2019_collector or Europe parencite:&KalbCosmo_2020_museum, or as too difficult to attain in the case of China which "lacks a comprehensive tax structure" [[parencite:&DeNigris_2018_museums p.222]].
 #
-Occasionally, tax breaks are discussed regarding private museums without discussing a causal direction [[parencite:&Brown_2019_private;&Camarero_etal_2018_marketing;&Frey_Meier_2002_beyeler]]. 
-# 
+Occasionally, some research merely states that private museums are receiving tax breaks without discussing their consequences [[parencite:&Brown_2019_private;&Camarero_etal_2018_marketing;&Frey_Meier_2002_beyeler]].
+
+*** policy 
 In the case of China, explicit political encouragement by inclusion in the five-year plan has also been hypothesized to contribute to the founding of (private) museums as part of urban development projects, the promotion of tourism and soft power projections [[parencite:&Song_2008_private;&Zennaro_2017_shanghai;&Zhao_2018_westbund;&Kiowski_2017_museum;&Zhang_Courty_2020_china;&Bechtler_Imhof_2018_future;&Lu_2014_museums]]. [fn::Whether museums are actually an efficient measure for economic growth has been questioned by [[textcite:&Frey_Meier_2006_economics]] who argue that "there are generally much better means, such as opening a theme park, to [stimulate the economy]" (p.403).]
-# something about Crystal Bridges? Walker? as in government also doing stuff elsewhere
 # 
 In Cyprus however, [[textcite:&StylianouLambert_etal_2014_museums]] find policies aimed at the recognizing private museums only to take place /after/ a museum boom in the 1990s.
 #
-*** data
+*** data :noexport:
 So far I have been unable to find systematic data on a global level for measuring the effect of tax breaks.
 #
 A number of qualitative findings such as individual agreements between collectors and public institutions in Germany [[parencite:&Walker_2019_collector]] or legislation passed for a single museum  [[parencite:&Zorloni_Resch_2016_opportunities]] also point out the highly case-specific forms that tax breaks take.
