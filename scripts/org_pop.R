@@ -2047,6 +2047,48 @@ filter(df_viz_rol2, year > 2017 & region == "Middle East & North Africa")
 ## hehehe Europe super strong
 ## weird how active Europe europe is in 80s
 
+
+
+
+
+## *** rolling average country-wise rate
+df_viz_rol_cry <- as_tibble(aggregate(cbind(population, nbr_opened) ~ countrycode + year, df_plt[,c("countrycode", "year", "region", "population", "nbr_opened")], sum))
+
+ROLLING_AVG_LEN <- 6
+
+
+df_viz_rol_cry <- df_viz_rol_cry %>%
+    group_by(countrycode) %>%
+    mutate(population_rollavg = rollmean_custom(population, win_len=ROLLING_AVG_LEN, orientation = "left"),
+           nbr_opened_rollavg = rollmean_custom(nbr_opened, win_len=ROLLING_AVG_LEN, orientation = "left")
+           )
+
+
+df_viz_rol_cry$rate_rollavg <- df_viz_rol_cry$nbr_opened_rollavg/(df_viz_rol_cry$population_rollavg/1e+8)
+
+df_viz_rol_cry <- filter(df_viz_rol_cry, countrycode %in% country_max_codes)
+
+p_ra_rate_cry <-
+    ggplot(df_viz_rol_cry, aes(x=year, y=rate_rollavg, group=countrycode, color=countrycode)) +
+    geom_line(size=1.5) +
+    scale_color_brewer(palette = "Paired") +
+    labs(y=paste0("foundings per 100m (", ROLLING_AVG_LEN ," years rolling average)"))
+
+p_ra_rate_cry
+
+## *** rolling average country-wise absolute count 
+p_ra_cnt_cry <- ggplot(df_viz_rol_cry, aes(x=year, y=nbr_opened_rollavg, group=countrycode, color=countrycode)) +
+    geom_line(size=1.5) +
+    scale_color_brewer(palette = "Paired") +
+    labs(y=paste0("foundings per country (", ROLLING_AVG_LEN ," years rolling average)"))
+
+pdf(paste0(FIG_DIR, "foundings_country_cnt_and_rate.pdf"), height = 9, width = 9)
+ggarrange(p_ra_cnt_cry, p_ra_rate_cry, nrow = 2)
+dev.off()
+
+
+
+
 ## *** cumulative
 
 df_viz_rol1$nbr_opened_cum <- ave(df_viz_rol1$nbr_opened, df_viz_rol1$region, FUN = cumsum)
