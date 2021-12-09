@@ -2054,8 +2054,7 @@ filter(df_viz_rol2, year > 2017 & region == "Middle East & North Africa")
 ## *** rolling average country-wise rate
 df_viz_rol_cry <- as_tibble(aggregate(cbind(population, nbr_opened) ~ countrycode + year, df_plt[,c("countrycode", "year", "region", "population", "nbr_opened")], sum))
 
-ROLLING_AVG_LEN <- 6
-
+ROLLING_AVG_LEN <- 5
 
 df_viz_rol_cry <- df_viz_rol_cry %>%
     group_by(countrycode) %>%
@@ -2074,7 +2073,7 @@ p_ra_rate_cry <-
     scale_color_brewer(palette = "Paired") +
     labs(y=paste0("foundings per 100m (", ROLLING_AVG_LEN ," years rolling average)"))
 
-p_ra_rate_cry
+## p_ra_rate_cry
 
 ## *** rolling average country-wise absolute count 
 p_ra_cnt_cry <- ggplot(df_viz_rol_cry, aes(x=year, y=nbr_opened_rollavg, group=countrycode, color=countrycode)) +
@@ -2152,19 +2151,29 @@ df_plt_cry$lt <- recode(df_plt_cry$region,
 
 p_cry_cum_abs <- ggplot(df_plt_cry, aes(x=year, y=nbr_opened_cum, group=country, color=country)) +
     geom_line(size=2) +
-    scale_color_brewer(palette = "Set3") +
+    scale_color_brewer(palette = "Paired") +
     labs(y="number opened (cumulative)")
 
 p_cry_cum_rel <-
     ggplot(df_plt_cry, aes(x=year, y=prop_cum, group=country, color=country, linetype=region)) +
-    geom_line(size=1) +
-    scale_color_brewer(palette = "Set3") +
-    labs(y="proportion opened", caption = "12 countries with most PMs (70% of PMs)") +
-    theme_dark()
+    geom_line(size=1.5) +
+    scale_color_brewer(palette = "Paired") +
+    labs(y="proportion opened", caption = "12 countries with most PMs (70% of PMs)")
 
 
-pdf(paste0(FIG_DIR, "foundings_country_cumulative.pdf"), height = 9, width = 9)
-ggarrange(p_cry_cum_abs, p_cry_cum_rel, nrow = 2)
+## also get cumulative rate: end is how many per 100m are there atm 
+df_plt_cry$rate_opened_cum <- df_plt_cry$nbr_opened_cum/(df_plt_cry$population/1e+08)
+
+p_cry_cum_rate <-
+    ggplot(df_plt_cry, aes(x=year, y=rate_opened_cum, group=country, color=country)) +
+    geom_line(size=2) +
+    scale_color_brewer(palette = "Paired") +
+    labs(y="rate opened per 100m (cumulative)")
+
+
+
+pdf(paste0(FIG_DIR, "foundings_country_cumulative.pdf"), height = 12, width = 9)
+ggarrange(p_cry_cum_abs, p_cry_cum_rel, p_cry_cum_rate, nrow = 3)
 dev.off()
 
 ## China really late, Korea really early -> there's much variation within region
