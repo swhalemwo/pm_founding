@@ -2128,6 +2128,14 @@ aggregate(nbr_opened ~ country, filter(df_plt, region == "East Asia & Pacific"),
 country_max <- aggregate(nbr_opened_cum ~ countrycode, df_plt, max)
 country_max_codes <- country_max[rev(order(country_max$nbr_opened_cum))[c(1:12)],]$countrycode
 
+
+## try selecting countries with highest PM concentration per population, end up with Monaco, and mostly other small countries that have like 2-4 PMs: "MCO" "ISL" "CYP" "BEL" "CHE" "KOR" "DEU" "EST" "LBN" "NLD" "AUT" "GRC"
+## df_plt$rate_opened_cum <- df_plt$nbr_opened_cum/(df_plt$population/1e+08)
+## country_max_prop <- aggregate(rate_opened_cum ~ countrycode, df_plt, max)
+## country_max_prop_codes <- country_max[rev(order(country_max_prop$rate_opened_cum))[c(1:12)],]$countrycode
+## country_max_codes <- country_max[rev(order(country_max_prop$rate_opened_cum))[c(1:12)],]$countrycode
+
+
 df_plt_cry <- filter(df_plt, countrycode %in% country_max_codes)
 
 df_plt_cry <- df_plt_cry %>%
