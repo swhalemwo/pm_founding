@@ -2048,9 +2048,6 @@ filter(df_viz_rol2, year > 2017 & region == "Middle East & North Africa")
 ## weird how active Europe europe is in 80s
 
 
-
-
-
 ## *** rolling average country-wise rate
 df_viz_rol_cry <- as_tibble(aggregate(cbind(population, nbr_opened) ~ countrycode + year, df_plt[,c("countrycode", "year", "region", "population", "nbr_opened")], sum))
 
@@ -2067,8 +2064,10 @@ df_viz_rol_cry$rate_rollavg <- df_viz_rol_cry$nbr_opened_rollavg/(df_viz_rol_cry
 
 df_viz_rol_cry <- filter(df_viz_rol_cry, countrycode %in% country_max_codes)
 
+df_viz_rol_cry$country <- countrycode(df_viz_rol_cry$countrycode, "iso3c", "country.name")
+
 p_ra_rate_cry <-
-    ggplot(df_viz_rol_cry, aes(x=year, y=rate_rollavg, group=countrycode, color=countrycode)) +
+    ggplot(df_viz_rol_cry, aes(x=year, y=rate_rollavg, group=country, color=country)) +
     geom_line(size=1.5) +
     scale_color_brewer(palette = "Paired") +
     labs(y=paste0("foundings per 100m (", ROLLING_AVG_LEN ," years rolling average)"))
@@ -2076,7 +2075,7 @@ p_ra_rate_cry <-
 ## p_ra_rate_cry
 
 ## *** rolling average country-wise absolute count 
-p_ra_cnt_cry <- ggplot(df_viz_rol_cry, aes(x=year, y=nbr_opened_rollavg, group=countrycode, color=countrycode)) +
+p_ra_cnt_cry <- ggplot(df_viz_rol_cry, aes(x=year, y=nbr_opened_rollavg, group=country, color=country)) +
     geom_line(size=1.5) +
     scale_color_brewer(palette = "Paired") +
     labs(y=paste0("foundings per country (", ROLLING_AVG_LEN ," years rolling average)"))
@@ -2084,7 +2083,6 @@ p_ra_cnt_cry <- ggplot(df_viz_rol_cry, aes(x=year, y=nbr_opened_rollavg, group=c
 pdf(paste0(FIG_DIR, "foundings_country_cnt_and_rate.pdf"), height = 9, width = 9)
 ggarrange(p_ra_cnt_cry, p_ra_rate_cry, nrow = 2)
 dev.off()
-
 
 
 
@@ -2148,6 +2146,7 @@ df_plt_cry$lt <- recode(df_plt_cry$region,
     "East Asia & Pacific" = "solid",
     "North America" = "F1")
 
+df_plt_cry$country <- countrycode(df_plt_cry$countrycode, "iso3c", "country.name")
 
 p_cry_cum_abs <- ggplot(df_plt_cry, aes(x=year, y=nbr_opened_cum, group=country, color=country)) +
     geom_line(size=2) +
@@ -2162,13 +2161,13 @@ p_cry_cum_rel <-
 
 
 ## also get cumulative rate: end is how many per 100m are there atm 
-df_plt_cry$rate_opened_cum <- df_plt_cry$nbr_opened_cum/(df_plt_cry$population/1e+08)
+df_plt_cry$rate_opened_cum <- df_plt_cry$nbr_opened_cum/(df_plt_cry$population/1e+07)
 
 p_cry_cum_rate <-
     ggplot(df_plt_cry, aes(x=year, y=rate_opened_cum, group=country, color=country)) +
     geom_line(size=2) +
     scale_color_brewer(palette = "Paired") +
-    labs(y="rate opened per 100m (cumulative)")
+    labs(y="number opened per 10m population (cumulative)")
 
 
 
