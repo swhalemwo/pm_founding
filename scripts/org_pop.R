@@ -2648,3 +2648,152 @@ some_page <- x[[1]]
 
 ## would be necessary to make all the aliases of museum names
 
+
+
+## * oecd
+library(OECD)
+df_oced <- as_tibble(get_datasets())
+## 1495 datasets noice
+
+df_stan <- as_tibble(
+    get_dataset("STANI4_2020", start_time = 2010, end_time = 2011,
+                filter = list(c("DEU"))
+                ))
+## there's probably some query limit on the number of rows
+
+
+
+
+dfx <- as_tibble(get_dataset("EPL_OV", 
+                   filter = list(c("DEU", "FRA"), 
+                                 c("EPRC_V1", "EPRC_V2")), 
+                   start_time = 2008, end_time = 2010))
+
+
+wdix <- read_dta("/home/johannes/ownCloud/wid/wid_2018_report/Computer Codes/Global Wealth Inequality/gpinterized.dta")
+## only about   CN   FR   GB   US   WO
+
+wdix <- as_tibble(read_dta("/home/johannes/ownCloud/wid/wid_2022_report/data/wid-data-25102021.dta"))
+wdix_hist <- as_tibble(read_dta("/home/johannes/ownCloud/wid/wid_2022_report/data/WO_hist.dta"))
+
+dfx2 <- as_tibble(get_dataset("SNA_TABLE11",
+                              start_time = 2010, end_time = 2011,
+                              filter = list(c("DEU"))
+                ))
+
+
+
+SDMX_DIR <- "/home/johannes/ownCloud/oecd/SDMX/"
+
+for (idx in df_oced$id){
+    sdmx_url <- paste0("https://stats.oecd.org/restsdmx/sdmx.ashx/GetDataStructure/", idx)
+    dest_file <- paste0(SDMX_DIR, idx, ".xml")
+    download.file(sdmx_url, dest_file)
+}
+
+
+library(rsdmx)
+
+idx <- "STANI4"
+
+sdmx_test <- readSDMX(dest_file, isURL = FALSE)
+
+
+slotNames(sdmx_test)
+## [1] "organisationSchemes" "concepts"            "codelists"          
+## [4] "datastructures"      "xmlObj"              "schema"             
+## [7] "header"              "footer"             
+## these 8 overall slots seem to be general thing? 
+
+
+cls <- slot(sdmx_test, "codelists")
+slotNames(cls)
+typeof(slot(cls, "codelists")) ## a list
+len(slot(cls, "codelists"))
+
+
+codelists <- sapply(slot(cls, "codelists"), function(x) slot(x, "id")) #get list of codelists
+codelist <- as.data.frame(slot(sdmx_test, "codelists"), codelistId = "CL_STANI4_IND") #get a codelist
+
+## sdmx basically seems like annoyingly formatted  dict
+
+codelist$idx <- idx
+
+SDMX_TBL_DIR <- "/home/johannes/ownCloud/oecd/sdmx_based_tables/"
+
+write.csv(codelist, paste0(SDMX_TBL_DIR, idx, ".csv"))
+
+files_there <- sample(list.files(SDMX_DIR),10)
+
+for (sdmx_file in files_there){
+    sdmx_id <- substr(sdmx_file, 1, nchar(sdmx_file)-4)
+    dsd <- readSDMX(paste0(SDMX_DIR, sdmx_file), isURL = FALSE)
+    ## print(slotNames(dsd)) overall slotnames are the same
+    cls <- slot(dsd, "codelists")
+    codelists <- sapply(slot(cls, "codelists"), function(x) slot(x, "id"))
+    ## print(codelists) ## not every SDMX has the same codelist, unsurprisingly
+
+    for (codelistx in codelists){
+        print(codelistx)
+        codelist_df <- as.data.frame(slot(dsd, "codelists"), codelistId = codelistx)
+
+        names_codelist_df <- names(codelist_df)
+        codelist_df$codelist <- codelistx
+        codelist_df$sdmx_id <- sdmx_id
+        ## reorder the columns so that I can easier grep/awk the databases/codelists where culture terms occur
+        codelist_df <- codelist_df[,c("sdmx_id", "codelist", names_codelist_df)]
+
+        filename <- paste0(SDMX_TBL_DIR, sdmx_id, "---", codelistx, ".csv")
+        write.csv(codelist_df, filename)
+        
+        ## print(codelist_df)
+        ## print(paste(len(names(codelist_df)), paste(names(codelist_df), collapse = ", ")))
+        ## not all codelist_dfs of the same sdmx file have the same variables,
+        ## e.g. are about country, time, observation status,
+        ## the "indicator" column seems to have all kinds of different names
+        ## -> have to print everything and filter 
+    }
+
+}
+
+x <- slot(cls, "codelists")[[1]]
+lapply(slotNames(x), function(i) {slot(x, i)})
+
+## need to compare one codelist that works properly with one that doesn't
+## might need manual parsing, have to make sure that it produces the same result in a codelist that works than what is produced by overloaded as.data.frame
+
+
+
+## ** concept stuff, not needed
+slotNames(sdmx_test)
+## [1] "organisationSchemes" "concepts"            "codelists"          
+## [4] "datastructures"      "xmlObj"              "schema"             
+## [7] "header"              "footer"             
+
+slotNames(slot(sdmx_test, "concepts"))
+## yo dawg i heard you like concepts in your concepts
+slot(slot(sdmx_test, "concepts"), "concepts")
+len(slot(slot(sdmx_test, "concepts"), "concepts"))
+
+
+country_slot <- slot(slot(sdmx_test, "concepts"), "concepts")[[1]]
+slotNames(country_slot)
+slot(country_slot, "Name")
+slot(country_slot, "Name")$en
+
+year_slot <- slot(slot(sdmx_test, "concepts"), "concepts")[[2]]
+slotNames(year_slot)
+concept_slot <- slot(sdmx_test, "concepts")
+typeof(concept_slot) ## -> S4
+len(concept_slot) ## -> 1
+slotNames(concept_slot)
+[1] "concepts"       "conceptSchemes" "xmlObj"         "schema"        
+[5] "header"         "footer"
+
+concept_slots <- slot(concept_slot, "concepts")
+lapply(concept_slots, function(x) {slotNames(x)})
+unlist(lapply(concept_slots, function(x) {slot(x, "Name")$en}))
+##  [1] "Country"            "Variable"           "Industry"          
+##  [4] "Time"               "Observation Value"  "Time Format"       
+##  [7] "Observation Status" "Unit"               "Unit multiplier"   
+## [10] "Reference period"  
