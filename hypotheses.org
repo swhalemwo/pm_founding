@@ -40,21 +40,42 @@ Nevertheless, a clear overall argument is reached in the impact of tax incentive
 # 
 A similar effect of the impact of tax incentives is diagnosed by textcite:&Bechtler_Imhof_2018_future, who argue that "collectors not only build museums as vehicles to save taxes" (p.14) which, while explicitly emphasizing the multifacetedness of founding causes, still assigns a facilitative role to tax incentives. 
 # 
-[[textcite:&Gnyp_2015_collectors]] argues that changes in tax law that limited donations to public museums "formed a boost for opening private spaces" (p.165) [fn::I think Gnyp might be reading too much into her source [[parencite:&Kahn_2006_fractional]] who argues only that due to changes in tax law, fractional donations become less likely, thus leaving more works in estates whereas previously by would have been (fractionally) donated to institutions. Kahn however does not link these estates to the establishment of private /museums/, as he only argues that from the bequests the artworks are "far more likely to be sold off to private collectors than to art institutions".]. 
+[[textcite:&Gnyp_2015_collectors]] argues that changes in tax law that limited donations to public museums "formed a boost for opening private spaces" (p.165) [fn::I think Gnyp might be reading too much into her source [[parencite:&Kahn_2006_fractional]] who argues only that due to changes in tax law, fractional donations become less likely, thus leaving more works in estates whereas previously by would have been (fractionally) donated to institutions. Kahn however does not link these estates to the establishment of private /museums/, as he only argues that from the bequests the artworks are "far more likely to be sold off to private collectors than to art institutions".].
+#
+The same mechanism of lack of tax incentives for donations to public museums is argued by [[textcite:&KalbCosmo_2020_museum]] to have contributed to the founding of private museums in Europe: "limited benefits to making museum donations have meant that private collectors have never had the power to shape the collecting, exhibiting and building programs of state-run museums the way North American collectors did. Instead, European collectors found it more beneficial to establish private museums" (p.35).
 # 
 More generally, exemptions from import taxes on art have also been seen as contributing to the establishment of art collections, both in the gilded age [[parencite:&Walker_2019_collector p.27]] and contemporary China [[parencite:&Kiowski_2017_museum p.p55]][fn::It is not clear to me whether the source that Kiowski uses [[parencite:&Bergman_2015_westbund]] actually refers to /import/ taxes, as the wording is ambiguous and only explicitly refers to the possibility to "/store/ art tax-free" (emphasis added).]
 
 
-
+**** contra 
 
 # [[cite:&Walker_2019_collector]] p.23: p.26: "Tax incentives are seldom an immediate call to action and do not always prompt ongoing philanthropic giving within society. Governments also need to promote a sense of goodwill as changes to cultural and taxation policy alone might not bring about the par indictment shift required by governments" -> tax incentives alone not efficient? is she proposing an interaction?
 # at other point argues that tax benefits would be necessary: p.34: "without [broader range of iinducements and approaches], I would suggest a generosity of spirit alone will not result in a substantial philanthropic gift such as TWMA or the founding of other private museums in Australia."
 # should have the quotes here to show what a mess the current state of the literature is
 # can also cite cite:&Hemels_2017_incentives, [[cite:&Stanco_2014_fiscaal]] here: transparency rather than amount
 # also that US system is not the most effective
-However, the impact of tax benefits is also explicitly de-emphasized as insignificant compared to other collector motivations parencite:&Zorloni_Resch_2016_opportunities, as insufficient on their own or as too limited to have an effect, particularly in the cases of Germany parencite:&Walker_2019_collector or Europe parencite:&KalbCosmo_2020_museum, or as too difficult to attain in the case of China which "lacks a comprehensive tax structure" [[parencite:&DeNigris_2018_museums p.222]].
+However, the impact of tax benefits is also explicitly de-emphasized: 
+textcite:&Zorloni_Resch_2016_opportunities argue that "[art collectors'] generosity is stimulated by a passion for art and quite often these motivations are far stronger than any tax incentive they may receive" (p.7).
 #
+Such multifacetedness is also seen as present by [[textcite:&Walker_2019_collector]], who argues that "on the whole, most philanthropic acts are not generally motivated by tax benefits and gains; the motivations are far more complex and personal." (p.144).
+# 
+Elsewhere, textcite:&Walker_2019_collector goes even further by moving from a multifacetedness of founding causes to the absence of a "net effect" of tax incentives, as she (in my opinion) suggests that tax incentives only are effective in interaction with wider cultural policies by arguing that "tax incentives are seldom an immediate call to action and do not always prompt ongoing philanthropic giving within society. Governments also need to promote a sense of goodwill as changes to cultural and taxation policy alone might not bring about the paradigm shift required by governments" (p.26). 
+# this can actually be tested: "sense of goodwill"
+#
+A similar interaction is suggested by textcite:&DeNigris_2018_museums, who questions the impact of formal presence of tax incentives for the case of China: "In theory [...] donations to not for profit organizations are tax exempt. In practice, however, art museums [...] must still apply separately to the tax bureau in order to obtain tax benefits" (p.222); yet as "there is little familiarity with income tax deductibility for donations among both tax authorities and donors" (ibid.) it is unclear if tax incentives can be effective on their own.
+# this is actually the same as walker
+#
+Unrelated to private museums but focusing on donations towards museums, a similar argument is made by [[textcite:&Hemels_2017_incentives]] and textcite:&Stanco_2014_fiscaal, who argue that it is less the amount of taxes that can be saved that motivates donations, but rather the transparency, publicity, and accessibility/understandability of cultural policies that influence charitable donations. 
+
+**** merely stating presence
 Occasionally, some studies merely state that private museums are receiving tax breaks without discussing their consequences [[parencite:&Brown_2019_private;&Camarero_etal_2018_marketing;&Frey_Meier_2002_beyeler]].
+
+**** hypotheses
+- some positive effect
+- no effect
+- interaction with other factors
+
+
 
 *** policy 
 In the case of China, explicit political encouragement by inclusion in the five-year plan has also been hypothesized to contribute to the founding of (private) museums as part of urban development projects, the promotion of tourism and soft power projections [[parencite:&Song_2008_private;&Zennaro_2017_shanghai;&Zhao_2018_westbund;&Kiowski_2017_museum;&Zhang_Courty_2020_china;&Bechtler_Imhof_2018_future;&Lu_2014_museums]]. [fn::Whether museums are actually an efficient measure for economic growth has been questioned by [[textcite:&Frey_Meier_2006_economics]] who argue that "there are generally much better means, such as opening a theme park, to [stimulate the economy]" (p.403).]
