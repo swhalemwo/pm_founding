@@ -74,6 +74,65 @@ Occasionally, some studies merely state that private museums are receiving tax b
 - some positive effect
 - no effect
 - interaction with other factors
+ 
+The literature overall leans towards an influence of tax breaks, leading to the following hypothesis:
+#
+*Hypothesis 1*: Private museums are more likely to be founded in countries with tax incentives.
+
+However, the effectiveness of tax incentives is also often qualified to be dependent on a wider sense of goodwill [[parencite:&Walker_2019_collector]] familiarity [[parencite:&DeNigris_2018_museums]] or transparency [[parencite:&Hemels_2017_incentives;&Stanco_2014_fiscaal]], which seem to point to the importance to the degree of institutionalization of philanthropy.
+#
+Capturing this interaction leads to the following hypothesis:
+
+*Hypothesis 2*: Tax incentives for the arts are more/only effective in countries with established philanthropic traditions.
+
+**** data
+Little distinction is made in the private museum literature between different kinds of tax measures as all tax incentives are grouped together.
+#
+It might however be that different kinds of tax incentives are effective to different extents; in particular differences could exist between tax deductions on donations to private museums (money or in kind) and tax exemptions. 
+#
+Since we focus on institutions that do not receive substantial funding from other actors, tax deductions on donations might be less important than tax exemptions for the operation of the private museum:
+#
+A country with tax deductions on donations would provide no incentive to donors, but as they are relatively unimportant the effect of tax exemptions (which would provide no motivation to the founder) might be more severe (however, this assumes that the monetary benefits are approximately of equal size, such an assumption of varying importance of the different incentives might not hold e.g. if the tax deduction for the founder when donating her collection (which would not be obtainable in a country without tax deduction) would far outweigh the potential benefits of tax exemptions reducing operation costs).
+
+***** Charities Aid Foundation
+The Charities Aid Foundation (CAF) has published a report on tax incentives to non-profits [[parencite:&Quick_Kruse_Pickering_2014_philanthropy]] globally (193 countries).
+#
+A distinction is made between tax exemptions for non-profits and tax deductions for donations to non-profits, both of which generally reduce running costs (a number of other indicators are also included, such as reporting requirements, differences in incentives between corporations and individuals, and 
+#
+While the importance might differ in the case of private museums, there is a strong positive relationship between presence of incentives for individuals/corporations and tax exemptions for non-profits. 
+#
+However, there are some limitations to this data:
+#
+First, the indicators of presence of presence of tax exemptions or tax deductions on donations are binary indicators. 
+# 
+Second, the focus on philanthropy in general might not necessarily indicate the presence of tax exemptions or tax deductions on donations for private museums more specifically, as "countries which offer ANY [sic] incentives will be defined as having tax incentives" (p.34).
+#
+Third, the focus lies on the legal framework, not norms or whether tax incentives are actually used.
+#
+Fourth, the data is cross-sectional; it was (presumably) collected between 2013 and 2015 and thus may be outdated or inadequate for the previous time spans. 
+#
+
+
+The CAF has also publishes the World Giving Index [[parencite:&CAF_2018_index]], in which since 2010 the tendencies of charitable giving are assessed in 114 countries.
+#
+The main items are having helped a stranger, given money and volunteered for a cause.
+#
+While not concerning the legal framework, it might be used to assess the extent of charitable giving generally.
+#
+However, it might be that the focus on individual behavior might be less effective for this purpose than e.g. the density of philanthropic organizations.
+#
+
+
+***** Hudson Foundation 
+The [[textcite:&HudsonInstitute_2015_philanthropy]][fn::the Hudson Institute has been described as "conservative" and been associated with climate change denial. I didn't find much about the ideological orientation of the Charity Aids Foundation.] has also published a report investigating the philanthropy-friendliness in 64 countries.
+#
+Most directly applicable to private museums are the items on donations, particularly the extent to which the tax system is favorable to making and receiving charitable donations (each rated on a 5-point scale).
+#
+Other indices that might capture the extent of philanthropy generally are ability of individuals to form non-profits and the extent of government interference.
+#
+Again, data is not necessarily also applicable to private museums and only cross-sectional. 
+
+
 
 
 
