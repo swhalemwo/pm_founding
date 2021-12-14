@@ -179,7 +179,7 @@ However, there have also been calls to caution against an exclusive focus on "su
 
 **** Data
 # 
-Systematic wealth data is rather sparse as, unlike income, it is much less subject to taxation [[parencite:&WID_2018_inequality]].
+Systematic wealth data is rather sparse as, unlike income, it is much less subject to taxation [[parencite:&WID_2018_inequality;&WID_2022_inequality]].
 #
 While in recent years the wealth databases have been established such as as the Luxembourg Wealth Study [[parencite:&LWS_2020_LWS]], the World Inequality Database [[parencite:&WID_2021_WID]] or the OECD Wealth Distribution Database [[parencite:&OECD_2021_WDD]], the coverage of wealth measures still falls far behind that of income both in terms of country and time coverage.
 #
@@ -190,6 +190,9 @@ Furthermore, some reviews have noted familiarity with the Forbes list and a over
 It also seems fairly expensive; no direct pricing information is provided on the website but on an other site it is listed as 15k per company per year [fn::https://appexchange.salesforce.com/listingDetail?listingId=a0N3A00000EO62PUAT#:~:text=%2415%2C000%20USD%20per%20company%20per,data%20licence%20is%20also%20required.&text=Access%20to%20the%20world's%20most,through%20your%20existing%20Salesforce%20interface.]
 #
 Credit Suisse has been publishing Global Wealth Reports, but also only from around 2010 onwards. 
+#
+[[textcite:&Capgemini_2021_wealth]] has published a "World Wealth Report" from 1997, however until 2008 HWNI data is only reported on the regional level (North America, Europe, Asia, Latin America, Middle East, Africa).
+
 
 
 ***** Forbes
