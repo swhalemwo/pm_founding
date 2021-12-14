@@ -134,6 +134,13 @@ Again, data is not necessarily also applicable to private museums and only cross
 
 
 
+# #
+# A number of qualitative findings such as individual agreements between collectors and public institutions in Germany [[parencite:&Walker_2019_collector]] or legislation passed for a single museum  [[parencite:&Zorloni_Resch_2016_opportunities]] also point out the highly case-specific forms that tax breaks take.
+# #
+# Similarly, as the complex organizational structure of private museums in which different components (such as the building, the collection, the operations) are organized as different legal entities makes it already difficult to decipher individual institutions; which renders a comparative approach beyond the scope of this project. 
+
+# [[cite:&EFC_2015_comparative]]
+
 
 
 *** policy 
@@ -141,14 +148,8 @@ In the case of China, explicit political encouragement by inclusion in the five-
 # 
 In Cyprus however, [[textcite:&StylianouLambert_etal_2014_museums]] find policies aimed at the recognizing private museums only to take place /after/ a museum boom in the 1990s.
 #
-*** data :noexport:
-So far I have been unable to find systematic data on a global level for measuring the effect of tax breaks.
-#
-A number of qualitative findings such as individual agreements between collectors and public institutions in Germany [[parencite:&Walker_2019_collector]] or legislation passed for a single museum  [[parencite:&Zorloni_Resch_2016_opportunities]] also point out the highly case-specific forms that tax breaks take.
-#
-Similarly, as the complex organizational structure of private museums in which different components (such as the building, the collection, the operations) are organized as different legal entities makes it already difficult to decipher individual institutions; which renders a comparative approach beyond the scope of this project. 
 
-[[cite:&EFC_2015_comparative]]
+
 
 ** wealth
 overall wealth: this could also go through audiences: middle class
