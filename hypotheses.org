@@ -307,9 +307,10 @@ My hunch is that it is too much work to do for the scope of the project as not o
 Eurostat has data on cultural employment in Europe, [[parencite:&Eurostat_2021_employment]], and while it has very fine-grained geographical resolution (regions/provinces/states within countries), its longitudinal scope is limited to 2011 or 2014  onwards (depending on the specific indicator).
 
 
-Another possibility to measure cultural spending via proxy would be to use the Museums of the World database [[parencite:&deGruyter_2021_MOW]], which claims to have 55k museums in 202 countries, and also includes academic staff.
+Another possibility to measure cultural spending via proxy would be to use the Museums of the World database [[parencite:&deGruyter_2021_MOW]], which claims to include 55k museums in 202 countries as well as collection and staff information.
 # 
-However, since I don't have access to that database yet, I don't know how complete the coverage is both in terms of time and staff coverage. 
+However, since I don't have access to that database yet, I don't know how complete the coverage is both regarding museums across space and time as well as the additional information.
+
 
 
 
