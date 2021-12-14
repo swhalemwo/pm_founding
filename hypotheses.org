@@ -289,7 +289,7 @@ However, neither prices for contemporary, public subsidies generally or acquisit
 **** Data
 Ideally it would be nice to have financial information on both public and private museums; but although some institutions publish yearly financial reports, to my knowledge no systematic database exists. 
 # 
-The OECD has a database on national accounts for its member state the most detailed item of which are "cultural services", reaching back until the late 1990s/early 2000s (at least for the countries I checked).
+The OECD has a database on national accounts for its member state the most detailed item of which are "cultural services", reaching back until the late 1990s/early 2000s (at least for the countries I checked)[fn::The OECD also has a hundreds of databases which I'm currently searching for indicators related to cultural spending, however as the items cannot be searched directly a lot of technical tinkering (downloading and parsing the files describing dataset structures and evaluating coverage of results) is needed to see if there are other useful indicators.]
 #
 The UN and the IMF also have database on government cultural spending (The World Bank does not have any items on culture), but they are less fine-grained; the most detailed item is "recreation, culture and religion" (which "cultural services" in the OECD database is a sub-item of, alongside "Recreational and sporting services", "Broadcasting and Publishing Services", "Religious and other Community Services", "R&D recreation, culture and recognition" (?), and "Recreation, culture and religion n.e.c." (?))
 # 
