@@ -16,13 +16,14 @@ Many different causes have been argued to contribute to the founding of private 
 #
 However, the vast majority of the literature is based on case studies or media reports which mostly focus on a limited number of institution within a particular country, resulting in little systematic knowledge of underlying mechanisms.
 #
-Furthermore, it is often not clear if the existing date warrants the often wide-ranging claims that have been made.
+Furthermore, it is often not clear if the existing data warrants the often wide-ranging claims that have been made.
 # this is shittily generalized, should have something more specific
 # need to evaluate the merit of each statement? 
 
-** state support
-*** tax incentives
-**** pro
+** State Support
+*** Tax Incentives
+**** pro :ignhead:
+***** US/Australia :ignhead:
 State support in the form of tax breaks or provision of land have been argued to contribute to the founding of private museums: 
 #
 textcite:&Walker_2019_collector investigates the legal frameworks and tax exemptions that private museums receive in a number of locations.[fn::A historical argument is also made regarding the precursors of private museums, as tax incentives are also seen as relevant to the establishment of art collections in the gilded age as "the accumulation of expensive European art collections at the turn of the twentieth century was aided by the reduction, and eventual abolition of import tariffs in the US" (p.27).]
@@ -30,16 +31,18 @@ textcite:&Walker_2019_collector investigates the legal frameworks and tax exempt
 In the case of Australia, she argues that tax reforms that increased tax deductions for donations to charitable organizations played a substantial role for the establishment of private museums: "The founding and funding of TWMA [TarraWarra Museum of Art] was a direct consequence of the changes to Australian tax law. [...] without [a broader range of inducements and approaches], I would suggest a generosity of spirit alone will not result in a substantial philanthropic gift such as TWMA or the founding of other private museums in Australia."
 #
 In the US, it is not a /change/ in the tax code, but its general features, such as exemptions from 28% capital gains tax and tax deductibility of exhibition, insurance, conservation and storage costs, which "[support] the founding of collector museums" (p.35). 
-#
+
+***** EU :ignhead:
 For Europe, the effect of tax incentives on founding is less pronounced.
 #
-While tax incentives in Germany (p.29) and Switzerland (p.36) are discussed, it is not argued that they constitute a necessary or supportive factor in the Establishment of private museums, it is merely mentioned that
-"[Fondation Beyeler's] complex tax structure is a way for the foundation to minimize its tax burden." (p.36).
+While tax incentives in Germany (p.29) and Switzerland (p.36) are discussed, it is not argued that they constitute a necessary or supportive factor in the establishment of private museums, it is merely mentioned that "[Fondation Beyeler's] complex tax structure is a way for the foundation to minimize its tax burden." (p.36).
 #
 Nevertheless, a clear overall argument is reached in the impact of tax incentives as it is concluded that "the formation of many private museums in the last two decades are directly or indirectly linked to generous tax incentives as they help to offset individual tax burdens and promote arts philanthropy. [...] The generosity and breadth of American, Australian, English and European[fn::Curiously, English cases are not discussed, and the other European cases that are discussed (Fondation Beyeler and Kunsthaus Zuerich) have not been founded in "the last two decades"] tax law is a factor in the promotion of private museums" (p.37). 
 # 
 A similar effect of the impact of tax incentives is diagnosed by textcite:&Bechtler_Imhof_2018_future, who argue that "collectors not only build museums as vehicles to save taxes" (p.14) which, while explicitly emphasizing the multifacetedness of founding causes, still assigns a facilitative role to tax incentives. 
-# 
+
+
+***** other taxes :ignhead:
 [[textcite:&Gnyp_2015_collectors]] argues that changes in tax law that limited donations to public museums "formed a boost for opening private spaces" (p.165) [fn::I think Gnyp might be reading too much into her source [[parencite:&Kahn_2006_fractional]] who argues only that due to changes in tax law, fractional donations become less likely, thus leaving more works in estates whereas previously by would have been (fractionally) donated to institutions. Kahn however does not link these estates to the establishment of private /museums/, as he only argues that from the bequests the artworks are "far more likely to be sold off to private collectors than to art institutions".].
 #
 The same mechanism of lack of tax incentives for donations to public museums is argued by [[textcite:&KalbCosmo_2020_museum]] to have contributed to the founding of private museums in Europe: "limited benefits to making museum donations have meant that private collectors have never had the power to shape the collecting, exhibiting and building programs of state-run museums the way North American collectors did. Instead, European collectors found it more beneficial to establish private museums" (p.35).
@@ -47,7 +50,7 @@ The same mechanism of lack of tax incentives for donations to public museums is 
 More generally, exemptions from import taxes on art have also been seen as contributing to the establishment of art collections, both in the gilded age [[parencite:&Walker_2019_collector p.27]] and contemporary China [[parencite:&Kiowski_2017_museum p.p55]][fn::It is not clear to me whether the source that Kiowski uses [[parencite:&Bergman_2015_westbund]] actually refers to /import/ taxes, as the wording is ambiguous and only explicitly refers to the possibility to "/store/ art tax-free" (emphasis added).]
 
 
-**** contra 
+**** contra :ignhead:
 
 # [[cite:&Walker_2019_collector]] p.23: p.26: "Tax incentives are seldom an immediate call to action and do not always prompt ongoing philanthropic giving within society. Governments also need to promote a sense of goodwill as changes to cultural and taxation policy alone might not bring about the par indictment shift required by governments" -> tax incentives alone not efficient? is she proposing an interaction?
 # at other point argues that tax benefits would be necessary: p.34: "without [broader range of iinducements and approaches], I would suggest a generosity of spirit alone will not result in a substantial philanthropic gift such as TWMA or the founding of other private museums in Australia."
@@ -59,34 +62,42 @@ textcite:&Zorloni_Resch_2016_opportunities argue that "[art collectors'] generos
 #
 Such multifacetedness is also seen as present by [[textcite:&Walker_2019_collector]], who argues that "on the whole, most philanthropic acts are not generally motivated by tax benefits and gains; the motivations are far more complex and personal." (p.144).
 # 
-Elsewhere, textcite:&Walker_2019_collector goes even further by moving from a multifacetedness of founding causes to the absence of a "net effect" of tax incentives, as she (in my opinion) suggests that tax incentives only are effective in interaction with wider cultural policies by arguing that "tax incentives are seldom an immediate call to action and do not always prompt ongoing philanthropic giving within society. Governments also need to promote a sense of goodwill as changes to cultural and taxation policy alone might not bring about the paradigm shift required by governments" (p.26). 
+Elsewhere, textcite:&Walker_2019_collector goes even further by moving from a multifacetedness of founding causes to the absence of a "net effect" of tax incentives, as she (in my opinion) suggests that tax incentives only are effective in interaction with wider cultural policies by arguing that "tax incentives are seldom an immediate call to action and do not always prompt ongoing philanthropic giving within society. Governments /also need to promote a sense of goodwill as changes to cultural and taxation policy alone might not bring about the paradigm shift required by governments" (p.26, emphasis added). 
 # this can actually be tested: "sense of goodwill"
 #
-A similar interaction is suggested by textcite:&DeNigris_2018_museums, who questions the impact of formal presence of tax incentives for the case of China: "In theory [...] donations to not for profit organizations are tax exempt. In practice, however, art museums [...] must still apply separately to the tax bureau in order to obtain tax benefits" (p.222); yet as "there is little familiarity with income tax deductibility for donations among both tax authorities and donors" (ibid.) it is unclear if tax incentives can be effective on their own.
+A similar interaction is suggested by textcite:&DeNigris_2018_museums, who questions the impact of formal presence of tax incentives for the case of China: "In theory [...] donations to not for profit organizations are tax exempt. In practice, however, art museums [...] must still apply separately to the tax bureau in order to obtain tax benefits" (p.222); yet as "there is little familiarity with income tax deductibility for donations among both tax authorities and donors" (ibid.) the question arises whether tax incentives are effective on their own.
 # this is actually the same as walker
 #
 Unrelated to private museums but focusing on donations towards museums, a similar argument is made by [[textcite:&Hemels_2017_incentives]] and textcite:&Stanco_2014_fiscaal, who argue that it is less the amount of taxes that can be saved that motivates donations, but rather the transparency, publicity, and accessibility/understandability of cultural policies that influence charitable donations. 
 
-**** merely stating presence
-Occasionally, some studies merely state that private museums are receiving tax breaks without discussing their consequences [[parencite:&Brown_2019_private;&Camarero_etal_2018_marketing;&Frey_Meier_2002_beyeler]].
+# **** merely stating presence
+# Occasionally, some studies merely state that private museums are receiving tax breaks without discussing their consequences [[parencite:&Brown_2019_private;&Camarero_etal_2018_marketing;&Frey_Meier_2002_beyeler]].
 
 **** hypotheses
-- some positive effect
-- no effect
-- interaction with other factors
+# - some positive effect
+# - no effect
+# - interaction with other factors
  
 The literature overall leans towards an influence of tax breaks, leading to the following hypothesis:
 #
+#+latex: \noindent
 *Hypothesis 1*: Private museums are more likely to be founded in countries with tax incentives.
+#+latex: \bigbreak
 
 However, the effectiveness of tax incentives is also often qualified to be dependent on a wider sense of goodwill [[parencite:&Walker_2019_collector]] familiarity [[parencite:&DeNigris_2018_museums]] or transparency [[parencite:&Hemels_2017_incentives;&Stanco_2014_fiscaal]], which seem to point to the importance to the degree of institutionalization of philanthropy.
 #
 Capturing this interaction leads to the following hypothesis:
-
-*Hypothesis 2*: Tax incentives for the arts are more/only effective in countries with established philanthropic traditions.
+#+latex: \noindent
+*Hypothesis 2*: Tax incentives for the arts are more/only effective for the founding of private museums in countries with established philanthropic traditions.
 
 **** data
-Little distinction is made in the private museum literature between different kinds of tax measures as all tax incentives are grouped together.
+
+***** Charities Aid Foundation :ignhead:
+The *Charities Aid Foundation* (CAF) has published a report on tax incentives to non-profits [[parencite:&Quick_Kruse_Pickering_2014_philanthropy]] globally (193 countries).
+#
+A distinction is made between tax exemptions for non-profits and tax deductions for donations to non-profits, both of which generally reduce running costs; the indicators are strongly related.
+# 
+However, little distinction is made in the private museum literature between different kinds of tax measures as all tax incentives are grouped together.
 #
 It might however be that different kinds of tax incentives are effective to different extents; in particular differences could exist between tax deductions on donations to private museums (money or in kind) and tax exemptions. 
 #
@@ -94,12 +105,9 @@ Since we focus on institutions that do not receive substantial funding from othe
 #
 A country with tax deductions on donations would provide no incentive to donors, but as they are relatively unimportant the effect of tax exemptions (which would provide no motivation to the founder) might be more severe (however, this assumes that the monetary benefits are approximately of equal size, such an assumption of varying importance of the different incentives might not hold e.g. if the tax deduction for the founder when donating her collection (which would not be obtainable in a country without tax deduction) would far outweigh the potential benefits of tax exemptions reducing operation costs).
 
-***** Charities Aid Foundation
-The Charities Aid Foundation (CAF) has published a report on tax incentives to non-profits [[parencite:&Quick_Kruse_Pickering_2014_philanthropy]] globally (193 countries).
-#
-A distinction is made between tax exemptions for non-profits and tax deductions for donations to non-profits, both of which generally reduce running costs (a number of other indicators are also included, such as reporting requirements, differences in incentives between corporations and individuals, and 
-#
-While the importance might differ in the case of private museums, there is a strong positive relationship between presence of incentives for individuals/corporations and tax exemptions for non-profits. 
+
+
+A number of other indicators are also included, such as reporting requirements, differences in incentives between corporations and individuals, and the possibility of using charitable donations to pay estate tax, which might however still be used to measure extent of philanthropy generally. 
 #
 However, there are some limitations to this data:
 #
@@ -110,7 +118,7 @@ Second, the focus on philanthropy in general might not necessarily indicate the 
 Third, the focus lies on the legal framework, not norms or whether tax incentives are actually used.
 #
 Fourth, the data is cross-sectional; it was (presumably) collected between 2013 and 2015 and thus may be outdated or inadequate for the previous time spans. 
-#
+
 
 
 The CAF has also publishes the World Giving Index [[parencite:&CAF_2018_index]], in which since 2010 the tendencies of charitable giving are assessed in 114 countries.
@@ -123,8 +131,8 @@ However, it might be that the focus on individual behavior might be less effecti
 #
 
 
-***** Hudson Foundation 
-The [[textcite:&HudsonInstitute_2015_philanthropy]][fn::the Hudson Institute has been described as "conservative" and been associated with climate change denial. I didn't find much about the ideological orientation of the Charity Aids Foundation.] has also published a report investigating the philanthropy-friendliness in 64 countries.
+***** Hudson Foundation :ignhead:
+The *[[textcite:&HudsonInstitute_2015_philanthropy]]* [fn::the Hudson Institute has been described as "conservative" and been associated with climate change denial. I didn't find much about the ideological orientation of the Charity Aids Foundation.] has also published a report investigating the philanthropy-friendliness in 64 countries.
 #
 Most directly applicable to private museums are the items on donations, particularly the extent to which the tax system is favorable to making and receiving charitable donations (each rated on a 5-point scale).
 #
@@ -134,50 +142,74 @@ Again, data is not necessarily also applicable to private museums and only cross
 
 
 
+
+
+*** Policy 
+In the case of China, explicit political encouragement by inclusion in the five-year plan has also been hypothesized to contribute to the founding of (private) museums as part of urban development projects, the promotion of tourism and soft power projections [[parencite:&Song_2008_private;&Zennaro_2017_shanghai;&Zhao_2018_westbund;&Kiowski_2017_museum;&Zhang_Courty_2020_china;&Bechtler_Imhof_2018_future;&Lu_2014_museums]]. [fn::Whether museums are actually an efficient measure for economic growth has been questioned by [[textcite:&Frey_Meier_2006_economics]] who argue that "there are generally much better means, such as opening a theme park, to [stimulate the economy]" (p.403).]
+# 
+In Cyprus however, [[textcite:&StylianouLambert_etal_2014_museums]] find policies aimed at the recognizing private museums only to take place /after/ a museum boom in the 1990s.
+
+#+latex: \bigbreak
+#+latex: \noindent
+*Hypothesis 3*: Private museums are more likely to be founded in countries with policy support.
+
+So far I have not been able to find good data on this topic, possibly due to difficulties in standardizing cultural policies; furthermore legislation intended for the promotion of private museums might be case-specific, such as the case of Crystal Bridges discussed by textcite:&Zorloni_Resch_2016_opportunities. 
+
 # #
-# A number of qualitative findings such as individual agreements between collectors and public institutions in Germany [[parencite:&Walker_2019_collector]] or legislation passed for a single museum  [[parencite:&Zorloni_Resch_2016_opportunities]] also point out the highly case-specific forms that tax breaks take.
+# A number of qualitative findings such as individual agreements between collectors and public institutions in Germany [[parencite:&Walker_2019_collector]] or legislation passed for a single museum  [[]] also point out the highly case-specific forms that tax breaks take.
 # #
 # Similarly, as the complex organizational structure of private museums in which different components (such as the building, the collection, the operations) are organized as different legal entities makes it already difficult to decipher individual institutions; which renders a comparative approach beyond the scope of this project. 
 
 # [[cite:&EFC_2015_comparative]]
 
+# ** Elite Wealth
+# overall wealth: this could also go through audiences: middle class
+# wealth of elites
+# private/public ratio
+# "inequality"
+
+# Wealth is hypothesized to contribute to the founding of private museums in different ways.
+# #
+# In this section I focus on different material components of wealth; I discuss status dynamics separately in the next section. 
 
 
-*** policy 
-In the case of China, explicit political encouragement by inclusion in the five-year plan has also been hypothesized to contribute to the founding of (private) museums as part of urban development projects, the promotion of tourism and soft power projections [[parencite:&Song_2008_private;&Zennaro_2017_shanghai;&Zhao_2018_westbund;&Kiowski_2017_museum;&Zhang_Courty_2020_china;&Bechtler_Imhof_2018_future;&Lu_2014_museums]]. [fn::Whether museums are actually an efficient measure for economic growth has been questioned by [[textcite:&Frey_Meier_2006_economics]] who argue that "there are generally much better means, such as opening a theme park, to [stimulate the economy]" (p.403).]
-# 
-In Cyprus however, [[textcite:&StylianouLambert_etal_2014_museums]] find policies aimed at the recognizing private museums only to take place /after/ a museum boom in the 1990s.
-#
-
-
-
-** wealth
-overall wealth: this could also go through audiences: middle class
-wealth of elites
-private/public ratio
-"inequality"
-
-Wealth is hypothesized to contribute to the founding of private museums in different ways.
-#
-In this section I focus on different material components of wealth; I discuss status dynamics separately in the next section. 
-
-*** overall wealth
-# Overall wealth is particularly in China seen as contributing to the increase in museums through economic development  and increases in people's standards of living [[
-#
-# Lu: mechanism is government spending, there's no argument e.g. about emerging middle class -> demand side
-# also not even about PMs -> can't make argument
-# Song is about collections, not museums
-
-However, general wealth might increase private museums indirectly, such as through an increase in museums generally (i.e., not just private ones cite:&Lu_2014_museums) and private collections parencite:&Song_2008_private.
-
-*** wealth of elites
-The founding of private museums has been associated with the rise of (Ultra) High Net Worth Individuals [[parencite:&Walker_2019_collector p.15/39]] as these "spaces generate costs and mostly no incomes" (cite:&Gnyp_2015_collectors p.236, cite:&Zorloni_Resch_2016_opportunities p.16).
+** Elite Wealth 
+The founding of private museums has been associated with the rise of (Ultra) High Net Worth Individuals (UHNWI) [[parencite:&Walker_2019_collector p.15/39]] as these "spaces generate costs and mostly no incomes" (cite:&Gnyp_2015_collectors p.236, cite:&Zorloni_Resch_2016_opportunities p.16).
 #
 However, there have also been calls to caution against an exclusive focus on "super rich collectors who attract so much attention [as] there are many others that have made and still make things possible with comparatively small means" [[parencite:&Bechtler_Imhof_2018_future p.12]].
 #
-# i am also
+While there is thus some disagreement on the importance of wealth, a hypothesis can be tentatively formulated as:
 
-**** Data
+
+#+latex: \noindent
+*Hypothesis 4*: Private Museums are more likely to be founded in countries with higher numbers of UHNWI.
+#+latex: \bigbreak
+
+Sometimes private museums are associated specifically with the nouveau rich, for example in China [[parencite:&DeNigris_2018_museums;&Lu_2014_museums]] or the American gilded age [[parencite:&Duncan_1995_civilizing;&Walker_2019_collector;&Higonnet_2003_sight;&Higonnet_2007_selfportrait]].
+
+
+#+latex: \noindent
+*Hypothesis 5*: Private museums are more likely to be founded in countries with larger shares of nouveau rich.
+#+latex: \bigbreak
+
+*** mechanism :ignhead:
+I am however not quite clear about the mechanism of wealth.
+#
+I'm not quite sure if it is wealth per se, simply because there are relatively few private museums even when only considering the elite population:
+#
+There are around 50 million millionaires (wikipedia), but only some hundred private museums (while there are around 10k superyachts and 22k private jets; wikipedia again).
+#
+Even if the threshold is pushed higher to some several millions, I think there should still be at least some several hundreds of thousands of individuals who could potentially found a private museum based on their wealth (the amount of people who could found a mega museum with a several hundred million dollar endowment would be much lower, but I think those are the outliers in our database as well).
+#
+Even in the late 80s and 90s, I think there were the resources to found orders of magnitude more museums than ended up being founded at the peak in the 2010s.
+#
+However, the wealth argument can be understood probabilistically as "an UHNWI has a certain chance to found a private museum", and then more UHNWIs would result in more museums being founded. 
+# 
+# Furthermore, founding has declined in recent years,
+# not an argument, just means there are other factors as well
+
+
+*** Data
 # 
 Systematic wealth data is rather sparse as, unlike income, it is much less subject to taxation [[parencite:&WID_2018_inequality;&WID_2022_inequality]].
 #
@@ -193,8 +225,6 @@ Credit Suisse has been publishing Global Wealth Reports, but also only from arou
 #
 [[textcite:&Capgemini_2021_wealth]] has published a "World Wealth Report" from 1997, however until 2008 HWNI data is only reported on the regional level (North America, Europe, Asia, Latin America, Middle East, Africa).
 
-
-
 ***** Forbes
 I'm not sure yet how much value the Forbes billionaire list would be.
 #
@@ -202,7 +232,7 @@ The focus on extreme wealth might fail to capture the large (larger?) number of 
 #
 This argument is also made by [[textcite:&WID_2018_inequality]], who on top of it stress the intransparency of the way the Forbes list is generated and for these reason only use it in combination with other data sources (household surveys, administrative fiscal data on income (capitalization method?) and inheritance tax (estate multiplier method?)) if these are also available.
 #
-This in turn limits their countries for which they consider wealth estimates sufficient to the US, China and France, the UK and Spain, the latter three being argued to be "broadly representative" (p.199) of Europe as whole. 
+This in turn limits their countries for which they consider wealth estimates sufficient to the US, China and France, the UK and Spain, the latter three being argued to be "broadly representative" (p.199) of Europe as whole.[fn::a new wealth report, [[textcite:&WID_2022_inequality]] has been published in the last days but I have not had the time to read it or see if the country coverage has been improved]
 #
 
 The cutoff seems the more severe the more one goes back in time, as Forbes always has used the cutoff of one billion while the relative value of money decreases over time. 
@@ -215,47 +245,33 @@ couldn't find the lists of the pre-internet era online.
 I have written an e-mail to the WID, but so far I've not heard back.
 #
 Editions until 2000 should be included in EBSCO [fn::https://www.ebsco.com/products/magazine-archives/forbes-magazine-archive], but it doesn't seem the UvA has access. 
-#
+
+
 However, it still seems to be a quite valuable datasource due to its long observation period and (theoretically) global focus.
 #
 Furthermore, it might be possible to estimate the validity by comparing the number of billionaires with more standardized wealth measures for the countries/years for which these are available, thus gaining insights into how well number of billionaires can be used as a proxies for countries/years where the standardized measures are absent (however,
 
-*** mechanism
-I'm also not quite clear about the mechanism of wealth.
-#
-I'm not quite sure if it is wealth per se, simply because there are relatively few private museums even when only considering the elite population:
-#
-There are around 50 million millionaires (wikipedia), but only some hundred private museums.
-#
-Even if the threshold is pushed higher to some several millions, I think there should still be at least some millions of individuals who could potentially found a private museum based on their wealth (not everybody could found a mega museum with a several hundred million dollar endowment, but I think those are the outliers in our database as well).
-#
-Even in the late 80s and 90s, I think there were the resources to found orders of magnitude more museums than ended up being founded at the peak in the 2010s.
-#
-However, the wealth argument can be understood probabilistically as "an UHNWI has a certain chance to found a private museum", and then more UHNWIs would result in more museums being founded. 
-# 
-# Furthermore, founding has declined in recent years,
-# not an argument, just means there are other factors as well
 
 
-
-*** Distribution
+** Wealth Distribution
 Less emphasis than to absolute levels/amounts of wealth has been given to wealth distribution.
 #
-While distributional characteristics sometimes mentioned in passing [[cite:&Gnyp_2015_collectors;&KalbCosmo_2020_museum]], the only explicit argument regarding wealth /inequality/ on its own (separate from the high absolute sums of wealth) is made by [[textcite:&Brown_2019_private]], who points out parallels to previous periods of wealth accumulation by arguing that "the founding of private museums appeals to the rhetoric of social obligation that sustained the accumulation of capital early in the twentieth century" (p.15).
+While distributional characteristics sometimes mentioned in passing [[parencite:&Gnyp_2015_collectors;&KalbCosmo_2020_museum]], the only explicit argument regarding wealth /inequality/ on its own (separate from the high absolute sums of wealth) is made by [[textcite:&Brown_2019_private]], who points out parallels to previous periods of wealth accumulation by arguing that "the founding of private museums appeals to the rhetoric of social obligation that sustained the accumulation of capital early in the twentieth century" (p.15).
 #
 However, the extent to which private museums legitimate inequality in a similar way as in the gilded age, where "philanthropic giving on the part of a close-knit community of wealthy individuals functioned as a means by which to maintain widespread confidence" (p.3), is qualified as it is argued that "in the context of the twenty-first century art world [a shifting of public heritage into private hands] does not equate to the pairing of patrimonial capital with the fulfillment of social obligation that characterized smaller, more cohesive societies prior to the first world war" (p.8).
 #
 Thus there is only little argument for or investigation into private museums "covering up" larger societal inequalities.
 
 
-*** founder status
+** Founder Status
 Unlike confidence/legitimacy of the wider socio-economic system, improving individual founder status has been widely suggested as a motivation for collectors to establish a private museum [[parencite:&Zorloni_Resch_2016_opportunities;&Frey_Meier_2002_beyeler;&Walker_2019_collector;&Brown_2019_private;&Durand_2018_jumex;&KalbCosmo_2020_museum;&Gnyp_2015_collectors]].
-#
-Sometimes private museums are associated specifically with the nouveau rich, for example in China [[parencite:&DeNigris_2018_museums;&Lu_2014_museums]] or the American gilded age [[parencite:&Duncan_1995_civilizing;&Walker_2019_collector;&Higonnet_2003_sight;&Higonnet_2007_selfportrait]].
-#
+
+#+latex: \bigbreak
+#+latex: \noindent
+*Hypothesis 6*: Private museums are more likely to be founded by collectors aiming to improve their status
 
 
-**** Data
+*** Data
 To systematically investigate whether private museums are founded with the intention to increase the status of their founders it would be necessary to compare founders with art collectors who do no found museums and see if differences in the motivation to achieve high status exist.
 #
 As direct measures of "status orientation" are not available, it would be necessary to use some such as media attention (under the assumption that collectors who are looking for status will generally behave in a way that results in them receiving media attention).
@@ -264,9 +280,8 @@ However, lack of media attention might also reflect failure to attract status, w
 #
 Furthermore, attention by the media might not be the kind of recognition that collectors want to attain, as less public recognition by peers might be more relevant.
 
-Testing the nouveau rich hypothesis would require wealth data, which involves the problems discussed above.
 
-*** state absence/retreat
+** state absence/retreat
 Another argument for the emergence of private museums has been the decline or absence of state support for the arts, particularly the acquisition budgets for public museums, either in absolute terms or relatively to the (ostensibly strongly increasing) prices for contemporary art [[parencite:&Bechtler_Imhof_2018_future;&Walker_2019_collector;&Song_2008_private;&StylianouLambert_etal_2014_museums;&Zorloni_Resch_2016_opportunities;&Gnyp_2015_collectors;&Clarke_1991_UK;&Brown_2019_private;&Franklin_Papastergiadis_2017_anti;&Quemin_2020_power]].
 # 
 (Relatedly, textcite:&Durand_2018_jumex considers the opaqueness and unresponsiveness of public institutions as the context to which private museums could contrast themselves as more dynamic.)
@@ -283,7 +298,8 @@ Even if no public funds are directed towards private museums, the presence of a 
 #
 However, neither prices for contemporary, public subsidies generally or acquisition budgets of museums (both public and private) have been systematically analyzed in the existing literature on private museums.
 
-
+#+latex: \noindent
+*Hypothesis 7*: Private museums are less likely to be founded in countries with larger public cultural infrastructure.
 
 
 **** Data
@@ -300,7 +316,7 @@ Cultural Services includes a wide range of actors ranging from  "publicly-funded
 Furthermore, countries differ in the extent to which they "include gastronomy, indigenous
 heritage, fashion, software and games industry, or virtual/artificial reality in their national CCS definitions" (ibid.), the OECD thus warns itself that "care is needed in international comparisons".
 #
-There has been an OECD report [[citeyear:&OECD_2020_shock]] in response to the Covid Pandemic that distinguishes employment in cultural services in more detail with the more fine-grained category of "libraries, archives, museums and other cultural activities" (alongside "printing and reproduction of recorded media", "publishing activities", "books and software", "motion picture, video TV, radio", "creative, arts and entertainment activities"); however the data collection for this report is described as "ad-hoc" (p.7), i.e. based on the respective national statistical agencies of the countries investigated, presumably as no standardized database for employment in cultural sectors exist.
+There has been an OECD report ([[citeyear:&OECD_2020_shock]]) in response to the Covid Pandemic that distinguishes employment in cultural services in more detail with the more fine-grained category of "libraries, archives, museums and other cultural activities" (alongside "printing and reproduction of recorded media", "publishing activities", "books and software", "motion picture, video TV, radio", "creative, arts and entertainment activities"); however the data collection for this report is described as "ad-hoc" (p.7), i.e. based on the respective national statistical agencies of the countries investigated, presumably as no standardized database for employment in cultural sectors exist.
 #
 My hunch is that it is too much work to do for the scope of the project as not only do countries use different classifications, but at least some countries provide yearbooks rather than time-series, and furthermore it is not clear if all countries provide relevant data for the time-period in question (the report itself is only interested with the most recent data to study Covid policy responses).
 #
@@ -314,12 +330,23 @@ However, since I don't have access to that database yet, I don't know how comple
 
 
 
-*** some reflection
-The emphasis on case studies of individual collectors also tends to focus on what may be called supply factors, such as collector motivation or government policy.
-#
-"Demand factors", such as emerging middle classes as the customer base of museums [[parencite:&Bourdieu_Darbel_Schnapper_1991_museums]] have received much less attention, however  textcite:&Durand_2018_jumex argues that Jumex "addresses an elite group of aspirational upper-middle-class and specialized audiences within the art world and market" (p.14).
+** other causes
 
-The case-study based studies also have sampled on the dependent variable by tracing one or several private museums, and based on that data argued whether any factor played or didn't play a role, but so far there is no research that looks at cases where there are no private museums.
+The emphasis on case studies of individual collectors has so far not much considered an effect of the presence of the intended audiences such as (emerging) middle classes which constitute the customer base of museums [[parencite:&Bourdieu_Darbel_Schnapper_1991_museums]], the exception being textcite:&Durand_2018_jumex who argues that Jumex "addresses an elite group of aspirational upper-middle-class and specialized audiences within the art world and market" (p.14).
+#
+However, while general wealth might increase both the audience of museums and private collections parencite:&Song_2008_private, it could also through an increase of public cultural spending, leading to an increase in public museums (i.e., not just private ones cite:&Lu_2014_museums) lead to worse prospects for private museums.
+#
+Furthermore, the population of art collectors might be important as precursors of private museums (I have contacted Laura Braden who used ArtNews top collectors ([[citeyear:&Braden_2016_recognition]]), but I have not heard back yet). 
+
+
+# *** overall wealth
+# Overall wealth is particularly in China seen as contributing to the increase in museums through economic development  and increases in people's standards of living [[
+#
+# Lu: mechanism is government spending, there's no argument e.g. about emerging middle class -> demand side
+# also not even about PMs -> can't make argument
+# Song is about collections, not museums
+
+
 
 
 * References :ignhead:
