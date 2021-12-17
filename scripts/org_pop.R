@@ -2651,6 +2651,7 @@ some_page <- x[[1]]
 
 
 ## * oecd
+## ** library access, doesn't have labels tho 
 library(OECD)
 df_oced <- as_tibble(get_datasets())
 ## 1495 datasets noice
@@ -2681,7 +2682,7 @@ dfx2 <- as_tibble(get_dataset("SNA_TABLE11",
                               filter = list(c("DEU"))
                 ))
 
-
+## ** sdmx parsing tests
 
 SDMX_DIR <- "/home/johannes/ownCloud/oecd/SDMX/"
 
@@ -2785,11 +2786,87 @@ proc_sdmx_file <- function(sdmx_file){
         ## the "indicator" column seems to have all kinds of different names
         ## -> have to print everything and filter 
     }
-
 }
+
+mclapply(files_there, proc_sdmx_file, mc.cores = 6)
+
+
+
+## ** debugging failed files, doesn't seem that many 
+proc_sdmx_file("REVPER.xml")
+proc_sdmx_file("EO27_VINTAGE.xml")
+
+lapply(list("EO27_VINTAGE.xml", "REVPER.xml"), proc_sdmx_file)
+
+
+
+## each item is again a slot-carrier (?) with bunch of slots?
+
+sdmx_file <- "EO27_VINTAGE.xml"
+##  [1] "id"                  "agencyID"            "version"            
+##  [4] "uri"                 "urn"                 "isExternalReference"
+##  [7] "isFinal"             "validFrom"           "validTo"            
+## [10] "Name"                "Description"         "Code"               
+
+lapply(list_of_codelists, function(x) slotNames(x))
+## need to compare with some item that I know works
+
+sdmx_id <- substr(sdmx_file, 1, nchar(sdmx_file)-4)
+dsd <- readSDMX(paste0(SDMX_DIR, sdmx_file), isURL = FALSE)
+## print(slotNames(dsd)) overall slotnames are the same
+cls <- slot(dsd, "codelists")
+codelists <- sapply(slot(cls, "codelists"), function(x) slot(x, "id"))
+
+codelistx <- "CL_EO27_VINTAGE_LOCATION"
+
+list_of_codelists <- slot(slot(dsd, "codelists"),"codelists")
+location_codelist <- list_of_codelists[[1]]
+slot(location_codelist)
+## huh actually has no "Code" slot that could provide the rows
+slotNames(location_codelist)
+
+## maybe should see if all the sdmx files that don't work have the same structure
+## first see where it works -> write exception
+
+
+
+
+
+sdmx_file <- "REVPER.xml"
+##  [1] "id"                  "agencyID"            "version"            
+##  [4] "uri"                 "urn"                 "isExternalReference"
+##  [7] "isFinal"             "validFrom"           "validTo"            
+## [10] "Name"                "Description"         "Code"               
+sdmx_id <- substr(sdmx_file, 1, nchar(sdmx_file)-4)
+dsd <- readSDMX(paste0(SDMX_DIR, sdmx_file), isURL = FALSE)
+## print(slotNames(dsd)) overall slotnames are the same
+cls <- slot(dsd, "codelists")
+codelists <- sapply(slot(cls, "codelists"), function(x) slot(x, "id"))
+
+
+## -> each of the names within the slots seem to be the same
+list_of_codelists <- slot(slot(dsd, "codelists"),"codelists")
+codelistx <- "CL_REVPER_TIME_FORMAT"
+## index 8
+## each item again codelist
+time_format_codelist <- list_of_codelists[[8]]
+## seems like slot "Code" is a list of things that gets converted to rows
+slot(time_format_codelist, "Code")
+
+row1 <- slot(time_format_codelist, "Code")[[1]]
+## then uses slots id, label, description
+## label and description are seem to be named lists -> should be able to loop over them
+
 
 x <- slot(cls, "codelists")[[1]]
 lapply(slotNames(x), function(i) {slot(x, i)})
+
+
+
+## proc_sdmx_file(sdmx_file)
+
+
+
 
 ## need to compare one codelist that works properly with one that doesn't
 ## might need manual parsing, have to make sure that it produces the same result in a codelist that works than what is produced by overloaded as.data.frame
