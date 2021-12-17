@@ -2723,9 +2723,28 @@ SDMX_TBL_DIR <- "/home/johannes/ownCloud/oecd/sdmx_based_tables/"
 
 write.csv(codelist, paste0(SDMX_TBL_DIR, idx, ".csv"))
 
-files_there <- sample(list.files(SDMX_DIR),10)
+## ** sdmx parsing proc
 
-for (sdmx_file in files_there){
+files_there <- list.files(SDMX_DIR)
+
+SDMX_FAIL_DIR <- "/home/johannes/ownCloud/oecd/sdmx_parsing_fail"
+SDMX_FAIL_FILE <- paste0(SDMX_FAIL_DIR, "/fails.csv")
+
+proc_codelist <- function(dsd, codelistx, sdmx_id) {
+    #' convert sdmx codelist into df, outsourced to own function for better trycatching
+    codelist_df <- as.data.frame(slot(dsd, "codelists"), codelistId = codelistx)
+    names_codelist_df <- names(codelist_df)
+    codelist_df$codelist <- codelistx
+    codelist_df$sdmx_id <- sdmx_id
+    ## reorder the columns so that I can easier grep/awk the databases/codelists where culture terms occur
+    codelist_df <- codelist_df[,c("sdmx_id", "codelist", names_codelist_df)]
+
+    filename <- paste0(SDMX_TBL_DIR, sdmx_id, "---", codelistx, ".csv")
+    write.csv(codelist_df, filename)
+}
+
+
+proc_sdmx_file <- function(sdmx_file){
     sdmx_id <- substr(sdmx_file, 1, nchar(sdmx_file)-4)
     dsd <- readSDMX(paste0(SDMX_DIR, sdmx_file), isURL = FALSE)
     ## print(slotNames(dsd)) overall slotnames are the same
@@ -2735,16 +2754,29 @@ for (sdmx_file in files_there){
 
     for (codelistx in codelists){
         print(codelistx)
-        codelist_df <- as.data.frame(slot(dsd, "codelists"), codelistId = codelistx)
+        res <- tryCatch(
+            proc_codelist(dsd, codelistx, sdmx_id),
+            error=function(e) {
+                FAILED_LIST <- c(failed_list, c(sdmx_id, codelistx))
+                ## print(c(failed_list, c(sdmx_id, codelistx)))
 
-        names_codelist_df <- names(codelist_df)
-        codelist_df$codelist <- codelistx
-        codelist_df$sdmx_id <- sdmx_id
-        ## reorder the columns so that I can easier grep/awk the databases/codelists where culture terms occur
-        codelist_df <- codelist_df[,c("sdmx_id", "codelist", names_codelist_df)]
+                ## save which files failed to parse 
+                write.table(paste(sdmx_id, codelistx, sep=","), file=SDMX_FAIL_FILE, append=TRUE,
+                            col.names = FALSE, row.names = FALSE, quote = FALSE)
+                
+                }
+            
+        )
+        ## codelist_df <- as.data.frame(slot(dsd, "codelists"), codelistId = codelistx)
 
-        filename <- paste0(SDMX_TBL_DIR, sdmx_id, "---", codelistx, ".csv")
-        write.csv(codelist_df, filename)
+        ## names_codelist_df <- names(codelist_df)
+        ## codelist_df$codelist <- codelistx
+        ## codelist_df$sdmx_id <- sdmx_id
+        ## ## reorder the columns so that I can easier grep/awk the databases/codelists where culture terms occur
+        ## codelist_df <- codelist_df[,c("sdmx_id", "codelist", names_codelist_df)]
+
+        ## filename <- paste0(SDMX_TBL_DIR, sdmx_id, "---", codelistx, ".csv")
+        ## write.csv(codelist_df, filename)
         
         ## print(codelist_df)
         ## print(paste(len(names(codelist_df)), paste(names(codelist_df), collapse = ", ")))
