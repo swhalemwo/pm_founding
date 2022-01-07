@@ -18,6 +18,7 @@ library(ggpubr)
 library(xtable)
 library(OECD)
 library(rsdmx)
+library(data.table)
 ds <- docstring
 
 
@@ -2948,6 +2949,7 @@ download_oecd_dataset <- function(datasetx, idx) {
     
 apply(sdmx_res_fltrd, 1, function(x) download_oecd_dataset(x["sdmx_id"], x["id"]))
 
+## *** testing how to call data downloading best 
 
 test_printer <- function(datasetx, idx){
     print(paste0("datasetx: ", datasetx))
@@ -2965,9 +2967,91 @@ test_printer("asdf", "jjj")
 apply(sdmx_res_fltrd, 1, function(x) print(names(x)))
 apply(sdmx_res_fltrd, 1, function(x) print(x["sdmx_id"]))
 
+## ** processing actual data
+## maybe first get those that sufficient country coverage
+## hope the label for the country code is the same, but probably isn't 
+
+OECD_DATA_DIR
+
+for (i in datasets_already_there){
+    dfx <- read.csv(paste0(OECD_DATA_DIR, i))
+    if (length(intersect(names(dfx), c("LOCATION", "COU", "COUNTRY"))) == 0) {
+        print(i)
+    }
+}
 
 
-## ** debugging failed files, doesn't seem that many 
+namesx <- unlist(lapply(datasets_already_there, function(x) names(read.csv(paste0(OECD_DATA_DIR, x)))))
+namesx_tbl <- table(namesx)
+namesx_tbl[order(namesx_tbl)]
+
+## country col is either: LOCATION (23), COU (12), COUNTRY(3)
+## exceptions: "BIMTS_CPA","TEC5_REV4"  ,"TEC6_REV4"  ,"TEC9_REV4"
+
+namesx_exceptions <- c("BIMTS_CPA","TEC5_REV4"  ,"TEC6_REV4"  ,"TEC9_REV4")
+
+
+"BIMTS_CPA"
+"TEC5_REV4"
+"TEC6_REV4"
+dfx <- as_tibble(read.csv(paste0(OECD_DATA_DIR,"TEC9_REV4")))
+
+names(dfx)
+
+namesx_exceptions <- list("BIMTS_CPA"=1,"TEC5_REV4"  ,"TEC6_REV4"  ,"TEC9_REV4")
+
+for (i in datasets_already_there){
+    dfx <- as_tibble(read.csv(paste0(OECD_DATA_DIR, i)))
+    if (length(intersect(names(dfx), c("LOCATION", "COU", "COUNTRY"))) == 0) {
+        next
+    } else {
+        country_col <- intersect(names(dfx), c("LOCATION", "COU", "COUNTRY"))
+        print(paste(i, nrow(unique(dfx[,country_col]))))
+    }
+    }
+
+vague_cvrg <- function(namex){
+    dfx <- as_tibble(read.csv(paste0(OECD_DATA_DIR, namex)))
+    country_col <- intersect(names(dfx), c("LOCATION", "COU", "COUNTRY"))
+    country_nbr <- nrow(unique(dfx[,country_col]))
+    year_min <- min(dfx$Time)
+    year_max <- max(dfx$Time)
+    time_cvrg <- year_max-year_min
+    return(list(
+        namex = namex,
+        country_nbr = country_nbr,
+        year_min = year_min,
+        year_max = year_max,
+        time_cvrg=time_cvrg))
+}
+
+vague_cvrg(datasets_already_there[1])
+
+vague_cvrg_res <- lapply(setdiff(datasets_already_there, namesx_exceptions), vague_cvrg)
+
+vague_res_df <- as_tibble(rbindlist(vague_cvrg_res))
+as.data.frame(vague_res_df)
+
+filter(vague_res_df, country_nbr > 25 & time_cvrg > 25)
+## focus on AEA
+## STANI4_2016
+## STANI4_2020
+
+
+
+
+
+## make all the oecd dfs into named list for nicer access
+oecd_dfs <- list()
+for (i in datasets_already_there){
+    dfx <-  as_tibble(read.csv(paste0(OECD_DATA_DIR, i)))
+    oecd_dfs[[i]] <- dfx
+}
+
+
+
+
+## ** debugging failed files, doesn't seem that many -> fine to ignore
 proc_sdmx_file("REVPER.xml")
 proc_sdmx_file("EO27_VINTAGE.xml")
 
