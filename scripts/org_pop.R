@@ -2794,6 +2794,23 @@ proc_sdmx_file <- function(sdmx_file){
 mclapply(files_there, proc_sdmx_file, mc.cores = 6)
 
 ## ** working with parsing results
+## get files with grepping in /home/johannes/ownCloud/oecd/sdmx_based_tables
+
+sdmx_tables_musem <- system(
+    paste0("cd ", SDMX_TBL_DIR, " && grep -irl --include \\*.csv 'museum'"),
+    intern = TRUE)
+    
+sdmx_tables_cultural_services <- system(
+    paste0("cd ", SDMX_TBL_DIR, " && grep -irl --include \\*.csv 'cultural services'"),
+    intern = TRUE)
+
+sdmx_tables_cultural <- system(
+    paste0("cd ", SDMX_TBL_DIR, " && grep -irl --include \\*.csv ' cultural'"),
+    intern = TRUE)
+
+
+relevant_sdmx_tables <- Reduce(union, list(sdmx_tables_musem, sdmx_tables_cultural_services, sdmx_tables_cultural))
+
 relevant_sdmx_tables <- c(
     "AEA---CL_AEA_ACTIVITY.csv",
     "BIMTS_CPA---CL_BIMTS_CPA_CPA_VER_2_1.csv",
