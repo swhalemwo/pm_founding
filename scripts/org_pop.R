@@ -2995,44 +2995,68 @@ apply(sdmx_res_fltrd, 1, function(x) print(x["sdmx_id"]))
 ## maybe first get those that sufficient country coverage
 ## hope the label for the country code is the same, but probably isn't 
 
-OECD_DATA_DIR
 
-for (i in datasets_already_there){
-    dfx <- read.csv(paste0(OECD_DATA_DIR, i))
-    if (length(intersect(names(dfx), c("LOCATION", "COU", "COUNTRY"))) == 0) {
-        print(i)
-    }
-}
-
-
+## find data set column sets 
 namesx <- unlist(lapply(datasets_already_there, function(x) names(read.csv(paste0(OECD_DATA_DIR, x)))))
 namesx_tbl <- table(namesx)
 namesx_tbl[order(namesx_tbl)]
 
 ## country col is either: LOCATION (23), COU (12), COUNTRY(3)
-## exceptions: "BIMTS_CPA","TEC5_REV4"  ,"TEC6_REV4"  ,"TEC9_REV4"
+## exceptions (so far): "BIMTS_CPA","TEC5_REV4"  ,"TEC6_REV4" ,"TEC9_REV4"
 
-namesx_exceptions <- c("BIMTS_CPA","TEC5_REV4"  ,"TEC6_REV4"  ,"TEC9_REV4")
+## find exceptions automatically where there's no column named "LOCATION", "COU", "COUNTRY"
 
-
-"BIMTS_CPA"
-"TEC5_REV4"
-"TEC6_REV4"
-dfx <- as_tibble(read.csv(paste0(OECD_DATA_DIR,"TEC9_REV4")))
-
-names(dfx)
-
-namesx_exceptions <- list("BIMTS_CPA"=1,"TEC5_REV4"  ,"TEC6_REV4"  ,"TEC9_REV4")
+namesx_exceptions <- c()
 
 for (i in datasets_already_there){
-    dfx <- as_tibble(read.csv(paste0(OECD_DATA_DIR, i)))
+    dfx <- read.csv(paste0(OECD_DATA_DIR, i))
     if (length(intersect(names(dfx), c("LOCATION", "COU", "COUNTRY"))) == 0) {
-        next
-    } else {
-        country_col <- intersect(names(dfx), c("LOCATION", "COU", "COUNTRY"))
-        print(paste(i, nrow(unique(dfx[,country_col]))))
+        print(i)
+        namesx_exceptions <- c(namesx_exceptions, i)
     }
-    }
+}
+
+checked_exceptions <- c("BIMTS_CPA","TEC5_REV4","TEC6_REV4","TEC9_REV4","CRS1","CRS1_GREQ","DV_DCD_GENDER","DV_DCD_PPFD","MULTISYSTEM","RIOMARKERS","SOCX_DET","TSEC1","TSEC1_COPY")
+lapply(setdiff(namesx_exceptions, checked_exceptions), print)
+
+## check manually (should check whenever I change the datasets to be included)
+
+## check snippet 
+## dfx <- as_tibble(read.csv(paste0(OECD_DATA_DIR,
+
+
+## first batch 
+## "BIMTS_CPA"
+## "TEC5_REV4"
+## "TEC6_REV4"
+## "TEC9_REV4"
+
+## second batch 
+## "CRS1" ## about agriculture anyways
+## "CRS1_GREQ" ## about agriculture anyways
+## "DV_DCD_GENDER" ## about agriculture anyways
+## "DV_DCD_PPFD" ## about agriculture anyways 
+## "MULTISYSTEM" ## about agriculture anyways 
+## "RIOMARKERS"  ## about agriculture anyways
+## "SOCX_DET" ## only 38 rows, seems all about spain 
+## "TSEC1" ## not clear what it is, but only 134 rows
+## "TSEC1_COPY" ## also unclear, but also only 134 rows
+
+
+
+## names(dfx)
+
+## sloppy coverage evaluations, better in functionalized form below (vague_cvrg)
+## namesx_exceptions <- list("BIMTS_CPA"=1,"TEC5_REV4"  ,"TEC6_REV4"  ,"TEC9_REV4")
+## for (i in datasets_already_there){
+##     dfx <- as_tibble(read.csv(paste0(OECD_DATA_DIR, i)))
+##     if (length(intersect(names(dfx), c("LOCATION", "COU", "COUNTRY"))) == 0) {
+##         next
+##     } else {
+##         country_col <- intersect(names(dfx), c("LOCATION", "COU", "COUNTRY"))
+##         print(paste(i, nrow(unique(dfx[,country_col]))))
+##     }
+##     }
 
 vague_cvrg <- function(namex){
     dfx <- as_tibble(read.csv(paste0(OECD_DATA_DIR, namex)))
