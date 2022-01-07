@@ -3080,13 +3080,10 @@ vague_cvrg_res <- lapply(setdiff(datasets_already_there, namesx_exceptions), vag
 vague_res_df <- as_tibble(rbindlist(vague_cvrg_res))
 as.data.frame(vague_res_df)
 
-filter(vague_res_df, country_nbr > 25 & time_cvrg > 25)
+
 ## focus on AEA
 ## STANI4_2016
 ## STANI4_2020
-
-
-
 
 
 ## make all the oecd dfs into named list for nicer access
@@ -3096,6 +3093,148 @@ for (i in datasets_already_there){
     oecd_dfs[[i]] <- dfx
 }
 
+
+## ** variable extraction 
+
+
+cpltns_checker <- function(vx, varx) {
+    #' assesses completeness of variable in terms of df_anls PM coverage 
+    # there's still a bug with cry_cvrg_geq3, which can be higher than 217 sometimes 
+
+    dfb <- df_anls[,c("countrycode", "year", "nbr_opened")]
+    dfc <- as_tibble(merge(dfb, vx, by = c("year", "countrycode"), all.x = TRUE))
+
+    cry_cvrg <- aggregate(year ~ countrycode, na.omit(dfc), length)
+    crys_geq3 <- cry_cvrg[which(cry_cvrg$year >= 3),]$countrycode
+    cry_pm_crvg_actual <- aggregate(nbr_opened ~ countrycode, na.omit(dfc), sum)
+    cry_pm_crvg_ideal <- aggregate(nbr_opened ~ countrycode, dfc, sum)
+    names(cry_pm_crvg_ideal) <- c("countrycode", "nbr_opened_ideal")
+
+    cry_pm_cvrg_cprn <- as_tibble(merge(cry_pm_crvg_ideal, cry_pm_crvg_actual, all.x = TRUE))
+    cry_pm_cvrg_cprn$nbr_opened[which(is.na(cry_pm_cvrg_cprn$nbr_opened))] <- 0
+    cry_pm_cvrg_cprn$diff <- cry_pm_cvrg_cprn$nbr_opened - cry_pm_cvrg_cprn$nbr_opened_ideal
+
+    ## most_affected_crys <- unlist(lapply(sort(cry_pm_cvrg_cprn$diff)[1:4],
+    ##                                     function(x) (filter(cry_pm_cvrg_cprn, diff == x)$countrycode)))
+
+    most_affected_crys <- cry_pm_cvrg_cprn$countrycode[order(cry_pm_cvrg_cprn$diff)[1:4]]
+    
+
+    PMs_covered_raw <- sum(na.omit(dfc[which(dfc$countrycode %in% crys_geq3),])$nbr_opened)
+
+    cry_cvrg_geq3 <- sum(filter(dfc, countrycode %in% crys_geq3)$nbr_opened)
+
+    nbr_of_crys_geq3 <- len(crys_geq3)
+
+    ## how many of crys_geq3 that have at least one PM founded, maybe relevant for comparative purposes 
+    nbr_of_crys_geq1pm <- filter(aggregate(nbr_opened ~ countrycode, dfc, sum), countrycode %in% crys_geq3) %>%
+        filter(nbr_opened >= 1) %>%
+        nrow()
+
+    return(list(
+        varx=varx,
+        nobs=nrow(vx),
+        PMs_covered_raw=PMs_covered_raw,
+        cry_cvrg_geq3=cry_cvrg_geq3,
+        most_affected_crys = paste(most_affected_crys, collapse = "--"),
+        nbr_of_crys_geq3=nbr_of_crys_geq3,
+        nbr_of_crys_geq1pm=nbr_of_crys_geq1pm))
+ 
+}
+
+## generate filter expression with eval(parse())
+generate_sel_str <- function(combox){
+    strs <- c()
+
+    for (k in 1:ncol(combox)) {
+
+        col_name <- names(combox)[k]
+        col_vlu <- as.data.frame(combox)[1,k]
+        
+        print(paste(col_vlu, typeof(col_vlu)))
+        if (is.na(col_vlu)) {
+            strx <- paste0('is.na(dfx$', col_name, ")")
+
+        } else if (typeof(col_vlu) == "character"){
+            strx <- paste0('dfx["', col_name, '"]=="', col_vlu,'"')
+        } else  {
+            strx <- paste0('dfx["', col_name, '"]==', col_vlu)
+        }
+        strs <- c(strs, strx)
+    }
+
+    strx_cbn <- paste(strs,collapse =  " & ")
+    return(strx_cbn)
+}
+
+
+filter(vague_res_df, country_nbr > 25 & time_cvrg > 25)
+
+lapply(filter(vague_res_df, country_nbr > 25 & time_cvrg > 25)$namex, function(x) names(oecd_dfs[[x]]))
+
+
+idx <- "AEA"
+idx <- "TISP_EBOPS2010"
+idx <- "STANI4_2020"
+
+
+dfx <- oecd_dfs[[idx]]
+
+namesx <- names(dfx)
+country_col <- intersect(names(dfx), c("LOCATION", "COU", "COUNTRY"))
+
+dfx$ObsValue <- dfx$ObsValue * (10^dfx$POWERCODE)
+
+combo_cols <- setdiff(namesx, c(country_col, "ObsValue", "X", "Time", "POWERCODE"))
+
+combos <- unique(dfx[,combo_cols])
+
+filter(dfx, is.na(OBS_STATUS) & )
+
+
+combos <- unique(dfx[,c("MEASURE", "POLLUTANT")])
+
+
+dfx[which(eval(parse(text=strx_cbn))),]
+
+## which(dfx["IND"] == "D90T92" & is.na(dfx$OBS_STATUS))
+    
+res <- list()     
+
+for (i in 1:nrow(combos)) {
+    print(i)
+    combox <- combos[i,]
+    print(combox)
+
+    strx_cbn <- generate_sel_str(combox)
+    vx <- dfx[which(eval(parse(text=strx_cbn))),]
+
+
+    ## vx <- dfx[which(dfx["MEASURE"]== as.data.frame(combox)[1,"MEASURE"] &
+    ##                 dfx["POLLUTANT"]== as.data.frame(combox)[1,"POLLUTANT"]),]
+
+
+    ## some flexible renaming, kinda like SQL
+    vx2 <- vx %>%
+        rename(countrycode=country_col, year=Time, value =ObsValue) %>%
+        select(countrycode, year, value)
+    
+    varx <- paste(combox, collapse = "-")
+    
+    resx <- cpltns_checker(vx2, varx)
+    res[[i]] <- resx
+}
+
+res_df <- as_tibble(rbindlist(res))
+
+hist(res_df$cry_cvrg_geq3)
+
+hist(res_df$nobs)
+
+filter(res_df, PMs_covered_raw > 130 & cry_cvrg_geq3 > 200)$varx
+
+i <- which(res_df$varx=="D90T92-NA-NA-P1Y-PER-SELF")
+i <- which(res_df$cry_cvrg_geq3 > 250)
 
 
 
