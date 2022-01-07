@@ -2919,32 +2919,24 @@ x3 <- as_tibble(get_dataset("FDI_POS_IND", filter = list(c(""),c(""), c("R91")))
 ## actually does when just adding enough LUL 
 x3 <- as_tibble(get_dataset("FDI_POS_IND", filter = list(c(""),c(""),c(""), c(""), c(""), c(""),  c(""), c(""), c("R91"))))
 
+## *** functionalized download 
+
 
 OECD_DATA_DIR <- "/home/johannes/ownCloud/oecd/api_data/"
 
 download_oecd_df <- function(datasetx, filter_list){
+    #' actual downloading 
     dfx <- get_dataset(datasetx, filter=filter_list)
     write.csv(dfx, paste0(OECD_DATA_DIR, datasetx))
     print("success")
     done <- TRUE
     }
 
-download_oecd_df(datasetx, list(c(""), c(""), c("D90T92")))
-download_oecd_df(datasetx, list((idx)))
-
-idx <- "D90T92"
-datasetx <- "STANI4_2020"
-
-idx <- "923"
-datasetx <- "SDBS_BDI"
-
-datasetx <- sdmx_res_fltrd[2,]$sdmx_id
-idx <- sdmx_res_fltrd[2,]$id
 
 datasets_already_there <- list.files(OECD_DATA_DIR)
 
 
-options(timeout = 180)
+options(timeout = 10)
 
 download_oecd_dataset <- function(datasetx, idx) {
     print(paste0("dataset: ", datasetx, " id: ", idx))
@@ -2965,12 +2957,20 @@ download_oecd_dataset <- function(datasetx, idx) {
             })
             filter_list <- res
             Sys.sleep(2)
+            
+            if (length(filter_list) == 20) {
+                done <- TRUE
+                print("quit after too many tries")
+            }
+                
         }
     }
-
 }      
 
-    
+## write to file to read from separate download_oecd.R
+## write.csv(sdmx_res_fltrd, "/home/johannes/Dropbox/phd/papers/org_pop/data/oecd_dbs/sdmx_res_fltrd.csv")
+
+
 apply(sdmx_res_fltrd, 1, function(x) download_oecd_dataset(x["sdmx_id"], x["id"]))
 
 ## *** testing how to call data downloading best 
