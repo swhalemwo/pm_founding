@@ -2864,7 +2864,7 @@ relevant_sdmx_tables <- c(
 sdmx_res_tbls <- lapply(relevant_sdmx_tables, function(x) as_tibble(read.csv(paste0(SDMX_TBL_DIR, x))))
 
 sdmx_res_tbl_names <- unlist(lapply(sdmx_res_tbls, names))
-table(sddmx_res_tbl_names)
+table(sdmx_res_tbl_names)
 
 col_names <- c("sdmx_id", "codelist", "id", "label.en", "description.en")
 
@@ -2872,11 +2872,18 @@ sdmx_res_cbn <- as_tibble(Reduce(function(x,y, ...) rbind(x[,col_names],y[,col_n
 
 ## grepping multiple columns works best with apply, lapply on names(df) doesn't work properly for some reason 
 sdmx_res_fltrd <- sdmx_res_cbn[which(rowSums(apply(sdmx_res_cbn, 2, function(x) grepl("museum", x)))>0),]
-sdmx_res_fltrd$id
 
-sdmx_res_fltrd[28,]
+
+## seems using pipe I can use multiple terms with pipe 
+sdmx_res_fltrd <- sdmx_res_cbn[which(rowSums(apply(sdmx_res_cbn, 2, function(x) grepl(" cultural|museum|cultural services", x)))>0),]
+
+## sdmx_res_fltrd$id
+
+## sdmx_res_fltrd[28,]
 ## hello "D90T92" my old friend
 ## let's see how to query you
+
+## *** figuring out download 
 
 x <- as_tibble(get_dataset("STANI4_2020", filter = list("D90T92")))
 
