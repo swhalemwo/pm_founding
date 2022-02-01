@@ -29,6 +29,7 @@ options(show.error.locations = TRUE)
 len <- length
 
 df <- read_excel("/home/johannes/Dropbox/phd/papers/org_pop/data/Private museum database.xlsx")
+df <- read_excel("/home/johannes/Dropbox/phd/papers/org_pop/data/Private museum database2.xlsx")
 ## removing header stuff 
 nrows <- nrow(df)-1
 df <- df[2:nrows,]
@@ -2189,10 +2190,26 @@ dev.off()
 
 
 ## ** looking into how messy variables can be sanitized automatically, little success so far
+
+## *** variable completeness
+
+var_cpltns <- apply(df, 2, function(x) table(is.na(x))[1])
+var_cpltns[order(var_cpltns)]
+var_cpltns_df <- as.data.frame(var_cpltns[order(var_cpltns)])
+
+## would be interesting, but only few results
+## - governance structure : 117 
+
+
+
+## *** genre focus 
 df$"Collection genre focus"
 summary(df$"Collection genre focus")
 table(is.na(df$"Collection genre focus"))
 
+df$collection_genre_focus <- df$"Collection genre focus"
+
+## *** size 
 table(is.na(df$"Floor size"))
 
 df$"Floor size"[!is.na(df$"Floor size")]
@@ -2203,8 +2220,8 @@ df[which(df$floor_size == "NA"),]$floor_size <- NA
 
 table(df$floor_size)
 
-df$collection_genre_focus <- df$"Collection genre focus"
 
+## *** activities
 df$activities <- df$"Educational / outreach / social / artistic programs"
 strsplit(df$activities, split=c(",|:|;"))
 strsplit(df$activities[553], ',')
@@ -2225,8 +2242,11 @@ strsplit2("abcdefg", 3)
 ## strsplit2(df$activities[553], 3)[4728]
 ## x <- df$activities[553]
 
+## *** mission/vision
+
 
 df$mission <- df$"Mission / vision"
+table(is.na(df$mission))
 hist(unlist(lapply(df$mission, nchar)), breaks = 40)
 
 library(topicmodels)
@@ -3092,6 +3112,8 @@ for (i in datasets_already_there){
     dfx <-  as_tibble(read.csv(paste0(OECD_DATA_DIR, i)))
     oecd_dfs[[i]] <- dfx
 }
+
+
 
 
 ## ** variable extraction 
