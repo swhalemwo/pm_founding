@@ -35,7 +35,7 @@ nrows <- nrow(df)-1
 df <- df[2:nrows,]
 
 
-# tbl <- table(df$Country)
+## tbl <- table(df$Country)
 
 df$country <- df$"Country where museum is located"
 
