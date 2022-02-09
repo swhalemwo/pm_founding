@@ -37,7 +37,10 @@ SCRIPT_DIR <- paste0(PROJECT_DIR, "scripts/")
 FIG_DIR <- paste0(PROJECT_DIR, "figures/")
 TABLE_DIR <- paste0(PROJECT_DIR, "tables/")
 WID_DIR = paste0(PROJECT_DIR, "data/wid/")
+PROC_DATA_DIR <- paste0(PROJECT_DIR, "data/processed/")
+
 STARTING_YEAR <- 1985
+ENDING_YEAR <- 2020
 
 WID_FILES <- list.files(WID_DIR)
 
