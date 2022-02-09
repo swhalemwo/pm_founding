@@ -164,7 +164,7 @@ filter(df_gdp_pcap_molt, country %in% c("Myanmar", "United States", "Germany", "
 ## **** actual function implementation
 
 download_WB_data <- function(indx){
-    #' downloads data with the WB API
+    #' downloads data with the WB API, can take single WB variable codes or vectors thereof
     indx_data <- wb_data(indicator = indx, start_date = STARTING_YEAR, end_date = ENDING_YEAR)
     return(indx_data[,c("iso3c", "country", "date", indx)])
 }
@@ -172,9 +172,49 @@ download_WB_data <- function(indx){
 dfx <- download_WB_data(c("NY.GDP.PCAP.CD", "SI.POV.GINI"))
 
 save_WB_data <- function(df) {
-    
+    #' saves WB data
+    write.table(df, file = paste0(PROC_DATA_DIR, "WB_data_proc.csv"))
+}
 
-## 
+save_WB_data(dfx)
+
+
+read_WB_data <- function() {
+    df_wb <- as_tibble(read.table(paste0(PROC_DATA_DIR, "WB_data_proc.csv")))
+}
+
+df_wb <- read_WB_data()
+
+get_WB_data <- function(indx, refresh_all=FALSE) {
+    #' get WB variables, download all new if asked to do so, else read from file
+    df_wb_local <- read_WB_data()
+    wb_vars_there <- names(df_wb_local)[4:len(names(df_wb_local))]
+
+
+    if (refresh_all) {
+        print(indx)
+        df_wb_api <- download_WB_data(indx)
+
+        unchanged_vars <- wb_vars_there[which(wb_vars_there %!in% indx)]
+        
+    } else {
+        wb_vars_to_download <- indx[which(indx %!in% wb_vars_there)]
+        print(wb_vars_to_download)
+
+        unchanged_vars <- wb_vars_there[which(wb_vars_to_download %!in% wb_vars_to_download)]
+        print(unchanged_vars)
+        ## need to this out: how to get the variables which shouldn't be changed
+    }
+    
+}
+
+
+indx <- c("NY.GDP.PCAP.CD", "SI.POV.GINI", "NY.GDP.PCAP.KD.ZG")
+get_WB_data(indx, FALSE)
+x <- TRUE
+
+
+
 
 
 ## complete data from 1995 onwards
