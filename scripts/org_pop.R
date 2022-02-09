@@ -1,4 +1,5 @@
-## ** libraries/opening data
+## ** startup
+## *** libraries
 library("readxl")
 library(tibble)
 library(reshape2)
@@ -25,24 +26,26 @@ ds <- docstring
 options(show.error.messages = TRUE)
 options(show.error.locations = TRUE)
 
-PMDB_DIR <- "/home/johannes/Dropbox/phd/papers/org_pop/data/pmdb/"
-SCRIPT_DIR <- "/home/johannes/Dropbox/phd/papers/org_pop/scripts/"
 
 
-source(paste0(SCRIPT_DIR, "base_df_creation.R"))
+## *** set static vars
 
+PROJECT_DIR <- "/home/johannes/Dropbox/phd/papers/org_pop/"
 
-
-    
-
-## ** set static vars
-FIG_DIR <- "/home/johannes/Dropbox/phd/papers/org_pop/figures/"
-TABLE_DIR <- "/home/johannes/Dropbox/phd/papers/org_pop/tables/"
+PMDB_DIR <- paste0(PROJECT_DIR, "data/pmdb/") # DIR for private museum database (currently excel import)
+SCRIPT_DIR <- paste0(PROJECT_DIR, "scripts/")
+FIG_DIR <- paste0(PROJECT_DIR, "figures/")
+TABLE_DIR <- paste0(PROJECT_DIR, "tables/")
+WID_DIR = paste0(PROJECT_DIR, "data/wid/")
 STARTING_YEAR <- 1985
-WID_DIR = "/home/johannes/Dropbox/phd/papers/org_pop/data/wid/"
+
 WID_FILES <- list.files(WID_DIR)
 
 con <- DBI::dbConnect(RClickhouse::clickhouse(), host="localhost", db = "org_pop")
+
+## *** source other files 
+source(paste0(SCRIPT_DIR, "custom_funcs.R")) # random utils
+source(paste0(SCRIPT_DIR, "base_df_creation.R")) # function to read in excel data
 
 
 

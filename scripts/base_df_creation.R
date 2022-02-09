@@ -37,7 +37,7 @@ create_base_df <- function() {
     return(df)
 }
 
-dfx <- create_base_df()
+
 
 create_base_df_diagnose <- function(df, verbose = 0){
     #' check status of base df
@@ -58,5 +58,7 @@ create_base_df_diagnose <- function(df, verbose = 0){
     ## but don't think I need it as this point, don't update data that much
 }
 
-create_base_df_diagnose(dfx)
+
+## dfx <- create_base_df()
+## create_base_df_diagnose(dfx)
     
