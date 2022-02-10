@@ -60,3 +60,18 @@ dev.off()
 filter(df_gdp_pcap_molt, country %in% c("Myanmar", "United States", "Germany", "Luxembourg")) %>%
     ggplot(aes(x=date, y=gdp_pcap, group=country, color = country)) +
     geom_line()
+
+## **** compare gini
+df_wb_gini_molt$year <- as.numeric(as.character(df_wb_gini_molt$year))
+filter(df_wb_gini_molt, year > 1984)
+
+gini_cpr_prep <- df_wb_gini_molt
+names(gini_cpr_prep) <- c("country", "iso3c", "date", "gini")
+
+gini_cpr <- as_tibble(merge(x[,c("iso3c", "country", "date", "SI.POV.GINI")], gini_cpr_prep))
+gini_cpr$diff <- gini_cpr$gini - gini_cpr$SI.POV.GINI
+
+summary(gini_cpr$diff)
+hist(gini_cpr$diff)
+
+## gini didn't change at all
