@@ -64,3 +64,8 @@ get_WB_data <- function(indx, refresh_all=FALSE) {
 ## x <- get_WB_data(indx)
 
 
+## complete data from 1995 onwards
+## can see what kind of different ways I can use to remove NAs:
+## remove stuff before 1995
+## remove countries with NAs
+## maybe I can also have different starting dates per country? idk, will see when i check the method
