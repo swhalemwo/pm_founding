@@ -20,6 +20,7 @@ library(xtable)
 library(OECD)
 library(rsdmx)
 library(data.table)
+library(wbstats)
 ds <- docstring
 
 
@@ -37,7 +38,10 @@ SCRIPT_DIR <- paste0(PROJECT_DIR, "scripts/")
 FIG_DIR <- paste0(PROJECT_DIR, "figures/")
 TABLE_DIR <- paste0(PROJECT_DIR, "tables/")
 WID_DIR = paste0(PROJECT_DIR, "data/wid/")
+PROC_DATA_DIR <- paste0(PROJECT_DIR, "data/processed/")
+
 STARTING_YEAR <- 1985
+ENDING_YEAR <- 2020
 
 WID_FILES <- list.files(WID_DIR)
 
@@ -48,50 +52,77 @@ source(paste0(SCRIPT_DIR, "custom_funcs.R")) # random utils
 source(paste0(SCRIPT_DIR, "base_df_creation.R")) # function to read in excel data
 
 
+## *** apiifying indicators
 
-## ** read in some wb gdp data for basic testing
-## *** gdp_pcap: gdp per capita
-## probably need in long_format
-gdp_pcap <- as_tibble(read.csv("/home/johannes/Dropbox/phd/papers/org_pop/data/wb_gpd_pcap/API_NY.GDP.PCAP.CD_DS2_en_csv_v2_2916517.csv", header = F))
-## no gdp data for 2021 yet, no shit
-## actually fine, don't need that data for now: don't have museums opened in 2022 yet
+## **** actual function implementation
 
-## -1 at the end to have the weird 2021 column gone that is NA everywhere
-df_gdp_pcap <- gdp_pcap[3:nrow(gdp_pcap),c(1,2,5:ncol(gdp_pcap)-1)]
+download_WB_data <- function(indx){
+    #' downloads data with the WB API, can take single WB variable codes or vectors thereof
+    print(paste0("now downloading: ", indx))
+    indx_data <- wb_data(indicator = indx, start_date = STARTING_YEAR, end_date = ENDING_YEAR)
+    return(indx_data[,c("iso3c", "country", "date", indx)])
+}
 
-names(df_gdp_pcap)[3:ncol(df_gdp_pcap)] <- unlist(df_gdp_pcap[1,3:ncol(df_gdp_pcap)])
-## drop first row which has the column names 
-df_gdp_pcap <- df_gdp_pcap[-1,] 
+## dfx <- download_WB_data(c("NY.GDP.PCAP.CD", "SI.POV.GINI"))
 
+save_WB_data <- function(df) {
+    #' saves WB data
+    write.table(df, file = paste0(PROC_DATA_DIR, "WB_data_proc.csv"))
+}
 
-## yeeting all the country codes that aren't countries but some larger stuff 
-df_gdp_pcap$countrycode_actual <- countrycode(df_gdp_pcap$V2, "wb", "wb")
-df_gdp_pcap <- df_gdp_pcap[-which(is.na(df_gdp_pcap$countrycode_actual)),]
-## yeet the selection column
-df_gdp_pcap2 <- df_gdp_pcap[,-which(names(df_gdp_pcap) %in% c("countrycode_actual", "Indicator Code"))]
+## save_WB_data(dfx)
 
 
-## melting into long format
-df_gdp_pcap_molt <- as_tibble(melt(df_gdp_pcap2, id=c('V1', 'V2')))
-names(df_gdp_pcap_molt) <- c('country', 'countrycode', 'year', 'gdp_pcap')
-## print(df_gdp_pcap_molt[which(df_gdp_pcap_molt$country == 'United States'),], n=1000)
-## df_gdp_pcap_molt <- df_gdp_pcap_molt[which(df_gdp_pcap_molt$country %in% df_country_years$country),]
+read_WB_data <- function() {
+    df_wb <- as_tibble(read.table(paste0(PROC_DATA_DIR, "WB_data_proc.csv")))
+}
 
-## XKX: Kosovo not included in iso3c, gets solved when using worldbank schema
-## countrycode(unique(df_gdp_pcap_molt$countrycode), "wb", "country.name")
-
-## testing of ambiguous country codes
-## ambig_country_codes2 <- c("AFE", "AFW", "ARB", "CEB", "CSS", "EAP", "EAR", "EAS", "ECA", "ECS", "EMU", "EUU", "FCS", "HIC", "HPC", "IBD", "IBT", "IDA", "IDB", "IDX", "INX", "LAC", "LCN", "LDC", "LIC", "LMC", "LMY", "LTE", "MEA", "MIC", "MNA", "NAC", "OED", "OSS", "PRE", "PSS", "PST", "SAS", "SSA", "SSF", "SST", "TEA", "TEC", "TLA", "TMN", "TSA", "TSS", "UMC", "WLD")
-## as.data.frame(df_gdp_pcap[which(df_gdp_pcap$V2 %in% ambig_country_codes2),c("V1", "V2")])
+## df_wb <- read_WB_data()
 
 
-## need to check completeness: visualization by line
-## ehh just do some aggregation
 
-## some NA tests
-## df_gdp_pcap_molt_lmt <- df_gdp_pcap_molt[which(df_gdp_pcap_molt$country %in% df_country_years$country),]
-## df_gdp_pcap_molt_drop <- na.omit(df_gdp_pcap_molt_lmt)
-## max(aggregate(as.integer(as.character(df_gdp_pcap_molt_drop$year)), list(df_gdp_pcap_molt_drop$country), min)$x)
+get_WB_data <- function(indx, refresh_all=FALSE) {
+    #' get WB variables, download all new if asked to do so, else read from file
+    df_wb_local <- read_WB_data()
+    wb_vars_there <- names(df_wb_local)[4:len(names(df_wb_local))]
+    print(paste0("wb_vars_there: ", wb_vars_there))
+
+    if (refresh_all) {
+        print(paste0("download all indicators anew: ", indx))
+        df_wb_api <- download_WB_data(indx)
+
+        unchanged_vars <- wb_vars_there[which(wb_vars_there %!in% indx)]
+        
+    } else {
+        wb_vars_to_download <- indx[which(indx %!in% wb_vars_there)]
+        print(length(wb_vars_to_download))
+        print(paste0("download selected indicator(s) anew: ", wb_vars_to_download)) #
+        
+        if (length(wb_vars_to_download) > 0) {
+            df_wb_api <- download_WB_data(wb_vars_to_download)
+        } else {
+            df_wb_api <- df_wb_local[,c("iso3c", "country", "date")]
+        }
+
+        unchanged_vars <- wb_vars_there[which(wb_vars_there %!in% wb_vars_to_download)]
+        print(paste0("unchanged_vars: ", unchanged_vars))
+        ## need to this out: how to get the variables which shouldn't be changed; think i got it now
+    }
+
+    df_wb_new <- as_tibble(merge(df_wb_local[,c("iso3c", "country", "date", unchanged_vars)], df_wb_api))
+    save_WB_data(df_wb_new)
+
+    return(df_wb_new[,c("iso3c", "country", "date", indx)])
+    
+}
+
+
+indx <- c("NY.GDP.PCAP.CD", "SI.POV.GINI", "NY.GDP.PCAP.KD.ZG", "SP.POP.TOTL")
+x <- get_WB_data(indx)
+
+
+
+
 
 
 ## complete data from 1995 onwards
@@ -100,40 +131,6 @@ names(df_gdp_pcap_molt) <- c('country', 'countrycode', 'year', 'gdp_pcap')
 ## remove countries with NAs
 ## maybe I can also have different starting dates per country? idk, will see when i check the method
 
-## *** gini
-wb_gini <- as_tibble(read.csv("/home/johannes/Dropbox/phd/papers/org_pop/data/wb_gini/API_SI.POV.GINI_DS2_en_csv_v2_2916486.csv", header = F))
-
-df_wb_gini <- wb_gini[3:nrow(wb_gini), c(1,2,5:ncol(wb_gini)-1)]
-names(df_wb_gini)[3:ncol(df_wb_gini)] <- unlist(df_wb_gini[1,3:ncol(df_wb_gini)])
-df_wb_gini <- df_wb_gini[-1,]
-## more effective way of yeeting all the "countries" that aren't countries
-df_wb_gini2 <- df_wb_gini[which(df_wb_gini$V2 %in% countrycode(unique(df_wb_gini$V2), "wb", "wb")),]
-
-df_wb_gini_molt <- as_tibble(melt(df_wb_gini2[,-3], id=c('V1', 'V2')))
-
-names(df_wb_gini_molt) <- c('country', 'countrycode', 'year', 'gini')
-## df_wb_gini_molt <- df_wb_gini_molt[which(df_wb_gini_molt$country %in% df_country_years$country),]
-aggregate(gini ~ year, data = df_wb_gini_molt, function(x){sum(is.na(x))}, na.action = NULL)
-aggregate(gini ~ country, data = df_wb_gini_molt, function(x){sum(is.na(x))}, na.action = NULL)
-## whole bunch of NAs.. should check aggregation to some spell
-## will remove many observations tho -> need to have function/systematic
-
-## *** population
-wb_population <- as_tibble(read.csv("/home/johannes/Dropbox/phd/papers/org_pop/data/wb_population/API_SP.POP.TOTL_DS2_en_csv_v2_3158886.csv", header = F))
-df_wb_population <- wb_population[3:nrow(wb_population), c(1,2,5:ncol(wb_population)-1)]
-
-names(df_wb_population)[3:ncol(df_wb_population)] <- unlist(df_wb_population[1,3:ncol(df_wb_population)])
-df_wb_population <- df_wb_population[-1,]
-## more effective way of yeeting all the "countries" that aren't countries
-df_wb_population2 <- df_wb_population[which(df_wb_population$V2 %in% countrycode(unique(df_wb_population$V2), "wb", "wb")),]
-
-df_wb_population_molt <- as_tibble(melt(df_wb_population2[,-3], id=c('V1', 'V2')))
-
-names(df_wb_population_molt) <- c('country', 'countrycode', 'year', 'population')
-
-aggregate(population ~ year, data = df_wb_population_molt, function(x){sum(is.na(x))}, na.action = NULL)
-aggregate(population ~ country, data = df_wb_population_molt, function(x){sum(is.na(x))}, na.action = NULL)
-## population seems good, some missing stuff for Gaza/Kuwait, nobody cares
 
 
 
