@@ -112,15 +112,13 @@ get_WB_data <- function(indx, refresh_all=FALSE) {
     df_wb_new <- as_tibble(merge(df_wb_local[,c("iso3c", "country", "date", unchanged_vars)], df_wb_api))
     save_WB_data(df_wb_new)
 
-    return(df_wb_new)
+    return(df_wb_new[,c("iso3c", "country", "date", indx)])
     
 }
 
 
 indx <- c("NY.GDP.PCAP.CD", "SI.POV.GINI", "NY.GDP.PCAP.KD.ZG", "SP.POP.TOTL")
 x <- get_WB_data(indx)
-
-
 
 
 
