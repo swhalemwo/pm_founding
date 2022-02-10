@@ -23,6 +23,21 @@ y <- wb_data(indicator=indicatorx, mrv=10000)
 table(z$date)
 table(y$date)
 
+## ** check WB for culture variables, not there
+culture_vars <- x[which(grepl("culture", x$indicator, ignore.case = TRUE) & !grepl("agricultur", x$indicator, ignore.case = TRUE)),]
+culture_vars$indicator_id
+culture_vars$indicator_desc
+culture_vars$source
+
+## 9110000
+## "FC.XPD.TOUR.CR"
+
+y <- wb_data(indicator = "9110000", start_date = 1985, end_date = 2020) ## not there
+y <- wb_data(indicator = "FC.XPD.TOUR.CR", start_date = 1985, end_date = 2020) ## "Indonesia Database for Policy and Economic Research"
+
+
+
+
 
 ## * getting gdp to work
 
