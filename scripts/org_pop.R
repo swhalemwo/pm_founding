@@ -104,7 +104,7 @@ names(df_gdp_pcap_molt) <- c('country', 'countrycode', 'year', 'gdp_pcap')
 
 download_WB_data <- function(indx){
     #' downloads data with the WB API, can take single WB variable codes or vectors thereof
-    print(paste0("now downloading", indx))
+    print(paste0("now downloading: ", indx))
     indx_data <- wb_data(indicator = indx, start_date = STARTING_YEAR, end_date = ENDING_YEAR)
     return(indx_data[,c("iso3c", "country", "date", indx)])
 }
@@ -163,8 +163,8 @@ get_WB_data <- function(indx, refresh_all=FALSE) {
 }
 
 
-indx <- c("NY.GDP.PCAP.CD", "SI.POV.GINI", "NY.GDP.PCAP.KD.ZG")
-x <- get_WB_data(indx, TRUE)
+indx <- c("NY.GDP.PCAP.CD", "SI.POV.GINI", "NY.GDP.PCAP.KD.ZG", "SP.POP.TOTL")
+x <- get_WB_data(indx)
 
 
 
