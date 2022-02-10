@@ -75,3 +75,20 @@ summary(gini_cpr$diff)
 hist(gini_cpr$diff)
 
 ## gini didn't change at all
+
+## compare population
+
+
+df_wb_population_molt$year <- as.numeric(as.character(df_wb_population_molt$variable))
+filter(df_wb_population_molt, year > 1984)
+
+population_cpr_prep <- df_wb_population_molt[,c("V1", "V2", "year", "value")]
+names(population_cpr_prep) <- c("country", "iso3c", "date", "population")
+
+population_cpr <- as_tibble(merge(x[,c("iso3c", "country", "date", "SP.POP.TOTL")], population_cpr_prep))
+population_cpr$diff <- population_cpr$population - population_cpr$SP.POP.TOTL
+
+summary(population_cpr$diff)
+hist(population_cpr$diff, breaks = 100)
+
+as.data.frame(filter(population_cpr, diff > 10000))
