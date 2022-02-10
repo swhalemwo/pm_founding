@@ -35,8 +35,15 @@ culture_vars$source
 y <- wb_data(indicator = "9110000", start_date = 1985, end_date = 2020) ## not there
 y <- wb_data(indicator = "FC.XPD.TOUR.CR", start_date = 1985, end_date = 2020) ## "Indonesia Database for Policy and Economic Research"
 
+## ** check for tourism
+tourism_vars <- x[which(grepl("tourism", x$indicator, ignore.case = TRUE)),]
+tourism_vars$indicator_desc
+tourism_vars$indicator
 
+tourism_df <- get_WB_data(tourism_vars$indicator_id[-c(2)])
+summary(tourism_df)
 
+## at least 50% for all of the indicators, but still not too bad, I guess? 
 
 
 ## * getting gdp to work
