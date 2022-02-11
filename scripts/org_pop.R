@@ -37,13 +37,16 @@ PMDB_DIR <- paste0(PROJECT_DIR, "data/pmdb/") # DIR for private museum database 
 SCRIPT_DIR <- paste0(PROJECT_DIR, "scripts/")
 FIG_DIR <- paste0(PROJECT_DIR, "figures/")
 TABLE_DIR <- paste0(PROJECT_DIR, "tables/")
-WID_DIR = paste0(PROJECT_DIR, "data/wid/")
+WID_DIR_v1 = paste0(PROJECT_DIR, "data/wid/wid_world_db/version1_oct21/")
+WID_DIR_v2 = paste0(PROJECT_DIR, "data/wid/wid_world_db/version2_feb22/")
+
+
 PROC_DATA_DIR <- paste0(PROJECT_DIR, "data/processed/")
 
 STARTING_YEAR <- 1985
 ENDING_YEAR <- 2020
 
-WID_FILES <- list.files(WID_DIR)
+
 
 con <- DBI::dbConnect(RClickhouse::clickhouse(), host="localhost", db = "org_pop")
 
@@ -93,11 +96,27 @@ as.data.frame(df_crycd_mrg[which(df_crycd_mrg$wid_cry != df_crycd_mrg$country),]
 ## only re-read CH data when especially asking for it
 
 ## **** read into CH
-READ_IN_CH <- FALSE
-if (READ_IN_CH == TRUE){
 
+
+## READ_IN_CH <- FALSE
+## if (READ_IN_CH == TRUE){
+
+read_WID_into_CH <- function(countrycodes3c, db_name, wid_dir) {
+    #' read WID data into clickhouse for countrycodes3c with db name
+    #' wid_dir is dir where all the individual WID country files are located
+
+    wid_files <- list.files(wid_dir)
+
+    ## dbGetQuery(con, "show tables")  ## this is how you can send arbitrary sql statements, hopefully
+    existing_tables <- dbGetQuery(con, "show tables")
+    
+    if (db_name %in% existing_tables$name) {
+        ## delete existing table if it exists
+        dbGetQuery(con, paste0("drop table ", db_name))
+    }
+    
     for (code in countrycodes3c){
-        ## manual exceptions for channel 
+        ## manual exceptions for channel islands and kosovo
         if (code == "XKX") {
             cry_code2c <- "KV"
         } else if (code == "CHI"){
@@ -110,27 +129,37 @@ if (READ_IN_CH == TRUE){
         
         filename <- paste0("WID_data_", cry_code2c, ".csv")
 
-        if (filename %in% WID_FILES){
+        if (filename %in% wid_files){
 
-            cry_data <- as_tibble(read.csv(paste(WID_DIR, "WID_data_", cry_code2c, ".csv", sep=""), sep=";"))
+            cry_data <- as_tibble(read.csv(paste(wid_dir, "WID_data_", cry_code2c, ".csv", sep=""), sep=";"))
 
             cry_data$country <- code
             cry_data$varx <- substring(cry_data$variable, 2, 6)
             cry_data$first_letter <- substring(cry_data$variable, 1,1)
 
+            cry_data <- na.omit(cry_data) # lol why do you include NAs that I have to manually clean up???
+
             ## only write schema with first table, otherwise append
-            if (code == "ABW"){
-                DBI::dbWriteTable(con, "wdi", cry_data)
+            ## if (code == "ABW"){
+            if (code == countrycodes3c[1]) {
+                dbWriteTable(con, db_name, cry_data)
             }
             else {
-                DBI::dbWriteTable(con, "wdi", cry_data, append=TRUE)
+                dbWriteTable(con, db_name, cry_data, append=TRUE)
                 
             }
         }
     }
-
+    print("done")   
 }
-print("done")
+
+read_WID_into_CH(countrycodes3c, "wid_v1", WID_DIR_v1)
+read_WID_into_CH(countrycodes3c, "wid_v2", WID_DIR_v2)
+
+
+
+## }
+
 
 ## cry_rel_vars_df <- filter(cry_data, varx == "labsh" | varx == "wealp" | varx == "wealg")
 ## cry_dfs[[code]] <- cry_rel_vars_df
