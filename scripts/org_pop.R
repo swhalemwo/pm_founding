@@ -57,49 +57,44 @@ source(paste0(SCRIPT_DIR, "wb_api.R"))
 
 
 
-
-
-
-
-
 ## *** WID
 
 ## **** setting up CH
-library(countrycode)
 
-countrycodes2c <- na.omit(countrycode(unique(df_gdp_pcap_molt$countrycode), "iso3c", "iso2c"))
+df_gdp <- get_WB_data("NY.GDP.PCAP.CD")
 
-con <- DBI::dbConnect(RClickhouse::clickhouse(), host="localhost", db = "org_pop")
-
-countrycodes3c <- na.omit(unique(df_gdp_pcap_molt$countrycode))
+countrycodes2c <- na.omit(countrycode(unique(df_gdp$iso3c), "iso3c", "iso2c"))
+countrycodes3c <- na.omit(unique(df_gdp$iso3c))
 
 ## issues with CHI and XKX
 ## need to check what they actually refer in WB data
 ## then probably write some manual exceptions so that they get correctly translated from WB to WDI
 ## also need to check whether there are other mismatches between iso2c(wb) and WDI -> paste WDI (https://wid.world/codes-dictionary/#country-code)
 
-## **** check country codes compatibility between WID and WB 
-df_crycd <- unique(df_gdp_pcap_molt[,c("country", "countrycode")])
-df_crycd$iso2c <- countrycode(df_crycd$countrycode, "wb", "iso2c")
+## **** check country codes compatibility between WID and WB
 
+compare_WID_WB_countrycodes <- function(df_wb, wid_dir) {
+    #' manually necessary to check whether the iso2c countrycodes of the WID match the ones of the WB
+    df_wb <- unique(df_wb[,c("country", "iso3c")])
+    df_wb$iso2c <- countrycode(df_wb$iso3c, "wb", "iso2c")
 
-wid_crycds <- as_tibble(read.csv(paste0(WID_DIR, "countrycodes.csv"), sep = "\t", header = F))[,c("V1", "V2")]
-names(wid_crycds) <- c("countrycode", "wid_cry")
+    ## use "WID_countries.csv" instead of "countrycodes.csv", which wasn't present everywhere
+    # use na.strings = "" to prevent "NA" (alpha2 for Namibia) to be read as NA
+    wid_crycds <- as_tibble(read.csv(paste0(wid_dir, "WID_countries.csv"), sep = ";", header = T, na.strings = ""))
+    
+    df_crycd_mrg <- as_tibble(merge(df_wb, wid_crycds, by.x = "iso2c", by.y = "alpha2"))
+    
+    df_cry_mismatch <- as.data.frame(df_crycd_mrg[which(df_crycd_mrg$country != df_crycd_mrg$shortname),c("iso2c", "country", "titlename")])
 
-## idk why this doesn't work, dfs are all string values, should be just fine
-df_crycd_mrg <- as_tibble(merge(wid_crycds, df_crycd, by.x = "countrycode", by.y = "iso2c"))
-## manual inspection
-as.data.frame(df_crycd_mrg[which(df_crycd_mrg$wid_cry != df_crycd_mrg$country),])
-## results: WID and WB data seem to be in agreement: possible to use iso2c of WB codes for WID
-## just need manual exceptions for Kosovo and Channel Islands
+    ## print(df_cry_mismatch)
 
-## only re-read CH data when especially asking for it
+    return(df_cry_mismatch)
+}
+
+compare_WID_WB_countrycodes(df_gdp, WID_DIR_v1)
+compare_WID_WB_countrycodes(df_gdp, WID_DIR_v2)
 
 ## **** read into CH
-
-
-## READ_IN_CH <- FALSE
-## if (READ_IN_CH == TRUE){
 
 read_WID_into_CH <- function(countrycodes3c, db_name, wid_dir) {
     #' read WID data into clickhouse for countrycodes3c with db name
@@ -156,21 +151,8 @@ read_WID_into_CH <- function(countrycodes3c, db_name, wid_dir) {
 read_WID_into_CH(countrycodes3c, "wid_v1", WID_DIR_v1)
 read_WID_into_CH(countrycodes3c, "wid_v2", WID_DIR_v2)
 
+## **** completeness tests
 
-
-## }
-
-
-## cry_rel_vars_df <- filter(cry_data, varx == "labsh" | varx == "wealp" | varx == "wealg")
-## cry_dfs[[code]] <- cry_rel_vars_df
-
-
-## percentile table
-## pctl_tbl <- table(cry_data$percentile)
-## pctl_tbl[rev(order(pctl_tbl))]
-
-## ggplot(filter(cry_data, varx=="wealg"), aes(x=year, y=value)) +
-##     geom_line()
 
 
 ## *** join predictor data together
