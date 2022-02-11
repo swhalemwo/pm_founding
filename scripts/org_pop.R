@@ -52,8 +52,9 @@ con <- DBI::dbConnect(RClickhouse::clickhouse(), host="localhost", db = "org_pop
 
 ## *** source other files 
 source(paste0(SCRIPT_DIR, "custom_funcs.R")) # random utils
+source(paste0(SCRIPT_DIR, "wb_api.R")) ## World Bank data, has to be run before sourcing base_df_creationn since it provides the country-year structure
 source(paste0(SCRIPT_DIR, "base_df_creation.R")) # function to read in excel data
-source(paste0(SCRIPT_DIR, "wb_api.R"))
+
 
 
 
@@ -154,67 +155,7 @@ read_WID_into_CH(countrycodes3c, "wid_v2", WID_DIR_v2)
 ## **** completeness tests
 
 
-
-## *** join predictor data together
-## For Inner Join
-multi_inner <- as_tibble(Reduce(
-  function(x, y, ...) merge(x, y, ...), 
-  list(df_wb_gini_molt, df_wb_population_molt, df_gdp_pcap_molt)
-))
-## how the fuck does that work? how does it know what variables to use to join?
-## need to check reduce
-
-
-multi_inner$year <- as.numeric(as.character(multi_inner$year))
-multi_inner <- multi_inner[which(multi_inner$year >= STARTING_YEAR),]
-
-filter(multi_inner, is.na(population))
-## population only missing for stuff where I don't have gdp/gini data anyways
-
-
-## ** basic DV table preparation
-## add year: 
-## just clean everything by taking first 4, drop everything that doesn't work lmao
-
-## have 59 NAs, oh well
-## let's say for now 1985-2021
-# plot(table(df$year_opened_int), type='h')
-
-
-df$year_opened_int2 <- df$year_opened_int
-df$year_opened_int2[which(df$year_opened_int2 < STARTING_YEAR | df$year_opened_int2 > 2021)] <- NA
-## up to 100 dropped atm 
-
-
-df_open <- na.omit(df[,c('name', 'country', 'countrycode', 'year_opened_int2')])
-# plot(table(df_open$year_opened_int2), type='l')
-df_open$ctr <- 1
-
-
-df_country_year_agg_cnt <- as_tibble(aggregate(ctr ~ countrycode + year_opened_int2, df_open, FUN = sum))
-names(df_country_year_agg_cnt) <- c('countrycode', 'year', 'nbr_opened')
-
-## df_country_year_agg_names <- as_tibble(aggregate(name ~ countrycode + year_opened_int2, df_open, c))
-
-## df_country_year_agg_names <- as_tibble(aggregate(name ~ countrycode + year_opened_int2, df_open, function(x){paste(x, collapse = "----")}))
-
-df_country_year_agg_names <- df_open %>% group_by(countrycode, year_opened_int2) %>% summarise(name = list(name))
-
-
-names(df_country_year_agg_names) <- c("countrycode", "year", "name")
-
-df_country_year_agg <- as_tibble(merge(df_country_year_agg_cnt, df_country_year_agg_names))
-
-
-
-## ** merge basic opening data with gdp data
-
-df_anls <- as_tibble(merge(multi_inner, df_country_year_agg,
-                           by=c('countrycode', 'year'),
-                           all.x= TRUE))
-
-## fill up NAs up with 0s
-df_anls$nbr_opened[which(is.na(df_anls$nbr_opened))] <- 0
+## *** remaining variables construction, not directly related to structure, have to be functionalized somewhere
 
 df_anls$wv <- 0
 
