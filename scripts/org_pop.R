@@ -31,7 +31,9 @@ df_anls$gdp_pcapk <- df_anls$gdp_pcap/1000
 ## x[which(x$V1 != x$country),]
 
 ## cumulative number of opened
-df_anls$nbr_opened_cum <- ave(df_anls$nbr_opened, df_anls$countrycode, FUN = cumsum)
+df_anls$nbr_opened_cum <- ave(df_anls$nbr_opened, df_anls$iso3c, FUN = cumsum)
+
+
 df_anls$nbr_opened_cum_sqrd <- (df_anls$nbr_opened_cum^2)/100
 ## have to divide by 100 otherwise R glmer.nb complains
 
@@ -498,15 +500,22 @@ screenreg(list(found.pglm.poi1,found.poi1,
 ## ** visualization
 
 
-df_plt <- df_anls
-df_plt$region <- countrycode(df_plt$countrycode, "iso3c", "region")
 
 
-## *** n-year cuts
 
 year_selector <- function(x)(
     # convert cuts back to years
     substring(x, 2,5))
+
+viz_cuts <- function(df_anls){
+    #' visualize the founding 
+
+df_plt <- df_anls
+df_plt$region <- countrycode(df_plt$iso3c, "iso3c", "region")
+
+
+## *** n-year cuts
+
 
 
 df_plt$cut <- cut(df_plt$year, seq(min(df_plt$year), max(df_plt$year)+5, by = 3))
@@ -518,14 +527,14 @@ df_viz <- as_tibble(aggregate(nbr_opened ~ region + cut2, df_plt, sum))
 ## founding rates
 ## first country mean per cut
 ## then region sum 
-df_viz_pop1 <- as_tibble(aggregate(population ~ countrycode + cut2 , df_plt, mean))
-filter(df_viz_pop1, countrycode == "DEU")
-df_viz_pop1$region <- countrycode(df_viz_pop1$countrycode, "iso3c", "region")
+df_viz_pop1 <- as_tibble(aggregate(SP.POP.TOTL ~ iso3c + cut2 , df_plt, mean))
+## filter(df_viz_pop1, iso3c == "DEU")
+df_viz_pop1$region <- countrycode(df_viz_pop1$iso3c, "iso3c", "region")
 
-countrycode(unique(filter(df_viz_pop1, region == "South Asia")$countrycode), "iso3c", "country.name")
+## countrycode(unique(filter(df_viz_pop1, region == "South Asia")$iso3c), "iso3c", "country.name")
 
 
-df_viz_pop2 <- as_tibble(aggregate(population ~ region + cut2, df_viz_pop1, sum))
+df_viz_pop2 <- as_tibble(aggregate(SP.POP.TOTL ~ region + cut2, df_viz_pop1, sum))
 
 ## ggplot(df_viz_pop2, aes(x=cut2, y=population, group=region, color=region)) +
 ##     geom_line()
@@ -533,7 +542,7 @@ df_viz_pop2 <- as_tibble(aggregate(population ~ region + cut2, df_viz_pop1, sum)
 
 
 df_viz_pop3 <- as_tibble(merge(df_viz, df_viz_pop2))
-df_viz_pop3$rate <- df_viz_pop3$nbr_opened/(df_viz_pop3$population/1e+8)
+df_viz_pop3$rate <- df_viz_pop3$nbr_opened/(df_viz_pop3$SP.POP.TOTL/1e+8)
 
 
 p_abs <- ggplot(df_viz, aes(x=cut2, y=nbr_opened, group = region, color = region)) +
@@ -554,12 +563,12 @@ dev.off()
 ## *** rolling average
 
 
-df_viz_rol1 <- as_tibble(aggregate(cbind(population, nbr_opened) ~ region + year, df_plt[,c("countrycode", "year", "region", "population", "nbr_opened")], sum))
+df_viz_rol1 <- as_tibble(aggregate(cbind(SP.POP.TOTL, nbr_opened) ~ region + year, df_plt[,c("iso3c", "year", "region", "SP.POP.TOTL", "nbr_opened")], sum))
 
 ROLLING_AVG_LEN <- 4
 
 df_viz_rol2 <- df_viz_rol1  %>% group_by(region) %>% mutate(nbr_opened_rollavg = runMean(nbr_opened, ROLLING_AVG_LEN))
-df_viz_rol2 <- df_viz_rol2  %>% group_by(region) %>% mutate(population_rollavg = runMean(population, ROLLING_AVG_LEN))
+df_viz_rol2 <- df_viz_rol2  %>% group_by(region) %>% mutate(population_rollavg = runMean(SP.POP.TOTL, ROLLING_AVG_LEN))
 
 df_viz_rol2$rate_rollavg <- df_viz_rol2$nbr_opened_rollavg/(df_viz_rol2$population_rollavg/1e+8)
 
@@ -578,7 +587,7 @@ ggarrange(p_ra_abs, p_ra_rel, nrow = 2)
 dev.off()
 
 
-filter(df_viz_rol2, year > 2017 & region == "Middle East & North Africa")
+## filter(df_viz_rol2, year > 2017 & region == "Middle East & North Africa")
 
 
 ## atm it's per hundred million
@@ -592,22 +601,26 @@ filter(df_viz_rol2, year > 2017 & region == "Middle East & North Africa")
 
 
 ## *** rolling average country-wise rate
-df_viz_rol_cry <- as_tibble(aggregate(cbind(population, nbr_opened) ~ countrycode + year, df_plt[,c("countrycode", "year", "region", "population", "nbr_opened")], sum))
+df_viz_rol_cry <- as_tibble(aggregate(cbind(SP.POP.TOTL, nbr_opened) ~ iso3c + year, df_plt[,c("iso3c", "year", "region", "SP.POP.TOTL", "nbr_opened")], sum))
 
 ROLLING_AVG_LEN <- 5
 
 df_viz_rol_cry <- df_viz_rol_cry %>%
-    group_by(countrycode) %>%
-    mutate(population_rollavg = rollmean_custom(population, win_len=ROLLING_AVG_LEN, orientation = "left"),
+    group_by(iso3c) %>%
+    mutate(population_rollavg = rollmean_custom(SP.POP.TOTL, win_len=ROLLING_AVG_LEN, orientation = "left"),
            nbr_opened_rollavg = rollmean_custom(nbr_opened, win_len=ROLLING_AVG_LEN, orientation = "left")
            )
 
 
 df_viz_rol_cry$rate_rollavg <- df_viz_rol_cry$nbr_opened_rollavg/(df_viz_rol_cry$population_rollavg/1e+8)
 
-df_viz_rol_cry <- filter(df_viz_rol_cry, countrycode %in% country_max_codes)
+country_max <- aggregate(nbr_opened_cum ~ iso3c, df_plt, max)
+country_max_codes <- country_max[rev(order(country_max$nbr_opened_cum))[c(1:12)],]$iso3c
 
-df_viz_rol_cry$country <- countrycode(df_viz_rol_cry$countrycode, "iso3c", "country.name")
+
+df_viz_rol_cry <- filter(df_viz_rol_cry, iso3c %in% country_max_codes)
+
+df_viz_rol_cry$country <- countrycode(df_viz_rol_cry$iso3c, "iso3c", "country.name")
 
 p_ra_rate_cry <-
     ggplot(df_viz_rol_cry, aes(x=year, y=rate_rollavg, group=country, color=country)) +
@@ -626,6 +639,7 @@ p_ra_cnt_cry <- ggplot(df_viz_rol_cry, aes(x=year, y=nbr_opened_rollavg, group=c
 pdf(paste0(FIG_DIR, "foundings_country_cnt_and_rate.pdf"), height = 9, width = 9)
 ggarrange(p_ra_cnt_cry, p_ra_rate_cry, nrow = 2)
 dev.off()
+
 
 
 
@@ -665,8 +679,6 @@ dev.off()
 aggregate(nbr_opened ~ country, filter(df_plt, region == "East Asia & Pacific"), sum)
 ## -> do for countries with most PMs
 
-country_max <- aggregate(nbr_opened_cum ~ countrycode, df_plt, max)
-country_max_codes <- country_max[rev(order(country_max$nbr_opened_cum))[c(1:12)],]$countrycode
 
 
 ## try selecting countries with highest PM concentration per population, end up with Monaco, and mostly other small countries that have like 2-4 PMs: "MCO" "ISL" "CYP" "BEL" "CHE" "KOR" "DEU" "EST" "LBN" "NLD" "AUT" "GRC"
