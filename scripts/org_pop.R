@@ -12,7 +12,7 @@ source(paste0(SCRIPT_DIR, "WID_setup_and_checks.R"))
 
 df_excl <- create_excel_df()
 df_open <- aggregate_openings(df_excl)
-df_wb <- get_WB_data("NY.GDP.PCAP.CD")
+df_wb <- get_WB_data(c("NY.GDP.PCAP.CD", "SP.POP.TOTL"))
 df_anls <- create_anls_df(df_wb, df_open)
 
 
