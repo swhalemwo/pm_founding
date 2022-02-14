@@ -156,13 +156,11 @@ read_WID_into_CH(countrycodes3c, "wid_v2", WID_DIR_v2)
 
 
 
-
 ## **** completeness tests
 
-base_cmd <- "select country as countrycode, variable, percentile, year, first_letter, varx, value from wid_v2 where year >= 1985"
+base_cmd <- "select iso3c, variable, percentile, year, first_letter, varx, value from wid_v2 where year >= 1985"
 
 base_df <- as_tibble(dbGetQuery(con, base_cmd))
-
 
 check_wid_cpltns <- function(varx, percentile){
     #' check how well WID variables cover PM foundings
@@ -170,15 +168,15 @@ check_wid_cpltns <- function(varx, percentile){
     ## print(varx)
     varz <- varx ## need to assign to own objects to be able to filter on them 
 
-    if(missing(percentile)){
+    ## if(missing(percentile)){
 
-        res <- filter(base_df, varx==varz)
+    ##     res <- filter(base_df, varx==varz)
 
-    } else {
-        ## print(percentile)
-        pctz <- percentile
-        res <- filter(base_df, variable == varz & percentile == pctz)
-    }
+    ## } else {
+    ##     ## print(percentile)
+    pctz <- percentile
+    res <- filter(base_df, variable == varz & percentile == pctz)
+    ## }
 
     print(res)
     
@@ -211,31 +209,90 @@ check_wid_cpltns <- function(varx, percentile){
                                             function(x) (filter(cry_pm_cvrg_cprn, diff == x)$iso3c)))
 
         ## country-year coverage of countries which have at least 3 WDI observations AND which have WDI data for that year
-        PMs_covered_raw <- sum(na.omit(dfc[which(dfc$iso3c %in% crys_geq3),])$nbr_opened)
+        opyrs <- sum(na.omit(dfc[which(dfc$iso3c %in% crys_geq3),])$nbr_opened) ## opening years covered
 
         ## coverage of countries which have at least three values, even if they don't have WDI data for years of museum founding
-        cry_cvrg_geq3 <- sum(filter(dfc, iso3c %in% crys_geq3)$nbr_opened)
+        cry_geq3 <- sum(filter(dfc, iso3c %in% crys_geq3)$nbr_opened)
 
-        nbr_of_crys_geq3 <- len(crys_geq3)
+        nbr_crys_geq3 <- len(crys_geq3)
 
         ## how many of crys_geq3 that have at least one PM founded, maybe relevant for comparative purposes 
-        nbr_of_crys_geq1pm <- filter(aggregate(nbr_opened ~ iso3c, dfc, sum), iso3c %in% crys_geq3) %>%
+        nbr_crys_geq1pm <- filter(aggregate(nbr_opened ~ iso3c, dfc, sum), iso3c %in% crys_geq3) %>%
             filter(nbr_opened >= 1) %>%
             nrow()
 
         return(list(
             variable = varx,
             percentile = percentile,
-            PMs_covered_raw=PMs_covered_raw,
-            cry_cvrg_geq3=cry_cvrg_geq3,
-            most_affected_crys = paste(most_affected_crys, collapse = "--"),
-            nbr_of_crys_geq3=nbr_of_crys_geq3,
-            nbr_of_crys_geq1pm=nbr_of_crys_geq1pm))
+            opyrs = opyrs, 
+            cry_geq3=cry_geq3,
+            nbr_crys_geq3=nbr_crys_geq3,
+            nbr_crys_geq1pm=nbr_crys_geq1pm,
+            most_affected_crys = paste(most_affected_crys, collapse = "--")))
     }
 }
+## check_wid_cpltns("sfiinc992i", "p90p100")
 
 
-check_wid_cpltns("wealg")
+check_wid_cpltns_tuples <- function(df_tpls) {
+    #' apply check_wid_cpltns to df of variables and percentiles
+    apply(df_tpls, 1, function(x) print(paste0(x['variable'],"--", x['percentile'])))
+
+    res <- apply(df_tpls, 1, function(x) check_wid_cpltns(x['variable'], x['percentile']))
+    res_df <- as_tibble(rbindlist(res))
+
+    }
+
+
+## df_tpls_wealth <- dbGetQuery(con, "select distinct(variable),percentile from wid_v2 where ilike(varx, '%weal%') and first_letter = 's'")[0:4,]
+## wealth_cvrg <- check_wid_cpltns_tuples(df_tpls_wealth)
+
+
+## dbGetQuery(con, "select distinct(variable) from wid_v2 where ilike(varx, '%weal%')")
+
+
+
+recode_df <-as.data.frame(matrix(nrow=0, ncol=2))
+recode_list <- c("sptinc992j", "pretax income (equal-split adults = based on household)",
+                 "sdiinc992j", "post-tax income (equal-split adults)",
+                 "scainc992j", "post-tax disposable income (equal-split adults)",
+                 "sfiinc992t", "fiscal income (threshold)",
+                 "sfiinc992j", "fiscal income (equal-split adults)",
+                 "sfiinc992i", "fiscal income (individuals)",
+                 "shweal992j", "net wealth (equal-split adults)",
+                 "sptinc992i", "pretax income (individuals)",
+                 "sdiinc992i", "post-tax income (individuals)",
+                 "sfiinc999t", "fiscal income (threshold)",
+                 "apweal999i", "average individual wealth of combined sector (households, NPISH)",
+                 "anweal999i", "average individual wealth of national economy",
+                 "wwealn999i", "wealth-to-income ratio of national economy",
+                 "mpweal999i", "total wealth of combined sector",
+                 "apweal992i", "average individual wealth of combined sector (above 20 y/o)",
+                 "mgweal999i", "total net wealth of general government",
+                 "wwealg999i", "wealth-to-income ratio of national economy",
+                 "wwealp999i", "net private wealth to net national income ratio",
+                 "anweal992i", "average individual wealth of national economy (above 20 y/o)",
+                 "agweal999i", "average individual net wealth of general government",
+                 "mnweal999i", "total individual wealth of national economy",
+                 "agweal992i", "average individual net wealth of general government")
+
+
+recode_codes <- recode_list[seq(1, length(recode_list)-1, 2)]
+recode_labels <- recode_list[seq(2, length(recode_list), 2)]
+
+recode_df <- as.data.frame(cbind(recode_codes, recode_labels))
+
+## recode(res_df$variable,
+
+## flexible recoding with vector
+## https://stackoverflow.com/questions/49388313/recoding-values-based-on-two-vectors-levels-and-labels-with-identical-labels-a 
+recode_labels[match(res_df$variable, recode_codes)]
+
+## seems to work also with variables that are not included: recodes them to NA
+res_df[5,1] <- "lolol"
+
+
+
 
 ## *** remaining variables construction, not directly related to structure, have to be functionalized somewhere
 
