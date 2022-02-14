@@ -1,5 +1,8 @@
 
 ## *** source other files
+PROJECT_DIR <- "/home/johannes/Dropbox/phd/papers/org_pop/"
+SCRIPT_DIR <- paste0(PROJECT_DIR, "scripts/")
+
 source(paste0(SCRIPT_DIR, "org_pop_startup.R")) ## startup: libraries, global vars
 source(paste0(SCRIPT_DIR, "custom_funcs.R")) # random utils
 source(paste0(SCRIPT_DIR, "wb_api.R")) ## World Bank data, has to be run before sourcing base_df_creationn since it provides the country-year structure
