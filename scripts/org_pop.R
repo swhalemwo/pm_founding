@@ -51,58 +51,6 @@ unique(df_open$countrycode)[which(unique(df_open$countrycode) %!in% (unique(df_g
 
 
 
-
-
-## *** EGMUS data
-
-EGMUS_DIR <- "/home/johannes/Dropbox/phd/data/EGMUS/"
-
-df_1998 <- read.csv(paste0(EGMUS_DIR, "egmus_export_1998_seded.csv"), sep = ";", header = T, dec = ",") 
-df_1999 <- read.csv(paste0(EGMUS_DIR, "egmus_export_1999_seded.csv"), sep = ";", header = T, dec = ",") 
-df_2000 <- read.csv(paste0(EGMUS_DIR, "egmus_export_2000_seded.csv"), sep = ";", header = T, dec = ",")
-df_2001 <- read.csv(paste0(EGMUS_DIR, "egmus_export_2001_seded.csv"), sep = ";", header = T, dec = ",")
-df_2002 <- read.csv(paste0(EGMUS_DIR, "egmus_export_2002_seded.csv"), sep = ";", header = T, dec = ",")
-df_2003 <- read.csv(paste0(EGMUS_DIR, "egmus_export_2003_seded.csv"), sep = ";", header = T, dec = ",")
-df_2004 <- read.csv(paste0(EGMUS_DIR, "egmus_export_2004_seded.csv"), sep = ";", header = T, dec = ",")
-df_2005 <- read.csv(paste0(EGMUS_DIR, "egmus_export_2005_seded.csv"), sep = ";", header = T, dec = ",")
-df_2006 <- read.csv(paste0(EGMUS_DIR, "egmus_export_2006_seded.csv"), sep = ";", header = T, dec = ",")
-df_2007 <- read.csv(paste0(EGMUS_DIR, "egmus_export_2007_seded.csv"), sep = ";", header = T, dec = ",")
-df_2008 <- read.csv(paste0(EGMUS_DIR, "egmus_export_2008_seded.csv"), sep = ";", header = T, dec = ",")
-df_2009 <- read.csv(paste0(EGMUS_DIR, "egmus_export_2009_seded.csv"), sep = ";", header = T, dec = ",")
-df_2010 <- read.csv(paste0(EGMUS_DIR, "egmus_export_2010_seded.csv"), sep = ";", header = T, dec = ",")
-df_2011 <- read.csv(paste0(EGMUS_DIR, "egmus_export_2011_seded.csv"), sep = ";", header = T, dec = ",")
-df_2012 <- read.csv(paste0(EGMUS_DIR, "egmus_export_2012_seded.csv"), sep = ";", header = T, dec = ",")
-df_2013 <- read.csv(paste0(EGMUS_DIR, "egmus_export_2013_seded.csv"), sep = ";", header = T, dec = ",")
-df_2014 <- read.csv(paste0(EGMUS_DIR, "egmus_export_2014_seded.csv"), sep = ";", header = T, dec = ",")
-df_2015 <- read.csv(paste0(EGMUS_DIR, "egmus_export_2015_seded.csv"), sep = ";", header = T, dec = ",")
-df_2016 <- read.csv(paste0(EGMUS_DIR, "egmus_export_2016_seded.csv"), sep = ";", header = T, dec = ",")
-df_2017 <- read.csv(paste0(EGMUS_DIR, "egmus_export_2017_seded.csv"), sep = ";", header = T, dec = ",")
-df_2018 <- read.csv(paste0(EGMUS_DIR, "egmus_export_2018_seded.csv"), sep = ";", header = T, dec = ",")
-df_2019 <- read.csv(paste0(EGMUS_DIR, "egmus_export_2019_seded.csv"), sep = ";", header = T, dec = ",")
-df_2020 <- read.csv(paste0(EGMUS_DIR, "egmus_export_2020_seded.csv"), sep = ";", header = T, dec = ",")
-
-df_egmus <- as_tibble(rbind(df_1998,df_1999,df_2000,df_2001,df_2002,df_2003,df_2004,df_2005,df_2006,
-                  df_2007,df_2008,df_2009,df_2010,df_2011,df_2012,df_2013,df_2014,df_2015,df_2016,
-                  df_2017,df_2018,df_2019, df_2020))
-
-df_egmus$private <- as.character(df_egmus$X3d..Ownership...private.owned.museums...Total)
-df_egmus$private_clean <- gsub("\\.", "", df_egmus$private)
-df_egmus$private_num <- as.numeric(df_egmus$private_clean)
-
-
-## na.omit needed to remove all the points to still have line
-ggplot(data = na.omit(df_egmus[,c("Year", "private_num", "Country")]), aes(x=Year, y=private_num, group=Country, color=Country)) +
-    geom_line() 
-
-
-aggregate(private_num ~ Country, df_egmus, mean, use="complete.obs")
-filter(df_egmus, Country == "Italy")$private_num
-
-
-
-
-
-
 ## *** diffusion
 ## **** geographical proximity: use country boundaries
 library(rgdal)
