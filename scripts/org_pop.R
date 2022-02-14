@@ -110,6 +110,14 @@ read_WID_into_CH <- function(countrycodes3c, db_name, wid_dir) {
         ## delete existing table if it exists
         dbGetQuery(con, paste0("drop table ", db_name))
     }
+
+    create_tbl_cmd <- sprintf("CREATE TABLE %s (iso3c String, variable String, percentile String, year Int16,
+value Float64, age Int16, pop String, varx String, first_letter String)
+engine=MergeTree() 
+PARTITION BY iso3c
+ORDER BY tuple()", db_name) ## use proper MergeTree tables rather than default tinylogs
+
+    dbGetQuery(con, create_tbl_cmd)
     
     for (code in countrycodes3c){
         ## manual exceptions for channel islands and kosovo
@@ -134,16 +142,9 @@ read_WID_into_CH <- function(countrycodes3c, db_name, wid_dir) {
             cry_data$first_letter <- substring(cry_data$variable, 1,1)
 
             cry_data <- na.omit(cry_data) # lol why do you include NAs that I have to manually clean up???
+            names(cry_data)[which(names(cry_data) == "country")] <- "iso3c" ## keep consistent variable names
 
-            ## only write schema with first table, otherwise append
-            ## if (code == "ABW"){
-            if (code == countrycodes3c[1]) {
-                dbWriteTable(con, db_name, cry_data)
-            }
-            else {
-                dbWriteTable(con, db_name, cry_data, append=TRUE)
-                
-            }
+            dbWriteTable(con, db_name, cry_data, append=TRUE)
         }
     }
     print("done")   
@@ -151,6 +152,10 @@ read_WID_into_CH <- function(countrycodes3c, db_name, wid_dir) {
 
 read_WID_into_CH(countrycodes3c, "wid_v1", WID_DIR_v1)
 read_WID_into_CH(countrycodes3c, "wid_v2", WID_DIR_v2)
+
+
+
+
 
 ## **** completeness tests
 
