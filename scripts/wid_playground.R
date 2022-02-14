@@ -4,7 +4,7 @@
     names(wealth_res_df2) <- c("variable", "meaning", "PM foundings\n covered directly", "PM foundings in countries with data for at least 3 years", "number of countries with data for at least 3 years", "number of countries with data and at least 1 PM founding")
 
 
-
+xtbl <- xtable(
         wealth_res_df2,
         label="wid_cpltns",
         caption = "coverage variables for top decile in WID",

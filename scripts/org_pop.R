@@ -150,39 +150,34 @@ ORDER BY tuple()", db_name) ## use proper MergeTree tables rather than default t
     print("done")   
 }
 
-read_WID_into_CH(countrycodes3c, "wid_v1", WID_DIR_v1)
-read_WID_into_CH(countrycodes3c, "wid_v2", WID_DIR_v2)
-
+## read_WID_into_CH(countrycodes3c, "wid_v1", WID_DIR_v1)
+## read_WID_into_CH(countrycodes3c, "wid_v2", WID_DIR_v2)
 
 
 
 ## **** completeness tests
 
-base_cmd <- "select iso3c, variable, percentile, year, first_letter, varx, value from wid_v2 where year >= 1985"
 
-base_df <- as_tibble(dbGetQuery(con, base_cmd))
-
-check_wid_cpltns <- function(varx, percentile){
-    #' check how well WID variables cover PM foundings
-
-    ## print(varx)
+check_wid_cpltns <- function(varx, percentile, base_df){
+    #' check how well WID variables cover PM foundings ?
+    #' 
+    #' varx: complete WID variable name
+    #'
+    #' percentile: WID percentile specification, e.g. p90p100
+    #'
+    #' base df: the entire database in R memory
+    
+    
     varz <- varx ## need to assign to own objects to be able to filter on them 
 
-    ## if(missing(percentile)){
-
-    ##     res <- filter(base_df, varx==varz)
-
-    ## } else {
-    ##     ## print(percentile)
     pctz <- percentile
     res <- filter(base_df, variable == varz & percentile == pctz)
-    ## }
 
-    print(res)
+    
     
     ## some exception to throw when too many variables
     if (length(table(res$variable)) > 1){
-        ## print(varx)
+        print(varx)
         stop("too many variables")
     }
 
@@ -204,9 +199,12 @@ check_wid_cpltns <- function(varx, percentile){
         cry_pm_cvrg_cprn$nbr_opened[which(is.na(cry_pm_cvrg_cprn$nbr_opened))] <- 0
         cry_pm_cvrg_cprn$diff <- cry_pm_cvrg_cprn$nbr_opened - cry_pm_cvrg_cprn$nbr_opened_ideal
 
-        ## maybe need to collapse them instead of having them as vector 
+        ## get most affected countries, limit to 5 max
         most_affected_crys <- unlist(lapply(sort(cry_pm_cvrg_cprn$diff)[1:4],
                                             function(x) (filter(cry_pm_cvrg_cprn, diff == x)$iso3c)))
+
+        most_affected_crys2 <- unique(most_affected_crys)[1:min(len(most_affected_crys), 5)]
+
 
         ## country-year coverage of countries which have at least 3 WDI observations AND which have WDI data for that year
         opyrs <- sum(na.omit(dfc[which(dfc$iso3c %in% crys_geq3),])$nbr_opened) ## opening years covered
@@ -228,32 +226,27 @@ check_wid_cpltns <- function(varx, percentile){
             cry_geq3=cry_geq3,
             nbr_crys_geq3=nbr_crys_geq3,
             nbr_crys_geq1pm=nbr_crys_geq1pm,
-            most_affected_crys = paste(most_affected_crys, collapse = "--")))
+            most_affected_crys = paste(most_affected_crys2, collapse = "--")))
     }
 }
 ## check_wid_cpltns("sfiinc992i", "p90p100")
 
 
-check_wid_cpltns_tuples <- function(df_tpls) {
+check_wid_cpltns_tuples <- function(df_tpls, base_df) {
     #' apply check_wid_cpltns to df of variables and percentiles
-    apply(df_tpls, 1, function(x) print(paste0(x['variable'],"--", x['percentile'])))
+    ## apply(df_tpls, 1, function(x) print(paste0(x['variable'],"--", x['percentile'])))
+    
 
-    res <- apply(df_tpls, 1, function(x) check_wid_cpltns(x['variable'], x['percentile']))
+    res <- apply(df_tpls, 1, function(x) check_wid_cpltns(x['variable'], x['percentile'],base_df))
     res_df <- as_tibble(rbindlist(res))
 
-    }
+    return(res_df)
 
-
-## df_tpls_wealth <- dbGetQuery(con, "select distinct(variable),percentile from wid_v2 where ilike(varx, '%weal%') and first_letter = 's'")[0:4,]
-## wealth_cvrg <- check_wid_cpltns_tuples(df_tpls_wealth)
-
-
-## dbGetQuery(con, "select distinct(variable) from wid_v2 where ilike(varx, '%weal%')")
+}
 
 
 
-recode_df <-as.data.frame(matrix(nrow=0, ncol=2))
-recode_list <- c("sptinc992j", "pretax income (equal-split adults = based on household)",
+wid_recode_list <- c("sptinc992j", "pretax income (equal-split adults = based on household)",
                  "sdiinc992j", "post-tax income (equal-split adults)",
                  "scainc992j", "post-tax disposable income (equal-split adults)",
                  "sfiinc992t", "fiscal income (threshold)",
@@ -277,19 +270,67 @@ recode_list <- c("sptinc992j", "pretax income (equal-split adults = based on hou
                  "agweal992i", "average individual net wealth of general government")
 
 
-recode_codes <- recode_list[seq(1, length(recode_list)-1, 2)]
-recode_labels <- recode_list[seq(2, length(recode_list), 2)]
+wid_recode_codes <- wid_recode_list[seq(1, length(wid_recode_list)-1, 2)]
+wid_recode_labels <- wid_recode_list[seq(2, length(wid_recode_list), 2)]
 
-recode_df <- as.data.frame(cbind(recode_codes, recode_labels))
+wid_recode_df <- as.data.frame(cbind(wid_recode_codes, wid_recode_labels))
+
+wid_res_col_lbls <-c("variable", "meaning", "percentile", "opyrs", "cry_geq3", "nbr_crys_geq3", "nbr_crys_geq1pm", "most_affected_crys") ## column labels
+wid_res_col_nms <- c("variable", "meaning", "percentile", "PM foundings\n covered directly", "PM foundings in countries with data for at least 3 years", "number of countries with data for at least 3 years", "number of countries with data and at least 1 PM founding", "countries most affected by missing data") ## full column names
+
 
 ## recode(res_df$variable,
 
 ## flexible recoding with vector
 ## https://stackoverflow.com/questions/49388313/recoding-values-based-on-two-vectors-levels-and-labels-with-identical-labels-a 
-recode_labels[match(res_df$variable, recode_codes)]
 
 ## seems to work also with variables that are not included: recodes them to NA
-res_df[5,1] <- "lolol"
+
+
+
+export_wid_cpltns_check <- function(res_df, tbl_label, tbl_caption) {
+
+    res_df <- add_column(res_df, meaning = wid_recode_labels[match(res_df$variable, wid_recode_codes)], .after = "variable")
+    
+    ##  print(res_df$meaning)
+
+    names(res_df) <- wid_res_col_nms[match(names(res_df), wid_res_col_lbls)]
+
+    xtbl <- xtable(res_df,
+                   label = tbl_label,
+                   caption = tbl_caption,
+                   align= c("p{2cm}", "l", "p{5.5cm}","p{2cm}", rep("p{2.25cm}", 5)),
+                   digits=0)
+    ## return(xtbl)
+
+    filename <- paste0(TABLE_DIR, tbl_label, ".tex")
+    print(xtbl,
+          include.rownames = F,
+          file = filename,
+          tabular.environment = 'longtable'
+          )
+}
+
+base_cmd_v1 <- "select iso3c, variable, percentile, year, first_letter, varx, value from wid_v1 where year >= 1985"
+base_df_v1 <- as_tibble(dbGetQuery(con, base_cmd_v1))
+
+base_cmd_v2 <- "select iso3c, variable, percentile, year, first_letter, varx, value from wid_v2 where year >= 1985"
+base_df_v2 <- as_tibble(dbGetQuery(con, base_cmd_v2))
+
+
+df_tpls_wealth_v1 <- dbGetQuery(con, "select distinct(variable),percentile from wid_v1 where ilike(varx, '%weal%') and first_letter = 's' and percentile = 'p99p100'")
+
+df_tpls_wealth_v2 <- dbGetQuery(con, "select distinct(variable),percentile from wid_v2 where ilike(varx, '%weal%') and first_letter = 's' and percentile = 'p99p100'")
+
+
+## dbGetQuery(con, "select distinct(variable) from wid_v2 where ilike(varx, '%weal%')")
+
+
+res_df_v1 <- check_wid_cpltns_tuples(df_tpls_wealth_v1, base_df_v1)
+res_df_v2 <- check_wid_cpltns_tuples(df_tpls_wealth_v2, base_df_v2)
+
+export_wid_cpltns_check(res_df_v1, "wid_wealth_v1", "wealth coverage in version 1")
+export_wid_cpltns_check(res_df_v2, "wid_wealth_v2", "wealth coverage in version 2")
 
 
 
@@ -318,8 +359,6 @@ df_anls$nbr_opened_prop <- df_anls$nbr_opened/(df_anls$population/1000000)
 
 ## iceland, monaco, cyprus LUL
 filter(df_anls, nbr_opened_prop > 1)
-
-
 
 
 ## ** directions of trade
