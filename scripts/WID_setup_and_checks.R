@@ -1,7 +1,10 @@
 
-## *** WID
 
-## **** setting up CH
+## * WID
+## ** setting up CH
+
+
+## *** check country codes compatibility between WID and WB
 
 df_gdp <- get_WB_data("NY.GDP.PCAP.CD")
 
@@ -13,7 +16,6 @@ countrycodes3c <- na.omit(unique(df_gdp$iso3c))
 ## then probably write some manual exceptions so that they get correctly translated from WB to WDI
 ## also need to check whether there are other mismatches between iso2c(wb) and WDI -> paste WDI (https://wid.world/codes-dictionary/#country-code)
 
-## **** check country codes compatibility between WID and WB
 
 compare_WID_WB_countrycodes <- function(df_wb, wid_dir) {
     #' manually necessary to check whether the iso2c countrycodes of the WID match the ones of the WB
@@ -36,7 +38,7 @@ compare_WID_WB_countrycodes <- function(df_wb, wid_dir) {
 compare_WID_WB_countrycodes(df_gdp, WID_DIR_v1)
 compare_WID_WB_countrycodes(df_gdp, WID_DIR_v2)
 
-## **** read into CH
+## *** read into CH
 
 read_WID_into_CH <- function(countrycodes3c, db_name, wid_dir) {
     #' read WID data into clickhouse for countrycodes3c with db name
@@ -96,8 +98,9 @@ ORDER BY tuple()", db_name) ## use proper MergeTree tables rather than default t
 
 
 
-## **** completeness tests
+## ** completeness tests
 
+## *** single and multi completeness check functions
 
 check_wid_cpltns <- function(varx, percentile, base_df){
     #' check how well WID variables cover PM foundings ?
@@ -185,7 +188,7 @@ check_wid_cpltns_tuples <- function(df_tpls, base_df) {
 
 }
 
-
+## *** exporting with proper names
 
 wid_recode_list <- c("sptinc992j", "pretax income (equal-split adults = based on household)",
                  "sdiinc992j", "post-tax income (equal-split adults)",
@@ -252,24 +255,26 @@ export_wid_cpltns_check <- function(res_df, tbl_label, tbl_caption) {
           )
 }
 
-base_cmd_v1 <- "select iso3c, variable, percentile, year, first_letter, varx, value from wid_v1 where year >= 1985"
-base_df_v1 <- as_tibble(dbGetQuery(con, base_cmd_v1))
+## ** tests 
 
-base_cmd_v2 <- "select iso3c, variable, percentile, year, first_letter, varx, value from wid_v2 where year >= 1985"
-base_df_v2 <- as_tibble(dbGetQuery(con, base_cmd_v2))
+## compare v1 and v2 in terms of wealth variable coverage, v2 much better
 
+## base_cmd_v1 <- "select iso3c, variable, percentile, year, first_letter, varx, value from wid_v1 where year >= 1985"
+## base_df_v1 <- as_tibble(dbGetQuery(con, base_cmd_v1))
 
-df_tpls_wealth_v1 <- dbGetQuery(con, "select distinct(variable),percentile from wid_v1 where ilike(varx, '%weal%') and first_letter = 's' and percentile = 'p99p100'")
-
-df_tpls_wealth_v2 <- dbGetQuery(con, "select distinct(variable),percentile from wid_v2 where ilike(varx, '%weal%') and first_letter = 's' and percentile = 'p99p100'")
-
-
-## dbGetQuery(con, "select distinct(variable) from wid_v2 where ilike(varx, '%weal%')")
+## base_cmd_v2 <- "select iso3c, variable, percentile, year, first_letter, varx, value from wid_v2 where year >= 1985"
+## base_df_v2 <- as_tibble(dbGetQuery(con, base_cmd_v2))
 
 
-res_df_v1 <- check_wid_cpltns_tuples(df_tpls_wealth_v1, base_df_v1)
-res_df_v2 <- check_wid_cpltns_tuples(df_tpls_wealth_v2, base_df_v2)
+## df_tpls_wealth_v1 <- dbGetQuery(con, "select distinct(variable),percentile from wid_v1 where ilike(varx, '%weal%') and first_letter = 's' and percentile = 'p99p100'")
 
-export_wid_cpltns_check(res_df_v1, "wid_wealth_v1", "wealth coverage in version 1")
-export_wid_cpltns_check(res_df_v2, "wid_wealth_v2", "wealth coverage in version 2")
+## df_tpls_wealth_v2 <- dbGetQuery(con, "select distinct(variable),percentile from wid_v2 where ilike(varx, '%weal%') and first_letter = 's' and percentile = 'p99p100'")
+
+
+
+## res_df_v1 <- check_wid_cpltns_tuples(df_tpls_wealth_v1, base_df_v1)
+## res_df_v2 <- check_wid_cpltns_tuples(df_tpls_wealth_v2, base_df_v2)
+
+## export_wid_cpltns_check(res_df_v1, "wid_wealth_v1", "wealth coverage in version 1")
+## export_wid_cpltns_check(res_df_v2, "wid_wealth_v2", "wealth coverage in version 2")
 
