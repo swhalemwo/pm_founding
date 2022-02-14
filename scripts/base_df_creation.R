@@ -1,5 +1,6 @@
 
-create_base_df <- function() {
+create_excel_df <- function() {
+    #' read the excel sheet into R
 
     ## df <- read_excel("/home/johannes/Dropbox/phd/papers/org_pop/data/Private museum database.xlsx")
     ## df <- read_excel("/home/johannes/Dropbox/phd/papers/org_pop/data/Private museum database2.xlsx")
@@ -39,7 +40,7 @@ create_base_df <- function() {
 
 
 
-create_base_df_diagnose <- function(df, verbose = 0){
+create_excel_df_diagnose <- function(df, verbose = 0){
     #' check status of base df
     ## debugging unclear/missing countries: atm 12 cases
 
@@ -58,7 +59,51 @@ create_base_df_diagnose <- function(df, verbose = 0){
     ## but don't think I need it as this point, don't update data that much
 }
 
+## dfx <- create_excel_df()
+## create_excel_df_diagnose(dfx)
 
-## dfx <- create_base_df()
-## create_base_df_diagnose(dfx)
-    
+
+
+
+aggregate_openings <- function(df_excl) {
+    #' aggregate excel df into country-year openings
+
+    df_excl <- na.omit(df_excl[,c("name", "country", "countrycode", "year_opened_int")])
+    ## excel-based df
+
+    df_excl$ctr <- 1
+    df_open_cnt <- as_tibble(aggregate(ctr ~ countrycode + year_opened_int, df_excl, FUN = sum))
+    names(df_open_cnt) <- c('iso3c', 'year', 'nbr_opened')
+
+    df_open_names <- df_excl %>% group_by(countrycode, year_opened_int) %>% summarise(name = list(name))
+    names(df_open_names) <- c("iso3c", "year", "name")
+
+    df_open <- as_tibble(merge(df_open_cnt, df_open_names))
+    return(df_open)
+}
+
+
+
+## need some df_wb for the complete country-year structure
+
+
+create_anls_df <- function(df_wb, df_open) {
+    #' merge the aggregated excel df to the WB df (as complete country-year structure)
+    df_anls <- as_tibble(merge(df_wb, df_open,
+                               by=c("iso3c", "year"),
+                               all.x = TRUE))
+
+    df_anls$nbr_opened[which(is.na(df_anls$nbr_opened))] <- 0
+
+    ## maybe move these things somewhere proper 
+    ## df_anls$wv <- 0
+    ## df_anls$nbr_opened_cum <- ave(df_anls$nbr_opened, df_anls$iso3c, FUN = cumsum)
+
+    return(df_anls)
+}
+
+
+## df_excl <- create_excel_df()
+## df_open <- aggregate_openings(df_excl)
+## df_wb <- get_WB_data("NY.GDP.PCAP.CD")
+## df_anls <- create_anls_df(df_wb, df_open)
