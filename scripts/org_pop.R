@@ -154,6 +154,83 @@ read_WID_into_CH(countrycodes3c, "wid_v2", WID_DIR_v2)
 
 ## **** completeness tests
 
+base_cmd <- "select country as countrycode, variable, percentile, year, first_letter, varx, value from wid_v2 where year >= 1985"
+
+base_df <- as_tibble(dbGetQuery(con, base_cmd))
+
+
+check_wid_cpltns <- function(varx, percentile){
+    #' check how well WID variables cover PM foundings
+
+    ## print(varx)
+    varz <- varx ## need to assign to own objects to be able to filter on them 
+
+    if(missing(percentile)){
+
+        res <- filter(base_df, varx==varz)
+
+    } else {
+        ## print(percentile)
+        pctz <- percentile
+        res <- filter(base_df, variable == varz & percentile == pctz)
+    }
+
+    print(res)
+    
+    ## some exception to throw when too many variables
+    if (length(table(res$variable)) > 1){
+        ## print(varx)
+        stop("too many variables")
+    }
+
+    ## print(nrow(res))
+    if (nrow(res)!=0){
+        
+    ## make df base to merge WDI data to 
+        dfb <- df_anls[,c("iso3c", "year", "nbr_opened")]
+
+        dfc <- as_tibble(merge(dfb, res, by = c("year", "iso3c"), all.x = TRUE))
+        cry_cvrg <- aggregate(year ~ iso3c, na.omit(dfc), length)
+        crys_geq3 <- cry_cvrg[which(cry_cvrg$year >= 3),]$iso3c
+
+        cry_pm_crvg_actual <- aggregate(nbr_opened ~ iso3c, na.omit(dfc), sum)
+        cry_pm_crvg_ideal <- aggregate(nbr_opened ~ iso3c, dfc, sum)
+        names(cry_pm_crvg_ideal) <- c("iso3c", "nbr_opened_ideal")
+        
+        cry_pm_cvrg_cprn <- as_tibble(merge(cry_pm_crvg_ideal, cry_pm_crvg_actual, all.x = TRUE))
+        cry_pm_cvrg_cprn$nbr_opened[which(is.na(cry_pm_cvrg_cprn$nbr_opened))] <- 0
+        cry_pm_cvrg_cprn$diff <- cry_pm_cvrg_cprn$nbr_opened - cry_pm_cvrg_cprn$nbr_opened_ideal
+
+        ## maybe need to collapse them instead of having them as vector 
+        most_affected_crys <- unlist(lapply(sort(cry_pm_cvrg_cprn$diff)[1:4],
+                                            function(x) (filter(cry_pm_cvrg_cprn, diff == x)$iso3c)))
+
+        ## country-year coverage of countries which have at least 3 WDI observations AND which have WDI data for that year
+        PMs_covered_raw <- sum(na.omit(dfc[which(dfc$iso3c %in% crys_geq3),])$nbr_opened)
+
+        ## coverage of countries which have at least three values, even if they don't have WDI data for years of museum founding
+        cry_cvrg_geq3 <- sum(filter(dfc, iso3c %in% crys_geq3)$nbr_opened)
+
+        nbr_of_crys_geq3 <- len(crys_geq3)
+
+        ## how many of crys_geq3 that have at least one PM founded, maybe relevant for comparative purposes 
+        nbr_of_crys_geq1pm <- filter(aggregate(nbr_opened ~ iso3c, dfc, sum), iso3c %in% crys_geq3) %>%
+            filter(nbr_opened >= 1) %>%
+            nrow()
+
+        return(list(
+            variable = varx,
+            percentile = percentile,
+            PMs_covered_raw=PMs_covered_raw,
+            cry_cvrg_geq3=cry_cvrg_geq3,
+            most_affected_crys = paste(most_affected_crys, collapse = "--"),
+            nbr_of_crys_geq3=nbr_of_crys_geq3,
+            nbr_of_crys_geq1pm=nbr_of_crys_geq1pm))
+    }
+}
+
+
+check_wid_cpltns("wealg")
 
 ## *** remaining variables construction, not directly related to structure, have to be functionalized somewhere
 
@@ -398,83 +475,7 @@ x <- tbl(con, "wdi") %>%
 
 
 
-base_cmd <- "select country as countrycode, variable, percentile, year, first_letter, varx, value from wdi where year >= 1985"
 
-base_df <- as_tibble(dbGetQuery(con, base_cmd))
-
-
-check_wid_cpltns <- function(varx, percentile){
-    #' check how well WID variables cover PM foundings
-
-    ## print(varx)
-    varz <- varx ## need to assign to own objects to be able to filter on them 
-
-    if(missing(percentile)){
-
-        res <- filter(base_df, varx==varz)
-    
-    } else {
-        
-        ## print(percentile)
-        
-        pctz <- percentile
-        res <- filter(base_df, variable == varz & percentile == pctz)
-       
-    }
-
-    ## some exception to throw when too many variables
-    if (length(table(res$variable)) > 1){
-        ## print(varx)
-        stop("too many variables")
-    }
-
-    ## print(nrow(res))
-    if (nrow(res)!=0){
-        
-    ## make df base to merge WDI data to 
-    dfb <- df_anls[,c("countrycode", "year", "nbr_opened")]
-
-    dfc <- as_tibble(merge(dfb, res, by = c("year", "countrycode"), all.x = TRUE))
-    cry_cvrg <- aggregate(year ~ countrycode, na.omit(dfc), length)
-    crys_geq3 <- cry_cvrg[which(cry_cvrg$year >= 3),]$countrycode
-
-    cry_pm_crvg_actual <- aggregate(nbr_opened ~ countrycode, na.omit(dfc), sum)
-    cry_pm_crvg_ideal <- aggregate(nbr_opened ~ countrycode, dfc, sum)
-    names(cry_pm_crvg_ideal) <- c("countrycode", "nbr_opened_ideal")
-    
-    cry_pm_cvrg_cprn <- as_tibble(merge(cry_pm_crvg_ideal, cry_pm_crvg_actual, all.x = TRUE))
-    cry_pm_cvrg_cprn$nbr_opened[which(is.na(cry_pm_cvrg_cprn$nbr_opened))] <- 0
-    cry_pm_cvrg_cprn$diff <- cry_pm_cvrg_cprn$nbr_opened - cry_pm_cvrg_cprn$nbr_opened_ideal
-
-    ## maybe need to collapse them instead of having them as vector 
-    most_affected_crys <- unlist(lapply(sort(cry_pm_cvrg_cprn$diff)[1:4],
-                                        function(x) (filter(cry_pm_cvrg_cprn, diff == x)$countrycode)))
-
-    ## country-year coverage of countries which have at least 3 WDI observations AND which have WDI data for that year
-    PMs_covered_raw <- sum(na.omit(dfc[which(dfc$countrycode %in% crys_geq3),])$nbr_opened)
-    ## huh 280 for labsh, not too bad
-
-
-    ## coverage of countries which have at least three values, even if they don't have WDI data for years of museum founding
-    cry_cvrg_geq3 <- sum(filter(dfc, countrycode %in% crys_geq3)$nbr_opened)
-
-    nbr_of_crys_geq3 <- len(crys_geq3)
-
-    ## how many of crys_geq3 that have at least one PM founded, maybe relevant for comparative purposes 
-    nbr_of_crys_geq1pm <- filter(aggregate(nbr_opened ~ countrycode, dfc, sum), countrycode %in% crys_geq3) %>%
-        filter(nbr_opened >= 1) %>%
-        nrow()
-
-    return(list(
-        variable = varx,
-        percentile = percentile,
-        PMs_covered_raw=PMs_covered_raw,
-        cry_cvrg_geq3=cry_cvrg_geq3,
-        most_affected_crys = paste(most_affected_crys, collapse = "--"),
-        nbr_of_crys_geq3=nbr_of_crys_geq3,
-        nbr_of_crys_geq1pm=nbr_of_crys_geq1pm))
-    }
-}
 
 ## could add something like how complete the countries are that are not fully complete to assess how difficult imputation will be 
 
