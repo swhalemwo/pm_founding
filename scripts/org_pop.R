@@ -57,34 +57,6 @@ unique(df_open$countrycode)[which(unique(df_open$countrycode) %!in% (unique(df_g
     
 
 
-## ** add lagged values
-
-## overly messy way of lagging variables that creates intermediary vars because mutate/lag doesn't accept variablies as input
-
-lagger <- function(dfx, vrbls_to_lag){
-    for (varx in vrbls_to_lag){
-        lag_name = paste(varx, "_lag1", sep = "")
-        ## eval(parse("lag_name"))
-        ## df_anls$var_to_lag <- df_anls[,c(varx)]
-        ## df_anls[,"var_lagged"] <- mutate(group_by(df_anls, countrycode), var_lagged = lag(var_to_lag))[,"var_lagged"]
-        ## df_anls[,lag_name] <- df_anls$var_lagged
-        ## df_anls <- df_anls[,-which(names(df_anls) %in% c("var_to_lag", "var_lagged"))]
-
-        dfx[,"var_to_lag"] <- dfx[,c(varx)]
-        dfx[,"var_lagged"] <- mutate(group_by(dfx, countrycode), var_lagged = lag(var_to_lag))[,"var_lagged"]
-        dfx[,lag_name] <- dfx[,"var_lagged"]
-
-        dfx <- dfx[,-which(names(dfx) %in% c("var_to_lag", "var_lagged"))]
-    }
-    return(dfx)
-}
-
-vrbls_to_lag <- c("gdp_pcap", "gdp_pcapk", "gini", "nbr_opened")
-
-df_anls <- lagger(df_anls, vrbls_to_lag)
-
-filter(df_anls[,c("countrycode", "year", "nbr_opened", "nbr_opened_lag1", "gini", "gini_lag1")], countrycode == "USA")
-
 
 ## ** negative binomial
 

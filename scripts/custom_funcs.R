@@ -89,3 +89,32 @@ rollmean_custom <- function(v, win_len, func, orientation){
 
 
 
+
+## ** add lagged values
+
+## overly messy way of lagging variables that creates intermediary vars because mutate/lag doesn't accept variablies as input
+
+lagger <- function(dfx, vrbls_to_lag){
+    for (varx in vrbls_to_lag){
+        lag_name = paste(varx, "_lag1", sep = "")
+        ## eval(parse("lag_name"))
+        ## df_anls$var_to_lag <- df_anls[,c(varx)]
+        ## df_anls[,"var_lagged"] <- mutate(group_by(df_anls, countrycode), var_lagged = lag(var_to_lag))[,"var_lagged"]
+        ## df_anls[,lag_name] <- df_anls$var_lagged
+        ## df_anls <- df_anls[,-which(names(df_anls) %in% c("var_to_lag", "var_lagged"))]
+
+        dfx[,"var_to_lag"] <- dfx[,c(varx)]
+        dfx[,"var_lagged"] <- mutate(group_by(dfx, iso3c), var_lagged = lag(var_to_lag))[,"var_lagged"]
+        dfx[,lag_name] <- dfx[,"var_lagged"]
+
+        dfx <- dfx[,-which(names(dfx) %in% c("var_to_lag", "var_lagged"))]
+    }
+    return(dfx)
+}
+
+## vrbls_to_lag <- c("gdp_pcap", "gdp_pcapk", "gini", "nbr_opened")
+## vrbls_to_lag <- c("NY.GDP.PCAP.CD", "nbr_opened")
+
+## df_anls2 <- lagger(df_anls, vrbls_to_lag)
+
+## filter(df_anls2[,c("iso3c", "year", "nbr_opened", "nbr_opened_lag1", "NY.GDP.PCAP.CD", "NY.GDP.PCAP.CD_lag1")], iso3c == "USA")
