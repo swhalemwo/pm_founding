@@ -508,12 +508,84 @@ year_selector <- function(x)(
     # convert cuts back to years
     substring(x, 2,5))
 
-viz_cuts <- function(df_anls, time_type, duration, agg_level, cumulative, max_lines=12){
+set_geo_level <- function(df, geo_level) {
+    #' set geo_level to either country or geo
+
+    if (geo_level == "region") {
+    
+        ## df_plt$geo <- countrycode(df_plt$iso3c, "iso3c", "geo")
+        df$geo_level <- countrycode(df$iso3c, "iso3c", "region")
+
+    } else {
+        df$geo_level <- df_plt$iso3c
+    }
+    return(df)
+}
+
+
+set_time_level <- function(df, time_level, duration) {
+    #' setting time level: either cut or year (for rolling mean) calculation
+
+    if (time_level == "cut") {
+        ## just population calculation: could go into separate function, if rates are requested
+        
+        df$cut <- cut(df$year, seq(min(df$year), max(df$year)+5, by = duration))
+        df$time_level <- as.numeric(sapply(as.character(df$cut), year_selector))
+        ## df_viz <- as_tibble(aggregate(nbr_opened ~ region + cut2, df_plt, sum))
+
+    } else {
+        ##  maybe I have to put in function application here, not sure if I can put it properly away
+        ## try first tho
+        df$time_level <- df_plt$year
+    }
+    return(df)
+}
+
+prep_pop <- function(df_plt) {
+    #' prepare the population variable: mean by time period, then sum by geo level (if it is region)
+    
+    ## founding rates
+    ## first country mean per cut
+    ## then region sum
+    ## always need this one: first aggregate by country + time + geo with mean 
+    df_pop_cry_mean <- as_tibble(aggregate(SP.POP.TOTL ~ iso3c + time_level + geo_level, df_plt, mean))
+
+    ## df_viz_pop_agg$region <- countrycode(df_viz_pop_agg$iso3c, "iso3c", "region")
+
+    ## countrycode(unique(filter(df_viz_pop1, region == "South Asia")$iso3c), "iso3c", "country.name")
+    df_pop_reg_sum <- as_tibble(aggregate(SP.POP.TOTL ~ geo_level + time_level, df_pop_cry_mean, sum))
+    ## ggplot(df_pop_reg_sum, aes(x=time_level, y=SP.POP.TOTL, group=geo_level, color=geo_level)) +
+    ##     geom_line()
+
+    return(df_pop_reg_sum)
+    }
+
+
+agg_opnd_cnts <- function(df_plt, time_level, duration) {
+    #' aggregate the opening counts
+
+    ## always sum by geo_level + time_level, is enough if cuts are provided as time_level
+    df_plt_opnd <- as_tibble(aggregate(nbr_opened ~ geo_level + time_level, df_plt, sum))
+
+    ## if time_level is ra, apply custom rollmean function (time_level is year in that case)
+    if (time_level != "cut") {
+
+        df_plt_opnd <- df_plt_opnd %>%
+            group_by(geo_level) %>%
+            mutate(nbr_opened_ra = rollmean_custom(nbr_opened, win_len = duration))
+    }
+    
+    
+    return(df_plt_opnd)
+}
+
+
+viz_cuts <- function(df_anls, time_level, duration, geo_level, cumulative, max_lines=12){
     #' visualize the founding
     #' 
-    #' time_type: cut or rolling mean
+    #' time_level: cut or rolling mean
     #' duration: length of cut/rolling mean
-    #' agg_level: region or country
+    #' geo_level: region or country
     #' cumulative: whether using per period or cumulative
     #' max_lines: if country
     #' also need something whether it should use the absolute counts or the population ratio 
@@ -523,50 +595,24 @@ viz_cuts <- function(df_anls, time_type, duration, agg_level, cumulative, max_li
     
     ## gonna be difficult to process each step independently
     ## may not be possible without much nesting
+    ## also need consistent color schemes
     
+    geo_level = "region"
+    geo_level = "country"
+    time_level <- "cut"
+    time_level <- "rolling_mean"
+    duration <- 10
     df_plt <- df_anls
 
-    ## also need consistent color schemes
 
-    ## aggregation level
-    if (agg_level == "region") {
+
+    df_plt <- set_geo_level(df_plt, geo_level)
+    df_plt <- set_time_level(df_plt, time_level, duration)
     
-        ## df_plt$region <- countrycode(df_plt$iso3c, "iso3c", "region")
-        df_plt$agg_level <- countrycode(df_plt$iso3c, "iso3c", "region")
+    df_pop_reg_sum <- prep_pop(df_plt)
+    df_plt_opnd <- agg_opnd_cnts(df_plt, time_level, duration)
 
-    } else {
-        df_plt$agg_level <- df_plt$iso3c
-    }
-
-
-    if (time_type == "cut") {
-
-        ## just population calculation: could go into separate function, if rates are requested
-        
-        df_plt$cut <- cut(df_plt$year, seq(min(df_plt$year), max(df_plt$year)+5, by = duration))
-        df_plt$cut2 <- as.numeric(sapply(as.character(df_plt$cut), year_selector))
-        ## df_viz <- as_tibble(aggregate(nbr_opened ~ region + cut2, df_plt, sum))
-
-        ## founding rates
-        ## first country mean per cut
-        ## then region sum 
-        df_viz_pop_agg_country <- as_tibble(aggregate(SP.POP.TOTL ~ iso3c + cut2 + agg_level, df_plt, mean))
-
-        ## df_viz_pop_agg$region <- countrycode(df_viz_pop_agg$iso3c, "iso3c", "region")
-
-        ## countrycode(unique(filter(df_viz_pop1, region == "South Asia")$iso3c), "iso3c", "country.name")
-        df_viz_pop_agg_lvlx <- as_tibble(aggregate(SP.POP.TOTL ~ agg_level + cut2, df_viz_pop_agg_country, sum))
-
-        ## ggplot(df_viz_pop_agg_lvlx, aes(x=cut2, y=SP.POP.TOTL, group=agg_level, color=agg_level)) +
-        ##     geom_line()
-
-    } else {
-
-
-
-    
-
-    ## ggplot(df_viz_pop2, aes(x=cut2, y=population, group=region, color=region)) +
+    ## ggplot(df_plt_opnd, aes(x=time_level, y=nbr_opened_ra, color = geo_level)) +
     ##     geom_line()
 
 

@@ -16,14 +16,12 @@ lm.beta.lmer <- function(mod) {
 minus <- function(a,b){return(a-b)}
 plus <- function(a,b){return(a+b)}
 
-rollmean_custom <- function(v, win_len, func, orientation){
+rollmean_custom <- function(v, win_len, func, orientation = "left"){
     # computes rolling mean without removing observations by using smaller windows at the sides
     c <- 1
     ## slider needs orientation if length of sliding window is even:
     ## question is whether to orient oneself to the right of left
     len_v <- length(v)
-
-    orientation <- "left"
 
     all_res <- c()
     
