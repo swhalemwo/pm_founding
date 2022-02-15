@@ -1,5 +1,5 @@
 
-## *** source other files
+## * source other files
 PROJECT_DIR <- "/home/johannes/Dropbox/phd/papers/org_pop/"
 SCRIPT_DIR <- paste0(PROJECT_DIR, "scripts/")
 
