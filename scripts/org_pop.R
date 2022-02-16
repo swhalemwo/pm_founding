@@ -9,6 +9,7 @@ source(paste0(SCRIPT_DIR, "wb_api.R")) ## World Bank data, has to be run before 
 source(paste0(SCRIPT_DIR, "base_df_creation.R")) # function to read in excel data
 source(paste0(SCRIPT_DIR, "WID_setup_and_checks.R"))
 source(paste0(SCRIPT_DIR, "viz_opngs.R"))
+source(paste0(SCRIPT_DIR, "oecd_api.R"))
 
 df_excl <- create_excel_df()
 df_open <- aggregate_openings(df_excl)
