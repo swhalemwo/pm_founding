@@ -645,83 +645,19 @@ some_page <- x[[1]]
 ## * oecd
 ## ** library access, doesn't have labels tho 
 library(OECD)
-df_oced <- as_tibble(get_datasets())
-## 1495 datasets noice
-
-df_stan <- as_tibble(
-    get_dataset("STANI4_2020", start_time = 2010, end_time = 2011,
-                filter = list(c("DEU"))
-                ))
-## there's probably some query limit on the number of rows
-
-
-
-
-dfx <- as_tibble(get_dataset("EPL_OV", 
-                   filter = list(c("DEU", "FRA"), 
-                                 c("EPRC_V1", "EPRC_V2")), 
-                   start_time = 2008, end_time = 2010))
-
-
-wdix <- read_dta("/home/johannes/ownCloud/wid/wid_2018_report/Computer Codes/Global Wealth Inequality/gpinterized.dta")
-## only about   CN   FR   GB   US   WO
-
-wdix <- as_tibble(read_dta("/home/johannes/ownCloud/wid/wid_2022_report/data/wid-data-25102021.dta"))
-wdix_hist <- as_tibble(read_dta("/home/johannes/ownCloud/wid/wid_2022_report/data/WO_hist.dta"))
-
-dfx2 <- as_tibble(get_dataset("SNA_TABLE11",
-                              start_time = 2010, end_time = 2011,
-                              filter = list(c("DEU"))
-                ))
-
-## ** sdmx parsing tests
-
-SDMX_DIR <- "/home/johannes/ownCloud/oecd/SDMX/"
-
-for (idx in df_oced$id){
-    sdmx_url <- paste0("https://stats.oecd.org/restsdmx/sdmx.ashx/GetDataStructure/", idx)
-    dest_file <- paste0(SDMX_DIR, idx, ".xml")
-    download.file(sdmx_url, dest_file)
-}
-
-
 library(rsdmx)
 
-idx <- "STANI4"
-
-sdmx_test <- readSDMX(dest_file, isURL = FALSE)
-
-
-slotNames(sdmx_test)
-## [1] "organisationSchemes" "concepts"            "codelists"          
-## [4] "datastructures"      "xmlObj"              "schema"             
-## [7] "header"              "footer"             
-## these 8 overall slots seem to be general thing? 
-
-
-cls <- slot(sdmx_test, "codelists")
-slotNames(cls)
-typeof(slot(cls, "codelists")) ## a list
-len(slot(cls, "codelists"))
-
-
-codelists <- sapply(slot(cls, "codelists"), function(x) slot(x, "id")) #get list of codelists
-codelist <- as.data.frame(slot(sdmx_test, "codelists"), codelistId = "CL_STANI4_IND") #get a codelist
-
-## sdmx basically seems like annoyingly formatted  dict
-
-codelist$idx <- idx
-
+SDMX_DIR <- "/home/johannes/ownCloud/oecd/SDMX/"
 SDMX_TBL_DIR <- "/home/johannes/ownCloud/oecd/sdmx_based_tables/"
 
-write.csv(codelist, paste0(SDMX_TBL_DIR, idx, ".csv"))
+SDMX_FAIL_DIR <- "/home/johannes/ownCloud/oecd/sdmx_parsing_fail"
+SDMX_FAIL_FILE <- paste0(SDMX_FAIL_DIR, "/fails.csv")
+
+
 
 ## ** sdmx parsing proc
 
 files_there <- list.files(SDMX_DIR)
-
-SDMX_FAIL_DIR <- "/home/johannes/ownCloud/oecd/sdmx_parsing_fail"
-SDMX_FAIL_FILE <- paste0(SDMX_FAIL_DIR, "/fails.csv")
 
 proc_codelist <- function(dsd, codelistx, sdmx_id) {
     #' convert sdmx codelist into df, outsourced to own function for better trycatching
@@ -738,6 +674,7 @@ proc_codelist <- function(dsd, codelistx, sdmx_id) {
 
 
 proc_sdmx_file <- function(sdmx_file){
+    #' process an sdmx file: print all the codelists to file
     sdmx_id <- substr(sdmx_file, 1, nchar(sdmx_file)-4)
     dsd <- readSDMX(paste0(SDMX_DIR, sdmx_file), isURL = FALSE)
     ## print(slotNames(dsd)) overall slotnames are the same
@@ -758,111 +695,43 @@ proc_sdmx_file <- function(sdmx_file){
                             col.names = FALSE, row.names = FALSE, quote = FALSE)
                 
                 }
-            
         )
-        ## codelist_df <- as.data.frame(slot(dsd, "codelists"), codelistId = codelistx)
-
-        ## names_codelist_df <- names(codelist_df)
-        ## codelist_df$codelist <- codelistx
-        ## codelist_df$sdmx_id <- sdmx_id
-        ## ## reorder the columns so that I can easier grep/awk the databases/codelists where culture terms occur
-        ## codelist_df <- codelist_df[,c("sdmx_id", "codelist", names_codelist_df)]
-
-        ## filename <- paste0(SDMX_TBL_DIR, sdmx_id, "---", codelistx, ".csv")
-        ## write.csv(codelist_df, filename)
-        
-        ## print(codelist_df)
-        ## print(paste(len(names(codelist_df)), paste(names(codelist_df), collapse = ", ")))
-        ## not all codelist_dfs of the same sdmx file have the same variables,
-        ## e.g. are about country, time, observation status,
-        ## the "indicator" column seems to have all kinds of different names
-        ## -> have to print everything and filter 
     }
 }
 
 mclapply(files_there, proc_sdmx_file, mc.cores = 6)
 
+## proc_sdmx_file("WSECTOR.xml")
+
+
 ## ** working with parsing results
 ## get files with grepping in /home/johannes/ownCloud/oecd/sdmx_based_tables
 
-sdmx_tables_musem <- system(
-    paste0("cd ", SDMX_TBL_DIR, " && grep -irl --include \\*.csv 'museum'"),
-    intern = TRUE)
-    
-sdmx_tables_cultural_services <- system(
-    paste0("cd ", SDMX_TBL_DIR, " && grep -irl --include \\*.csv 'cultural services'"),
-    intern = TRUE)
 
-sdmx_tables_cultural <- system(
-    paste0("cd ", SDMX_TBL_DIR, " && grep -irl --include \\*.csv ' cultural'"),
-    intern = TRUE)
+find_sdmx_tables <- function(term) {
+    #' search parsed sdmx tables for terms, return all that fit it
+    cmd <- paste0("cd ", SDMX_TBL_DIR, " && grep -irl --include \\*.csv '", term, "'")
+    tables <- system(cmd, intern = TRUE)
+    return(tables)
+}
 
 
-relevant_sdmx_tables <- Reduce(union, list(sdmx_tables_musem, sdmx_tables_cultural_services, sdmx_tables_cultural))
+find_tables ("cultural services")
 
-relevant_sdmx_tables <- c(
-    "AEA---CL_AEA_ACTIVITY.csv",
-    "BIMTS_CPA---CL_BIMTS_CPA_CPA_VER_2_1.csv",
-    "DIOC_OCCUPATION_DET---CL_DIOC_OCCUPATION_DET_DET_OCCUP.csv",
-    "FATS_OUT3_SERV---CL_FATS_OUT3_SERV_SERV.csv",
-    "FDI_CTRY_IND_SUMM---CL_FDI_CTRY_IND_SUMM_ECO_ACT.csv",
-    "FDI_INC_IND---CL_FDI_INC_IND_ECO_ACT.csv",
-    "FDI_POS_IND---CL_FDI_POS_IND_ECO_ACT.csv",
-    "ERTR_ACC---CL_ERTR_ACC_ACT.csv",
-    "FDI_FLOW_IND---CL_FDI_FLOW_IND_ECO_ACT.csv",
-    "FATS_IN3_SERV---CL_FATS_IN3_SERV_SERV.csv",
-    "FDI_CTRY_ECO_HIST---CL_FDI_CTRY_ECO_HIST_ECO_ACT.csv",
-    "NCM_LIVE---CL_NCM_LIVE_INDICATOR.csv",
-    "NCM_STAGING---CL_NCM_STAGING_INDICATOR.csv",
-    "SNA_TABLE42---CL_SNA_TABLE42_ACTIVITY.csv",
-    "SNA_TABLE8A_ARCHIVE---CL_SNA_TABLE8A_ARCHIVE_ACTIVITY.csv",
-    "SNA_TABLE31---CL_SNA_TABLE31_ACTIVITY.csv",
-    "SNA_TABLE44---CL_SNA_TABLE44_TRANSACT.csv",
-    "SNA_TABLE44---CL_SNA_TABLE44_PRODUCT.csv",
-    "SNA_TABLE6A_ARCHIVE---CL_SNA_TABLE6A_ARCHIVE_ACTIVITY.csv",
-    "SDBS_BDI---CL_SDBS_BDI_SEC.csv",
-    "SNA_TABLE7A_SNA93---CL_SNA_TABLE7A_SNA93_ACTIVITY.csv",
-    "TEC1_REV4_COPY---CL_TEC1_REV4_COPY_SECTOR.csv",
-    "SNA_TABLE8A---CL_SNA_TABLE8A_ACTIVITY.csv",
-    "TEC5_REV4---CL_TEC5_REV4_SECTOR.csv",
-    "SSIS_BSC---CL_SSIS_BSC_ISIC3.csv",
-    "STANI4_2020---CL_STANI4_2020_IND.csv",
-    "SNA_TABLE40---CL_SNA_TABLE40_TRANSACT.csv",
-    "SNA_TABLE40---CL_SNA_TABLE40_PRODUCT.csv",
-    "SNA_TABLE6A---CL_SNA_TABLE6A_ACTIVITY.csv",
-    "SNA_TABLE30---CL_SNA_TABLE30_TRANSACT.csv",
-    "SNA_TABLE30---CL_SNA_TABLE30_PRODUCT.csv",
-    "SNA_TABLE43---CL_SNA_TABLE43_TRANSACT.csv",
-    "SNA_TABLE43---CL_SNA_TABLE43_PRODUCT.csv",
-    "SNA_TABLE7A_ARCHIVE---CL_SNA_TABLE7A_ARCHIVE_ACTIVITY.csv",
-    "TEC9_REV4---CL_TEC9_REV4_SECTOR.csv",
-    "SNA_TABLE9A---CL_SNA_TABLE9A_ACTIVITY.csv",
-    "SSIS_BSC_ISIC4---CL_SSIS_BSC_ISIC4_ISIC4.csv",
-    "STANI4_2016---CL_STANI4_2016_IND.csv",
-    "SNA_TABLE41---CL_SNA_TABLE41_ACTIVITY.csv",
-    "SDBS_BDI_ISIC4---CL_SDBS_BDI_ISIC4_SEC.csv",
-    "TEC1_REV4---CL_TEC1_REV4_SECTOR.csv",
-    "TEC6_REV4---CL_TEC6_REV4_SECTOR.csv",
-    "SNA_TABLE45---CL_SNA_TABLE45_ACTIVITY.csv",
-    "SNA_TABLE45---CL_SNA_TABLE45_PRODUCT.csv",
-    "SNA_TABLE7A---CL_SNA_TABLE7A_ACTIVITY.csv",
-    "STANI4---CL_STANI4_IND.csv",
-    "STANINDICATORSI4---CL_STANINDICATORSI4_IND.csv")
-
+sdmx_terms <- c("museum", "cultural services", " cultural")
+relevant_sdmx_tables <- unique(unlist(lapply(sdmx_terms, find_sdmx_tables)))
 
 sdmx_res_tbls <- lapply(relevant_sdmx_tables, function(x) as_tibble(read.csv(paste0(SDMX_TBL_DIR, x))))
 
 sdmx_res_tbl_names <- unlist(lapply(sdmx_res_tbls, names))
 table(sdmx_res_tbl_names)
 
+## find main columns to focus on
 col_names <- c("sdmx_id", "codelist", "id", "label.en", "description.en")
 
 sdmx_res_cbn <- as_tibble(Reduce(function(x,y, ...) rbind(x[,col_names],y[,col_names]),sdmx_res_tbls))
 
 ## grepping multiple columns works best with apply, lapply on names(df) doesn't work properly for some reason 
-sdmx_res_fltrd <- sdmx_res_cbn[which(rowSums(apply(sdmx_res_cbn, 2, function(x) grepl("museum", x)))>0),]
-
-
 ## seems using pipe I can use multiple terms with pipe 
 sdmx_res_fltrd <- sdmx_res_cbn[which(rowSums(apply(sdmx_res_cbn, 2, function(x) grepl(" cultural|museum|cultural services", x)))>0),]
 
