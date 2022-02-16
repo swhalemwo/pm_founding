@@ -970,18 +970,3 @@ if (RE_RUN_OECD_DOWNLOADS) {
 ## focus on AEA
 ## STANI4_2016
 ## STANI4_2020
-
-
-
-## ** debugging failed files, doesn't seem that many -> fine to ignore
-proc_sdmx_file("REVPER.xml")
-proc_sdmx_file("EO27_VINTAGE.xml")
-
-lapply(list("EO27_VINTAGE.xml", "REVPER.xml"), proc_sdmx_file)
-
-
-
-sdmx_fail_df <- as_tibble(read.csv(SDMX_FAIL_FILE))
-names(sdmx_fail_df) <- c("sdmx_id", "codelist_id")
-
-unique(sdmx_fail_df$sdmx_id)

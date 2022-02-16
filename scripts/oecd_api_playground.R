@@ -186,6 +186,28 @@ apply(sdmx_res_fltrd, 1, function(x) print(names(x)))
 apply(sdmx_res_fltrd, 1, function(x) print(x["sdmx_id"]))
 
 
+## ** debugging SDMX parse fails
+
+
+
+## ** debugging failed files, doesn't seem that many -> fine to ignore
+proc_sdmx_file("REVPER.xml")
+proc_sdmx_file("EO27_VINTAGE.xml")
+
+lapply(list("EO27_VINTAGE.xml", "REVPER.xml"), proc_sdmx_file)
+
+
+
+sdmx_fail_df <- as_tibble(read.csv(SDMX_FAIL_FILE, header = FALSE))
+names(sdmx_fail_df) <- c("sdmx_id", "codelist_id")
+
+unique(sdmx_fail_df$sdmx_id)
+## 62 files fail to parse, most about "vintage": e.g. EO22_VINTAGE
+
+proc_sdmx_file("REVNAM.xml")
+
+
+
 ## ** each item is again a slot-carrier (?) with bunch of slots?
 
 sdmx_file <- "EO27_VINTAGE.xml"
