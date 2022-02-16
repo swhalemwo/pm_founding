@@ -3,12 +3,12 @@
 PROJECT_DIR <- "/home/johannes/Dropbox/phd/papers/org_pop/"
 SCRIPT_DIR <- paste0(PROJECT_DIR, "scripts/")
 
-source(paste0(SCRIPT_DIR, "org_pop_startup.R")) ## startup: libraries, global vars
+source(paste0(SCRIPT_DIR, "startup_org_pop.R")) ## startup: libraries, global vars
 source(paste0(SCRIPT_DIR, "custom_funcs.R")) # random utils
 source(paste0(SCRIPT_DIR, "wb_api.R")) ## World Bank data, has to be run before sourcing base_df_creationn since it provides the country-year structure
 source(paste0(SCRIPT_DIR, "base_df_creation.R")) # function to read in excel data
 source(paste0(SCRIPT_DIR, "WID_setup_and_checks.R"))
-
+source(paste0(SCRIPT_DIR, "viz_opngs.R"))
 
 df_excl <- create_excel_df()
 df_open <- aggregate_openings(df_excl)
