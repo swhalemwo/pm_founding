@@ -233,7 +233,7 @@ wid_res_col_nms <- c("variable", "meaning", "percentile", "PM foundings\n covere
 
 
 export_wid_cpltns_check <- function(res_df, tbl_label, tbl_caption) {
-
+    #' export WID completeness check to latex with label/caption, variable meaning
     res_df <- add_column(res_df, meaning = wid_recode_labels[match(res_df$variable, wid_recode_codes)], .after = "variable")
     
     ##  print(res_df$meaning)
