@@ -687,7 +687,7 @@ proc_sdmx_file <- function(sdmx_file){
         res <- tryCatch(
             proc_codelist(dsd, codelistx, sdmx_id),
             error=function(e) {
-                FAILED_LIST <- c(failed_list, c(sdmx_id, codelistx))
+                ## FAILED_LIST <- c(failed_list, c(sdmx_id, codelistx))
                 ## print(c(failed_list, c(sdmx_id, codelistx)))
 
                 ## save which files failed to parse 
@@ -751,6 +751,11 @@ filter_sdmx_results <- function(sdmx_terms) {
 ## sdmx_terms <- c("museum", "cultural services", " cultural")
 ## sdmx_res_fltrd <- filter_sdmx_results(sdmx_terms)
 
+## write to file to read from separate download_oecd.R, so that it can be read in by download_oecd.R
+## actually by now could just import the funcs (filter_sdmx_results) in download_oecd.R to generate the table there
+## write.csv(sdmx_res_fltrd, "/home/johannes/Dropbox/phd/papers/org_pop/data/oecd_dbs/sdmx_res_fltrd.csv")
+
+
 ## sdmx_res_fltrd$id
 
 ## sdmx_res_fltrd[28,]
@@ -805,94 +810,97 @@ download_oecd_dataset <- function(datasetx, idx) {
     }
 }      
 
-system(paste0("cd ", SCRIPT_DIR, " && Rscript download_sdmx.R"))
-
-files_there <- list.files(SDMX_DIR)
-mclapply(files_there, proc_sdmx_file, mc.cores = 6)
-
-
-sdmx_terms <- c("museum", "cultural services", " cultural")
-sdmx_res_fltrd <- filter_sdmx_results(sdmx_terms)
-
-## write to file to read from separate download_oecd.R, so that it can be read in by download_oecd.R
-write.csv(sdmx_res_fltrd, "/home/johannes/Dropbox/phd/papers/org_pop/data/oecd_dbs/sdmx_res_fltrd.csv")
 
 
 ## this code is also run in download_oecd.R, not sure if I should have it here too
 ## could just call it with:
 ## system(paste0("cd ", SCRIPT_DIR, " && Rscript download_oecd.R"))
-datasets_already_there <- list.files(OECD_DATA_DIR)
-options(timeout = 10)
-apply(sdmx_res_fltrd, 1, function(x) download_oecd_dataset(x["sdmx_id"], x["id"]))
+## datasets_already_there <- list.files(OECD_DATA_DIR)
+## options(timeout = 10)
+## apply(sdmx_res_fltrd, 1, function(x) download_oecd_dataset(x["sdmx_id"], x["id"]))
 
 
 
 ## ** processing actual data
-## maybe first get those that sufficient country coverage
-## hope the label for the country code is the same, but probably isn't 
+
+## first get those that sufficient country coverage
 
 
+create_oecd_df_list <- function() {
+    #' make all the oecd dfs into named list for nicer access
+    oecd_dfs <- list()
+    for (i in datasets_already_there){
+        dfx <-  as_tibble(read.csv(paste0(OECD_DATA_DIR, i)))
+        oecd_dfs[[i]] <- dfx
+    }
+    return(oecd_dfs)
+}
+
+
+## oecd_dfs <- create_oecd_df_list()
 ## find data set column sets 
-namesx <- unlist(lapply(datasets_already_there, function(x) names(read.csv(paste0(OECD_DATA_DIR, x)))))
-namesx_tbl <- table(namesx)
-namesx_tbl[order(namesx_tbl)]
+check_oecd_data_sets <- function(oecd_dfs, datasets_already_there) {
+    #' check whether datasets have a country column that is one of c("LOCATION", "COU", "COUNTRY")
+    #' if not, put them in list, check/update that manually 
 
-## country col is either: LOCATION (23), COU (12), COUNTRY(3)
-## exceptions (so far): "BIMTS_CPA","TEC5_REV4"  ,"TEC6_REV4" ,"TEC9_REV4"
+    ## figuring out what are the location unit columns
+    ## namesx <- unlist(lapply(datasets_already_there, function(x) names(read.csv(paste0(OECD_DATA_DIR, x)))))
+    ## namesx_tbl <- table(namesx)
+    ## namesx_tbl[order(namesx_tbl)]
 
-## find exceptions automatically where there's no column named "LOCATION", "COU", "COUNTRY"
+    ## country col is either: LOCATION (23), COU (12), COUNTRY(3)
+    ## exceptions (so far): "BIMTS_CPA","TEC5_REV4"  ,"TEC6_REV4" ,"TEC9_REV4"
+    ## find exceptions automatically where there's no column named "LOCATION", "COU", "COUNTRY"
 
-namesx_exceptions <- c()
+    namesx_exceptions <- c()
 
-for (i in datasets_already_there){
-    dfx <- read.csv(paste0(OECD_DATA_DIR, i))
-    if (length(intersect(names(dfx), c("LOCATION", "COU", "COUNTRY"))) == 0) {
-        print(i)
-        namesx_exceptions <- c(namesx_exceptions, i)
+    for (i in datasets_already_there){
+        ## dfx <- read.csv(paste0(OECD_DATA_DIR, i))
+        dfx <- oecd_dfs[[i]]
+        
+        if (length(intersect(names(dfx), c("LOCATION", "COU", "COUNTRY"))) == 0) {
+            namesx_exceptions <- c(namesx_exceptions, i)
+        }
+    }
+    ## check manually (should check whenever I change the datasets to be included)
+
+    ## first batch 
+    ## - BIMTS_CPA: Balanced International Merchandise Trade Statistics: only from 2007
+    ##   also Olav doesn't believe in diffusion anyways
+    ## - TEC5_REV4: Trade by enterprise characteristics: only costa rica, and no values -> scrap
+    ## - TEC6_REV: only Turkey and Israel 
+    ## - TEC9_REV4: more Trade by enterprise characteristics: but only Czech Republic and Luxembourg
+    ## could be that the same measure is scattered across different databases,
+    ## but if it is scattered it's probablyl not the same stuff to begin with 
+
+    ## second batch 
+    ## "CRS1" ## about agriculture anyways
+    ## "CRS1_GREQ" ## about agriculture anyways
+    ## "DV_DCD_GENDER" ## about agriculture anyways
+    ## "DV_DCD_PPFD" ## about agriculture anyways 
+    ## "MULTISYSTEM" ## about agriculture anyways 
+    ## "RIOMARKERS"  ## about agriculture anyways
+    ## "SOCX_DET" ## only 38 rows, seems all about spain 
+    ## "TSEC1" ## not clear what it is, but only 134 rows
+    ## "TSEC1_COPY" ## also unclear, but also only 134 rows
+
+    checked_exceptions <- c("BIMTS_CPA","TEC5_REV4","TEC6_REV4","TEC9_REV4","CRS1","CRS1_GREQ","DV_DCD_GENDER","DV_DCD_PPFD","MULTISYSTEM","RIOMARKERS","SOCX_DET","TSEC1","TSEC1_COPY")
+
+    ## lapply(setdiff(namesx_exceptions, checked_exceptions), print)
+
+    datasets_to_check_manually <- setdiff(namesx_exceptions, checked_exceptions)
+    print(datasets_to_check_manually)
+
+
+    if (len(datasets_to_check_manually) == 0) {
+        print("no unchecked datasets")
+    } else if (len(datasets_to_check_manually) > 0) {
+        warning("there are some datasets that don't work but have not been manually checked")
     }
 }
 
-checked_exceptions <- c("BIMTS_CPA","TEC5_REV4","TEC6_REV4","TEC9_REV4","CRS1","CRS1_GREQ","DV_DCD_GENDER","DV_DCD_PPFD","MULTISYSTEM","RIOMARKERS","SOCX_DET","TSEC1","TSEC1_COPY")
-lapply(setdiff(namesx_exceptions, checked_exceptions), print)
-
-## check manually (should check whenever I change the datasets to be included)
-
-## check snippet 
-## dfx <- as_tibble(read.csv(paste0(OECD_DATA_DIR,
 
 
-## first batch 
-## "BIMTS_CPA"
-## "TEC5_REV4"
-## "TEC6_REV4"
-## "TEC9_REV4"
-
-## second batch 
-## "CRS1" ## about agriculture anyways
-## "CRS1_GREQ" ## about agriculture anyways
-## "DV_DCD_GENDER" ## about agriculture anyways
-## "DV_DCD_PPFD" ## about agriculture anyways 
-## "MULTISYSTEM" ## about agriculture anyways 
-## "RIOMARKERS"  ## about agriculture anyways
-## "SOCX_DET" ## only 38 rows, seems all about spain 
-## "TSEC1" ## not clear what it is, but only 134 rows
-## "TSEC1_COPY" ## also unclear, but also only 134 rows
-
-
-
-## names(dfx)
-
-## sloppy coverage evaluations, better in functionalized form below (vague_cvrg)
-## namesx_exceptions <- list("BIMTS_CPA"=1,"TEC5_REV4"  ,"TEC6_REV4"  ,"TEC9_REV4")
-## for (i in datasets_already_there){
-##     dfx <- as_tibble(read.csv(paste0(OECD_DATA_DIR, i)))
-##     if (length(intersect(names(dfx), c("LOCATION", "COU", "COUNTRY"))) == 0) {
-##         next
-##     } else {
-##         country_col <- intersect(names(dfx), c("LOCATION", "COU", "COUNTRY"))
-##         print(paste(i, nrow(unique(dfx[,country_col]))))
-##     }
-##     }
 
 vague_cvrg <- function(namex){
     dfx <- as_tibble(read.csv(paste0(OECD_DATA_DIR, namex)))
@@ -909,170 +917,59 @@ vague_cvrg <- function(namex){
         time_cvrg=time_cvrg))
 }
 
-vague_cvrg(datasets_already_there[1])
+## vague_cvrg(datasets_already_there[1])
 
-vague_cvrg_res <- lapply(setdiff(datasets_already_there, namesx_exceptions), vague_cvrg)
+filter_vague_crvg <- function() {
 
-vague_res_df <- as_tibble(rbindlist(vague_cvrg_res))
-as.data.frame(vague_res_df)
+    vague_cvrg_res <- lapply(setdiff(datasets_already_there, namesx_exceptions), vague_cvrg)
+
+    vague_res_df <- as_tibble(rbindlist(vague_cvrg_res))
+    ## as.data.frame(vague_res_df)
+
+    return(vague_res_df)
+}
 
 
+## don't put downloading oecd code into an overall function, will take forever, functions should run selectively/once
+
+RE_RUN_OECD_DOWNLOADS <- FALSE
+
+if (RE_RUN_OECD_DOWNLOADS) {
+
+    system(paste0("cd ", SCRIPT_DIR, " && Rscript download_sdmx.R"))
+
+    files_there <- list.files(SDMX_DIR)
+    mclapply(files_there, proc_sdmx_file, mc.cores = 6)
+
+
+    sdmx_terms <- c("museum", "cultural services", " cultural")
+    sdmx_res_fltrd <- filter_sdmx_results(sdmx_terms)
+
+    ## write to file to read from separate download_oecd.R, so that it can be read in by download_oecd.R
+    ## actually by now could just import the funcs (filter_sdmx_results) in download_oecd.R to generate the table there
+    write.csv(sdmx_res_fltrd, "/home/johannes/Dropbox/phd/papers/org_pop/data/oecd_dbs/sdmx_res_fltrd.csv")
+
+
+    ## this code is also run in download_oecd.R, not sure if I should have it here too
+    ## could just call it with:
+    ## system(paste0("cd ", SCRIPT_DIR, " && Rscript download_oecd.R"))
+    datasets_already_there <- list.files(OECD_DATA_DIR)
+    options(timeout = 10)
+    apply(sdmx_res_fltrd, 1, function(x) download_oecd_dataset(x["sdmx_id"], x["id"]))
+
+    oecd_dfs <- create_oecd_df_list()
+
+    check_oecd_data_sets(oecd_dfs, datasets_already_there)
+
+    vague_res_df <- filter_vague_crvg()
+
+    filter(vague_res_df, country_nbr > 25 & time_cvrg > 25)
+}
+
+    
 ## focus on AEA
 ## STANI4_2016
 ## STANI4_2020
-
-
-## make all the oecd dfs into named list for nicer access
-oecd_dfs <- list()
-for (i in datasets_already_there){
-    dfx <-  as_tibble(read.csv(paste0(OECD_DATA_DIR, i)))
-    oecd_dfs[[i]] <- dfx
-}
-
-
-
-
-## ** variable extraction 
-
-
-cpltns_checker <- function(vx, varx) {
-    #' assesses completeness of variable in terms of df_anls PM coverage 
-    # there's still a bug with cry_cvrg_geq3, which can be higher than 217 sometimes 
-
-    dfb <- df_anls[,c("countrycode", "year", "nbr_opened")]
-    dfc <- as_tibble(merge(dfb, vx, by = c("year", "countrycode"), all.x = TRUE))
-
-    cry_cvrg <- aggregate(year ~ countrycode, na.omit(dfc), length)
-    crys_geq3 <- cry_cvrg[which(cry_cvrg$year >= 3),]$countrycode
-    cry_pm_crvg_actual <- aggregate(nbr_opened ~ countrycode, na.omit(dfc), sum)
-    cry_pm_crvg_ideal <- aggregate(nbr_opened ~ countrycode, dfc, sum)
-    names(cry_pm_crvg_ideal) <- c("countrycode", "nbr_opened_ideal")
-
-    cry_pm_cvrg_cprn <- as_tibble(merge(cry_pm_crvg_ideal, cry_pm_crvg_actual, all.x = TRUE))
-    cry_pm_cvrg_cprn$nbr_opened[which(is.na(cry_pm_cvrg_cprn$nbr_opened))] <- 0
-    cry_pm_cvrg_cprn$diff <- cry_pm_cvrg_cprn$nbr_opened - cry_pm_cvrg_cprn$nbr_opened_ideal
-
-    ## most_affected_crys <- unlist(lapply(sort(cry_pm_cvrg_cprn$diff)[1:4],
-    ##                                     function(x) (filter(cry_pm_cvrg_cprn, diff == x)$countrycode)))
-
-    most_affected_crys <- cry_pm_cvrg_cprn$countrycode[order(cry_pm_cvrg_cprn$diff)[1:4]]
-    
-
-    PMs_covered_raw <- sum(na.omit(dfc[which(dfc$countrycode %in% crys_geq3),])$nbr_opened)
-
-    cry_cvrg_geq3 <- sum(filter(dfc, countrycode %in% crys_geq3)$nbr_opened)
-
-    nbr_of_crys_geq3 <- len(crys_geq3)
-
-    ## how many of crys_geq3 that have at least one PM founded, maybe relevant for comparative purposes 
-    nbr_of_crys_geq1pm <- filter(aggregate(nbr_opened ~ countrycode, dfc, sum), countrycode %in% crys_geq3) %>%
-        filter(nbr_opened >= 1) %>%
-        nrow()
-
-    return(list(
-        varx=varx,
-        nobs=nrow(vx),
-        PMs_covered_raw=PMs_covered_raw,
-        cry_cvrg_geq3=cry_cvrg_geq3,
-        most_affected_crys = paste(most_affected_crys, collapse = "--"),
-        nbr_of_crys_geq3=nbr_of_crys_geq3,
-        nbr_of_crys_geq1pm=nbr_of_crys_geq1pm))
- 
-}
-
-## generate filter expression with eval(parse())
-generate_sel_str <- function(combox){
-    strs <- c()
-
-    for (k in 1:ncol(combox)) {
-
-        col_name <- names(combox)[k]
-        col_vlu <- as.data.frame(combox)[1,k]
-        
-        print(paste(col_vlu, typeof(col_vlu)))
-        if (is.na(col_vlu)) {
-            strx <- paste0('is.na(dfx$', col_name, ")")
-
-        } else if (typeof(col_vlu) == "character"){
-            strx <- paste0('dfx["', col_name, '"]=="', col_vlu,'"')
-        } else  {
-            strx <- paste0('dfx["', col_name, '"]==', col_vlu)
-        }
-        strs <- c(strs, strx)
-    }
-
-    strx_cbn <- paste(strs,collapse =  " & ")
-    return(strx_cbn)
-}
-
-
-filter(vague_res_df, country_nbr > 25 & time_cvrg > 25)
-
-lapply(filter(vague_res_df, country_nbr > 25 & time_cvrg > 25)$namex, function(x) names(oecd_dfs[[x]]))
-
-
-idx <- "AEA"
-idx <- "TISP_EBOPS2010"
-idx <- "STANI4_2020"
-
-
-dfx <- oecd_dfs[[idx]]
-
-namesx <- names(dfx)
-country_col <- intersect(names(dfx), c("LOCATION", "COU", "COUNTRY"))
-
-dfx$ObsValue <- dfx$ObsValue * (10^dfx$POWERCODE)
-
-combo_cols <- setdiff(namesx, c(country_col, "ObsValue", "X", "Time", "POWERCODE"))
-
-combos <- unique(dfx[,combo_cols])
-
-filter(dfx, is.na(OBS_STATUS) & )
-
-
-combos <- unique(dfx[,c("MEASURE", "POLLUTANT")])
-
-
-dfx[which(eval(parse(text=strx_cbn))),]
-
-## which(dfx["IND"] == "D90T92" & is.na(dfx$OBS_STATUS))
-    
-res <- list()     
-
-for (i in 1:nrow(combos)) {
-    print(i)
-    combox <- combos[i,]
-    print(combox)
-
-    strx_cbn <- generate_sel_str(combox)
-    vx <- dfx[which(eval(parse(text=strx_cbn))),]
-
-
-    ## vx <- dfx[which(dfx["MEASURE"]== as.data.frame(combox)[1,"MEASURE"] &
-    ##                 dfx["POLLUTANT"]== as.data.frame(combox)[1,"POLLUTANT"]),]
-
-
-    ## some flexible renaming, kinda like SQL
-    vx2 <- vx %>%
-        rename(countrycode=country_col, year=Time, value =ObsValue) %>%
-        select(countrycode, year, value)
-    
-    varx <- paste(combox, collapse = "-")
-    
-    resx <- cpltns_checker(vx2, varx)
-    res[[i]] <- resx
-}
-
-res_df <- as_tibble(rbindlist(res))
-
-hist(res_df$cry_cvrg_geq3)
-
-hist(res_df$nobs)
-
-filter(res_df, PMs_covered_raw > 130 & cry_cvrg_geq3 > 200)$varx
-
-i <- which(res_df$varx=="D90T92-NA-NA-P1Y-PER-SELF")
-i <- which(res_df$cry_cvrg_geq3 > 250)
 
 
 
@@ -1084,109 +981,7 @@ lapply(list("EO27_VINTAGE.xml", "REVPER.xml"), proc_sdmx_file)
 
 
 
-## each item is again a slot-carrier (?) with bunch of slots?
+sdmx_fail_df <- as_tibble(read.csv(SDMX_FAIL_FILE))
+names(sdmx_fail_df) <- c("sdmx_id", "codelist_id")
 
-sdmx_file <- "EO27_VINTAGE.xml"
-##  [1] "id"                  "agencyID"            "version"            
-##  [4] "uri"                 "urn"                 "isExternalReference"
-##  [7] "isFinal"             "validFrom"           "validTo"            
-## [10] "Name"                "Description"         "Code"               
-
-lapply(list_of_codelists, function(x) slotNames(x))
-## need to compare with some item that I know works
-
-sdmx_id <- substr(sdmx_file, 1, nchar(sdmx_file)-4)
-dsd <- readSDMX(paste0(SDMX_DIR, sdmx_file), isURL = FALSE)
-## print(slotNames(dsd)) overall slotnames are the same
-cls <- slot(dsd, "codelists")
-codelists <- sapply(slot(cls, "codelists"), function(x) slot(x, "id"))
-
-codelistx <- "CL_EO27_VINTAGE_LOCATION"
-
-list_of_codelists <- slot(slot(dsd, "codelists"),"codelists")
-location_codelist <- list_of_codelists[[1]]
-slot(location_codelist)
-## huh actually has no "Code" slot that could provide the rows
-slotNames(location_codelist)
-
-## maybe should see if all the sdmx files that don't work have the same structure
-## first see where it works -> write exception
-
-
-
-
-
-sdmx_file <- "REVPER.xml"
-##  [1] "id"                  "agencyID"            "version"            
-##  [4] "uri"                 "urn"                 "isExternalReference"
-##  [7] "isFinal"             "validFrom"           "validTo"            
-## [10] "Name"                "Description"         "Code"               
-sdmx_id <- substr(sdmx_file, 1, nchar(sdmx_file)-4)
-dsd <- readSDMX(paste0(SDMX_DIR, sdmx_file), isURL = FALSE)
-## print(slotNames(dsd)) overall slotnames are the same
-cls <- slot(dsd, "codelists")
-codelists <- sapply(slot(cls, "codelists"), function(x) slot(x, "id"))
-
-
-## -> each of the names within the slots seem to be the same
-list_of_codelists <- slot(slot(dsd, "codelists"),"codelists")
-codelistx <- "CL_REVPER_TIME_FORMAT"
-## index 8
-## each item again codelist
-time_format_codelist <- list_of_codelists[[8]]
-## seems like slot "Code" is a list of things that gets converted to rows
-slot(time_format_codelist, "Code")
-
-row1 <- slot(time_format_codelist, "Code")[[1]]
-## then uses slots id, label, description
-## label and description are seem to be named lists -> should be able to loop over them
-
-
-x <- slot(cls, "codelists")[[1]]
-lapply(slotNames(x), function(i) {slot(x, i)})
-
-
-
-## proc_sdmx_file(sdmx_file)
-
-
-
-
-## need to compare one codelist that works properly with one that doesn't
-## might need manual parsing, have to make sure that it produces the same result in a codelist that works than what is produced by overloaded as.data.frame
-
-
-
-## ** concept stuff, not needed
-slotNames(sdmx_test)
-## [1] "organisationSchemes" "concepts"            "codelists"          
-## [4] "datastructures"      "xmlObj"              "schema"             
-## [7] "header"              "footer"             
-
-slotNames(slot(sdmx_test, "concepts"))
-## yo dawg i heard you like concepts in your concepts
-slot(slot(sdmx_test, "concepts"), "concepts")
-len(slot(slot(sdmx_test, "concepts"), "concepts"))
-
-
-country_slot <- slot(slot(sdmx_test, "concepts"), "concepts")[[1]]
-slotNames(country_slot)
-slot(country_slot, "Name")
-slot(country_slot, "Name")$en
-
-year_slot <- slot(slot(sdmx_test, "concepts"), "concepts")[[2]]
-slotNames(year_slot)
-concept_slot <- slot(sdmx_test, "concepts")
-typeof(concept_slot) ## -> S4
-len(concept_slot) ## -> 1
-slotNames(concept_slot)
-[1] "concepts"       "conceptSchemes" "xmlObj"         "schema"        
-[5] "header"         "footer"
-
-concept_slots <- slot(concept_slot, "concepts")
-lapply(concept_slots, function(x) {slotNames(x)})
-unlist(lapply(concept_slots, function(x) {slot(x, "Name")$en}))
-##  [1] "Country"            "Variable"           "Industry"          
-##  [4] "Time"               "Observation Value"  "Time Format"       
-##  [7] "Observation Status" "Unit"               "Unit multiplier"   
-## [10] "Reference period"  
+unique(sdmx_fail_df$sdmx_id)

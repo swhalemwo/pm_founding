@@ -1,4 +1,4 @@
-## *** tests, probably can be removed
+## ** tests, probably can be removed
 
 df_oced <- as_tibble(get_datasets())
 ## 1495 datasets noice
@@ -185,4 +185,203 @@ test_printer("asdf", "jjj")
 apply(sdmx_res_fltrd, 1, function(x) print(names(x)))
 apply(sdmx_res_fltrd, 1, function(x) print(x["sdmx_id"]))
 
+
+## ** each item is again a slot-carrier (?) with bunch of slots?
+
+sdmx_file <- "EO27_VINTAGE.xml"
+##  [1] "id"                  "agencyID"            "version"            
+##  [4] "uri"                 "urn"                 "isExternalReference"
+##  [7] "isFinal"             "validFrom"           "validTo"            
+## [10] "Name"                "Description"         "Code"               
+
+lapply(list_of_codelists, function(x) slotNames(x))
+## need to compare with some item that I know works
+
+sdmx_id <- substr(sdmx_file, 1, nchar(sdmx_file)-4)
+dsd <- readSDMX(paste0(SDMX_DIR, sdmx_file), isURL = FALSE)
+## print(slotNames(dsd)) overall slotnames are the same
+cls <- slot(dsd, "codelists")
+codelists <- sapply(slot(cls, "codelists"), function(x) slot(x, "id"))
+
+codelistx <- "CL_EO27_VINTAGE_LOCATION"
+
+list_of_codelists <- slot(slot(dsd, "codelists"),"codelists")
+location_codelist <- list_of_codelists[[1]]
+slot(location_codelist)
+## huh actually has no "Code" slot that could provide the rows
+slotNames(location_codelist)
+
+## maybe should see if all the sdmx files that don't work have the same structure
+## first see where it works -> write exception
+
+
+
+
+
+sdmx_file <- "REVPER.xml"
+##  [1] "id"                  "agencyID"            "version"            
+##  [4] "uri"                 "urn"                 "isExternalReference"
+##  [7] "isFinal"             "validFrom"           "validTo"            
+## [10] "Name"                "Description"         "Code"               
+sdmx_id <- substr(sdmx_file, 1, nchar(sdmx_file)-4)
+dsd <- readSDMX(paste0(SDMX_DIR, sdmx_file), isURL = FALSE)
+## print(slotNames(dsd)) overall slotnames are the same
+cls <- slot(dsd, "codelists")
+codelists <- sapply(slot(cls, "codelists"), function(x) slot(x, "id"))
+
+
+## -> each of the names within the slots seem to be the same
+list_of_codelists <- slot(slot(dsd, "codelists"),"codelists")
+codelistx <- "CL_REVPER_TIME_FORMAT"
+## index 8
+## each item again codelist
+time_format_codelist <- list_of_codelists[[8]]
+## seems like slot "Code" is a list of things that gets converted to rows
+slot(time_format_codelist, "Code")
+
+row1 <- slot(time_format_codelist, "Code")[[1]]
+## then uses slots id, label, description
+## label and description are seem to be named lists -> should be able to loop over them
+
+
+x <- slot(cls, "codelists")[[1]]
+lapply(slotNames(x), function(i) {slot(x, i)})
+
+
+
+## proc_sdmx_file(sdmx_file)
+
+
+
+
+## need to compare one codelist that works properly with one that doesn't
+## might need manual parsing, have to make sure that it produces the same result in a codelist that works than what is produced by overloaded as.data.frame
+
+
+
+## ** concept stuff, not needed
+slotNames(sdmx_test)
+## [1] "organisationSchemes" "concepts"            "codelists"          
+## [4] "datastructures"      "xmlObj"              "schema"             
+## [7] "header"              "footer"             
+
+slotNames(slot(sdmx_test, "concepts"))
+## yo dawg i heard you like concepts in your concepts
+slot(slot(sdmx_test, "concepts"), "concepts")
+len(slot(slot(sdmx_test, "concepts"), "concepts"))
+
+
+country_slot <- slot(slot(sdmx_test, "concepts"), "concepts")[[1]]
+slotNames(country_slot)
+slot(country_slot, "Name")
+slot(country_slot, "Name")$en
+
+year_slot <- slot(slot(sdmx_test, "concepts"), "concepts")[[2]]
+slotNames(year_slot)
+concept_slot <- slot(sdmx_test, "concepts")
+typeof(concept_slot) ## -> S4
+len(concept_slot) ## -> 1
+slotNames(concept_slot)
+[1] "concepts"       "conceptSchemes" "xmlObj"         "schema"        
+[5] "header"         "footer"
+
+concept_slots <- slot(concept_slot, "concepts")
+lapply(concept_slots, function(x) {slotNames(x)})
+unlist(lapply(concept_slots, function(x) {slot(x, "Name")$en}))
+##  [1] "Country"            "Variable"           "Industry"          
+##  [4] "Time"               "Observation Value"  "Time Format"       
+##  [7] "Observation Status" "Unit"               "Unit multiplier"   
+## [10] "Reference period"  
+## ** try automated analysis, but seemed kinda pointless
+## generate filter expression with eval(parse())
+generate_sel_str <- function(combox){
+    strs <- c()
+
+    for (k in 1:ncol(combox)) {
+
+        col_name <- names(combox)[k]
+        col_vlu <- as.data.frame(combox)[1,k]
+        
+        print(paste(col_vlu, typeof(col_vlu)))
+        if (is.na(col_vlu)) {
+            strx <- paste0('is.na(dfx$', col_name, ")")
+
+        } else if (typeof(col_vlu) == "character"){
+            strx <- paste0('dfx["', col_name, '"]=="', col_vlu,'"')
+        } else  {
+            strx <- paste0('dfx["', col_name, '"]==', col_vlu)
+        }
+        strs <- c(strs, strx)
+    }
+
+    strx_cbn <- paste(strs,collapse =  " & ")
+    return(strx_cbn)
+}
+
+
+lapply(filter(vague_res_df, country_nbr > 25 & time_cvrg > 25)$namex, function(x) names(oecd_dfs[[x]]))
+
+
+idx <- "AEA"
+idx <- "TISP_EBOPS2010"
+idx <- "STANI4_2020"
+
+
+dfx <- oecd_dfs[[idx]]
+
+namesx <- names(dfx)
+country_col <- intersect(names(dfx), c("LOCATION", "COU", "COUNTRY"))
+
+dfx$ObsValue <- dfx$ObsValue * (10^dfx$POWERCODE)
+
+combo_cols <- setdiff(namesx, c(country_col, "ObsValue", "X", "Time", "POWERCODE"))
+
+combos <- unique(dfx[,combo_cols])
+
+filter(dfx, is.na(OBS_STATUS) & )
+
+
+combos <- unique(dfx[,c("MEASURE", "POLLUTANT")])
+
+
+dfx[which(eval(parse(text=strx_cbn))),]
+
+## which(dfx["IND"] == "D90T92" & is.na(dfx$OBS_STATUS))
+    
+res <- list()     
+
+for (i in 1:nrow(combos)) {
+    print(i)
+    combox <- combos[i,]
+    print(combox)
+
+    strx_cbn <- generate_sel_str(combox)
+    vx <- dfx[which(eval(parse(text=strx_cbn))),]
+
+
+    ## vx <- dfx[which(dfx["MEASURE"]== as.data.frame(combox)[1,"MEASURE"] &
+    ##                 dfx["POLLUTANT"]== as.data.frame(combox)[1,"POLLUTANT"]),]
+
+
+    ## some flexible renaming, kinda like SQL
+    vx2 <- vx %>%
+        rename(countrycode=country_col, year=Time, value =ObsValue) %>%
+        select(countrycode, year, value)
+    
+    varx <- paste(combox, collapse = "-")
+    
+    resx <- cpltns_checker(vx2, varx)
+    res[[i]] <- resx
+}
+
+res_df <- as_tibble(rbindlist(res))
+
+hist(res_df$cry_cvrg_geq3)
+
+hist(res_df$nobs)
+
+filter(res_df, PMs_covered_raw > 130 & cry_cvrg_geq3 > 200)$varx
+
+i <- which(res_df$varx=="D90T92-NA-NA-P1Y-PER-SELF")
+i <- which(res_df$cry_cvrg_geq3 > 250)
 
