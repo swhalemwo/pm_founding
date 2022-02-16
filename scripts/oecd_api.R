@@ -258,6 +258,8 @@ check_oecd_data_sets <- function(oecd_dfs, datasets_already_there) {
     } else if (len(datasets_to_check_manually) > 0) {
         warning("there are some datasets that don't work but have not been manually checked")
     }
+
+    return(namesx_exceptions)
 }
 
 
@@ -280,7 +282,7 @@ vague_cvrg <- function(namex){
 
 ## vague_cvrg(datasets_already_there[1])
 
-filter_vague_crvg <- function() {
+filter_vague_crvg <- function(namesx_exceptions) {
 
     vague_cvrg_res <- lapply(setdiff(datasets_already_there, namesx_exceptions), vague_cvrg)
 
@@ -320,9 +322,9 @@ if (RE_RUN_OECD_DOWNLOADS) {
 
     oecd_dfs <- create_oecd_df_list()
 
-    check_oecd_data_sets(oecd_dfs, datasets_already_there)
+    namesx_exceptions <- check_oecd_data_sets(oecd_dfs, datasets_already_there)
 
-    vague_res_df <- filter_vague_crvg()
+    vague_res_df <- filter_vague_crvg(namesx_exceptions)
 
     filter(vague_res_df, country_nbr > 25 & time_cvrg > 25)
 }
