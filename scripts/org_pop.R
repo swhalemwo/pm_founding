@@ -608,15 +608,18 @@ process_extra <- function(df_plt, df_pop_reg_sum, extra) {
 }
 
 
-viz_cuts <- function(df_plt, time_level, duration, geo_level, extra=FALSE, max_lines=12){
-    #' visualize the founding
+viz_opngs <- function(df_plt, time_level, duration, geo_level, extra=FALSE, max_lines=12, return ="df") {
+    #' visualize the openings of private museums
     #' 
     #' time_level: cut or rolling mean
     #' duration: length of cut/rolling mean
     #' geo_level: region or country
-    #' cumulative: whether using per period or cumulative
+    #' extra: one of "pop_rates" (population rates), "cum" (cumulative counts) and "cum_rate" (cumulative rate)
     #' max_lines: if country
-    #' also need something whether it should use the absolute counts or the population ratio 
+    #' return: whether to return dataframe (before filtering lines) or the plot 
+
+
+    ## may at some point be generalized into plotting any time series
 
     df_plt <- set_geo_level(df_plt, geo_level)
     
@@ -629,7 +632,6 @@ viz_cuts <- function(df_plt, time_level, duration, geo_level, extra=FALSE, max_l
 
 
     df_plt <- process_extra(df_plt, df_pop_reg_sum, extra)
-    print("process_extra")
 
     print(c(geo_level, time_level, duration))
     ## filter(df_plt2, nbr_opened > 400)
@@ -644,24 +646,35 @@ viz_cuts <- function(df_plt, time_level, duration, geo_level, extra=FALSE, max_l
     max_geos <- geos_cnt[rev(order(geos_cnt$nbr_opened_bu))[1:min(max_lines, nrow(geos_cnt))],"geo_level"]
     
     
-    
     df_plt <- filter(df_plt, geo_level %in% max_geos)
     ## }
     
     
-    print(nrow(df_plt))
-    print('lol')
-
     plt <- ggplot(df_plt, aes(x=time_level, y=nbr_opened, color = geo_level)) +
         scale_color_brewer(palette = "Paired") + 
         geom_line(size=1.5)
     print(plt)
 
-    return(df_return)
+    ## allow to return either df or plot 
+    if  (return=="plot") {
+        return(plt)
+    } else {
+        return(df_return)
+    }
 }
 
 
-x <- viz_cuts(df_anls, time_level = "cut", duration = 5, geo_level = "country", extra = "cum_rate", max_lines = 12)
+x <- viz_opngs(df_anls, time_level = "rolling_mean", duration = 5, geo_level = "country", extra = "pop_rates", max_lines = 8, return="plot")
+
+plots <- lapply(seq(1,10), function(x) viz_opngs(df_anls, time_level = "cut", duration = x, geo_level = "country", extra = FALSE, max_lines = 5, return = "plot"))
+
+
+pdf(paste0(FIG_DIR, "opngs_cut.pdf"), height = 15, width = 20)
+do.call(grid.arrange, plots)
+dev.off()
+
+
+
 
 
 ggplot(filter(x, nbr_opened < 1000), aes(x=time_level, y=nbr_opened, color = geo_level)) +
