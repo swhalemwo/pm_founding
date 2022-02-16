@@ -94,7 +94,10 @@ filter_sdmx_results <- function(sdmx_terms) {
 
     ## grepping multiple columns works best with apply, lapply on names(df) doesn't work properly for some reason 
     ## seems using pipe I can use multiple terms with pipe 
-    sdmx_res_fltrd <- sdmx_res_cbn[which(rowSums(apply(sdmx_res_cbn, 2, function(x) grepl(" cultural|museum|cultural services", x)))>0),]
+    
+    grep_part <- paste0(sdmx_terms, collapse = "|")
+    sdmx_res_fltrd <- sdmx_res_cbn[which(rowSums(apply(sdmx_res_cbn, 2, function(x) grepl(grep_part, x)))>0),]
+
 
     return(sdmx_res_fltrd)
 

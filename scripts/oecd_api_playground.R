@@ -206,6 +206,10 @@ unique(sdmx_fail_df$sdmx_id)
 
 proc_sdmx_file("REVNAM.xml")
 
+## ** searching for other terms in parsed results, might be helpful
+sdmx_res_fltrd <- filter_sdmx_results(c("corporate tax", "coal"))
+sdmx_res_fltrd <- filter_sdmx_results(c("governan"))
+
 
 
 ## ** each item is again a slot-carrier (?) with bunch of slots?
