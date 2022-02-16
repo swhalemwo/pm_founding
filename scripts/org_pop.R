@@ -652,12 +652,12 @@ SDMX_TBL_DIR <- "/home/johannes/ownCloud/oecd/sdmx_based_tables/"
 
 SDMX_FAIL_DIR <- "/home/johannes/ownCloud/oecd/sdmx_parsing_fail"
 SDMX_FAIL_FILE <- paste0(SDMX_FAIL_DIR, "/fails.csv")
-
+OECD_DATA_DIR <- "/home/johannes/ownCloud/oecd/api_data/"
 
 
 ## ** sdmx parsing proc
 
-files_there <- list.files(SDMX_DIR)
+
 
 proc_codelist <- function(dsd, codelistx, sdmx_id) {
     #' convert sdmx codelist into df, outsourced to own function for better trycatching
@@ -699,7 +699,10 @@ proc_sdmx_file <- function(sdmx_file){
     }
 }
 
-mclapply(files_there, proc_sdmx_file, mc.cores = 6)
+## system(paste0("cd ", SCRIPT_DIR, " && Rscript download_sdmx.R"))
+
+## files_there <- list.files(SDMX_DIR)
+## mclapply(files_there, proc_sdmx_file, mc.cores = 6)
 
 ## proc_sdmx_file("WSECTOR.xml")
 
@@ -709,31 +712,44 @@ mclapply(files_there, proc_sdmx_file, mc.cores = 6)
 
 
 find_sdmx_tables <- function(term) {
-    #' search parsed sdmx tables for terms, return all that fit it
+    #' grep parsed sdmx tables for terms, return all that fit it
     cmd <- paste0("cd ", SDMX_TBL_DIR, " && grep -irl --include \\*.csv '", term, "'")
     tables <- system(cmd, intern = TRUE)
     return(tables)
 }
 
+## find_tables ("cultural services")
 
-find_tables ("cultural services")
+filter_sdmx_results <- function(sdmx_terms) {
+    #' search the sdmx results, extract indicators matching to sdmx_terms 
+    relevant_sdmx_tables <- unique(unlist(lapply(sdmx_terms, find_sdmx_tables)))
 
-sdmx_terms <- c("museum", "cultural services", " cultural")
-relevant_sdmx_tables <- unique(unlist(lapply(sdmx_terms, find_sdmx_tables)))
+    sdmx_res_tbls <- lapply(relevant_sdmx_tables, function(x) as_tibble(read.csv(paste0(SDMX_TBL_DIR, x))))
 
-sdmx_res_tbls <- lapply(relevant_sdmx_tables, function(x) as_tibble(read.csv(paste0(SDMX_TBL_DIR, x))))
+    sdmx_res_tbl_names <- unlist(lapply(sdmx_res_tbls, names))
+    table(sdmx_res_tbl_names)
 
-sdmx_res_tbl_names <- unlist(lapply(sdmx_res_tbls, names))
-table(sdmx_res_tbl_names)
+    ## find main columns to focus on
+    col_names <- c("sdmx_id", "codelist", "id", "label.en", "description.en")
 
-## find main columns to focus on
-col_names <- c("sdmx_id", "codelist", "id", "label.en", "description.en")
+    sdmx_res_cbn <- as_tibble(Reduce(function(x,y, ...) rbind(x[,col_names],y[,col_names]),sdmx_res_tbls))
 
-sdmx_res_cbn <- as_tibble(Reduce(function(x,y, ...) rbind(x[,col_names],y[,col_names]),sdmx_res_tbls))
+    ## grepping multiple columns works best with apply, lapply on names(df) doesn't work properly for some reason 
+    ## seems using pipe I can use multiple terms with pipe 
+    sdmx_res_fltrd <- sdmx_res_cbn[which(rowSums(apply(sdmx_res_cbn, 2, function(x) grepl(" cultural|museum|cultural services", x)))>0),]
 
-## grepping multiple columns works best with apply, lapply on names(df) doesn't work properly for some reason 
-## seems using pipe I can use multiple terms with pipe 
-sdmx_res_fltrd <- sdmx_res_cbn[which(rowSums(apply(sdmx_res_cbn, 2, function(x) grepl(" cultural|museum|cultural services", x)))>0),]
+    return(sdmx_res_fltrd)
+
+}
+
+## system(paste0("cd ", SCRIPT_DIR, " && Rscript download_sdmx.R"))
+
+## files_there <- list.files(SDMX_DIR)
+## mclapply(files_there, proc_sdmx_file, mc.cores = 6)
+
+
+## sdmx_terms <- c("museum", "cultural services", " cultural")
+## sdmx_res_fltrd <- filter_sdmx_results(sdmx_terms)
 
 ## sdmx_res_fltrd$id
 
@@ -741,46 +757,11 @@ sdmx_res_fltrd <- sdmx_res_cbn[which(rowSums(apply(sdmx_res_cbn, 2, function(x) 
 ## hello "D90T92" my old friend
 ## let's see how to query you
 
-## *** figuring out download 
-
-x <- as_tibble(get_dataset("STANI4_2020", filter = list("D90T92")))
-
-## maybe possible to first search which column is actually the indicator?
-
-unlist(lapply(names(df_stan), function(x) grepl("D90T92", df_stan[,x])))
-## for STAN, D90T92 is in the first column 
-
-## trying to pass all for countries, just get specific indicator
-x <- as_tibble(get_dataset("STANI4_2020", filter=list(c("AUTx"),c("PROD"), c("D90T92"))))
-## this works for some reason
-
-## passing all doesn't work tho :(
-x <- as_tibble(get_dataset("STANI4_2020", filter=list(c("all"),c("PROD"), c("D90T92"))))
-
-x <- as_tibble(get_dataset("STANI4_2020", filter="PROD.AUT", pre_formatted = TRUE))
-
-## working url: https://stats.oecd.org/restsdmx/sdmx.ashx/GetData/STANI4_2020/AUT.PROD.D90T92/all
-## not working: https://stats.oecd.org/restsdmx/sdmx.ashx/GetData/STANI4_2020/all.PROD.D90T92/all
-
-## https://data.oecd.org/api/sdmx-json-documentation/: CAN USE EMPTY STRING TO SELECT ALL
-x <- as_tibble(get_dataset("STANI4_2020", filter=list(c(""),c("PROD"), c("D90T92"))))
-x <- as_tibble(get_dataset("STANI4_2020", filter=list(c(""),c(""), c("D90T92"))))
-
-
-## AEA actually has the same structure huh 
-x2 <- as_tibble(get_dataset("AEA", filter = list(c(""),c(""), c("R90-R92"))))
-
-## FDI_POS_IND: doesn't have the same structure
-## adding/removing empty filter strings doesn't seem to work
-
-x3 <- as_tibble(get_dataset("FDI_POS_IND", filter = list(c(""),c(""), c("R91"))))
-## actually does when just adding enough LUL 
-x3 <- as_tibble(get_dataset("FDI_POS_IND", filter = list(c(""),c(""),c(""), c(""), c(""), c(""),  c(""), c(""), c("R91"))))
 
 ## *** functionalized download 
 
 
-OECD_DATA_DIR <- "/home/johannes/ownCloud/oecd/api_data/"
+
 
 download_oecd_df <- function(datasetx, filter_list){
     #' actual downloading 
@@ -791,10 +772,6 @@ download_oecd_df <- function(datasetx, filter_list){
     }
 
 
-datasets_already_there <- list.files(OECD_DATA_DIR)
-
-
-options(timeout = 10)
 
 download_oecd_dataset <- function(datasetx, idx) {
     print(paste0("dataset: ", datasetx, " id: ", idx))
@@ -811,6 +788,9 @@ download_oecd_dataset <- function(datasetx, idx) {
             },
             error=function(e) {
                 print(paste0("error: ", length(filter_list)))
+                ## adding/removing empty filter strings to get everything,
+                ## structure of dataset differs -> filter has to be expanded until dataset structure is matched
+                
                 filter_list <- rev(append(rev(filter_list), ""))
             })
             filter_list <- res
@@ -825,29 +805,27 @@ download_oecd_dataset <- function(datasetx, idx) {
     }
 }      
 
-## write to file to read from separate download_oecd.R
-## write.csv(sdmx_res_fltrd, "/home/johannes/Dropbox/phd/papers/org_pop/data/oecd_dbs/sdmx_res_fltrd.csv")
+system(paste0("cd ", SCRIPT_DIR, " && Rscript download_sdmx.R"))
+
+files_there <- list.files(SDMX_DIR)
+mclapply(files_there, proc_sdmx_file, mc.cores = 6)
 
 
+sdmx_terms <- c("museum", "cultural services", " cultural")
+sdmx_res_fltrd <- filter_sdmx_results(sdmx_terms)
+
+## write to file to read from separate download_oecd.R, so that it can be read in by download_oecd.R
+write.csv(sdmx_res_fltrd, "/home/johannes/Dropbox/phd/papers/org_pop/data/oecd_dbs/sdmx_res_fltrd.csv")
+
+
+## this code is also run in download_oecd.R, not sure if I should have it here too
+## could just call it with:
+## system(paste0("cd ", SCRIPT_DIR, " && Rscript download_oecd.R"))
+datasets_already_there <- list.files(OECD_DATA_DIR)
+options(timeout = 10)
 apply(sdmx_res_fltrd, 1, function(x) download_oecd_dataset(x["sdmx_id"], x["id"]))
 
-## *** testing how to call data downloading best 
 
-test_printer <- function(datasetx, idx){
-    print(paste0("datasetx: ", datasetx))
-    print(paste0("idx: ", idx))
-    print("-----------")
-    }
-
-apply(sdmx_res_fltrd, 1, test_printer, datasetx=sdmx_id, idx=id)
-
-apply(sdmx_res_fltrd, 1, function(x) test_printer(x$sdmx_id, x$id))
-apply(sdmx_res_fltrd, 1, function(x) test_printer(x["sdmx_id"], x["id"]))
-
-test_printer("asdf", "jjj")
-
-apply(sdmx_res_fltrd, 1, function(x) print(names(x)))
-apply(sdmx_res_fltrd, 1, function(x) print(x["sdmx_id"]))
 
 ## ** processing actual data
 ## maybe first get those that sufficient country coverage

@@ -127,3 +127,62 @@ relevant_sdmx_tables <- Reduce(union, list(sdmx_tables_musem, sdmx_tables_cultur
 sdmx_res_fltrd <- sdmx_res_cbn[which(rowSums(apply(sdmx_res_cbn, 2, function(x) grepl("museum", x)))>0),]
 
 
+## *** figuring out download 
+
+x <- as_tibble(get_dataset("STANI4_2020", filter = list("D90T92")))
+
+## maybe possible to first search which column is actually the indicator?
+
+unlist(lapply(names(df_stan), function(x) grepl("D90T92", df_stan[,x])))
+## for STAN, D90T92 is in the first column 
+
+## trying to pass all for countries, just get specific indicator
+x <- as_tibble(get_dataset("STANI4_2020", filter=list(c("AUTx"),c("PROD"), c("D90T92"))))
+## this works for some reason
+
+## passing all doesn't work tho :(
+x <- as_tibble(get_dataset("STANI4_2020", filter=list(c("all"),c("PROD"), c("D90T92"))))
+
+x <- as_tibble(get_dataset("STANI4_2020", filter="PROD.AUT", pre_formatted = TRUE))
+
+## working url: https://stats.oecd.org/restsdmx/sdmx.ashx/GetData/STANI4_2020/AUT.PROD.D90T92/all
+## not working: https://stats.oecd.org/restsdmx/sdmx.ashx/GetData/STANI4_2020/all.PROD.D90T92/all
+
+## https://data.oecd.org/api/sdmx-json-documentation/: CAN USE EMPTY STRING TO SELECT ALL
+x <- as_tibble(get_dataset("STANI4_2020", filter=list(c(""),c("PROD"), c("D90T92"))))
+x <- as_tibble(get_dataset("STANI4_2020", filter=list(c(""),c(""), c("D90T92"))))
+
+
+## AEA actually has the same structure huh 
+x2 <- as_tibble(get_dataset("AEA", filter = list(c(""),c(""), c("R90-R92"))))
+
+## FDI_POS_IND: doesn't have the same structure
+## adding/removing empty filter strings doesn't seem to work
+
+x3 <- as_tibble(get_dataset("FDI_POS_IND", filter = list(c(""),c(""), c("R91"))))
+## actually does when just adding enough LUL 
+x3 <- as_tibble(get_dataset("FDI_POS_IND", filter = list(c(""),c(""),c(""), c(""), c(""), c(""),  c(""), c(""), c("R91"))))
+
+
+## write to file to read from separate download_oecd.R
+## write.csv(sdmx_res_fltrd, "/home/johannes/Dropbox/phd/papers/org_pop/data/oecd_dbs/sdmx_res_fltrd.csv")
+
+## *** testing how to call data downloading best 
+
+test_printer <- function(datasetx, idx){
+    print(paste0("datasetx: ", datasetx))
+    print(paste0("idx: ", idx))
+    print("-----------")
+    }
+
+apply(sdmx_res_fltrd, 1, test_printer, datasetx=sdmx_id, idx=id)
+
+apply(sdmx_res_fltrd, 1, function(x) test_printer(x$sdmx_id, x$id))
+apply(sdmx_res_fltrd, 1, function(x) test_printer(x["sdmx_id"], x["id"]))
+
+test_printer("asdf", "jjj")
+
+apply(sdmx_res_fltrd, 1, function(x) print(names(x)))
+apply(sdmx_res_fltrd, 1, function(x) print(x["sdmx_id"]))
+
+
