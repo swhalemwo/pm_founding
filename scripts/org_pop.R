@@ -646,3 +646,54 @@ some_page <- x[[1]]
 ## * MOW/IDA
 
 ## first do in python: mow.py
+
+
+## https://stackoverflow.com/questions/48350991/filter-a-dataframe-by-values-in-a-column-of-type-list
+
+library('tidyverse')
+
+df <- tribble(
+  ~rownum, ~categories,
+        1, 'b',
+        2, c('c', 'd'),
+        3, c('d', 'e')
+)
+
+# All rows containing the 'd' category
+df %>%
+    filter(map_lgl(categories, ~'d' %in% .)) %>%
+  str
+
+
+
+write.csv(df, paste0(PROC_DATA_DIR, "listdf.csv"))
+library(readr)
+write_lines(df, paste0(PROC_DATA_DIR, "listdf.csv"))
+read_lines(paste0(PROC_DATA_DIR, "listdf.csv"))
+read.csv(paste0(PROC_DATA_DIR, "listdf.csv"))
+
+filter(df, map_lgl(categories, ~'d' %in% .))
+
+## ** json
+library(rjson)
+json_res <- fromJSON(file = paste0(PROC_DATA_DIR, "mow.json"))
+
+list_cols <- c("type", "clsfcn")
+
+for (i in (setdiff(names(json_df), list_cols))) {
+    json_df[,i] <- unname(unlist(json_df[,i]))
+}
+
+json_res <- fromJSON(file = paste0(PROC_DATA_DIR, "test.json"))
+
+json_df <- as_tibble(as_data_frame(json_res))
+
+
+json_df$ctr <- 1
+json_df$founding_date1 <- as.numeric(json_df$founding_date1)
+
+ggplot(aggregate(ctr ~ founding_date1, filter(json_df, map_lgl(type, ~'Art Museum' %in% .) & founding_date1 > 1900), sum), aes(x=founding_date1, y=ctr)) +
+    geom_line()
+    
+
+
