@@ -8,6 +8,7 @@ from collections import Counter
 import xmltodict
 import pandas as pd
 import json
+import re
 
 xml_file_name = "/home/johannes/Dropbox/phd/papers/org_pop/data/degruyter/mow/MOW2020_Output.xml"
 
@@ -21,7 +22,9 @@ bs_records = bs_data.find_all('directory_record')
 # "directory_record" is always only key 
 dict_records = [xmltodict.parse(str(i), dict_constructor = dict)['directory_record'] for i in bs_records]
 
-rec_dict = dict_records[10]
+rec_dict = dict_records[0]
+
+# * extracting main info
 
 def extract_info(rec_dict):
     idx = rec_dict['@id']
@@ -54,7 +57,7 @@ def extract_info(rec_dict):
         country = addr_dict['country_short']
 
 
-    typex = "NA"
+    typex = []
     
     founding_date1 = "NA"
     founding_date2 = "NA"
@@ -66,6 +69,9 @@ def extract_info(rec_dict):
     if "additional_inst_info" in inst_dict.keys():
         if "type" in inst_dict["additional_inst_info"].keys():
             typex = inst_dict["additional_inst_info"]["type"]
+            if type(typex) != type([]):
+                typex = [typex]
+                
             # print("type: ", typex)
         if "founding_date" in inst_dict["additional_inst_info"].keys():
             founding_date_str = inst_dict["additional_inst_info"]["founding_date"]
@@ -86,8 +92,9 @@ def extract_info(rec_dict):
     subj_clsfcn= []
     if 'subject_classification' in rec_dict.keys():
         subj_clsfcn = rec_dict['subject_classification']["keyword"]
-        # print("clsfcn: ", subj_clsfcn)
-
+        ## use lists everywhere to allow easier processing
+        if type(subj_clsfcn) != type([]):
+            subj_clsfcn = [subj_clsfcn]
 
     nbr_staff = 0
     if "inst_staff" in inst_dict.keys():
@@ -124,6 +131,12 @@ for i in dict_records:
 df_proc = pd.DataFrame(proc_records)
 df_proc
 
+# * melting list columns
+
+
+
+# * using json 
+
 df_proc[df_proc['founding_date1'] > 2]
 
 df_proc_json = df_proc.to_json()
@@ -131,8 +144,19 @@ df_proc_json = df_proc.to_json()
 with open("/home/johannes/Dropbox/phd/papers/org_pop/data/processed/mow.json", 'w', encoding = "utf8") as fo:
     fo.write(df_proc_json)
 
+def flatten_list(t):
+    flat_list = [item for sublist in t for item in sublist]
+    return flat_list
 
 
+type_lists = []
+for i in list(df_proc['clsfcn']):
+    if type(i) == type([]):
+        type_lists.append(i)
+    else:
+        type_lists.append([i])
+
+Counter(flatten_list(type_lists))
 
 
 
