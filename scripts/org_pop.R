@@ -650,6 +650,8 @@ some_page <- x[[1]]
 
 ## https://stackoverflow.com/questions/48350991/filter-a-dataframe-by-values-in-a-column-of-type-list
 
+## ** json 
+
 library('tidyverse')
 
 df <- tribble(
@@ -696,4 +698,53 @@ ggplot(aggregate(ctr ~ founding_date1, filter(json_df, map_lgl(type, ~'Art Museu
     geom_line()
     
 
+## ** csv
+df_mow <- as_tibble(read.csv(paste0(MOW_DIR, "mow.csv")))
 
+mow_type <- as_tibble(read.csv(paste0(MOW_DIR, "type.csv")))
+mow_clsfcn <- as_tibble(read.csv(paste0(MOW_DIR, "classification.csv")))
+
+mow_fndgs <- as_tibble(merge(filter(df_mow[,c("idx", "name", "founding_date1")], founding_date1 > 1900), mow_type, by=c("idx")))
+
+mow_fndgs$cnt <- 1
+
+mow_fndgs_grp <- as_tibble(aggregate(cnt ~ founding_date1 + type, mow_fndgs, sum))
+
+library(tidyquant)
+
+max_grps <- aggregate(cnt ~ type, mow_fndgs, sum)
+max_grps <- max_grps[rev(order(max_grps$cnt))[1:12],"type"]
+
+ggplot(filter(mow_fndgs_grp, type %in% max_grps), aes(x=founding_date1, y=cnt, group=type, color = type)) +
+    geom_line() 
+
+
+ggplot(filter(mow_fndgs_grp, type %in% max_grps), aes(x=founding_date1, y=cnt, group=type, color = type)) +
+    geom_ma(ma_fun = SMA,n=10)
+
+pdf(paste0(FIG_DIR, "mow.pdf"), height = 5, width = 10)
+ggplot(filter(mow_fndgs_grp, type %in% max_grps), aes(x=founding_date1, y=cnt, group=type, color = type)) +
+    geom_ma(ma_fun = SMA,n=8, size=1, linetype="solid") +
+    scale_color_brewer(palette="Paired") +
+    labs(y="nbr openings", x="founding date")
+dev.off()
+
+
+
+
+## ** more cleaning/completeness checks
+## *** country
+
+
+country_tbl <- table(df_mow$country)
+
+country_tbl[rev(order(country_tbl))[1:10]]
+## 63 museums have no country 
+## -> looks good
+
+
+## *** city
+city_tbl <- table(df_mow$city)
+
+city_tbl[rev(order(city_tbl))[1:10]]
+## around 4k have no city 
