@@ -145,7 +145,7 @@ df_clsfcn = df_melt.clsfcn.apply(pd.Series) \
                          .drop("variable", axis = 1) \
                          .dropna()
 
-df_clsfcn.to_csv(DEGRUYTER_DIR + "mow/classification.csv")
+df_clsfcn.to_csv(DEGRUYTER_DIR + "mow/classification.csv", index = False)
 
 
 # ** type
@@ -158,9 +158,12 @@ df_type = df_melt.type.apply(pd.Series) \
                           .drop("variable", axis = 1) \
                           .dropna()
 
-df_type.to_csv(DEGRUYTER_DIR + "mow/type.csv")
+df_type.to_csv(DEGRUYTER_DIR + "mow/type.csv", index = False)
 
 
+# * using csv for main table
+df_main = df_proc[[i for i in list(df_proc.columns) if i not in ["type", "clsfcn"]]]
+df_main.to_csv(DEGRUYTER_DIR + "mow/mow.csv", index = False)
 
 # * using json 
 
