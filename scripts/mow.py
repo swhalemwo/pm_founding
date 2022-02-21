@@ -10,7 +10,10 @@ import pandas as pd
 import json
 import re
 
-xml_file_name = "/home/johannes/Dropbox/phd/papers/org_pop/data/degruyter/mow/MOW2020_Output.xml"
+DEGRUYTER_DIR = "/home/johannes/Dropbox/phd/papers/org_pop/data/degruyter/"
+
+
+xml_file_name = DEGRUYTER_DIR + "mow/MOW2020_Output.xml"
 
 with open(xml_file_name, 'r') as f:
     data = f.read()
@@ -133,6 +136,30 @@ df_proc
 
 # * melting list columns
 
+# ** classification
+df_melt = df_proc[["idx", "clsfcn"]]
+df_clsfcn = df_melt.clsfcn.apply(pd.Series) \
+                         .merge(df_melt, right_index = True, left_index = True) \
+                         .drop(["clsfcn"], axis = 1) \
+                         .melt(id_vars = ['idx'], value_name = "clsfcn") \
+                         .drop("variable", axis = 1) \
+                         .dropna()
+
+df_clsfcn.to_csv(DEGRUYTER_DIR + "mow/classification.csv")
+
+
+# ** type
+
+df_melt = df_proc[["idx", "type"]]
+df_type = df_melt.type.apply(pd.Series) \
+                          .merge(df_melt, right_index = True, left_index = True) \
+                          .drop(["type"], axis = 1) \
+                          .melt(id_vars = ['idx'], value_name = "type") \
+                          .drop("variable", axis = 1) \
+                          .dropna()
+
+df_type.to_csv(DEGRUYTER_DIR + "mow/type.csv")
+
 
 
 # * using json 
@@ -141,24 +168,28 @@ df_proc[df_proc['founding_date1'] > 2]
 
 df_proc_json = df_proc.to_json()
 
-with open("/home/johannes/Dropbox/phd/papers/org_pop/data/processed/mow.json", 'w', encoding = "utf8") as fo:
+with open(DEGRUYTER_DIR + "mow/mow.json", 'w', encoding = "utf8") as fo:
     fo.write(df_proc_json)
 
-def flatten_list(t):
-    flat_list = [item for sublist in t for item in sublist]
-    return flat_list
+# * preliminary explorations
+
+# ** classification
+
+# def flatten_list(t):
+#     flat_list = [item for sublist in t for item in sublist]
+#     return flat_list
 
 
-type_lists = []
-for i in list(df_proc['clsfcn']):
-    if type(i) == type([]):
-        type_lists.append(i)
-    else:
-        type_lists.append([i])
+# type_lists = []
+# for i in list(df_proc['clsfcn']):
+#     if type(i) == type([]):
+#         type_lists.append(i)
+#     else:
+#         type_lists.append([i])
 
-Counter(flatten_list(type_lists))
+# Counter(flatten_list(type_lists))
 
-
+# ** founding year
 
 # ctr = Counter(df_proc['founding_date'])
 # plt_years = list(range(1900, 2020))
@@ -169,6 +200,7 @@ Counter(flatten_list(type_lists))
 # plt.plot(plt_years, plt_cnts)
 # plt.show()
 
+# * scrap 
 
 # from flatten_dict import flatten
 
@@ -189,9 +221,6 @@ Counter(flatten_list(type_lists))
 # df = pd.DataFrame(flat_entries)
 # df.columns
 # df.columns.tolist()
-
-
-
 
 
 # len(dict_records)
