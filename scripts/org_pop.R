@@ -701,6 +701,8 @@ ggplot(aggregate(ctr ~ founding_date1, filter(json_df, map_lgl(type, ~'Art Museu
 ## ** csv
 df_mow <- as_tibble(read.csv(paste0(MOW_DIR, "mow.csv")))
 
+df_mow$iso3c <- countrycode(df_mow$country, "country.name", "iso3c")
+
 mow_type <- as_tibble(read.csv(paste0(MOW_DIR, "type.csv")))
 mow_clsfcn <- as_tibble(read.csv(paste0(MOW_DIR, "classification.csv")))
 
@@ -723,6 +725,8 @@ ggplot(filter(mow_fndgs_grp, type %in% max_grps), aes(x=founding_date1, y=cnt, g
     labs(y="nbr openings", x="founding date")
 
 dev.off()
+
+viz_lines(mow_fndgs, x="founding_date1", y="cnt", time_level = "ra", duration = 8, grp = "type", extra = FALSE)
 
 
 
@@ -748,3 +752,86 @@ city_tbl[rev(order(city_tbl))[1:10]]
 as.data.frame(filter(mow_fndgs,
                      country == "Netherlands" & founding_date1 >= 1970 &
                      founding_date1 < 1980 & type == "Art Museum")[,c("name", "founding_date1")])
+
+
+## ** duplicate detection
+
+
+dupl_checker <- function(name, countrycode, opening_year){
+    #' manual checker
+    #' filter down the mow df to country and year+- year_diff
+    print(name)
+    opening_year <- as.numeric(opening_year)
+        
+    year_diff <- 1
+    
+    if (name %!in% mow_dupls$name) {
+
+        year_seq <- seq(opening_year-year_diff,opening_year+year_diff)
+        print(year_seq)
+        countrycode <- countrycode[[1]]
+        print(countrycode)
+        print(nrow(mow_art))
+
+        ##:ess-bp-start::browser@nil:##
+browser(expr=is.null(.ESSBP.[["@3@"]]));##:ess-bp-end:##
+        table(filter(mow_art, iso3c == "USA")$founding_date1)
+
+        mow_art_fltrd <- filter(mow_art, iso3c == countrycode &
+                                         (founding_date1 %in% year_seq |
+                                          founding_date2 %in% year_seq | 
+                                          founding_date3 %in% year_seq |
+                                          founding_date4 %in% year_seq ))
+        
+        print(nrow(mow_art_fltrd))
+        print(as.data.frame(mow_art_fltrd[,c("idx","name", "name_eng")]))
+
+        print(name)
+
+        duplicate <- readline(prompt = "duplicate?: ")
+        ## duplicate <- TRUE
+
+        ## write to file, append
+        if (duplicate == "j") {
+            idx <- readline(prompt = "id: ")
+            write.table(t(c(name, 1, idx)), file=MOW_DUPL_FILE, append=TRUE, col.names=FALSE, row.names=FALSE, sep=",")
+        } else {
+            write.table(t(c(name, 0, NA)), file=MOW_DUPL_FILE, append=TRUE, col.names=FALSE, row.names=FALSE, sep=",")
+        }
+    }
+    
+}
+
+
+## dupl_checker("lll", "USA", 2000)
+## dupl_checker("yyy", "USA", 2000)
+## dupl_checker("mmm", "USA", 2000)
+## dupl_checker("nnn", "USA", NA)
+## dupl_checker("aef", "USA", 2000)
+
+dupl_checker("Rubin Museum of Art", "USA", 2004)
+dupl_checker("Nerman Museum of Contemporary Art", "USA", 2007)
+dupl_checker("Rivet", "USA", 2007)
+
+mow_art <- as_tibble(merge(filter(df_mow[,c("idx", "name", "name_eng", "founding_date1", "founding_date2", "founding_date3", "founding_date4", "iso3c")], founding_date1 > 1900),
+                           filter(mow_type, type == "Art Museum"),
+                                  by=c("idx")))
+
+
+
+MOW_DUPL_FILE <- paste0(MOW_DIR, "dupl.csv")
+mow_dupls <- read.csv(MOW_DUPL_FILE, header = FALSE)
+names(mow_dupls) <- c("name", "dupl", "idx")
+
+
+
+apply(na.omit(df_excl[,c("name", "countrycode", "year_opened_int")]), 1,
+      function(x) {dupl_checker(x['name'], x['countrycode'], x['year_opened_int'])})
+
+
+
+
+        
+    
+
+
