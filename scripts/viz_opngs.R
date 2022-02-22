@@ -282,7 +282,7 @@ actually_plot <- function(df_plt, max_lines) {
 }
 
 
-viz_lines <- function(dfx, x, y, time_level, duration, grp, extra, div=FALSE, max_lines=12, return ="df")  {
+viz_lines <- function(dfx, x, y, time_level, duration, grp, extra =FALSE, div=FALSE, max_lines=12, return ="df")  {
     #' general vizualization function
     #' dfx: overall dataframe, containing at least columns for
     #' x
@@ -338,6 +338,10 @@ viz_lines <- function(dfx, x, y, time_level, duration, grp, extra, div=FALSE, ma
 ## df_anls$region <- countrycode(df_anls$iso3c, "iso3c", "un.regionsub.name")
 ## df_anls$region <- countrycode(df_anls$iso3c, "iso3c", "region")
 ## viz_lines(df_anls, x="year", y="nbr_opened", time_level = "ra", duration = 5, grp = "region", extra = "cum_rate", div = "SP.POP.TOTL", max_lines = 12)
+
+
+## df_excl$cnt <- 1
+## x <- viz_lines(filter(df_excl, year_opened_int > 1984 & year_opened_int < 2021), x="year_opened_int", y="cnt", time_level = "ra", duration = 3, grp = "country")
 
 
 
