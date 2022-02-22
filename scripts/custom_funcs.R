@@ -57,6 +57,11 @@ rollmean_custom <- function(v, win_len, func, orientation = "left"){
         
         indices_sel <- indices[intersect(which(indices>=1), which(indices <= len_v))]
         ## print(paste0("indices_sel: ", indices_sel))
+        ## print("----")
+        indices_sel <- sort(indices_sel)
+
+        ## weights = 
+        
         values <- v[c(indices_sel)]
 
         win_res <- mean(values)
