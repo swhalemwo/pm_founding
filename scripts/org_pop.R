@@ -704,7 +704,7 @@ df_mow <- as_tibble(read.csv(paste0(MOW_DIR, "mow.csv")))
 mow_type <- as_tibble(read.csv(paste0(MOW_DIR, "type.csv")))
 mow_clsfcn <- as_tibble(read.csv(paste0(MOW_DIR, "classification.csv")))
 
-mow_fndgs <- as_tibble(merge(filter(df_mow[,c("idx", "name", "founding_date1")], founding_date1 > 1900), mow_type, by=c("idx")))
+mow_fndgs <- as_tibble(merge(filter(df_mow[,c("idx", "name", "founding_date1", "country")], founding_date1 > 1900), mow_type, by=c("idx")))
 
 mow_fndgs$cnt <- 1
 
@@ -715,18 +715,13 @@ library(tidyquant)
 max_grps <- aggregate(cnt ~ type, mow_fndgs, sum)
 max_grps <- max_grps[rev(order(max_grps$cnt))[1:12],"type"]
 
-ggplot(filter(mow_fndgs_grp, type %in% max_grps), aes(x=founding_date1, y=cnt, group=type, color = type)) +
-    geom_line() 
-
-
-ggplot(filter(mow_fndgs_grp, type %in% max_grps), aes(x=founding_date1, y=cnt, group=type, color = type)) +
-    geom_ma(ma_fun = SMA,n=10)
-
 pdf(paste0(FIG_DIR, "mow.pdf"), height = 5, width = 10)
+
 ggplot(filter(mow_fndgs_grp, type %in% max_grps), aes(x=founding_date1, y=cnt, group=type, color = type)) +
     geom_ma(ma_fun = SMA,n=8, size=1, linetype="solid") +
     scale_color_brewer(palette="Paired") +
     labs(y="nbr openings", x="founding date")
+
 dev.off()
 
 
@@ -748,3 +743,8 @@ city_tbl <- table(df_mow$city)
 
 city_tbl[rev(order(city_tbl))[1:10]]
 ## around 4k have no city 
+
+## *** some manual check
+as.data.frame(filter(mow_fndgs,
+                     country == "Netherlands" & founding_date1 >= 1970 &
+                     founding_date1 < 1980 & type == "Art Museum")[,c("name", "founding_date1")])
