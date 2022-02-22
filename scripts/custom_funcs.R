@@ -56,15 +56,26 @@ rollmean_custom <- function(v, win_len, func, orientation = "left"){
         }
         
         indices_sel <- indices[intersect(which(indices>=1), which(indices <= len_v))]
-        ## print(paste0("indices_sel: ", indices_sel))
-        ## print("----")
-        indices_sel <- sort(indices_sel)
 
-        ## weights = 
+        ## weighted mean (normal distribution), but makes opening_count more jagged:
+        ## original series is jagged, weighted means give higher impact to original series -> more jagged :(
+        
+        ## weights = pnorm(indices_sel, c, win_len/3)
+        ## indices_sel <- sort(indices_sel)
+
+
+        ## print(paste0("indices_sel: ", indices_sel))
+        ## print(paste0("c: ", c))
+        ## print(paste0("weights: ", weights))
+        ## print("----")
+        ## win_res <- weighted.mean(values, weights)        
+        
         
         values <- v[c(indices_sel)]
 
         win_res <- mean(values)
+
+        
         all_res <- c(all_res, win_res)
         c <- c+1
     }
