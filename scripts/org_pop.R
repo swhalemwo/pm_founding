@@ -833,9 +833,16 @@ apply(df_excl[,c("name", "countrycode", "year_opened_int")], 1,
 
 
 
+mow_dupl_anls <- as_tibble(merge(df_excl[,c("name", "year_opened_int","countrycode")], mow_dupls))
+dupl_years <- as_tibble(aggregate(dupl ~ year_opened_int, mow_dupl_anls, sum))
+dupl_years$s <- "s"
+viz_lines(filter(dupl_years, year_opened_int > 1950), x="year_opened_int", y="dupl", time_level = "ra", duration=5, grp = "s", extra = FALSE)
+ ## 2002 peak, but also some in 80s/90s
 
+dupl_crys <- aggregate(dupl ~ countrycode, mow_dupl_anls, sum)
+dupl_crys[order(dupl_crys$dupl),]
+## Germany, USA, Switzerland covered most
 
-        
     
 
 
