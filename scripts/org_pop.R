@@ -757,31 +757,36 @@ as.data.frame(filter(mow_fndgs,
 ## ** duplicate detection
 
 
-dupl_checker <- function(name, countrycode, opening_year){
+dupl_checker <- function(name, countrycode, opening_year = NA){
     #' manual checker
     #' filter down the mow df to country and year+- year_diff
+    #' don't use opening year by default
+
     print(name)
-    opening_year <- as.numeric(opening_year)
+
         
     year_diff <- 1
     
     if (name %!in% mow_dupls$name) {
 
-        year_seq <- seq(opening_year-year_diff,opening_year+year_diff)
-        print(year_seq)
+        ## print(year_seq)
         countrycode <- countrycode[[1]]
         print(countrycode)
-        print(nrow(mow_art))
+        
+        if (is.na(opening_year)) {
+            opening_year <- as.numeric(opening_year)
+            year_seq <- seq(opening_year-year_diff,opening_year+year_diff)
+            
+            ## table(filter(mow_art, iso3c == "USA")$founding_date1)
 
-        ##:ess-bp-start::browser@nil:##
-browser(expr=is.null(.ESSBP.[["@3@"]]));##:ess-bp-end:##
-        table(filter(mow_art, iso3c == "USA")$founding_date1)
-
-        mow_art_fltrd <- filter(mow_art, iso3c == countrycode &
-                                         (founding_date1 %in% year_seq |
-                                          founding_date2 %in% year_seq | 
-                                          founding_date3 %in% year_seq |
-                                          founding_date4 %in% year_seq ))
+            mow_art_fltrd <- filter(mow_art, iso3c == countrycode &
+                                             (founding_date1 %in% year_seq |
+                                              founding_date2 %in% year_seq | 
+                                              founding_date3 %in% year_seq |
+                                              founding_date4 %in% year_seq ))
+        } else {
+            mow_art_fltrd <- filter(mow_art, iso3c == countrycode)
+        }
         
         print(nrow(mow_art_fltrd))
         print(as.data.frame(mow_art_fltrd[,c("idx","name", "name_eng")]))
@@ -803,12 +808,6 @@ browser(expr=is.null(.ESSBP.[["@3@"]]));##:ess-bp-end:##
 }
 
 
-## dupl_checker("lll", "USA", 2000)
-## dupl_checker("yyy", "USA", 2000)
-## dupl_checker("mmm", "USA", 2000)
-## dupl_checker("nnn", "USA", NA)
-## dupl_checker("aef", "USA", 2000)
-
 dupl_checker("Rubin Museum of Art", "USA", 2004)
 dupl_checker("Nerman Museum of Contemporary Art", "USA", 2007)
 dupl_checker("Rivet", "USA", 2007)
@@ -824,9 +823,14 @@ mow_dupls <- read.csv(MOW_DUPL_FILE, header = FALSE)
 names(mow_dupls) <- c("name", "dupl", "idx")
 
 
-
+## check those that have opening date 
 apply(na.omit(df_excl[,c("name", "countrycode", "year_opened_int")]), 1,
       function(x) {dupl_checker(x['name'], x['countrycode'], x['year_opened_int'])})
+
+## check those without opening date
+apply(df_excl[,c("name", "countrycode", "year_opened_int")], 1,
+      function(x) {dupl_checker(x['name'], x['countrycode'])})
+
 
 
 
