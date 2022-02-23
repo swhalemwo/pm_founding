@@ -754,6 +754,25 @@ as.data.frame(filter(mow_fndgs,
                      founding_date1 < 1980 & type == "Art Museum")[,c("name", "founding_date1")])
 
 
+## *** some basic look at contemporary art museums
+
+## around 2k museums, 1250 have founding date
+
+mow_cpaer <- as_tibble(merge(filter(mow_clsfcn, clsfcn == "Art, Modern and Contemporary"), df_mow))
+mow_cpaer$cnt <- 1
+
+viz_lines(filter(mow_cpaer, founding_date1 >= 1900), x = "founding_date1", y="cnt", time_level = "ra", duration = 10, grp = "country", fill_up = T, extra = "cum_rate")
+
+viz_lines(filter(mow_cpaer[mow_cpaer$country %!in% c("United States of America", "Germany"),], founding_date1 >= 1900), x = "founding_date1", y="cnt", time_level = "ra", duration = 10, grp = "country", fill_up = T, max_lines = 8, extra = "cum_rate")
+
+viz_lines(filter(mow_cpaer[mow_cpaer$country %!in% c("United States of America", "Germany"),], founding_date1 >= 1900), x = "founding_date1", y="cnt", time_level = "ra", duration = 10, grp = "country", fill_up = T, max_lines = 8,)
+
+## hmm canada so early huh
+## italy has actually a lot of founding going on until the end.. does it mean database is maybe less incomplete than I thought? 
+
+
+
+
 ## ** duplicate detection
 
 
