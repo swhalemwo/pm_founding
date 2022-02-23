@@ -42,13 +42,10 @@ set_time_level_gnrl <- function(df, x, time_level, duration) {
     if (time_level == "cut") {
         ## just population calculation: could go into separate function, if rates are requested
         
-        df$cut <- cut(df[[x]], seq(min(df[[x]]), max(df[[x]])+5, by = duration))
-        df$time_level <- as.numeric(sapply(as.character(df$cut), year_selector))
-
-    } else {
-
-        df$time_level <- df[[x]]
+        df$cut <- cut(df$x, seq(min(df$x), max(df$x)+5, by = duration))
+        df$x <- as.numeric(sapply(as.character(df$cut), year_selector))
     }
+
     return(df)
 }
 
@@ -80,15 +77,13 @@ prep_div <- function(df_plt, div, grp) {
     ## always need this one: first aggregate by country + time + geo with mean 
     ## df_pop_cry_mean <- as_tibble(aggregate(SP.POP.TOTL ~ iso3c + time_level + geo_level, df_plt, mean))
 
-    df_plt$div <- df_plt[[div]]
-    df_plt$grp <- df_plt[[grp]]
     
-    df_div_grp_mean <- as_tibble(aggregate(div ~ grp + time_level, df_plt, mean))
+    df_div_grp_mean <- as_tibble(aggregate(div ~ grp + x, df_plt, mean))
 
     ## df_viz_pop_agg$region <- countrycode(df_viz_pop_agg$iso3c, "iso3c", "region")
 
     ## countrycode(unique(filter(df_viz_pop1, region == "South Asia")$iso3c), "iso3c", "country.name")
-    df_div_grp_sum <- as_tibble(aggregate(div ~ grp + time_level, df_div_grp_mean, sum))
+    df_div_grp_sum <- as_tibble(aggregate(div ~ grp + x , df_div_grp_mean, sum))
     ## ggplot(df_pop_reg_sum, aes(x=time_level, y=SP.POP.TOTL, group=geo_level, color=geo_level)) +
     ##     geom_line()
 
@@ -117,13 +112,15 @@ agg_y <- function(df_plt, y, grp, time_level, duration) {
     #' aggregate the opening counts
     
     ## always sum by geo_level + time_level, is enough if cuts are provided as time_level
-    df_plt$y <- df_plt[[y]]
-    df_plt$grp <- df_plt[[grp]]
+    ## df_plt$y <- df_plt[[y]]
+    ## df_plt$grp <- df_plt[[grp]]
 
     ## grps1 <- names(which(table(df_plt$grp)==1))
     ## df_plt <- filter(df_plt, grp %!in% grps1)
     
-    df_plt_opnd <- as_tibble(aggregate(y ~ grp + time_level, df_plt, sum))
+    
+    df_plt_opnd <- as_tibble(aggregate(y ~ grp + x, df_plt, sum))
+    ## df_plt_opnd2 <- df_plt_opnd[order(df_plt_opnd$grp),]
 
     ## if time_level is ra, apply custom rollmean function (time_level is year in that case)
     if (time_level != "cut") {
@@ -213,7 +210,7 @@ viz_opngs <- function(df_plt, time_level, duration, geo_level, extra=FALSE, max_
 
 
     ## may at some point be generalized into plotting any time series
-
+    
     df_plt <- set_geo_level(df_plt, geo_level)
     
     df_plt <- set_time_level(df_plt, time_level, duration)
@@ -276,7 +273,7 @@ actually_plot <- function(df_plt, max_lines) {
 
     df_plt <- filter(df_plt, grp %in% max_grps)
 
-    plt <- ggplot(df_plt, aes(x=time_level, y=y, color = grp)) +
+    plt <- ggplot(df_plt, aes(x=x, y=y, color = grp)) +
         scale_color_brewer(palette = "Paired") + 
         geom_line(size=1.5)
     print(plt)
@@ -284,27 +281,57 @@ actually_plot <- function(df_plt, max_lines) {
     return(plt)
 }
 
+fill_up <- function(df, x, y, grp) {
+    #' create an empty df, merge it to the data
 
-viz_lines <- function(dfx, x, y, time_level, duration, grp, extra =FALSE, div=FALSE, max_lines=12, return ="df")  {
+    ## df$x <- df[[x]]
+    ## df$y <- df[[y]]
+    ## df$grp <- df[[grp]]
+
+    structure_df <- expand(df, x=min(df$x):max(df$x), grp)
+
+    ## aggregate (sum) original data
+    og_df_agg <- aggregate(y ~ x + grp, df, sum)
+
+    df_merge <- as_tibble(merge(structure_df, og_df_agg, all.x = TRUE))
+    df_merge$y[which(is.na(df_merge$y))] <- 0
+
+    return(df_merge)
+}
+
+viz_lines <- function(dfx, x, y, time_level, duration, grp, extra =FALSE, div=FALSE, max_lines=12, return ="df",fill_up = FALSE)  {
     #' general vizualization function
     #' dfx: overall dataframe, containing at least columns for
-    #' x
-    #' y
-    #' grp
+    #' x: the time series that ends up on the x axis
+    #' y: the (count) variable ending up on y
+    #' grp: group
     #' time_level: cut for cuts, else rolling means
     #' division column optional for rates
     #' extra: one of "pop_rates" (population rates), "cum" (cumulative counts) and "cum_rate" (cumulative rate)
+    #' fill_up: whether to impute missing x-grp observations, aggregates with sum (for now)
 
+        
     dfx <- set_time_level_gnrl(dfx, x, time_level = time_level, duration)
 
-    ## can't be prepared for mow (no natural population) -> probably needs to go in conditional
+    dfx$y <- dfx[[y]]
+    dfx$x <- dfx[[x]]
+    dfx$grp <- dfx[[grp]]
+
+    ## rates are now conditional
     if (extra == "rates") {
+        
+        dfx$div <- dfx[[div]]
         df_div_grp_sum <- prep_div(dfx, div, grp)
         
     } else {
         df_div_grp_sum <- FALSE
     }
-        
+    
+    if (fill_up) {
+        dfx <- fill_up(dfx, x, y, grp)
+    }
+    
+
     df_plt <- agg_y(dfx, y, grp, time_level, duration)
 
     df_plt$y_bu <- df_plt$y
@@ -329,51 +356,31 @@ viz_lines <- function(dfx, x, y, time_level, duration, grp, extra =FALSE, div=FA
 
 }
 
-## mow_fndgs$cnt <- 1
 
 ## viz_lines(mow_fndgs, x="founding_date1", y="cnt", time_level = "ra", duration = 5, grp = "type", extra = "cum_count")
 
+## viz_lines(mow_fndgs, x="founding_date1", y="cnt", time_level = "ra", duration = 5, grp = "type", extra = FALSE)
+
+## viz_lines(mow_fndgs, x="founding_date1", y="cnt", time_level = "ra", duration = 5, grp = "type", extra = "cum_rate", max_lines = 8)
+
+## viz_lines(df_anls, x="year", y="nbr_opened", time_level = "ra", duration = 5, grp = "country", div = "SP.POP.TOTL", max_lines = 12)
+
 ## viz_lines(df_anls, x="year", y="nbr_opened", time_level = "ra", duration = 5, grp = "country", extra = "rates", div = "SP.POP.TOTL", max_lines = 12)
+
+## viz_lines(df_anls, x="year", y="nbr_opened", time_level = "ra", duration = 5, grp = "country", extra = "cum_rate", div = "SP.POP.TOTL", max_lines = 12)
 
 
 ## viz_lines(df_anls, x="year", y="nbr_opened", time_level = "ra", duration = 3, grp = "country", extra = "cum_rate", div = "SP.POP.TOTL", max_lines = 12)
 
-## df_anls$region <- countrycode(df_anls$iso3c, "iso3c", "un.regionsub.name")
-## df_anls$region <- countrycode(df_anls$iso3c, "iso3c", "region")
-## viz_lines(df_anls, x="year", y="nbr_opened", time_level = "ra", duration = 5, grp = "region", extra = "cum_rate", div = "SP.POP.TOTL", max_lines = 12)
-
-
 ## df_excl$cnt <- 1
-## x <- viz_lines(filter(df_excl, year_opened_int > 1984 & year_opened_int < 2021), x="year_opened_int", y="cnt", time_level = "ra", duration = 3, grp = "country")
+## viz_lines(filter(df_excl, year_opened_int > 1984 & year_opened_int < 2021), x="year_opened_int", y="cnt", time_level = "ra", duration = 3, grp = "country")
+
+## viz_lines(filter(df_excl, year_opened_int > 1984 & year_opened_int < 2021), x="year_opened_int", y="cnt", time_level = "ra", duration = 6, grp = "country", fill_up = T)
 
 
-
-
-## ## overall vars 1
-## time_level = "cut"
-## duration = 5
-
-## ## overall vars 2
-## time_level = "ra"
-## duration = 5
-## max_lines = 12
-
-## ## specific test case 1
-## dfx <- mow_fndgs
-## dfx$cnt <- 1
-## x = "founding_date1"
-## grp = "type"
-## y = "cnt"
-## extra <- "cum_rate"
-
-## ## specific test case 2: df_anls
-## dfx <- df_anls
-## x <- "year"
-## div <- "SP.POP.TOTL"
-## grp <- "iso3c"
-## y = "nbr_opened"
-## extra <- "pop_rates"
-
+## df_anls$region <- countrycode(df_anls$iso3c, "iso3c", "region")
+## df_anls$region <- countrycode(df_anls$iso3c, "iso3c", "un.regionsub.name")
+## viz_lines(df_anls, x="year", y="nbr_opened", time_level = "ra", duration = 5, grp = "region", extra = "cum_rate", div = "SP.POP.TOTL", max_lines = 12)
 
 
 
