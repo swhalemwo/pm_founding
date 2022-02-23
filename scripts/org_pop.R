@@ -761,11 +761,15 @@ as.data.frame(filter(mow_fndgs,
 mow_cpaer <- as_tibble(merge(filter(mow_clsfcn, clsfcn == "Art, Modern and Contemporary"), df_mow))
 mow_cpaer$cnt <- 1
 
-viz_lines(filter(mow_cpaer, founding_date1 >= 1900), x = "founding_date1", y="cnt", time_level = "ra", duration = 10, grp = "country", fill_up = T, extra = "cum_rate")
+p1 <- viz_lines(filter(mow_cpaer, founding_date1 >= 1900), x = "founding_date1", y="cnt", time_level = "ra", duration = 10, grp = "country", fill_up = T, return="plot")
+p2 <- viz_lines(filter(mow_cpaer, founding_date1 >= 1900), x = "founding_date1", y="cnt", time_level = "ra", duration = 10, grp = "country", fill_up = T, extra = "cum_rate", return="plot")
+p3 <- viz_lines(filter(mow_cpaer[mow_cpaer$country %!in% c("United States of America", "Germany"),], founding_date1 >= 1900), x = "founding_date1", y="cnt", time_level = "ra", duration = 10, grp = "country", fill_up = T, max_lines = 8, extra = "cum_rate", return="plot")
+p4 <- viz_lines(filter(mow_cpaer[mow_cpaer$country %!in% c("United States of America", "Germany"),], founding_date1 >= 1900), x = "founding_date1", y="cnt", time_level = "ra", duration = 10, grp = "country", fill_up = T, max_lines = 8, return = "plot")
 
-viz_lines(filter(mow_cpaer[mow_cpaer$country %!in% c("United States of America", "Germany"),], founding_date1 >= 1900), x = "founding_date1", y="cnt", time_level = "ra", duration = 10, grp = "country", fill_up = T, max_lines = 8, extra = "cum_rate")
+pdf(paste0(FIG_DIR, "mow_contemporary.pdf"), width = 14, height = 8)
+grid.arrange(p1,p4,p2,p3, ncol=2, nrow=2)
+dev.off()
 
-viz_lines(filter(mow_cpaer[mow_cpaer$country %!in% c("United States of America", "Germany"),], founding_date1 >= 1900), x = "founding_date1", y="cnt", time_level = "ra", duration = 10, grp = "country", fill_up = T, max_lines = 8,)
 
 ## hmm canada so early huh
 ## italy has actually a lot of founding going on until the end.. does it mean database is maybe less incomplete than I thought? 
