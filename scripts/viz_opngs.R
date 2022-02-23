@@ -119,6 +119,9 @@ agg_y <- function(df_plt, y, grp, time_level, duration) {
     ## always sum by geo_level + time_level, is enough if cuts are provided as time_level
     df_plt$y <- df_plt[[y]]
     df_plt$grp <- df_plt[[grp]]
+
+    ## grps1 <- names(which(table(df_plt$grp)==1))
+    ## df_plt <- filter(df_plt, grp %!in% grps1)
     
     df_plt_opnd <- as_tibble(aggregate(y ~ grp + time_level, df_plt, sum))
 
