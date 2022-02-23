@@ -770,7 +770,18 @@ viz_lines(filter(mow_cpaer[mow_cpaer$country %!in% c("United States of America",
 ## hmm canada so early huh
 ## italy has actually a lot of founding going on until the end.. does it mean database is maybe less incomplete than I thought? 
 
+## *** keyword co-occurence
+kwds_w_cpaer <- as_tibble(merge(mow_clsfcn, mow_cpaer[,c("idx")]))
+tbl_kwds <- table(kwds_w_cpaer$clsfcn)
+as.data.frame(tbl_kwds[order(tbl_kwds)])
 
+## Decorative and Applied Arts   23
+##                Art, Russian   27
+##                 Photography   28
+##                   Sculpture   38
+## History, Local and Regional   45
+##                         Art   62
+## Art, Modern and Contemporary 2035
 
 
 ## ** duplicate detection
