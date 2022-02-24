@@ -30,7 +30,7 @@ df_hudson$iso3c <- countrycode(df_hudson$Country, "country.name", "iso3c")
 
 ## ** merging
 ## names are unique
-c(names(df_rules),names(df_give),names(df_hudon))
+c(names(df_rules),names(df_give),names(df_hudson))
 unique(c(names(df_rules),names(df_give),names(df_hudson)))
 
 
@@ -38,9 +38,9 @@ df_taxinc <- as_tibble(Reduce(function(x,y,...) merge(x,y, by=c("iso3c"), all = 
 
 
 ## * anls 
-tax_vars_all <- c("NPO.tax.exemption", "Individual.Tax.Incentives", "Corporate.Tax.Incentives", "Score", "money_score", "time_score", "Q1","Q2","Q3","Q4","Q5")
+tax_vars_all <- c("NPO.tax.exemption", "Individual.Tax.Incentives", "Corporate.Tax.Incentives", "Estate.Tax.Reducable.by.donation", "money_score", "time_score", "Q1","Q2","Q3","Q4","Q5")
 
-tax_vars_caf <- c("NPO.tax.exemption", "Individual.Tax.Incentives", "Corporate.Tax.Incentives", "money_score", "time_score")
+tax_vars_caf <- c("NPO.tax.exemption", "Individual.Tax.Incentives", "Corporate.Tax.Incentives", "Estate.Tax.Reducable.by.donation", "money_score", "time_score")
 
 library("PerformanceAnalytics")
 library(factoextra)
