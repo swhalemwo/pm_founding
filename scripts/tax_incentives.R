@@ -93,7 +93,36 @@ viz_loadings <- function(res.pca, nbr_factors=3, title = NA) {
 }
 ## p.loads.all <- viz_loadings(res.pca.all, title = "ALL") 
 
-    
+
+create_pca_df <- function(df, pca.res, id.col, nbr.factors=3, rename_cols = NA) {
+    #' bind the pca scores to an identifier 
+    #' id.col can be single string or vector of columns
+
+
+    ## use the pca.res rownames to not have to pass vars as separate variable
+
+    pca_df <- na.omit(df[,c(rownames(pca.res$rotation), id.col)])[,id.col]
+    pca_scores <- pca.res$x[,1:nbr.factors]
+    pca_df <- as_tibble(cbind(pca_df, pca_scores))
+
+
+    ## rename cols if requested
+    if (!is.na(rename_cols)) {
+        rnm_col_ids <- (length(id.col)+1):ncol(pca_df)
+        ## print(rename_col_ids)
+        names(pca_df)[rnm_col_ids] <- paste0(names(pca_df)[rnm_col_ids], "_", rename_cols)
+    }
+        
+    return(pca_df)
+}
+
+
+## create_pca_df(df=df_taxinc, pca.res = res.pca.all, id.col = "country")
+## create_pca_df(df=df_taxinc, pca.res = res.pca.caf, id.col = "country")
+
+## create_pca_df(df=df_taxinc, pca.res = res.pca.all, id.col = c("country", "subregion"))
+## create_pca_df(df=df_taxinc, pca.res = res.pca.caf, id.col = c("country", "subregion"))
+
      
 create_ind_plot <- function(df, pca.res, label_col, color_col, vars, title) {
     #' create the individual plot
@@ -105,9 +134,12 @@ create_ind_plot <- function(df, pca.res, label_col, color_col, vars, title) {
     opt_vars <- opt_vars[which(!is.na(opt_vars))]
 
     ## create plotting df with optional vars
-    pca_df <- na.omit(df[,c(opt_vars, vars)])[,c(opt_vars)]
-    pca_scores <- pca.res$x[,1:2]
-    pca_df <- as_tibble(cbind(pca_df, pca_scores))
+    ## pca_df <- na.omit(df[,c(opt_vars, vars)])[,c(opt_vars)]
+    ## pca_scores <- pca.res$x[,1:2]
+    ## pca_df <- as_tibble(cbind(pca_df, pca_scores))
+
+    pca_df <- create_pca_df(df, pca.res, id.col = opt_vars, nbr.factors = 2)
+    
     
     ind.plt <- ggplot(pca_df, aes(x=PC1, y=PC2)) +
         geom_hline(yintercept=0, linetype="dashed") +
@@ -219,24 +251,16 @@ grid.arrange(grobs = ps.all2)
 ## factor 2 no change really (r=0.97), but factor 1 "only" has 0.69 (nice) correlation
 ## think that's good enough tho to justify using CAF scores generally, if necessary
 
-pca_all_df <- na.omit(df_taxinc[,c("iso3c", tax_vars_all)])[,c("iso3c")]
-pca_all_df <- as_tibble(cbind(pca_all_df, res.pca.all$x[,1:3]))
-names(pca_all_df)[2:4] <- paste0(names(pca_all_df)[2:4], "_all")
-pca_all_df$country <- countrycode(pca_all_df$iso3c, "iso3c", "country.name")
-
-pca_caf_df <- na.omit(df_taxinc[,c("iso3c", tax_vars_caf)])[,c("iso3c")]
-pca_caf_df <- as_tibble(cbind(pca_caf_df, res.pca.caf$x[,1:3]))
-names(pca_caf_df)[2:4] <- paste0(names(pca_caf_df)[2:4], "_caf")
-pca_caf_df$country <- countrycode(pca_caf_df$iso3c, "iso3c", "country.name")
-
-
-pca_cpr_df <- as_tibble(merge(pca_all_df, pca_caf_df))
-
-
-chart.Correlation(pca_cpr_df[,3:8])
 
 
 
 
+
+pca_df_caf <- create_pca_df(df=df_taxinc, pca.res = res.pca.caf, id.col = "iso3c", rename_cols = "caf")
+pca_df_all <- create_pca_df(df=df_taxinc, pca.res = res.pca.all, id.col = "iso3c", rename_cols = "all")
+
+
+pca_cpr_df <- as_tibble(merge(pca_df_all, pca_df_caf, by="iso3c"))
+chart.Correlation(pca_cpr_df[,2:ncol(pca_cpr_df)])
 
 
