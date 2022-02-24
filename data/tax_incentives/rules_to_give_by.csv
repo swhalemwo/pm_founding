@@ -8,7 +8,7 @@ Ireland,1,1,1,1,1,1,1,1,1,11
 Italy,1,1,1,1,1,1,1,1,1,11
 Singapore,1,1,1,1,1,1,1,1,1,11
 Switzerland,1,1,1,1,1,1,1,1,1,11
-United Kingdom of Great Britain and Northern Ireland,1,1,1,1,1,1,1,1,1,11
+United Kingdom,1,1,1,1,1,1,1,1,1,11
 United States of America,1,1,1,1,1,1,1,1,1,11
 Albania,1,1,1,0,1,1,1,1,1,10
 Australia,1,1,1,0,1,1,0,1,1,10
@@ -64,7 +64,7 @@ India,1,1,1,0,1,1,0,0,0,9
 Jamaica,1,1,1,0,1,1,0,1,0,9
 Kazakhstan,1,1,1,0,1,1,0,0,0,9
 Kenya,1,1,1,0,1,1,0,0,0,9
-Korea (Republic of),1,1,1,0,1,1,1,0,0,9
+Korea,1,1,1,0,1,1,1,0,0,9
 Latvia,1,1,1,0,1,1,1,0,0,9
 Liberia,1,1,1,0,1,1,0,0,0,9
 Libya,1,1,1,0,1,1,0,0,0,9
@@ -90,7 +90,7 @@ South Sudan,1,1,1,0,1,1,0,0,0,9
 Spain,1,1,1,0,1,1,1,1,0,9
 Sri Lanka,1,1,1,0,1,1,1,0,0,9
 Tajikistan,1,1,1,0,1,1,0,0,0,9
-Tanzania (United Republic of),1,1,1,0,1,1,0,0,0,9
+Tanzania,1,1,1,0,1,1,0,0,0,9
 Thailand,1,1,1,0,1,1,1,0,0,9
 Timor-Leste,1,1,1,0,1,1,0,0,0,9
 Tonga,1,1,1,0,1,1,1,0,0,9
@@ -108,7 +108,7 @@ Tunisia,1,1,0,0,1,1,1,1,0,8
 Uganda,1,1,0,0,1,1,0,0,0,8
 Viet Nam,1,1,0,0,1,1,0,1,0,8
 Greece,1,1,1,0,0,1,1,1,1,7
-Macedonia (former Yugoslav Republic of),1,1,1,0,1,0,1,1,1,7
+Macedonia,1,1,1,0,1,0,1,1,1,7
 Russian Federation,1,1,1,1,0,1,1,0,0,7
 St. Vincent and the Grenadines,1,1,1,1,1,0,1,0,0,7
 Algeria,1,1,1,0,1,0,1,1,0,6
@@ -137,8 +137,8 @@ Serbia,1,1,1,0,1,0,1,1,0,6
 Sudan,1,1,1,0,1,0,1,0,0,6
 Uruguay,1,1,1,0,1,0,1,0,0,6
 Uzbekistan,1,1,1,0,1,0,1,0,0,6
-Lao (People’s Democratic Republic),1,1,0,0,1,0,1,0,0,5
-Moldova (Republic of) ,1,1,0,0,0,1,1,0,0,5
+Lao,1,1,0,0,1,0,1,0,0,5
+Moldova,1,1,0,0,0,1,1,0,0,5
 Mozambique,1,1,0,0,1,0,1,1,0,5
 Norway ,1,1,0,0,0,1,1,1,0,5
 Azerbaijan ,1,1,1,0,0,0,0,1,1,4
@@ -161,7 +161,7 @@ Solomon Islands,1,1,1,0,0,0,0,0,0,3
 Togo,1,1,1,0,0,0,0,0,0,3
 Turkmenistan,1,1,1,0,0,0,0,0,0,3
 Zimbabwe,1,0,0,0,1,0,1,1,0,3
-Congo (Democratic Republic of the),1,1,0,0,0,0,0,0,0,2
+Congo - Kinshasa,1,1,0,0,0,0,0,0,0,2
 Cote D’ivoire,1,1,0,0,0,0,0,0,0,2
 Gambia,1,1,0,0,0,0,0,0,0,2
 Guinea-Bissau,1,1,0,0,0,0,0,1,0,2
@@ -173,8 +173,8 @@ Tuvalu,1,1,0,0,0,0,0,0,0,2
 Suriname,1,0,1,0,0,0,0,0,0,1
 Djibouti,1,0,0,0,0,0,0,1,0,0
 Eritrea,1,0,0,0,0,0,0,0,0,0
-Korea (Democratic People’s Republic of),1,0,0,0,0,0,0,0,0,0
-Micronesia (Federated State of),1,0,0,0,0,0,0,0,0,0
+North Korea,1,0,0,0,0,0,0,0,0,0
+Micronesia,1,0,0,0,0,0,0,0,0,0
 Palau,1,0,0,0,0,0,0,0,0,0
 Andorra,1,1,1,0,0,0,0,0,0,-1
 Bahamas,1,0,0,0,0,0,0,0,0,-1
