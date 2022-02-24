@@ -56,17 +56,26 @@ res.pca.caf <- prcomp(na.omit(df_taxinc[,tax_vars_caf]),scale = T, retx = T)
 
 
 
-fviz_eig(res.pca.all)
-fviz_eig(res.pca.caf)
-
-fviz_pca_var(res.pca.all,
-             col.var = "contrib", # Color by contributions to the PC
-             gradient.cols = c("#00AFBB", "#E7B800", "#FC4E07"),
-             repel = TRUE     # Avoid text overlapping
-             )
+options(max.overlaps = 100)
+options("max.overlaps" = 100)
+options(ggrepel.max.overlaps = 100)
+options("ggrepel.max.overlaps" = 100)
 
 
-viz_pca <- function(res.pca, nbr_factors=3, title = NA) {
+viz_pca_arrows <- function(pca.res, title) {
+    #' do these nice arrow plots of the first two pca factors
+    p <- fviz_pca_var(pca.res,
+                      col.var = "contrib", # Color by contributions to the PC
+                      gradient.cols = c("#00AFBB", "#E7B800", "#FC4E07"),
+                      repel = TRUE,     # Avoid text overlapping
+                      title = title
+                      )
+    return(p)
+    }
+
+
+
+viz_loadings <- function(res.pca, nbr_factors=3, title = NA) {
     #' visualize pca loadings
     res.pca.df <- as.data.frame(res.pca$rotation[,1:nbr_factors])
     res.pca.df$item <- rownames(res.pca.df)
