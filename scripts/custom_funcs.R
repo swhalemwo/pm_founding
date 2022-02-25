@@ -31,27 +31,31 @@ rollmean_custom <- function(v, win_len, func, orientation = "left"){
         ## indices <- c(c, c-1)
         indices <- c(c)
 
-        ## initializing the operation to perform based on orientation
-        if (orientation == "left"){
-            op <- minus
-            op_name <- "minus"
-        } else {
-            op <- plus
-            op_name <- "plus"
-        }
-        for (k in seq(win_len-1)){
-            ## need -1 because first value c is already in indices
-            last_pos <- tail(indices,1)
-            
-            indices <- c(indices, op(last_pos,k))
-
-            ## switching the operation
-            if (op_name == "minus") {
-                op <- plus
-                op_name <- "plus"
-            } else {
+        ## only add more indices if win_len > 1
+        
+        if (win_len>1) {
+            ## initializing the operation to perform based on orientation
+            if (orientation == "left"){
                 op <- minus
                 op_name <- "minus"
+            } else {
+                op <- plus
+                op_name <- "plus"
+            }
+            for (k in seq(win_len-1)){
+                ## need -1 because first value c is already in indices
+                last_pos <- tail(indices,1)
+                
+                indices <- c(indices, op(last_pos,k))
+
+                ## switching the operation
+                if (op_name == "minus") {
+                    op <- plus
+                    op_name <- "plus"
+                } else {
+                    op <- minus
+                    op_name <- "minus"
+                }
             }
         }
         
