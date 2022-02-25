@@ -311,11 +311,11 @@ viz_lines <- function(dfx, x, y, time_level, duration, grp, extra =FALSE, div=FA
     #' fill_up: whether to impute missing x-grp observations, aggregates with sum (for now)
 
         
-    dfx <- set_time_level_gnrl(dfx, x, time_level = time_level, duration)
-
     dfx$y <- dfx[[y]]
     dfx$x <- dfx[[x]]
     dfx$grp <- dfx[[grp]]
+
+    dfx <- set_time_level_gnrl(dfx, x, time_level = time_level, duration)
 
     ## rates are now conditional
     if (extra == "rates") {
