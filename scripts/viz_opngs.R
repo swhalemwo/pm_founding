@@ -5,6 +5,19 @@ year_selector <- function(x)(
     # convert cuts back to years
     substring(x, 2,5))
 
+year_selector_gnrl <- function(x) {
+    ## convert cuts back to years
+    intv_split <- strsplit(as.character(x), ",")
+    intv_end <- intv_split[[1]][[2]]
+
+    end_clean <- as.numeric(substr(intv_end, 1, nchar(intv_end)-1))
+    
+    return(end_clean)
+}
+
+
+
+
 set_geo_level <- function(df, geo_level) {
     #' set geo_level to either country or geo
 
@@ -39,11 +52,12 @@ set_time_level <- function(df, time_level, duration) {
 set_time_level_gnrl <- function(df, x, time_level, duration) {
     #' setting time level: either cut or year (for rolling mean) calculation
 
+
     if (time_level == "cut") {
         ## just population calculation: could go into separate function, if rates are requested
         
-        df$cut <- cut(df$x, seq(min(df$x), max(df$x)+5, by = duration))
-        df$x <- as.numeric(sapply(as.character(df$cut), year_selector))
+        df$cut <- cut(df$x, seq(min(df$x)-1, max(df$x)+5, by = duration))
+        df$x <- as.numeric(sapply(as.character(df$cut), year_selector_gnrl))
     }
 
     return(df)
