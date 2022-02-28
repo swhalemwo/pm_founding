@@ -43,14 +43,14 @@ FIG_DIR <- paste0(PROJECT_DIR, "figures/")
 TABLE_DIR <- paste0(PROJECT_DIR, "tables/")
 WID_DIR_v1 = paste0(PROJECT_DIR, "data/wid/wid_world_db/version1_oct21/")
 WID_DIR_v2 = paste0(PROJECT_DIR, "data/wid/wid_world_db/version2_feb22/")
-<<<<<<< HEAD
+
 MOW_DIR <- paste0(PROJECT_DIR, "data/degruyter/mow/")
 IDA_DIR <- paste0(PROJECT_DIR, "data/degruyter/ida/")
-=======
+
 TAX_INCENTIVES_DIR <- paste0(PROJECT_DIR, "data/tax_incentives/")
 
 
->>>>>>> tax_incentives
+
 
 PROC_DATA_DIR <- paste0(PROJECT_DIR, "data/processed/")
 
