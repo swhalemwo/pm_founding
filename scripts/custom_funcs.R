@@ -31,35 +31,55 @@ rollmean_custom <- function(v, win_len, func, orientation = "left"){
         ## indices <- c(c, c-1)
         indices <- c(c)
 
-        ## initializing the operation to perform based on orientation
-        if (orientation == "left"){
-            op <- minus
-            op_name <- "minus"
-        } else {
-            op <- plus
-            op_name <- "plus"
-        }
-        for (k in seq(win_len-1)){
-            ## need -1 because first value c is already in indices
-            last_pos <- tail(indices,1)
-            
-            indices <- c(indices, op(last_pos,k))
-
-            ## switching the operation
-            if (op_name == "minus") {
-                op <- plus
-                op_name <- "plus"
-            } else {
+        ## only add more indices if win_len > 1
+        
+        if (win_len>1) {
+            ## initializing the operation to perform based on orientation
+            if (orientation == "left"){
                 op <- minus
                 op_name <- "minus"
+            } else {
+                op <- plus
+                op_name <- "plus"
+            }
+            for (k in seq(win_len-1)){
+                ## need -1 because first value c is already in indices
+                last_pos <- tail(indices,1)
+                
+                indices <- c(indices, op(last_pos,k))
+
+                ## switching the operation
+                if (op_name == "minus") {
+                    op <- plus
+                    op_name <- "plus"
+                } else {
+                    op <- minus
+                    op_name <- "minus"
+                }
             }
         }
         
         indices_sel <- indices[intersect(which(indices>=1), which(indices <= len_v))]
+
+        ## weighted mean (normal distribution), but makes opening_count more jagged:
+        ## original series is jagged, weighted means give higher impact to original series -> more jagged :(
+        
+        ## weights = pnorm(indices_sel, c, win_len/3)
+        ## indices_sel <- sort(indices_sel)
+
+
         ## print(paste0("indices_sel: ", indices_sel))
+        ## print(paste0("c: ", c))
+        ## print(paste0("weights: ", weights))
+        ## print("----")
+        ## win_res <- weighted.mean(values, weights)        
+        
+        
         values <- v[c(indices_sel)]
 
         win_res <- mean(values)
+
+        
         all_res <- c(all_res, win_res)
         c <- c+1
     }
