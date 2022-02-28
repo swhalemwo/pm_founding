@@ -313,6 +313,28 @@ fill_up <- function(df, x, y, grp) {
     return(df_merge)
 }
 
+fill_up2 <- function(df, x, y, grp) {
+    #' create an empty df, merge it to the data
+    #' now doesn't variable names x and y -> more general 
+    
+    minx <- min(df[[x]])
+    maxx <- max(df[[x]])
+
+    structure_df <- tidyr::expand(df, minx:maxx, get(grp))
+    names(structure_df) <- c(x,grp)
+    
+
+    ## aggregate (sum) original data
+    og_df_agg <- as_tibble(aggregate(get(y) ~ get(x) + get(grp), df, sum))
+    names(og_df_agg) <- c(x,grp,y) ## hope that order doesn't get changed around
+
+    df_merge <- as_tibble(merge(structure_df, og_df_agg, all.x = TRUE))
+    df_merge[[y]][which(is.na(df_merge[[y]]))] <- 0
+
+    return(df_merge)
+}
+
+
 viz_lines <- function(dfx, x, y, time_level, duration, grp, extra =FALSE, div=FALSE, max_lines=12, return ="df",fill_up = FALSE)  {
     #' general vizualization function
     #' dfx: overall dataframe, containing at least columns for
