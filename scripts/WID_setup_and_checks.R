@@ -311,59 +311,147 @@ RootLinearInterpolant <- function (x, y, y0 = 0) {
     #' calculate intercept of threshold function 
     #' https://stackoverflow.com/questions/52650467/how-to-estimate-x-value-from-y-value-input-after-approxfun-in-r
     
-  if (is.unsorted(x)) {
-      ind <- order(x)
-      x <- x[ind]; y <- y[ind]
-     }
-  z <- y - y0
-  ## which piecewise linear segment crosses zero?
-  k <- which(z[-1] * z[-length(z)] < 0)
-  ## analytically root finding
-  xk <- x[k] - z[k] * (x[k + 1] - x[k]) / (z[k + 1] - z[k])
-  xk
+    if (is.unsorted(x)) {
+        ind <- order(x)
+        x <- x[ind]; y <- y[ind]
+    }
+    z <- y - y0
+    ## which piecewise linear segment crosses zero?
+    k <- which(z[-1] * z[-length(z)] < 0)
+    ## analytically root finding
+    xk <- x[k] - z[k] * (x[k + 1] - x[k]) / (z[k + 1] - z[k])
+    return(xk)
 }
 
-RootLinearInterpolant(wealth_data$pct_lo, wealth_data$value, y0=5e+6)
+## x <- wealth_cur_df %>%
+##     group_by(iso3c, year) %>%
+##     summarise(pct_cutoff = RootLinearInterpolant(pct_lo, wealth_cur, y0=1e+06))
 
-test_df <- rbindlist(list(list(a=1, b=2), list(a=3, b=4)))
-aggregate(a ~ b, test_df, function(x) x[1])
+sanitize_number <- function(nbr) {
+    #' custom formatting for number abbreviations because f_denom doesn't work??
 
-
-
-
-wealth_cmd_all <- "select iso3c, variable, percentile, year, value from wid_v2 where variable='thweal992j' and year >=1985 and iso3c in ('DEU', 'USA', 'MNG', 'ITA', 'FRA')"
-
-wealth_df <- as_tibble(dbGetQuery(con, wealth_cmd_all))
-
-currency_cmd <- "select iso3c, year, variable, value from wid_v2 where variable='xlcusp999i' and iso3c in ('DEU', 'USA', 'MNG', 'DNK', 'ITA', 'FRA') and year>=1985"
-currency_df <- as_tibble(dbGetQuery(con, currency_cmd))
-
-ggplot(filter(currency_df, iso3c %in% c("USA", "DEU", 'FRA')) , aes(x=year, y=value, color=iso3c)) +
-    geom_line()
-
-
-
-wealth_df$pct_lo <- as.numeric(unlist(lapply(strsplit(wealth_df$percentile, split='p'), function(x) x[2])))
-
-ggplot(filter(wealth_df, iso3c=="MNG", year==2000), aes(x=pct_lo, y=log10(value))) +
-    geom_point()
+    if (nbr >= 1000 & nbr < 1e6) {
+        lbl <- paste0(nbr/1000, "K")
+    } else if (nbr >= 1e6 & nbr < 1e+9) {
+        lbl <- paste0(nbr/1e6, "M")
+    } else {
+        lbl <- paste0(nbr)
+    }
+    return(lbl)
+}
+        
 
 
-x <- wealth_df %>%
-    group_by(iso3c, year) %>%
-    summarise(pct_cutoff = RootLinearInterpolant(pct_lo, value, y0=1e+06))
+
+wealth_cutoff <- function(x,y,cutoff_amt) {
+    #' actually wrapper function for RootLinearinterpolant, also some diagnostics: 
+    #' distances (percentile wise) to upper/lower value, 
+    
+    ## could make own funtion for this, but kinda lazy for now 
+    cutoff = RootLinearInterpolant(x,y,cutoff_amt)
+    ind <- order(x)
+    x <- x[ind]; y <- y[ind]
+    z <- y - cutoff_amt
+    ## which piecewise linear segment crosses zero?
+    k <- which(z[-1] * z[-length(z)] < 0)
+
+    
+    cutoff_amt_sanitized <- sanitize_number(cutoff_amt)
+
+    
+    dist_down <- cutoff-x[k]
+    dist_up <- x[k+1]-cutoff
+    lenx <- len(x)
+    vlus_above <- lenx-k
+    maxy <- max(y)
+
+    res_df <- tibble(pct_cutoff=cutoff,
+                  dist_down=dist_down,
+                  dist_up =dist_up,
+                  lenx=lenx,
+                  vlus_above = vlus_above,
+                  maxy = maxy)
+    
+    names(res_df) <- paste(names(res_df), cutoff_amt_sanitized, sep = '_')
+
+    return(res_df)
+}
+
+j <- wealth_cutoff(wealth_data$pct_lo, wealth_data$value, cutoff=5e+6)
+
+get_wealth_df <- function() {
+    #' get the basic wealth df (in USD PPP)
+    #' store as global so I don't have to reload everything from CH if I want to change cutoff
+    #' use threshold for now (easiest)
+
+    wealth_cmd_all <- paste0("select iso3c, variable, percentile, year, value from wid_v2 where variable='thweal992j' and year >=", STARTING_YEAR)
+
+    wealth_df <- as_tibble(dbGetQuery(con, wealth_cmd_all))
+
+    currency_cmd <- paste0("select iso3c, year, value from wid_v2 where variable='xlcusp999i' and year>=", STARTING_YEAR)
+    currency_df <- as_tibble(dbGetQuery(con, currency_cmd))
+    names(currency_df)[3] <- "xlcusp999i"
+
+    ## ggplot(filter(currency_df, xlcusp999i < 10), aes(x=year, y=xlcusp999i, color=iso3c)) +
+    ##     geom_line()
+
+
+    wealth_cur_df <- as_tibble(merge(wealth_df, currency_df, all.x = T))
+    wealth_cur_df$wealth_cur <- wealth_cur_df$value/wealth_cur_df$xlcusp999i
+
+    ## there are still quite some NAs
+    ## table(filter(wealth_cur_df, is.na(wealth_cur))$iso3c)
+    ## North Korea, South Sudan
+    ## nobody cares bro 
+
+    wealth_cur_df$pct_lo <- as.numeric(unlist(lapply(strsplit(wealth_cur_df$percentile, split='p'), function(x) x[2])))
+
+    return(wealth_cur_df)
+}
+
+
+
+## ggplot(filter(wealth_cur_df, iso3c=="DEU", year==2000), aes(x=pct_lo, y=log10(value))) +
+##     geom_point()
+
+
+get_wealth_cutoff_pct <- function(wealth_cur_df, cutoff) {
+    #' calculating share of people over cutoff
+
+    
+    df_wealth <- wealth_cur_df %>%
+        group_by(iso3c, year) %>%
+        do(wealth_cutoff(.$pct_lo, .$wealth_cur, cutoff_amt =cutoff))
+
+    return(df_wealth)
+}
+
+
+wealth_cur_df <- get_wealth_df()
+df_wealth <- get_wealth_cutoff_pct(wealth_cur_df, 1e+06)
+
+## min max wealth is something like 10m
+
+
     
 ## do(RootLinearInterpolant(x=.$pct_lo, y=.$value, y0=1e+06)
 
-ggplot(x, aes(x=year, y=pct_cutoff, group=iso3c, color=iso3c)) +
+ggplot(df_wealth, aes(x=year, y=pct_cutoff, group=iso3c, color=iso3c)) +
     geom_line()
 
 
-getFX("EUR/USD", from = "2005-01-01")
+## ** debug weird countries
 
-library(priceR)
+table(filter(df_wealth, pct_cutoff < 95)$iso3c)
+## AGO BLR COD UZB VEN 
+##   4   3   5   1  25 
+## much in values for vuvuzela -> maybe I have to lag the cur_df? 
 
-historical_exchange_rates("EUR", to = "USD", start_date = "2010-01-01", end_date = "2020-06-30")
-historical_exchange_rates("DEM", to = "USD", start_date = "1999-01-01", end_date = "2000-06-30")
+filter(currency_df, iso3c=="VEN")$xlcusp999i
+
+ggplot(filter(df_wealth, iso3c=="VEN"), aes(x=year, y=pct_cutoff, group=iso3c, color=iso3c)) +
+    geom_line()
+
+
 
 
