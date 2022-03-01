@@ -278,3 +278,92 @@ export_wid_cpltns_check <- function(res_df, tbl_label, tbl_caption) {
 ## export_wid_cpltns_check(res_df_v1, "wid_wealth_v1", "wealth coverage in version 1")
 ## export_wid_cpltns_check(res_df_v2, "wid_wealth_v2", "wealth coverage in version 2")
 
+## ** HWNI calculation
+
+dbGetQuery(con, "show tables")
+
+wid_wealth_vars_cmd <- "SELECT DISTINCT(variable), percentile FROM wid_v2 WHERE ilike(varx, '%weal%')"
+wealth_vars <- as_tibble(dbGetQuery(con, wid_wealth_vars_cmd))
+
+wealth_tbl <- table(wealth_vars$variable)
+wealth_tbl[order(wealth_tbl)]
+
+wealth_cmd <- "SELECT variable, percentile, value from wid_v2 where iso3c='DEU' and variable='thweal992j' and year=2000"
+
+
+
+wealth_data <- as_tibble(dbGetQuery(con, wealth_cmd))
+
+wealth_data$pct_lo <- as.numeric(unlist(lapply(strsplit(wealth_data$percentile, split='p'), function(x) x[2])))
+wealth_data$pct_hi <- as.numeric(unlist(lapply(strsplit(wealth_data$percentile, split='p'), function(x) x[3])))
+
+wealth_data$pct_len <- wealth_data$pct_hi-wealth_data$pct_lo
+
+ggplot(filter(wealth_data, pct_lo > 80, pct_len >=0.1), aes(xmin=pct_lo, xmax=pct_hi, ymin=0, ymax=value, alpha=0.01)) +
+    geom_rect()
+
+ggplot(filter(wealth_data), aes(x=pct_lo, y=log10(value))) +
+    geom_point()
+
+approx(wealth_data$pct_lo, wealth_data$value, xout = 98.12)
+
+RootLinearInterpolant <- function (x, y, y0 = 0) {
+    #' calculate intercept of threshold function 
+    #' https://stackoverflow.com/questions/52650467/how-to-estimate-x-value-from-y-value-input-after-approxfun-in-r
+    
+  if (is.unsorted(x)) {
+      ind <- order(x)
+      x <- x[ind]; y <- y[ind]
+     }
+  z <- y - y0
+  ## which piecewise linear segment crosses zero?
+  k <- which(z[-1] * z[-length(z)] < 0)
+  ## analytically root finding
+  xk <- x[k] - z[k] * (x[k + 1] - x[k]) / (z[k + 1] - z[k])
+  xk
+}
+
+RootLinearInterpolant(wealth_data$pct_lo, wealth_data$value, y0=5e+6)
+
+test_df <- rbindlist(list(list(a=1, b=2), list(a=3, b=4)))
+aggregate(a ~ b, test_df, function(x) x[1])
+
+
+
+
+wealth_cmd_all <- "select iso3c, variable, percentile, year, value from wid_v2 where variable='thweal992j' and year >=1985 and iso3c in ('DEU', 'USA', 'MNG', 'ITA', 'FRA')"
+
+wealth_df <- as_tibble(dbGetQuery(con, wealth_cmd_all))
+
+currency_cmd <- "select iso3c, year, variable, value from wid_v2 where variable='xlcusp999i' and iso3c in ('DEU', 'USA', 'MNG', 'DNK', 'ITA', 'FRA') and year>=1985"
+currency_df <- as_tibble(dbGetQuery(con, currency_cmd))
+
+ggplot(filter(currency_df, iso3c %in% c("USA", "DEU", 'FRA')) , aes(x=year, y=value, color=iso3c)) +
+    geom_line()
+
+
+
+wealth_df$pct_lo <- as.numeric(unlist(lapply(strsplit(wealth_df$percentile, split='p'), function(x) x[2])))
+
+ggplot(filter(wealth_df, iso3c=="MNG", year==2000), aes(x=pct_lo, y=log10(value))) +
+    geom_point()
+
+
+x <- wealth_df %>%
+    group_by(iso3c, year) %>%
+    summarise(pct_cutoff = RootLinearInterpolant(pct_lo, value, y0=1e+06))
+    
+## do(RootLinearInterpolant(x=.$pct_lo, y=.$value, y0=1e+06)
+
+ggplot(x, aes(x=year, y=pct_cutoff, group=iso3c, color=iso3c)) +
+    geom_line()
+
+
+getFX("EUR/USD", from = "2005-01-01")
+
+library(priceR)
+
+historical_exchange_rates("EUR", to = "USD", start_date = "2010-01-01", end_date = "2020-06-30")
+historical_exchange_rates("DEM", to = "USD", start_date = "1999-01-01", end_date = "2000-06-30")
+
+
