@@ -10,6 +10,9 @@ wealth_tbl[order(wealth_tbl)]
 
 wealth_cmd <- "SELECT variable, percentile, value from wid_v2 where iso3c='DEU' and variable='thweal992j' and year=2000"
 
+pctl_tbl <- table(wealth_vars$percentile)
+pctl_tbl[order(pctl_tbl)]
+
 
 
 wealth_data <- as_tibble(dbGetQuery(con, wealth_cmd))
@@ -56,6 +59,31 @@ df_wealth_cbn <- as_tibble(Reduce(function(x,y,...) merge(x,y, all=TRUE), df_wea
 
 chart.Correlation(df_wealth_cbn[,c("pct_cutoff_1M", "pct_cutoff_2.5M", "pct_cutoff_5M", "pct_cutoff_10M")])
 ## quiet high correlations, idk if I have to control for time series characteristics tho 
+
+## *** wealth inequality
+
+chart.Correlation(wealth_ineq_df[,c("value_p90p100", "value_p95p100", "value_p99p100", "value_p99.9p100", "value_p99.99p100")])
+
+## *** income inequality
+wid_inc_vars_cmd <- "SELECT DISTINCT(variable), percentile FROM wid_v2 WHERE ilike(varx, '%inc%')"
+wid_inc_vars <- as_tibble(dbGetQuery(con, wid_inc_vars_cmd))
+wid_inc_vars_tbl <- table(wid_inc_vars$variable)
+wid_inc_vars_tbl[order(wid_inc_vars_tbl)]
+
+inc_ineq_vars <- c("sptinc992j", "sdiinc992j", "scainc992j")
+ineq_tpls <- expand.grid(varx=inc_ineq_vars, pctl=pctls)
+ineq_res <- apply(ineq_tpls, 1, function(x) get_inc_ineq(pctl=x['pctl'], varx=x['varx']))
+ineq_res_anls <- rbindlist(lapply(ineq_res, function(x) list(name=names(x)[3], lenx= nrow(x))))
+ineq_res_anls[order(ineq_res_anls$name),]
+## -> only sptinc992j (pre-tax income) has good coverage
+
+chart.Correlation(inc_ineq_df[,c("sptinc992j_p90p100", "sptinc992j_p95p100", "sptinc992j_p99p100", "sptinc992j_p99.9p100", "sptinc992j_p99.99p100")])
+## huh correlations within income inequality less than within wealth ineqality
+
+
+## *** compare income and wealth ineqality
+chart.Correlation(all_ineqs[,c("value_p90p100", "value_p95p100", "value_p99p100", "value_p99.9p100", "value_p99.99p100", "sptinc992j_p90p100", "sptinc992j_p95p100", "sptinc992j_p99p100", "sptinc992j_p99.9p100", "sptinc992j_p99.99p100")])
+## huh quite some correlations between income and wealth ineqality
 
 
 ## ** pretty printing/export function for WID completeness check tables

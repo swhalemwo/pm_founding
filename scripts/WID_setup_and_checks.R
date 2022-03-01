@@ -414,6 +414,45 @@ get_wealth_cutoff_pct <- function(wealth_cur_df, cutoff) {
 
 
 
+## ** wealth inequality
+
+
+
+get_wealth_ineq <- function(pctl){
+    #' get the wealth inequality df given the percentile 
+
+    wealth_ineq_cmd <- paste0("select year, iso3c, value from wid_v2 where variable='shweal992j' and percentile='", pctl, "' and year>", STARTING_YEAR)
+
+    wealth_ineq_df <- as_tibble(dbGetQuery(con, wealth_ineq_cmd))
+    names(wealth_ineq_df)[3] <- paste0("value_", pctl)
+    return(wealth_ineq_df)
+}
+
+get_inc_ineq <- function(pctl, varx){
+    #' get the income inequality df given the percentile 
+
+    wealth_ineq_cmd <- paste0("select year, iso3c, value from wid_v2 where variable='", varx, "' and percentile='", pctl, "' and year>", STARTING_YEAR)
+
+    wealth_ineq_df <- as_tibble(dbGetQuery(con, wealth_ineq_cmd))
+    names(wealth_ineq_df)[3] <- paste0(varx, "_", pctl)
+    return(wealth_ineq_df)
+}
+
+pctls <- c("p90p100", "p95p100", "p99p100", "p99.9p100", "p99.99p100")
+
+wealth_ineq_list <- lapply(pctls, get_wealth_ineq)
+wealth_ineq_df <- as_tibble(Reduce(function(x,y,...) merge(x,y), wealth_ineq_list))
+
+
+inc_ineq_dfs <- lapply(pctls, function(x) get_inc_ineq(pctl = x, varx = "sptinc992j"))
+inc_ineq_df <- as_tibble(Reduce(function(x,y,...) merge(x,y), inc_ineq_dfs))
+
+## still need ginis
+
+all_ineqs <- as_tibble(merge(wealth_ineq_df, inc_ineq_df, all = T))
+
+
+
 
 
 
