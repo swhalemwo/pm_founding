@@ -280,32 +280,6 @@ export_wid_cpltns_check <- function(res_df, tbl_label, tbl_caption) {
 
 ## ** HWNI calculation
 
-dbGetQuery(con, "show tables")
-
-wid_wealth_vars_cmd <- "SELECT DISTINCT(variable), percentile FROM wid_v2 WHERE ilike(varx, '%weal%')"
-wealth_vars <- as_tibble(dbGetQuery(con, wid_wealth_vars_cmd))
-
-wealth_tbl <- table(wealth_vars$variable)
-wealth_tbl[order(wealth_tbl)]
-
-wealth_cmd <- "SELECT variable, percentile, value from wid_v2 where iso3c='DEU' and variable='thweal992j' and year=2000"
-
-
-
-wealth_data <- as_tibble(dbGetQuery(con, wealth_cmd))
-
-wealth_data$pct_lo <- as.numeric(unlist(lapply(strsplit(wealth_data$percentile, split='p'), function(x) x[2])))
-wealth_data$pct_hi <- as.numeric(unlist(lapply(strsplit(wealth_data$percentile, split='p'), function(x) x[3])))
-
-wealth_data$pct_len <- wealth_data$pct_hi-wealth_data$pct_lo
-
-ggplot(filter(wealth_data, pct_lo > 80, pct_len >=0.1), aes(xmin=pct_lo, xmax=pct_hi, ymin=0, ymax=value, alpha=0.01)) +
-    geom_rect()
-
-ggplot(filter(wealth_data), aes(x=pct_lo, y=log10(value))) +
-    geom_point()
-
-approx(wealth_data$pct_lo, wealth_data$value, xout = 98.12)
 
 RootLinearInterpolant <- function (x, y, y0 = 0) {
     #' calculate intercept of threshold function 
@@ -341,8 +315,6 @@ sanitize_number <- function(nbr) {
 }
         
 
-
-
 wealth_cutoff <- function(x,y,cutoff_amt) {
     #' actually wrapper function for RootLinearinterpolant, also some diagnostics: 
     #' distances (percentile wise) to upper/lower value, 
@@ -365,7 +337,7 @@ wealth_cutoff <- function(x,y,cutoff_amt) {
     vlus_above <- lenx-k
     maxy <- max(y)
 
-    res_df <- tibble(pct_cutoff=cutoff,
+    res_df <- tibble(pct_cutoff=100-cutoff, ## rather use percentage above threshold
                   dist_down=dist_down,
                   dist_up =dist_up,
                   lenx=lenx,
@@ -377,7 +349,7 @@ wealth_cutoff <- function(x,y,cutoff_amt) {
     return(res_df)
 }
 
-j <- wealth_cutoff(wealth_data$pct_lo, wealth_data$value, cutoff=5e+6)
+## j <- wealth_cutoff(wealth_data$pct_lo, wealth_data$value, cutoff=5e+6)
 
 get_wealth_df <- function() {
     #' get the basic wealth df (in USD PPP)
@@ -423,34 +395,26 @@ get_wealth_cutoff_pct <- function(wealth_cur_df, cutoff) {
         group_by(iso3c, year) %>%
         do(wealth_cutoff(.$pct_lo, .$wealth_cur, cutoff_amt =cutoff))
 
+
+
     return(df_wealth)
 }
 
 
-wealth_cur_df <- get_wealth_df()
-df_wealth <- get_wealth_cutoff_pct(wealth_cur_df, 1e+06)
+## wealth_cur_df <- get_wealth_df()
+## df_wealth <- get_wealth_cutoff_pct(wealth_cur_df, 5e+06)
+
+## df_wealth_list <- lapply(c(1e6, 2.5e6, 5e6, 10e6), function(x) get_wealth_cutoff_pct(wealth_cur_df, x))
+## df_wealth_cbn <- as_tibble(Reduce(function(x,y,...) merge(x,y, all=TRUE), df_wealth_list))
 
 ## min max wealth is something like 10m
 
-
-    
-## do(RootLinearInterpolant(x=.$pct_lo, y=.$value, y0=1e+06)
-
-ggplot(df_wealth, aes(x=year, y=pct_cutoff, group=iso3c, color=iso3c)) +
-    geom_line()
+## ggplot(filter(df_wealth, pct_cutoff_5M < 5), aes(x=year, y=pct_cutoff_5M, group=iso3c, color=iso3c)) +
+##     geom_line()
 
 
-## ** debug weird countries
 
-table(filter(df_wealth, pct_cutoff < 95)$iso3c)
-## AGO BLR COD UZB VEN 
-##   4   3   5   1  25 
-## much in values for vuvuzela -> maybe I have to lag the cur_df? 
 
-filter(currency_df, iso3c=="VEN")$xlcusp999i
-
-ggplot(filter(df_wealth, iso3c=="VEN"), aes(x=year, y=pct_cutoff, group=iso3c, color=iso3c)) +
-    geom_line()
 
 
 

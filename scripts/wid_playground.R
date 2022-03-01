@@ -1,3 +1,63 @@
+## ** HWNI calculations
+
+dbGetQuery(con, "show tables")
+
+wid_wealth_vars_cmd <- "SELECT DISTINCT(variable), percentile FROM wid_v2 WHERE ilike(varx, '%weal%')"
+wealth_vars <- as_tibble(dbGetQuery(con, wid_wealth_vars_cmd))
+
+wealth_tbl <- table(wealth_vars$variable)
+wealth_tbl[order(wealth_tbl)]
+
+wealth_cmd <- "SELECT variable, percentile, value from wid_v2 where iso3c='DEU' and variable='thweal992j' and year=2000"
+
+
+
+wealth_data <- as_tibble(dbGetQuery(con, wealth_cmd))
+
+wealth_data$pct_lo <- as.numeric(unlist(lapply(strsplit(wealth_data$percentile, split='p'), function(x) x[2])))
+wealth_data$pct_hi <- as.numeric(unlist(lapply(strsplit(wealth_data$percentile, split='p'), function(x) x[3])))
+
+wealth_data$pct_len <- wealth_data$pct_hi-wealth_data$pct_lo
+
+ggplot(filter(wealth_data, pct_lo > 80, pct_len >=0.1), aes(xmin=pct_lo, xmax=pct_hi, ymin=0, ymax=value, alpha=0.01)) +
+    geom_rect()
+
+ggplot(filter(wealth_data), aes(x=pct_lo, y=log10(value))) +
+    geom_point()
+
+approx(wealth_data$pct_lo, wealth_data$value, xout = 98.12)
+## approx can only calculate y given x, but need x given y -> RootLinearInterpolant
+
+
+ggplot(df_wealth, aes(x=year, y=pct_cutoff_5M, group=iso3c, color=iso3c)) +
+    geom_line()
+
+ggplot(filter(df_wealth, pct_cutoff_5M < 5), aes(x=year, y=pct_cutoff_5M, group=iso3c, color=iso3c)) +
+    geom_line()
+
+
+## *** debug weird countries: leave for now
+
+
+table(filter(df_wealth, pct_cutoff_5M > 2)$iso3c)
+## AGO BLR COD UZB VEN 
+##   4   3   5   1  25 
+## much in values for vuvuzela -> maybe I have to lag the cur_df? 
+
+filter(currency_df, iso3c=="VEN")$xlcusp999i
+
+ggplot(filter(df_wealth, iso3c=="VEN"), aes(x=year, y=pct_cutoff, group=iso3c, color=iso3c)) +
+    geom_line()
+
+
+## *** try different cutoffs
+df_wealth_list <- lapply(c(1e6, 2.5e6, 5e6, 10e6), function(x) get_wealth_cutoff_pct(wealth_cur_df, x))
+df_wealth_cbn <- as_tibble(Reduce(function(x,y,...) merge(x,y, all=TRUE), df_wealth_list))
+
+chart.Correlation(df_wealth_cbn[,c("pct_cutoff_1M", "pct_cutoff_2.5M", "pct_cutoff_5M", "pct_cutoff_10M")])
+## quiet high correlations, idk if I have to control for time series characteristics tho 
+
+
 ## ** pretty printing/export function for WID completeness check tables
     wealth_res_df2 <- wealth_res_df2[,c('variable', 'variable_label', 'PMs_covered_raw', 'cry_cvrg_geq3', 'nbr_of_crys_geq3', 'nbr_of_crys_geq1pm')]
 
@@ -260,10 +320,7 @@ x <- tbl(con, "wdi") %>%
 
 
 
-
-
 ## could add something like how complete the countries are that are not fully complete to assess how difficult imputation will be 
-
 
 
 
