@@ -315,27 +315,44 @@ sanitize_number <- function(nbr) {
 }
         
 
-wealth_cutoff <- function(x,y,cutoff_amt) {
+wealth_cutoff <- function(x,y,cutoff_amt, iso3c, year) {
     #' actually wrapper function for RootLinearinterpolant, also some diagnostics: 
     #' distances (percentile wise) to upper/lower value, 
-    
-    ## could make own funtion for this, but kinda lazy for now 
-    cutoff = RootLinearInterpolant(x,y,cutoff_amt)
-    ind <- order(x)
-    x <- x[ind]; y <- y[ind]
-    z <- y - cutoff_amt
-    ## which piecewise linear segment crosses zero?
-    k <- which(z[-1] * z[-length(z)] < 0)
 
+    
+    ## print(paste(unique(iso3c), unique(year), len(y), sep = " "))
     
     cutoff_amt_sanitized <- sanitize_number(cutoff_amt)
 
-    
-    dist_down <- cutoff-x[k]
-    dist_up <- x[k+1]-cutoff
+
+
     lenx <- len(x)
-    vlus_above <- lenx-k
     maxy <- max(y)
+
+        
+    if (cutoff_amt <= max(y)) {
+        ## could make own funtion for this, but kinda lazy for now 
+        cutoff = RootLinearInterpolant(x,y,cutoff_amt)
+        ind <- order(x)
+        x <- x[ind]; y <- y[ind]
+        z <- y - cutoff_amt
+        ## which piecewise linear segment crosses zero?
+        k <- which(z[-1] * z[-length(z)] < 0)
+
+        dist_down <- cutoff-x[k]
+        dist_up <- x[k+1]-cutoff
+        vlus_above <- lenx-k
+
+        
+    } else {
+        ## some manual specification in case the cutoff amount is above the top value of y
+        
+        cutoff <- 100 # just set to 100, so percentage will be 0
+        dist_down <- 100-max(x) ## the range from 100 to top percentile, maybe not actual distance but upper limit 
+        dist_up <- NA ## not applicable now 
+        vlus_above <- 0
+    }
+
 
     res_df <- tibble(pct_cutoff=100-cutoff, ## rather use percentage above threshold
                   dist_down=dist_down,
@@ -393,12 +410,63 @@ get_wealth_cutoff_pct <- function(wealth_cur_df, cutoff) {
     
     df_wealth <- wealth_cur_df %>%
         group_by(iso3c, year) %>%
-        do(wealth_cutoff(.$pct_lo, .$wealth_cur, cutoff_amt =cutoff))
-
+        do(wealth_cutoff(.$pct_lo, .$wealth_cur, cutoff_amt =cutoff, iso3c = .$iso3c, year= .$year))
 
 
     return(df_wealth)
 }
+
+get_hwni_pcts <- function() {
+    #' more general wrapper function for getting hwni data
+    #' return diagnostics if requested
+    
+    wealth_cur_df <- get_wealth_df(diag=FALSE) 
+
+    ## HWNIs
+    ## df_wealth <- get_wealth_cutoff_pct(wealth_cur_df, 5e+06)
+
+    cutoff_vlus <- c(1e6, 2.5e6, 5e6, 10e6, 50e6, 100e6, 250e6,500e6)
+
+
+    df_wealth_list <- mclapply(cutoff_vlus, function(x) get_wealth_cutoff_pct(wealth_cur_df, x), mc.cores = 8)
+    df_wealth_cbn <- as_tibble(Reduce(function(x,y,...) merge(x,y, all=TRUE), df_wealth_list))
+
+    ## filter out Spain because data is crap 
+    df_hwni <- filter(df_wealth_cbn, iso3c!="ESP")
+
+    
+    vlu_columns <- unlist(lapply(cutoff_vlus, function(x) paste0("pct_cutoff_", sanitize_number(x))))
+
+    ## diag=T, return some more data 
+    if (diag) {
+        return_cols <- names(df_hwni)
+    } else {
+        return_cols <- c("iso3c", "year", vlu_columns)
+    }
+    
+
+    
+    return(df_hwni[,return_cols])
+}
+
+df_hwni <- get
+
+## ** debugging high thresholds
+
+
+df_wealth_10m <- get_wealth_cutoff_pct(na.omit(wealth_cur_df), 10e6)
+df_wealth_50m <- get_wealth_cutoff_pct(na.omit(wealth_cur_df), 50e6)
+df_wealth_100m <- get_wealth_cutoff_pct(na.omit(wealth_cur_df), 100e6)
+
+## hmm coverage is better but still not identical, which it should be
+
+
+filter(wealth_cur_df, iso3c=="PRK")$wealth_cur
+## PRK is full of NAs
+
+
+## ** testing 
+
 
 
 ## wealth_cur_df <- get_wealth_df()

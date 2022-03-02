@@ -42,12 +42,6 @@ df_anls$nbr_opened_prop <- df_anls$nbr_opened/(df_anls$SP.POP.TOTL/1e6)
 ## filter(df_anls, nbr_opened_prop > 1)
 ## iceland, monaco, cyprus LUL
 
-wealth_cur_df <- get_wealth_df()
-
-## HWNIs
-df_wealth <- get_wealth_cutoff_pct(wealth_cur_df, 5e+06)
-df_wealth_list <- lapply(c(1e6, 2.5e6, 5e6, 10e6), function(x) get_wealth_cutoff_pct(wealth_cur_df, x))
-df_wealth_cbn <- as_tibble(Reduce(function(x,y,...) merge(x,y, all=TRUE), df_wealth_list))
 
 ## inequalities
 df_ineq <- get_all_ineqs()
