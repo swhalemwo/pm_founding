@@ -121,6 +121,39 @@ pdf(paste0(FIG_DIR, "inequalities_pca.pdf"), width = 14, height = 10)
 grid.arrange(grobs = c(pca_inc_plts, pca_weal_plts, pca_ineqall_plts), ncol=3, as.table=FALSE)
 dev.off()
 
+## ** debugging spanish thweal992j
+df_wealth_cur_esp <- filter(wealth_cur_df, iso3c=="ESP")
+
+df_wealth_esp_re <- df_wealth_cur_esp %>%
+    group_by(year) %>%
+    do(wealth_cutoff(.$pct_lo, .$wealth_cur, cutoff_amt =cutoff))
+
+df_wealth_cur_esp95 <- filter(df_wealth_cur_esp, year==1995)
+
+
+ggplot(filter(df_wealth_cur_esp95, log10(value) > 4.7 & log10(value) < 5.5), aes(x=pct_lo, y=log10(value))) +
+    geom_point()
+
+df_wealth_esp <- filter(df_wealth, iso3c=="ESP")
+
+## df_wealth
+print(paste("ESP", cutoff, nrow(filter(df_wealth, iso3c=="ESP"))))
+
+df_wealth_cur_deu95 <- filter(wealth_cur_df, iso3c=="DEU" & year==1995)
+df_wealth_cur_usa95 <- filter(wealth_cur_df, iso3c=="USA" & year==1995)
+
+
+as.data.frame(df_wealth_cur_deu95[order(df_wealth_cur_deu95$percentile),])
+as.data.frame(df_wealth_cur_usa95[order(df_wealth_cur_usa95$percentile),])
+
+wealth_cur_df_plt <- filter(wealth_cur_df, year==1995 & iso3c %in% c("DEU", "USA", "NLD", "PRT", "FRA", "ESP", "CHN", "BRA"))
+
+ggplot(wealth_cur_df_plt, aes(x=pct_lo, y=log10(value), color=iso3c)) +
+    geom_line()
+
+
+
+
 
 
 ## ** pretty printing/export function for WID completeness check tables
