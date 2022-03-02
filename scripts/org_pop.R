@@ -23,16 +23,11 @@ df_anls <- create_anls_df(df_wb, df_open)
 
 ## *** remaining variables construction, not directly related to structure, have to be functionalized somewhere
 
-df_anls$wv <- 0
 
-df_anls$gdp_pcapk <- df_anls$gdp_pcap/1000
 
-## check if WB and my country codes are the same, they are 
-## x <- merge(df_gdp_pcap2[,c("V1", "V2")],
-##       unique(df_country_year_agg[,c("country", "countrycode")]),
-##       by.x = c("V2"),
-##       by.y = c("countrycode"))
-## x[which(x$V1 != x$country),]
+
+
+df_anls$NY.GDP.PCAP.CDk <- df_anls$NY.GDP.PCAP.CD/1000
 
 ## cumulative number of opened
 df_anls$nbr_opened_cum <- ave(df_anls$nbr_opened, df_anls$iso3c, FUN = cumsum)
@@ -41,17 +36,58 @@ df_anls$nbr_opened_cum <- ave(df_anls$nbr_opened, df_anls$iso3c, FUN = cumsum)
 df_anls$nbr_opened_cum_sqrd <- (df_anls$nbr_opened_cum^2)/100
 ## have to divide by 100 otherwise R glmer.nb complains
 
-
 ## PMs opened per 1m people -> rate
-df_anls$nbr_opened_prop <- df_anls$nbr_opened/(df_anls$population/1000000)
+df_anls$nbr_opened_prop <- df_anls$nbr_opened/(df_anls$SP.POP.TOTL/1e6)
 
+## filter(df_anls, nbr_opened_prop > 1)
 ## iceland, monaco, cyprus LUL
-filter(df_anls, nbr_opened_prop > 1)
 
-## wealth_cur_df <- get_wealth_df()
-## df_wealth <- get_wealth_cutoff_pct(wealth_cur_df, 5e+06)
+wealth_cur_df <- get_wealth_df()
 
+## HWNIs
+df_wealth <- get_wealth_cutoff_pct(wealth_cur_df, 5e+06)
+df_wealth_list <- lapply(c(1e6, 2.5e6, 5e6, 10e6), function(x) get_wealth_cutoff_pct(wealth_cur_df, x))
+df_wealth_cbn <- as_tibble(Reduce(function(x,y,...) merge(x,y, all=TRUE), df_wealth_list))
+
+## inequalities
 df_ineq <- get_all_ineqs()
+
+## tax incentives
+df_taxinc <- get_taxinc_dfs()
+
+## mow
+
+mow_res <- get_mow_dfs()
+mow_crssctn <- mow_res$mow_crssctn
+mow_cntns <- mow_res$mow_cntns
+
+## need to fill NAs of MOW with 0s
+c(names(mow_crssctn), names(mow_cntns))
+
+
+## combine everything
+df_reg <- as_tibble(Reduce(function(x,y,...) merge(x,y, by = c("iso3c", "year"), all.x = TRUE),
+                           list(df_anls, df_wealth_cbn)))
+## hmm a lot of extra country-years by adding df_wealth_cbn, not clear which
+
+unique(df_wealth_cbn$iso3c)[which(unique(df_wealth_cbn$iso3c) %!in% unique(df_anls$iso3c))]
+## all df_wealth_cbn iso3cs are in df_anls
+
+max(table(df_reg$iso3c)) ## ESP is wrong
+sum(table(df_anls$iso3c))
+table(df_wealth_cbn$iso3c)
+
+table(is.na(df_reg$iso3c))
+
+wealth_esp <- filter(df_wealth_cbn, iso3c=="ESP")
+
+
+
+df_ineq, df_taxinc, mow_crssctn, mow_cntns)))
+
+df_reg <- merge(
+
+na.omit(df_reg)
 
 
 ## ** checking NAs
