@@ -48,6 +48,10 @@ df_anls$nbr_opened_prop <- df_anls$nbr_opened/(df_anls$population/1000000)
 ## iceland, monaco, cyprus LUL
 filter(df_anls, nbr_opened_prop > 1)
 
+## wealth_cur_df <- get_wealth_df()
+## df_wealth <- get_wealth_cutoff_pct(wealth_cur_df, 5e+06)
+
+df_ineq <- get_all_ineqs()
 
 
 ## ** checking NAs

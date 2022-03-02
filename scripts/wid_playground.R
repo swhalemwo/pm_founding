@@ -1,3 +1,116 @@
+## ** HWNI calculations
+
+dbGetQuery(con, "show tables")
+
+wid_wealth_vars_cmd <- "SELECT DISTINCT(variable), percentile FROM wid_v2 WHERE ilike(varx, '%weal%')"
+wealth_vars <- as_tibble(dbGetQuery(con, wid_wealth_vars_cmd))
+
+wealth_tbl <- table(wealth_vars$variable)
+wealth_tbl[order(wealth_tbl)]
+
+wealth_cmd <- "SELECT variable, percentile, value from wid_v2 where iso3c='DEU' and variable='thweal992j' and year=2000"
+
+pctl_tbl <- table(wealth_vars$percentile)
+pctl_tbl[order(pctl_tbl)]
+
+
+
+wealth_data <- as_tibble(dbGetQuery(con, wealth_cmd))
+
+wealth_data$pct_lo <- as.numeric(unlist(lapply(strsplit(wealth_data$percentile, split='p'), function(x) x[2])))
+wealth_data$pct_hi <- as.numeric(unlist(lapply(strsplit(wealth_data$percentile, split='p'), function(x) x[3])))
+
+wealth_data$pct_len <- wealth_data$pct_hi-wealth_data$pct_lo
+
+ggplot(filter(wealth_data, pct_lo > 80, pct_len >=0.1), aes(xmin=pct_lo, xmax=pct_hi, ymin=0, ymax=value, alpha=0.01)) +
+    geom_rect()
+
+ggplot(filter(wealth_data), aes(x=pct_lo, y=log10(value))) +
+    geom_point()
+
+approx(wealth_data$pct_lo, wealth_data$value, xout = 98.12)
+## approx can only calculate y given x, but need x given y -> RootLinearInterpolant
+
+
+ggplot(df_wealth, aes(x=year, y=pct_cutoff_5M, group=iso3c, color=iso3c)) +
+    geom_line()
+
+ggplot(filter(df_wealth, pct_cutoff_5M < 5), aes(x=year, y=pct_cutoff_5M, group=iso3c, color=iso3c)) +
+    geom_line()
+
+
+## *** debug weird countries: leave for now
+
+
+table(filter(df_wealth, pct_cutoff_5M > 2)$iso3c)
+## AGO BLR COD UZB VEN 
+##   4   3   5   1  25 
+## much in values for vuvuzela -> maybe I have to lag the cur_df? 
+
+filter(currency_df, iso3c=="VEN")$xlcusp999i
+
+ggplot(filter(df_wealth, iso3c=="VEN"), aes(x=year, y=pct_cutoff, group=iso3c, color=iso3c)) +
+    geom_line()
+
+
+## *** try different cutoffs
+df_wealth_list <- lapply(c(1e6, 2.5e6, 5e6, 10e6), function(x) get_wealth_cutoff_pct(wealth_cur_df, x))
+df_wealth_cbn <- as_tibble(Reduce(function(x,y,...) merge(x,y, all=TRUE), df_wealth_list))
+
+chart.Correlation(df_wealth_cbn[,c("pct_cutoff_1M", "pct_cutoff_2.5M", "pct_cutoff_5M", "pct_cutoff_10M")])
+## quiet high correlations, idk if I have to control for time series characteristics tho 
+
+## *** wealth inequality
+
+chart.Correlation(wealth_ineq_df[,c("value_p90p100", "value_p95p100", "value_p99p100", "value_p99.9p100", "value_p99.99p100")])
+
+## *** income inequality
+wid_inc_vars_cmd <- "SELECT DISTINCT(variable), percentile FROM wid_v2 WHERE ilike(varx, '%inc%')"
+wid_inc_vars <- as_tibble(dbGetQuery(con, wid_inc_vars_cmd))
+wid_inc_vars_tbl <- table(wid_inc_vars$variable)
+wid_inc_vars_tbl[order(wid_inc_vars_tbl)]
+
+inc_ineq_vars <- c("sptinc992j", "sdiinc992j", "scainc992j")
+ineq_tpls <- expand.grid(varx=inc_ineq_vars, pctl=pctls)
+ineq_res <- apply(ineq_tpls, 1, function(x) get_inc_ineq(pctl=x['pctl'], varx=x['varx']))
+ineq_res_anls <- rbindlist(lapply(ineq_res, function(x) list(name=names(x)[3], lenx= nrow(x))))
+ineq_res_anls[order(ineq_res_anls$name),]
+## -> only sptinc992j (pre-tax income) has good coverage
+
+chart.Correlation(inc_ineq_df[,c("sptinc992j_p90p100", "sptinc992j_p95p100", "sptinc992j_p99p100", "sptinc992j_p99.9p100", "sptinc992j_p99.99p100")])
+## huh correlations within income inequality less than within wealth ineqality
+
+
+## *** compare income and wealth ineqality
+chart.Correlation(all_ineqs[,c("value_p90p100", "value_p95p100", "value_p99p100", "value_p99.9p100", "value_p99.99p100", "sptinc992j_p90p100", "sptinc992j_p95p100", "sptinc992j_p99p100", "sptinc992j_p99.9p100", "sptinc992j_p99.99p100")])
+## huh quite some correlations between income and wealth ineqality
+
+## *** ginis
+
+pdf(paste0(FIG_DIR, "inequalities.pdf"), width = 14, height = 8)
+chart.Correlation(df_ineq[,3:ncol(df_ineq)])
+dev.off()
+
+x <- chart.Correlation(df_ineq[,3:5])
+
+library(GGally)
+ggpairs(df_ineq[,3:5])
+
+
+png(paste0(FIG_DIR, "inequalities.png"), width = 2000, height = 1200)
+chart.Correlation(df_ineq[,3:ncol(df_ineq)])
+dev.off()
+
+
+png(paste0(FIG_DIR, "inequalities.png"), width = 1200, height = 800)
+ggpairs(df_ineq[,3:ncol(df_ineq)])
+dev.off()
+
+pdf(paste0(FIG_DIR, "inequalities.pdf"), width = 14, height = 8)
+ggpairs(df_ineq[,3:ncol(df_ineq)])
+dev.off()
+
+
 ## ** pretty printing/export function for WID completeness check tables
     wealth_res_df2 <- wealth_res_df2[,c('variable', 'variable_label', 'PMs_covered_raw', 'cry_cvrg_geq3', 'nbr_of_crys_geq3', 'nbr_of_crys_geq1pm')]
 
@@ -260,10 +373,7 @@ x <- tbl(con, "wdi") %>%
 
 
 
-
-
 ## could add something like how complete the countries are that are not fully complete to assess how difficult imputation will be 
-
 
 
 
