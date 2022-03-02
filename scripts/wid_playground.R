@@ -93,8 +93,6 @@ dev.off()
 
 x <- chart.Correlation(df_ineq[,3:5])
 
-library(GGally)
-ggpairs(df_ineq[,3:5])
 
 
 png(paste0(FIG_DIR, "inequalities.png"), width = 2000, height = 1200)
@@ -109,6 +107,20 @@ dev.off()
 pdf(paste0(FIG_DIR, "inequalities.pdf"), width = 14, height = 8)
 ggpairs(df_ineq[,3:ncol(df_ineq)])
 dev.off()
+
+pca_ineq <- prcomp(na.omit(df_ineq[,c(3:ncol(df_ineq))]))
+pca_inc <- prcomp(na.omit(df_ineq[,grep("ptinc", names(df_ineq))]))
+pca_weal <- prcomp(na.omit(df_ineq[,grep("hweal", names(df_ineq))]))
+
+
+pca_ineqall_plts <- pca_viz(pca.res = pca_ineq, title = "all")
+pca_inc_plts <- pca_viz(pca.res = pca_inc, title = "income")
+pca_weal_plts <- pca_viz(pca.res = pca_weal, title = "wealth")
+
+pdf(paste0(FIG_DIR, "inequalities_pca.pdf"), width = 14, height = 10)
+grid.arrange(grobs = c(pca_inc_plts, pca_weal_plts, pca_ineqall_plts), ncol=3, as.table=FALSE)
+dev.off()
+
 
 
 ## ** pretty printing/export function for WID completeness check tables
