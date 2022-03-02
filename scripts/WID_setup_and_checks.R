@@ -454,7 +454,7 @@ get_ginis <- function() {
 get_all_ineqs <- function() {
     #' get wealth/income top percentile shares and ginis
 
-    pctls <- c("p90p100", "p95p100", "p99p100", "p99.9p100", "p99.99p100")
+    pctls <- c("p50p100", "p90p100", "p95p100", "p99p100", "p99.9p100", "p99.99p100")
 
     wealth_ineq_list <- lapply(pctls, get_wealth_ineq)
     wealth_ineq_df <- as_tibble(Reduce(function(x,y,...) merge(x,y), wealth_ineq_list))
