@@ -85,6 +85,31 @@ chart.Correlation(inc_ineq_df[,c("sptinc992j_p90p100", "sptinc992j_p95p100", "sp
 chart.Correlation(all_ineqs[,c("value_p90p100", "value_p95p100", "value_p99p100", "value_p99.9p100", "value_p99.99p100", "sptinc992j_p90p100", "sptinc992j_p95p100", "sptinc992j_p99p100", "sptinc992j_p99.9p100", "sptinc992j_p99.99p100")])
 ## huh quite some correlations between income and wealth ineqality
 
+## *** ginis
+
+pdf(paste0(FIG_DIR, "inequalities.pdf"), width = 14, height = 8)
+chart.Correlation(df_ineq[,3:ncol(df_ineq)])
+dev.off()
+
+x <- chart.Correlation(df_ineq[,3:5])
+
+library(GGally)
+ggpairs(df_ineq[,3:5])
+
+
+png(paste0(FIG_DIR, "inequalities.png"), width = 2000, height = 1200)
+chart.Correlation(df_ineq[,3:ncol(df_ineq)])
+dev.off()
+
+
+png(paste0(FIG_DIR, "inequalities.png"), width = 1200, height = 800)
+ggpairs(df_ineq[,3:ncol(df_ineq)])
+dev.off()
+
+pdf(paste0(FIG_DIR, "inequalities.pdf"), width = 14, height = 8)
+ggpairs(df_ineq[,3:ncol(df_ineq)])
+dev.off()
+
 
 ## ** pretty printing/export function for WID completeness check tables
     wealth_res_df2 <- wealth_res_df2[,c('variable', 'variable_label', 'PMs_covered_raw', 'cry_cvrg_geq3', 'nbr_of_crys_geq3', 'nbr_of_crys_geq1pm')]
