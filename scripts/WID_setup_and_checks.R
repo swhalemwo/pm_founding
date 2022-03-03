@@ -433,12 +433,11 @@ get_hnwi_pcts <- function(diag=FALSE) {
     df_wealth_cbn <- as_tibble(Reduce(function(x,y,...) merge(x,y, all=TRUE), df_wealth_list))
 
     
-    vlu_columns <- unlist(lapply(cutoff_vlus, function(x) paste0("pct_cutoff_", sanitize_number(x))))
-
     ## diag=T, return some more data 
     if (diag) {
-        return_cols <- names(df_hwni)
+        return_cols <- names(df_wealth_cbn)
     } else {
+        vlu_columns <- unlist(lapply(cutoff_vlus, function(x) paste0("pct_cutoff_", sanitize_number(x))))
         return_cols <- c("iso3c", "year", vlu_columns)
     }
     

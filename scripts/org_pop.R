@@ -13,12 +13,13 @@ source(paste0(SCRIPT_DIR, "oecd_api.R"))
 
 source(paste0(SCRIPT_DIR, "mow.R"))
 source(paste0(SCRIPT_DIR, "tax_incentives.R"))
+source(paste0(SCRIPT_DIR, "cbn_dfs.R"))
 
 df_excl <- create_excel_df()
 df_open <- aggregate_openings(df_excl)
 df_wb <- get_WB_data(c("NY.GDP.PCAP.CD", "SP.POP.TOTL"))
 df_anls <- create_anls_df(df_wb, df_open)
-
+df_reg <- get_df_reg(df_anls)
 
 
 ## *** remaining variables construction, not directly related to structure, have to be functionalized somewhere
@@ -26,52 +27,10 @@ df_anls <- create_anls_df(df_wb, df_open)
 
 
 
-
-df_anls$NY.GDP.PCAP.CDk <- df_anls$NY.GDP.PCAP.CD/1000
-
-## cumulative number of opened
-df_anls$nbr_opened_cum <- ave(df_anls$nbr_opened, df_anls$iso3c, FUN = cumsum)
-
-
-df_anls$nbr_opened_cum_sqrd <- (df_anls$nbr_opened_cum^2)/100
-## have to divide by 100 otherwise R glmer.nb complains
-
-## PMs opened per 1m people -> rate
-df_anls$nbr_opened_prop <- df_anls$nbr_opened/(df_anls$SP.POP.TOTL/1e6)
-
-## filter(df_anls, nbr_opened_prop > 1)
-## iceland, monaco, cyprus LUL
-
-
-## inequalities
-df_ineq <- get_all_ineqs()
-
-## tax incentives
-df_taxinc <- get_taxinc_dfs()
-
-## mow
-
-mow_res <- get_mow_dfs()
-mow_crssctn <- mow_res$mow_crssctn
-mow_cntns <- mow_res$mow_cntns
-
-## need to fill NAs of MOW with 0s
-c(names(mow_crssctn), names(mow_cntns))
-
-df_hwni <- get_hwni_pcts()
-
-## combine everything
-df_reg <- as_tibble(Reduce(function(x,y,...) merge(x,y, by = c("iso3c", "year"), all.x = TRUE),
-                           list(df_anls, df_hwni)))
-
-## hmm a lot of extra country-years by adding df_wealth_cbn, not clear which
-
-
-df_ineq, df_taxinc, mow_crssctn, mow_cntns)))
+na.omit(df_reg[names(df_reg) %!in% c("PC1_all", "PC2_all")])
 
 
 
-na.omit(df_reg)
 
 
 ## ** checking NAs
