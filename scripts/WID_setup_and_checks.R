@@ -417,13 +417,13 @@ get_wealth_cutoff_pct <- function(wealth_cur_df, cutoff) {
     return(df_wealth)
 }
 
-get_hwni_pcts <- function(diag=FALSE) {
-    #' more general wrapper function for getting hwni data
+get_hnwi_pcts <- function(diag=FALSE) {
+    #' more general wrapper function for getting hnwi data
     #' return diagnostics if requested
     
     wealth_cur_df <- get_wealth_df()
 
-    ## HWNIs
+    ## HNWIs
     ## df_wealth <- get_wealth_cutoff_pct(wealth_cur_df, 5e+06)
 
     cutoff_vlus <- c(1e6, 2.5e6, 5e6, 10e6, 50e6, 100e6, 250e6,500e6)
@@ -447,7 +447,7 @@ get_hwni_pcts <- function(diag=FALSE) {
 }
 
 
-## df_hwni <- get_hwni_pcts()
+## df_hwni <- get_hnwi_pcts()
 
 
 ## df_wealth_10m <- get_wealth_cutoff_pct(na.omit(wealth_cur_df), 10e6)
