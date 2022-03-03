@@ -58,28 +58,18 @@ mow_cntns <- mow_res$mow_cntns
 ## need to fill NAs of MOW with 0s
 c(names(mow_crssctn), names(mow_cntns))
 
+df_hwni <- get_hwni_pcts()
 
 ## combine everything
 df_reg <- as_tibble(Reduce(function(x,y,...) merge(x,y, by = c("iso3c", "year"), all.x = TRUE),
-                           list(df_anls, df_wealth_cbn)))
+                           list(df_anls, df_hwni)))
+
 ## hmm a lot of extra country-years by adding df_wealth_cbn, not clear which
-
-unique(df_wealth_cbn$iso3c)[which(unique(df_wealth_cbn$iso3c) %!in% unique(df_anls$iso3c))]
-## all df_wealth_cbn iso3cs are in df_anls
-
-max(table(df_reg$iso3c)) ## ESP is wrong
-sum(table(df_anls$iso3c))
-table(df_wealth_cbn$iso3c)
-
-table(is.na(df_reg$iso3c))
-
-wealth_esp <- filter(df_wealth_cbn, iso3c=="ESP")
-
 
 
 df_ineq, df_taxinc, mow_crssctn, mow_cntns)))
 
-df_reg <- merge(
+
 
 na.omit(df_reg)
 

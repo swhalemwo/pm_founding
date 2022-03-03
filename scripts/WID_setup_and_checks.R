@@ -395,7 +395,7 @@ get_wealth_df <- function() {
 
     wealth_cur_df$pct_lo <- as.numeric(unlist(lapply(strsplit(wealth_cur_df$percentile, split='p'), function(x) x[2])))
 
-    return(wealth_cur_df)
+    return(na.omit(wealth_cur_df))
 }
 
 
@@ -409,6 +409,7 @@ get_wealth_cutoff_pct <- function(wealth_cur_df, cutoff) {
 
     
     df_wealth <- wealth_cur_df %>%
+        filter(iso3c != "ESP") %>% ## filter out crappy Spain data 
         group_by(iso3c, year) %>%
         do(wealth_cutoff(.$pct_lo, .$wealth_cur, cutoff_amt =cutoff, iso3c = .$iso3c, year= .$year))
 
@@ -416,11 +417,11 @@ get_wealth_cutoff_pct <- function(wealth_cur_df, cutoff) {
     return(df_wealth)
 }
 
-get_hwni_pcts <- function() {
+get_hwni_pcts <- function(diag=FALSE) {
     #' more general wrapper function for getting hwni data
     #' return diagnostics if requested
     
-    wealth_cur_df <- get_wealth_df(diag=FALSE) 
+    wealth_cur_df <- get_wealth_df()
 
     ## HWNIs
     ## df_wealth <- get_wealth_cutoff_pct(wealth_cur_df, 5e+06)
@@ -430,9 +431,6 @@ get_hwni_pcts <- function() {
 
     df_wealth_list <- mclapply(cutoff_vlus, function(x) get_wealth_cutoff_pct(wealth_cur_df, x), mc.cores = 8)
     df_wealth_cbn <- as_tibble(Reduce(function(x,y,...) merge(x,y, all=TRUE), df_wealth_list))
-
-    ## filter out Spain because data is crap 
-    df_hwni <- filter(df_wealth_cbn, iso3c!="ESP")
 
     
     vlu_columns <- unlist(lapply(cutoff_vlus, function(x) paste0("pct_cutoff_", sanitize_number(x))))
@@ -444,29 +442,17 @@ get_hwni_pcts <- function() {
         return_cols <- c("iso3c", "year", vlu_columns)
     }
     
-
     
-    return(df_hwni[,return_cols])
+    return(df_wealth_cbn[,return_cols])
 }
 
-df_hwni <- get
 
-## ** debugging high thresholds
-
-
-df_wealth_10m <- get_wealth_cutoff_pct(na.omit(wealth_cur_df), 10e6)
-df_wealth_50m <- get_wealth_cutoff_pct(na.omit(wealth_cur_df), 50e6)
-df_wealth_100m <- get_wealth_cutoff_pct(na.omit(wealth_cur_df), 100e6)
-
-## hmm coverage is better but still not identical, which it should be
+## df_hwni <- get_hwni_pcts()
 
 
-filter(wealth_cur_df, iso3c=="PRK")$wealth_cur
-## PRK is full of NAs
-
-
-## ** testing 
-
+## df_wealth_10m <- get_wealth_cutoff_pct(na.omit(wealth_cur_df), 10e6)
+## df_wealth_50m <- get_wealth_cutoff_pct(na.omit(wealth_cur_df), 50e6)
+## df_wealth_100m <- get_wealth_cutoff_pct(na.omit(wealth_cur_df), 100e6)
 
 
 ## wealth_cur_df <- get_wealth_df()

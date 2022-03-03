@@ -94,7 +94,6 @@ dev.off()
 x <- chart.Correlation(df_ineq[,3:5])
 
 
-
 png(paste0(FIG_DIR, "inequalities.png"), width = 2000, height = 1200)
 chart.Correlation(df_ineq[,3:ncol(df_ineq)])
 dev.off()
@@ -120,6 +119,45 @@ pca_weal_plts <- pca_viz(pca.res = pca_weal, title = "wealth")
 pdf(paste0(FIG_DIR, "inequalities_pca.pdf"), width = 14, height = 10)
 grid.arrange(grobs = c(pca_inc_plts, pca_weal_plts, pca_ineqall_plts), ncol=3, as.table=FALSE)
 dev.off()
+
+## ** visualizing cutoff lines, Russia weird
+
+
+df_hwni_melt <- as_tibble(reshape2::melt(df_hwni, id=c("iso3c", "year")))
+
+ggplot(df_hwni_melt, aes(x=year, y=value, color = interaction(iso3c, variable))) +
+    geom_line(show.legend = FALSE, alpha=0.2)
+
+table(filter(df_hwni_melt, value > 10)$iso3c)
+
+filter(df_hwni_melt, iso3c=="RUS", value > 10)
+get_wealth_cutoff_pct(filter(wealth_cur_df, iso3c=="RUS", year == 1995), cutoff = 1e6)
+
+ggplot(filter(wealth_cur_df, iso3c=="RUS", year == 1995), aes(x=pct_lo, y=log10(wealth_cur))) +
+    geom_line()
+
+ggplot(filter(wealth_cur_df, iso3c=="RUS"), aes(x=pct_lo, y=log10(wealth_cur), group=year, color=year)) +
+    geom_line() +
+    scale_color_gradient(low="blue", high = "red")
+
+ggplot(filter(df_hwni_melt, iso3c=="DEU"), aes(x=year, y=log10(value), group=variable, color=variable)) +
+    geom_line() 
+
+
+
+pdf(paste0(FIG_DIR, "russian_weirdness.pdf"), width = 9, height = 6)
+ggplot(filter(df_hwni_melt, iso3c %in% c("DEU", "RUS", "USA", "CHN", "NLD", "CHE") & year >=1995),
+       aes(x=year, y=log10(value))) +
+    facet_wrap(~ variable) + 
+    geom_line(aes(color=iso3c), size=1) + 
+    labs(title = "logged percentage of people above cutoff, Russia declining everywhere") +
+    scale_color_brewer(palette="Dark2")
+dev.off()
+
+
+
+
+
 
 ## ** debugging spanish thweal992j
 df_wealth_cur_esp <- filter(wealth_cur_df, iso3c=="ESP")
@@ -152,6 +190,31 @@ ggplot(wealth_cur_df_plt, aes(x=pct_lo, y=log10(value), color=iso3c)) +
     geom_line()
 
 
+## ** debugging high thresholds
+
+wealth_cur_df <- get_wealth_df()
+
+
+df_wealth_10m <- get_wealth_cutoff_pct(na.omit(wealth_cur_df), 10e6)
+df_wealth_50m <- get_wealth_cutoff_pct(na.omit(wealth_cur_df), 50e6)
+df_wealth_100m <- get_wealth_cutoff_pct(na.omit(wealth_cur_df), 100e6)
+
+## hmm coverage is better but still not identical, which it should be
+setdiff(unique(df_wealth_10m[,c("iso3c", "year", "pct_cutoff_10M")]), unique(df_wealth_100m[,c("iso3c", "year", "pct_cutoff_100M")]))
+
+unique(df_wealth_10m[,c("iso3c", "year")])
+unique(df_wealth_100m[,c("iso3c", "year")])
+
+df_wealth_10m$cnt <- 1
+df_wealth_100m$cnt <- 1
+
+filter(as_tibble(aggregate(cnt ~ iso3c + year, df_wealth_10m, sum)), cnt > 1)
+filter(as_tibble(aggregate(cnt ~ iso3c + year, df_wealth_100m, sum)), cnt > 1)
+
+
+
+filter(wealth_cur_df, iso3c=="PRK")$wealth_cur
+## PRK is full of NAs
 
 
 
