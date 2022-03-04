@@ -31,11 +31,33 @@ pseudo.r2 <- function(glm) {
     return(1-(glm$deviance/glm$null.deviance))
 }
 
+## ** overdispersion test
+
 poisson.phi <- function(glm) {
     #' calculate overdispersion parameter phi
     dp = sum(residuals(glm,type ="pearson")^2)/glm$df.residual
     return(dp)
 }
+library(AER)
+overdisp <- dispersiontest(poi2)
+poisson.phi(poi2)
+## hmm i get different results, but poisson.phi produces also what Coxe_etal report (2.30 for poi2, 2.84 for poi1)
+## dispersiontest is very similar tho: 2.27 for poi2, 2.83 for poi1
+
+## https://towardsdatascience.com/adjust-for-overdispersion-in-poisson-regression-4b1f52baa2f1
+## calling summary doesn't work somehow
+## i fucking hate these overloaded methods
+summary(poi2, dispersion = overdisp)
+
+## seems like family=quasipoisson implements overdispersed poisson
+qpoi2 <- glm(drinks ~ sensation + gender, df, family = "quasipoisson")
+qpoi1 <- glm(drinks ~ sensation,df, family = "quasipoisson")
+screenreg(list(poi2, qpoi2))
+
+summary(qpoi1)
+
+## this is literally just larger SEs...
+
 
 
 ## ** descriptives 
