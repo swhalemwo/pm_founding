@@ -23,7 +23,42 @@ resids <- residuals(poi2, "deviance")
 plot(poi2$fitted.values, resids)
 
 
+## ** prediction
 
+predict(poi2)
+predict_df <- as_tibble(expand.grid(gender=c(0,1), sensation=seq(0,8,0.1)))
+
+predict_df$prediction <- predict.glm(poi2, newdata=predict_input, type="response")
+
+predict_se <- predict.glm(poi2, newdata=predict_input, type="response", se.fit=T)
+predict_df$prediction <- predict_se$fit
+predict_df$se <- predict_se$se.fit
+## options for type:
+## - "response": seems to work
+## - "link": just linear?
+## - "terms": something weird, but seems like linear
+
+predict_df$ci_hi <- predict_df$prediction + 1.96*predict_df$se
+predict_df$ci_lo <- predict_df$prediction - 1.96*predict_df$se
+
+ggplot(predict_df, aes(x=sensation, y=prediction, color=factor(gender))) +
+    geom_line() +
+    geom_ribbon(aes(ymin=ci_lo, ymax=ci_hi, fill=factor(gender), alpha=0.5), show.legend=FALSE)
+
+## makes sense that men start higher: exp(0) for gender evaluates to 1, so if men have something more there (0.83) they have more because there are is still non-zero baseline to multiplicate with 
+exp(-0.78) ## women at sensation 0
+exp(-0.78) * exp(0.83) ## men at sensation 0
+
+
+
+## not using poisson
+
+## still kinda unclear what values I should use for all the other variables that I'm not plotting
+## maybe there's something like Average marginal effects? 
+
+
+
+## ** pseudo R2
 
 
 pseudo.r2 <- function(glm) {
