@@ -1,5 +1,10 @@
 ## * reading in
 
+tax_vars_all <- c("NPO.tax.exemption", "Individual.Tax.Incentives", "Corporate.Tax.Incentives", "Estate.Tax.Reducable.by.donation", "money_score", "time_score", "Q1","Q2","Q3","Q4","Q5")
+
+tax_vars_caf <- c("NPO.tax.exemption", "Individual.Tax.Incentives", "Corporate.Tax.Incentives", "Estate.Tax.Reducable.by.donation", "money_score", "time_score")
+
+
 
 read_in_tax_incentives <- function() {
     #' read in the tax data sources: CAF rules to give by/world giving  index, Hudson
@@ -203,9 +208,6 @@ get_taxinc_dfs <- function() {
     #' atm var specifications hardcoded here, not sure if they should be moved outside later 
     #' atm also each list specified explicitly, maybe should be generalized into list of configs 
 
-    tax_vars_all <- c("NPO.tax.exemption", "Individual.Tax.Incentives", "Corporate.Tax.Incentives", "Estate.Tax.Reducable.by.donation", "money_score", "time_score", "Q1","Q2","Q3","Q4","Q5")
-
-    tax_vars_caf <- c("NPO.tax.exemption", "Individual.Tax.Incentives", "Corporate.Tax.Incentives", "Estate.Tax.Reducable.by.donation", "money_score", "time_score")
 
     df_taxinc <- read_in_tax_incentives()
     
