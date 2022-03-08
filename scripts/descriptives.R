@@ -14,7 +14,7 @@ tax_inc_xtbl <- xtable(
 
 print(tax_inc_xtbl,
       include.rownames = T,
-      floating = FALSE,
+      ## floating = FALSE,
       file = paste0(TABLE_DIR, "tax_inc_descriptives.tex")
       )
 

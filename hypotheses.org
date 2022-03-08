@@ -368,17 +368,14 @@ I merge these with World bank data on GDP per capita and Population of 217 count
 *** Tax Incentives
 
 
-#+latex: \begin{wraptable}{R}{0pt}
 #+latex: \input{./tables/tax_inc_descriptives.tex}
-#+latex: \caption{Tax incentive descriptives}
-#+latex: \label{tax_inc_descriptives}
-#+latex: \end{wraptable}
 
 #
 I primarily use the reports by the Charities Aid Foundation, [[parencite:&Quick_Kruse_Pickering_2014_philanthropy;&CAF_2018_index]] to construct a measure of the volume and composition of a country's tax incentive.
 #
 In particular, I use four binary indicators from [[textcite:&Quick_Kruse_Pickering_2014_philanthropy]] concerning the exemption of Non-Profit Organizations from at least some taxes, the presence of individual tax incentives for donations, the presence of corporate tax incentives and the possibility of reducing estate tax by charitable donations, as well as two continuous measures of [[textcite:&CAF_2018_index]] describing the percentage of people donating time and money respectively (see table \ref{tax_inc_descriptives} for descriptives).
 #
+
 
 #+label: pca_caf_vars
 #+caption: Tax incentive PCA
