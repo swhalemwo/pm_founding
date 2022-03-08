@@ -214,3 +214,87 @@ poi_fe_within22 <- glmer(y ~ x_within4 + (1 | id), poi_fe_df, family = "poisson"
 
 
 screenreg(list(poi_fe_within2, poi_fe_within21, poi_fe_within22))
+
+## ** tutorial
+
+## first dataset
+library(saemix)
+as_tibble(rapi.saemix)
+
+## can't find second one, whatever
+
+library(dplyr)
+
+df_rapi <- as_tibble(rapi.saemix)
+
+df_rapi$gender <- dplyr::recode(as.character(df_rapi$gender),
+                         "Men"=1,
+                         "Women"=0)
+
+
+df_rapi$time2 <- df_rapi$time/6
+
+poi_rapi <- glmer(rapi ~ gender2 + time2 + (1 | id), df_rapi, family = "poisson")
+poi_rapi2 <- glmer(rapi ~ (1 | gender2)  + time2 +(1 | id), df_rapi, family = "poisson")
+## hmm this gets intercept to 1.45, but no more gender
+poi_rapi3 <- glmer(rapi ~ gender2  + time2 +(1 + gender2 |id), df_rapi, family = "poisson")
+## nope 
+## poi_rapi4 <- glmer(rapi ~  time2 +(1 + gender2 |id), df_rapi, family = "poisson") ## doesn't converge 
+poi_rapi5 <- glmer(rapi ~  gender + time2 +(1 |id) + (-1 | gender), df_rapi, family = "poisson") ## does'nt work? 
+poi_rapi6 <- glmer(rapi ~ gender2 + (1 | gender2)  + time2 +(1 | id), df_rapi, family = "poisson")
+
+poi_rapi7 <- glmer(rapi ~ gender2 + time + (gender2 | id), df_rapi, family = "poisson")
+
+## check appendix for exact values 
+screenreg(list(poi_rapi, poi_rapi2, poi_rapi3, poi_rapi6, poi_rapi7))
+
+library(glmmADMB)
+library(R2admb)
+
+## *** cheatsheet (cs)
+
+## poi_cs1 <- glmer(rapi ~ time + (1 | id)
+
+library(parallel)
+
+screenreg(mclapply(list(
+    ## rapi ~ (1 | id),
+    ## rapi ~ time + (1 | id),
+    rapi ~ time + gender2 + (1 | id),
+    ## rapi ~ time + gender + (1 | id)  ## different intercept, kinda makes sense
+    rapi ~ time + gender2 + (gender2 | id),
+    rapi ~ time2 + gender2 + (gender2 | id), ## rescaling time makes coef more like it should be, but that means without rescaling it's way too small (0.01 instead 0.04)
+    rapi ~ time + gender2 + (1 | id) + (0 + gender2 | id),
+    rapi ~ time + (1+gender2|id),
+    rapi ~ time + (1+gender2|id) + gender2
+),
+    function(x) glmer(x, df_rapi, family = "poisson"), mc.cores=8))
+                                  
+
+## actually working, not sure why tho -> still need to understand the different specifications more -> don't delete the wrong ones yet 
+screenreg(lapply(list(
+    ## rapi ~ time + gender + (1 | id),
+    ## rapi ~ time + (gender | id),
+    ## rapi ~ time + gender + (1 + gender | id),
+    ## rapi ~ time + (1 | gender) + (1 | id),
+    ## rapi ~ time + (1 | gender) + (1 + gender | id),
+    ## rapi ~ time + (1 | gender) + (1 + gender | id) + gender
+    rapi ~ time + (time | id) + gender, ## this is what works huh
+    rapi ~ time + (time | id) + gender + (1 | gender),
+    rapi ~ time + (time | id) + gender + (gender | id)
+    ),
+    function(x) glmer(x, df_rapi, family = "poisson")
+    ))
+
+## ** prediction 
+
+predict_df <- as_tibble(expand.grid(gender2=c(0,1), time2=seq(0,25,1)))
+library(lme4)
+
+
+predict.merMod(poi_rapi, newdata=predict_df)
+
+
+
+
+## ** overdispersion glmer
