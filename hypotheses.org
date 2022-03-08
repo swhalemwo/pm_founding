@@ -348,6 +348,46 @@ Furthermore, the population of art collectors might be important as precursors o
 
 
 
+* data section
+
+** dependent variable: counts of private museum
+#+label: openings
+#+caption: Private Museum openings (absolute and population-rate)
+[[file:figures/foundings_country_cnt_and_rate.pdf]]
+
+#
+I use the private museum database constructed by the research team to construct my dependent variable, number of private museums openings in a country in a given year. 
+#
+Given the current not-fully standardized status of the database, I obtain a year of opening for 346 private museums in 62 countries (see figure [[openings]] for the 12 countries with the highest absolute number of private museums, which constitute around 70% of the private museum population).
+#
+I merge these with World bank data on GDP per capita and Population of 217 countries for the years ranging from 1985 to 2020 (the starting and ending years of my analysis), resulting in 217*36=7812 country-years as unit of analysis (additions of other variables will decrease the number of units of observation). 
+#
+
+** Predictors
+#
+*** Tax Incentives
+
+
+#+latex: \input{./tables/tax_inc_descriptives.tex}
+
+
+#
+I primarily use the reports by the Charities Aid Foundation, [[parencite:&Quick_Kruse_Pickering_2014_philanthropy;&CAF_2018_index]] to construct a measure of the volume and composition of a country's tax incentive.
+#
+In particular, I use four binary indicators from [[textcite:&Quick_Kruse_Pickering_2014_philanthropy]] concerning the exemption of Non-Profit Organizations from at least some taxes, the presence of individual tax incentives for donations, the presence of corporate tax incentives and the possibility of reducing estate tax by charitable donations, as well as two continuous measures of [[textcite:&CAF_2018_index]] describing the percentage of people donating time and money respectively.
+#
+I combine these indicators in a Principal Component Analysis.
+#
+
+
+
+# #+latex: \caption{Private Museums per country}
+# #+latex: \label{countries}
+
+
+
+
+
 
 * References :ignhead:
 #+Latex: \begin{sloppypar}
