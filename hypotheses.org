@@ -396,9 +396,14 @@ Figure [[pca_caf_ind]] shows the for the location of countries on the two dimens
 #
 As notable clusters emerge, particularly the global north on the extreme on the first factor associated with high values, and the other side of the first factor being populated with relatively less developed countries, which corresponds to "my expectations", I think this measure has decent face validity[fn::However, working on this research has made me aware of how limited my knowledge is of comparative global measures/statistics, also e.g. in relation to other variables such as GDP per capita, population or art scence indicators (especially over time), which seems to me to indicate that a straightforward check of apparent plausibility may not be enough.].
 #
-I thus use the first two principal components as measures in my regression analysis to account for the type of philanthropy.
+I thus use the first two principal components as measures in my regression analysis to account for the type of philanthropy [fn::For now, the inclusion of the [[cite:&CAF_2018_index]] foundation results in a decrease in number of observations as it is available for less countries. This question of maximizing the number of (theoretically relevant) variables included vs maximizing the number of observations occurs in many places, and calls for a systematic approach of running the analysis with many different variable combinations, which I will work on in the future.]
+#
 
 
+
+*** Art Scene Indicators
+#
+I 
 
 
 
