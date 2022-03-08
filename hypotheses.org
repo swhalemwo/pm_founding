@@ -396,10 +396,10 @@ Figure [[pca_caf_ind]] shows the for the location of countries on the two dimens
 #
 As notable clusters emerge, particularly the global north on the extreme on the first factor associated with high values, and the other side of the first factor being populated with relatively less developed countries, which corresponds to "my expectations", I think this measure has decent face validity[fn::However, working on this research has made me aware of how limited my knowledge is of comparative global measures/statistics, also e.g. in relation to other variables such as GDP per capita, population or art scence indicators (especially over time), which seems to me to indicate that a straightforward check of apparent plausibility may not be enough.].
 #
-I thus use the first 
+I thus use the first two principal components as measures in my regression analysis to account for the type of philanthropy.
 
-# #+latex: \caption{Private Museums per country}
-# #+latex: \label{countries}
+
+
 
 
 
