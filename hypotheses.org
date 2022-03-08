@@ -368,18 +368,38 @@ I merge these with World bank data on GDP per capita and Population of 217 count
 *** Tax Incentives
 
 
+#+latex: \begin{wraptable}{R}{0pt}
 #+latex: \input{./tables/tax_inc_descriptives.tex}
-
+#+latex: \caption{Tax incentive descriptives}
+#+latex: \label{tax_inc_descriptives}
+#+latex: \end{wraptable}
 
 #
 I primarily use the reports by the Charities Aid Foundation, [[parencite:&Quick_Kruse_Pickering_2014_philanthropy;&CAF_2018_index]] to construct a measure of the volume and composition of a country's tax incentive.
 #
-In particular, I use four binary indicators from [[textcite:&Quick_Kruse_Pickering_2014_philanthropy]] concerning the exemption of Non-Profit Organizations from at least some taxes, the presence of individual tax incentives for donations, the presence of corporate tax incentives and the possibility of reducing estate tax by charitable donations, as well as two continuous measures of [[textcite:&CAF_2018_index]] describing the percentage of people donating time and money respectively.
-#
-I combine these indicators in a Principal Component Analysis.
+In particular, I use four binary indicators from [[textcite:&Quick_Kruse_Pickering_2014_philanthropy]] concerning the exemption of Non-Profit Organizations from at least some taxes, the presence of individual tax incentives for donations, the presence of corporate tax incentives and the possibility of reducing estate tax by charitable donations, as well as two continuous measures of [[textcite:&CAF_2018_index]] describing the percentage of people donating time and money respectively (see table \ref{tax_inc_descriptives} for descriptives).
 #
 
+#+label: pca_caf_vars
+#+caption: Tax incentive PCA
+[[file:figures/tax_inc_pca_caf.pdf]]
 
+#+latex: \begin{landscape}
+#+label: pca_caf_ind
+#+caption: Tax incentive PCA Individual plot
+#+attr_latex: :width 26cm
+[[file:figures/tax_inc_pca_caf_ind.pdf]]
+#+latex: \end{landscape}
+
+I combine these indicators in a Principal Component Analysis; figure [[pca_caf_vars]] shows the factor loadings, I for now focus only on the first two principal components.
+# 
+My interpretation is that factor 1 measures the overall volume (all arrows point to the same direction, left), and factor 2 describes the composition, with a more "formal/legalistic" approach being associated with lower values (the [[cite:&Quick_Kruse_Pickering_2014_philanthropy]] indicators describe the legal framework), and a more "informal/practical" approach associated with higher values (time and money [[parencite:&CAF_2018_index]] scores refer to (statements of) actual behavior). 
+#
+Figure [[pca_caf_ind]] shows the for the location of countries on the two dimensions.
+#
+As notable clusters emerge, particularly the global north on the extreme on the first factor associated with high values, and the other side of the first factor being populated with relatively less developed countries, which corresponds to "my expectations", I think this measure has decent face validity[fn::However, working on this research has made me aware of how limited my knowledge is of comparative global measures/statistics, also e.g. in relation to other variables such as GDP per capita, population or art scence indicators (especially over time), which seems to me to indicate that a straightforward check of apparent plausibility may not be enough.].
+#
+I thus use the first 
 
 # #+latex: \caption{Private Museums per country}
 # #+latex: \label{countries}
