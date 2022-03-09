@@ -4,7 +4,7 @@
 
 ### ** tax incentives
 
-generate_taxinc_descriptives <- function() {
+get_taxinc_descriptives <- function() {
 
     df_taxinc <- read_in_tax_incentives()
 
@@ -41,7 +41,7 @@ generate_taxinc_descriptives <- function() {
     dev.off()
 }
 
-generate_taxinc_descriptives() 
+## get_taxinc_descriptives() 
 
 
 ## ** mow
@@ -101,7 +101,7 @@ get_mow_descriptives <- function() {
     
 }
 
-get_mow_descriptives()
+## get_mow_descriptives()
     
 ## ** HWNI
 
@@ -178,6 +178,27 @@ get_hnwi_descriptives <- function() {
 
 }
 
-get_hnwi_descriptives()
+## get_hnwi_descriptives()
 
 
+## ** controls 
+get_control_descriptives <- function() {
+
+
+    controls_descs <- describe(df_reg[,c("NY.GDP.PCAP.CDk", "SP.POP.TOTLm", "sptinc992j_p99p100", "shweal992j_p99p100", "ghweal992j", "gptinc992j", "nbr_opened_cum", "nbr_opened_cum_sqrd")], skew = F)
+
+    controls_tbl <- xtable(controls_descs[names(controls_descs) %!in% c("vars", "se", "range")],
+                           caption = "Descriptives for controls",
+                           label = "controls_desc")
+
+    print(controls_tbl, file = paste0(TABLE_DIR, "controls_desc.tex"), include.rownames=T)
+}
+
+get_all_descriptives <- function(){
+    get_taxinc_descriptives()
+    get_mow_descriptives()
+    get_hnwi_descriptives()
+    get_control_descriptives()
+}
+
+## get_all_descriptives()

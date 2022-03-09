@@ -460,6 +460,22 @@ One cause might also be the conversion of local currencies into USD (which is pr
 # 
 So far I also cannot think of an effective way to validate these measures since the lack of globally comparative wealth statistics that makes validation difficult is precisely what the WID wants to alleviate.
 
+*** Controls
+
+#+latex: \input{./tables/controls_desc.tex}
+
+So far I use as controls:
+- the cumulative number of private museums in a linear and squared measure to account for organizational population dynamics
+- GDP per capita in thousands of dollars
+- population in millions
+- wealth and (pre-tax) income inequality: the share of wealth and income at a number of percentiles, as well as the gini coefficient of the wealth and income distributions. While the inequality argument is not developed in the private museum literature, it features prominently in literature on philanthropy [[parencite:&Maclean_etal_2021_philanthropy]]
+
+A number of other data sources have not been used, namely:
+- OECD cultural spending data: While I have managed to a handful of OECD datasets about items related to cultural spending, they at most covered around 30 countries, so I have therefore not further looked into them. I was hoping that the MOW database would also allow to construct indicators measuring effective cultural spending, but so far I'm doubtful whether it suffices for longitudinal measures; I am especially weary since the private museum founding peak was taking place at the time the MOW coverage seems to be declining, thus using MOW for continuous indicators could lead to finding an effect of declining public museum founding on private museum founding which could truly be driven by lack of data coverage.
+- ArtFacts: not accessible yet, it might also be useful to construct indicators of cultural spending.
+- Larry's List collector database: not accessible (yet)
+- ArtNews collector ranking: not accessible (yet)
+
 
 
 

@@ -14,12 +14,15 @@ source(paste0(SCRIPT_DIR, "oecd_api.R"))
 source(paste0(SCRIPT_DIR, "mow.R"))
 source(paste0(SCRIPT_DIR, "tax_incentives.R"))
 source(paste0(SCRIPT_DIR, "cbn_dfs.R"))
+source(paste0(SCRIPT_DIR, "descriptives.R"))
 
 df_excl <- create_excel_df()
 df_open <- aggregate_openings(df_excl)
 df_wb <- get_WB_data(c("NY.GDP.PCAP.CD", "SP.POP.TOTL"))
 df_anls <- create_anls_df(df_wb, df_open)
 df_reg <- get_df_reg(df_anls)
+
+get_all_descriptives()
 
 
 ## *** remaining variables construction, not directly related to structure, have to be functionalized somewhere
