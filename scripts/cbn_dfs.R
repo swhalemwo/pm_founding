@@ -3,6 +3,7 @@ get_df_reg <- function(df_anls) {
     #' combine together df_anls, inequality, tax incentive, mow, hnwi
 
     df_anls$NY.GDP.PCAP.CDk <- df_anls$NY.GDP.PCAP.CD/1000
+    df_anls$SP.POP.TOTLm <- df_anls$SP.POP.TOTL/1e6
 
     ## cumulative number of opened
     df_anls$nbr_opened_cum <- ave(df_anls$nbr_opened, df_anls$iso3c, FUN = cumsum)
