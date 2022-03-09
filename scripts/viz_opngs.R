@@ -302,7 +302,7 @@ fill_up <- function(df, x, y, grp) {
     ## df$y <- df[[y]]
     ## df$grp <- df[[grp]]
 
-    structure_df <- expand(df, x=min(df$x):max(df$x), grp)
+    structure_df <- tidyr::expand(df, x=min(df$x):max(df$x), grp)
 
     ## aggregate (sum) original data
     og_df_agg <- aggregate(y ~ x + grp, df, sum)
