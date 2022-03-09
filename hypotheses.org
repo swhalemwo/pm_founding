@@ -402,8 +402,25 @@ I thus use the first two principal components as measures in my regression analy
 
 
 *** Art Scene Indicators
+
+#+caption: Openings of Museums according to Museums of the World
+#+label: mow_facets
+#+attr_latex: :width 18cm
+[[file:figures/mow_facets.pdf]]
+
+
+#+latex: \input{./tables/mow_descriptives.tex}
+
+I use the Museums of the World (MOW) database [[parencite:&deGruyter_2021_MOW]] to construct indicators of the museum landscape of a country.
 #
-I 
+As preliminary analysis of the database seems to indicate that maintenance of the database has been declined in recent years (figure [[mow_facets]]), I for now use it to estimate more conservative cross sectional measures which describe the number of museums that have opened in a country up to a certain point in time (table \ref{mow_facets}).
+#
+Unfortunately the database does not register if a museum is closed, which means measures derived from it do not describe population size at that year but cumulative openings.
+#
+For now, I construct measures of the number of museums dedicated to modern and contemporary art, Art museums generally, and all non-art museums for the years 1985, 2000 and 2020.
+#
+As the museum claims to have global reach, countries that have no observations are assigned a zero rather than being excluded, resulting in no loss of observations. 
+
 
 
 
