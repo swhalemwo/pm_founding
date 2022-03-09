@@ -401,7 +401,7 @@ I thus use the first two principal components as measures in my regression analy
 
 
 
-*** Art Scene Indicators
+*** Art Scene (Cultural Spending?) Indicators
 
 #+caption: Openings of Museums according to Museums of the World
 #+label: mow_facets
@@ -423,7 +423,42 @@ As the museum claims to have global reach, countries that have no observations a
 
 
 
+*** Elite Wealth
+I use the Wealth Inequality Database (WID, [[cite:&WID_2021_WID]]) to calculate the percentage of High Net Worth Individuals (HNWI), i.e. the population proportion above a certain wealth threshold in a given year. 
+#
+The WID contains measures of the wealth at percentile threshold, for example the value for the 90th percentile describes the amount of wealth of the least wealthy member of the top 10%.
+#
+With higher percentiles, higher resolutions are included: Up to the 99th percentile, the largest step is 1% (e.g. 91,92,93th etc percentile), while the 99th percentile is subdivided more into tenths (99.1,99.2).
+#
+The top 0.1% and 0.01% (the 99.9th and 99.99th percentiles) are also similarly subdivided into ten smaller pieces (although the degree to which this information is available varies between countries and years).
+#
+I use these percentiles to calculate the percentage of people above a number of thresholds (1, 2.5, 10, 50, 100, 250 and 500m, figure \ref{hnwi_descs}) by linearly interpolating between the two percentiles above and below the respective threshold[fn::linear interpolation likely overestimates the percentage, as the wealth distribution probably doesn't increase linearly (maybe exponentially?), so it might be worth to develop a more sophisticated imputation. Similarly I have yet to check if/how the resolution (i.e. the distance to the closest percentiles) affects the estimates. I also have to investigate whether the percentage or the count is most appropriate for the Poisson/Negative binomial regression models.]
+#
+If the threshold exceeds the value of the highest percentile, I assign a zero.
 
+#+latex: \begin{landscape}
+#+caption: estimated percentage of population with at least 10 million USD wealth
+#+label: hwni_curves
+#+attr_latex: :width 26cm
+[[file:figures/hwni_curves.pdf]]
+#+latex: \end{landscape}
+
+
+#+latex: \input{./tables/hnwi_descs.tex}
+
+Data is available for 171 countries, but since only China, France and the US have data before 1995, including this indicator means that for the vast majority of countries the analysis can only be conducted from 1995 onwards.
+#
+Because of some oddity in the data for Spain, it is excluded at the moment (I have contacted the WID for clarification).
+#
+I am not really sure how plausible the estimates are (e.g. figure [[hwni_curves]], which shows the percentage of population with a wealth of at least 10 million USD). 
+#
+There are some very obvious outliers (not included in the figure, as they would distort the scale), firstly of around 90% of the population having wealth above 10m (Venezuela, Congo, Angola) and second values >3% for the previous countries as well as Belarus, Turkey and Uzbekistan.
+#
+But even if the values stay within a (generous) range of the values of countries for which I think the data is more likely to be correct (Europe and North America), there are still extremely high values and/or substantial fluctuations over time in e.g. India (IND), Sudan (SDN), Tajikistan (TJK) Mongolia (MNG), Iran (IRN), Ghana (GHA) or Argentina (ARG).
+#
+One cause might also be the conversion of local currencies into USD (which is provided by another variable in the WID; I am not completely sure if it accounts properly for inflation and price levels).
+# 
+So far I also cannot think of an effective way to validate these measures since the lack of globally comparative wealth statistics that makes validation difficult is precisely what the WID wants to alleviate.
 
 
 

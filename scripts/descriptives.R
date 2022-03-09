@@ -103,3 +103,81 @@ get_mow_descriptives <- function() {
 
 get_mow_descriptives()
     
+## ** HWNI
+
+get_hnwi_descriptives <- function() {
+
+## the table, some columns in scientific notation
+
+    df_hwni <- get_hnwi_pcts()
+
+    cutoff_vlus <- c(1e6, 2.5e6, 5e6, 10e6, 50e6, 100e6, 250e6,500e6)
+    col_names <- unlist(lapply(cutoff_vlus, function(x) paste0("pct_cutoff_", sanitize_number(x))))
+
+    df_hwni2 <- unique(df_hwni[which(df_hwni[,col_names] < 10),])
+    hwni_descs <- describe(df_hwni2[,names(df_hwni2) %!in% c("iso3c", "region", "label", "year")], skew = F)
+
+    hnwi_tbl <- xtable(hwni_descs[names(hwni_descs) %!in% c("vars", "se", "range")],
+                       caption = "HNWI descriptives (excluding largest outliers)",
+                       label = "hnwi_descs",
+                       digits = c(2,2,-2, -2,2,-2)
+                       )
+
+    print(hnwi_tbl, include.rownames = T, file = paste0(TABLE_DIR, "hnwi_descs.tex"))
+
+
+## want random label position
+## ideally would want location on graph that places the label at a spot where there is little overlap
+
+    df_hwni2 <- filter(df_hwni, pct_cutoff_10M < 1)
+
+    df_hwni2$region <- countrycode(df_hwni2$iso3c, "iso3c", "un.regionsub.name")
+
+    ## distribute labels across plot 
+
+    label_df <- df_hwni2 %>%
+        group_by(iso3c) %>%
+        summarise(year = sample(year, size = 1), label = sample(iso3c,1))
+
+    df_hwni2 <- as_tibble(merge(df_hwni2, label_df, all.x = T))
+
+    ## spread lines across facets
+
+    max_lines <- 12
+
+    df_hwni2$colr <- 0
+
+    for (i in unique(df_hwni2$region)) {
+        print(i)
+        ctr <- 1
+        while (TRUE) {
+            crys <- unique(filter(df_hwni2, region==i)$iso3c)
+            ## print(len(crys))
+            crys_sel <- crys[1:min(max_lines, len(crys))]
+            df_hwni2[c(df_hwni2$iso3c %in% crys_sel),]$region <- paste0(i, "_", ctr)
+            df_hwni2[c(df_hwni2$iso3c %in% crys_sel),]$colr <- as.numeric(factor(df_hwni2[c(df_hwni2$iso3c %in% crys_sel),]$iso3c))
+            ctr <- ctr+1
+            if (len(crys) <= max_lines) {
+                break
+            }
+        }
+    }
+
+
+
+    hwni_plt <- ggplot(filter(df_hwni2, region != "Melanesia_1"), aes(x=year, y=pct_cutoff_10M, group = iso3c, color = factor(colr))) +
+        facet_wrap(~ region, scales = "free", ncol = 4) +
+        geom_line(size = 1, show.legend = F) +
+        geom_label_repel(aes(label = label), show.legend = F, size=3) +
+        scale_color_manual(values = colors_manual)
+    ## scale_color_brewer(palette = "Paired")
+
+    pdf(paste0(FIG_DIR, "hwni_curves.pdf"), width = 18, height = 13)
+    plot(hwni_plt)
+    dev.off()
+
+}
+
+get_hnwi_descriptives()
+
+
