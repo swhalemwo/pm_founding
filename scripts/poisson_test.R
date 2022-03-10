@@ -276,7 +276,14 @@ fixef(poi_res$"multi-fe")
 ## -> should be identical to "gender-fe" =       rapi ~ time  + (1 | gender)  + (1 | id), isn't tho for some reason??, but (1|gender) seems so pointless that I think I can drop it
 
 ## *** others
-## actually have idea what (non-1 | id) means 
+## actually have idea what (varx | id) means 
+## means that the effect of varx differs between id-s
+## if (gender |id): for some people the effect of gender (being a man) is stronger than for others?
+coef(poi_res$"zero gender-re")$id[1:5,]
+hist(coef(poi_res$"zero gender-re")$id$gender, breaks = 100)
+## i think (gender | id) is kinda pointless
+
+
 
 
 
