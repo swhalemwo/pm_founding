@@ -240,7 +240,6 @@ poi_specs <- list(
     "gender-re" =       rapi ~ time + gender + (gender | id)
     ## "multi-fe" =        rapi ~ time + gender + (1 | gender)  + (1 | id),
     ## "gender-fe" =       rapi ~ time  + (1 | gender)  + (1 | id),
-
     )
 poi_res <- mclapply(poi_specs, function(x) glmer(x, df_rapi, family = "poisson"), mc.cores = 8)
 screenreg(poi_res)
@@ -324,7 +323,8 @@ pred_res_all <- lapply(seq_along(poi_res), function(x)
 pred_res_df <- as_tibble(Reduce(function(x,y,..) rbind(x,y), pred_res_all))
 pred_res_df$gender <- factor(pred_res_df$gender)
 ##
-ggplot(pred_res_df, aes(x=time, y=fitted, color=gender, lty=labelx)) +
+ggplot(pred_res_df, aes(x=time, y=fitted, color=gender)) +
+    facet_wrap(~labelx) + 
     geom_line(size=1)
 
 ## zero-gender re: has same for men, as other models, but higher for women??
