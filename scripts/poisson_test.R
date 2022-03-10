@@ -215,7 +215,7 @@ poi_fe_within22 <- glmer(y ~ x_within4 + (1 | id), poi_fe_df, family = "poisson"
 
 screenreg(list(poi_fe_within2, poi_fe_within21, poi_fe_within22))
 
-## ** tutorial
+## ** tutorial (Atkins_etal_2013_count)
 
 ## first dataset
 ## can't find second one for now, whatever
@@ -248,13 +248,102 @@ screenreg(poi_res)
 
 ## ** prediction 
 
-predict_df <- as_tibble(expand.grid(gender2=c(0,1), time2=seq(0,25,1)))
+
+## predict df with individual ids, then matching gender to it (since id is needed if not using re.form=NA), probably not gonna use this much
+predict_df_re <- as_tibble(expand.grid(time=seq(0,25,1), id=seq(50)))
+predict_df_re <- as_tibble(merge(predict_df_re, unique(df_rapi[,c("id", "gender")])))
+predict_df_re$fitted <- predict(poi_res$"right (time-re)", newdata=predict_df, type = "response")
+
+
+## just the fixed effects
+predict_df <- as_tibble(expand.grid(time=seq(0,25,1), gender=c(0,1)))
+
+## just one model 
+predict_df$fitted <- predict(poi_res$"right (time-re)", newdata=predict_df, type = "response", re.form = NA)
+predict_df$label <- round(predict_df$fitted,2)
+predict_df$label[which(predict_df$time %!in% c(0,6,12,18,24))] <- NA
+
+ggplot(predict_df, aes(x=time, y=fitted, color=factor(gender))) +
+    geom_line() +
+    geom_label_repel(aes(label = label))
+
+
+## fitting to all models 
+fit_stuff <- function(mod, predict_df, label) {
+    #' don't use the random effects 
+    predict_df$fitted <- predict(mod, newdata = predict_df, type = "response", re.form = NA)
+    predict_df$labelx <- label
+    return(predict_df)
+}
+##    
+pred_res_all <- lapply(seq_along(poi_res), function(x)
+    fit_stuff(mod=poi_res[[x]], predict_df = predict_df, label=names(poi_res)[[x]]))
+    ## have to makme sure to pass arguments properly 
+## 
+pred_res_df <- as_tibble(Reduce(function(x,y,..) rbind(x,y), pred_res_all))
+pred_res_df$gender <- factor(pred_res_df$gender)
+##
+ggplot(pred_res_df, aes(x=time, y=fitted, color=gender, lty=labelx)) +
+    geom_line(size=1)
+
+## zero-gender re: has same for men, as other models, but higher for women??
+## right (re?) has much steeper slope
+## gender-re has same as other fe models huh
+
+
+
+## *** bbolker: for CIs: not needed yet 
 library(lme4)
+library(ggplot2)
+data("Orthodont",package="MEMSS")
+fm1 <- lmer(
+    formula = distance ~ age*Sex + (age|Subject)
+    , data = Orthodont
+)
+newdat <- expand.grid(
+    age=c(8,10,12,14)
+    , Sex=c("Female","Male")
+    , distance = 0
+)
+newdat$distance <- predict(fm1,newdat,re.form=NA)
+mm <- model.matrix(terms(fm1),newdat)
+## or newdat$distance <- mm %*% fixef(fm1)
+pvar1 <- diag(mm %*% tcrossprod(vcov(fm1),mm))
+tvar1 <- pvar1+VarCorr(fm1)$Subject[1]  ## must be adapted for more complex models
+cmult <- 2 ## could use 1.96
+newdat <- data.frame(
+    newdat
+    , plo = newdat$distance-cmult*sqrt(pvar1)
+    , phi = newdat$distance+cmult*sqrt(pvar1)
+    , tlo = newdat$distance-cmult*sqrt(tvar1)
+    , thi = newdat$distance+cmult*sqrt(tvar1)
+)
+#plot confidence
+g0 <- ggplot(newdat, aes(x=age, y=distance, colour=Sex))+geom_point()
+g0 + geom_pointrange(aes(ymin = plo, ymax = phi))+
+    labs(title="CI based on fixed-effects uncertainty ONLY")
 
 
-predict.merMod(poi_rapi, newdata=predict_df)
+
+## ** bootMer: for CIs, but also skip for now 
+if (interactive()) {
+fm01ML <- lmer(Yield ~ 1|Batch, Dyestuff, REML = FALSE)
+screenreg(fm01ML)
+
+## see ?"profile-methods"
+mySumm <- function(.) { s <- sigma(.)
+    c(beta =getME(., "beta"), sigma = s, sig01 = unname(s * getME(., "theta"))) }
+(t0 <- mySumm(fm01ML)) # just three parameters
+## alternatively:
+mySumm2 <- function(.) {
+    c(beta=fixef(.),sigma=sigma(.), sig01=sqrt(unlist(VarCorr(.))))
+}
+
+sigma(fm01ML)
 
 
-
+set.seed(101)
+## 3.8s (on a 5600 MIPS 64bit fast(year 2009) desktop "AMD Phenom(tm) II X4 925"):
+boo01 <- bootMer(fm01ML, mySumm, nsim = 100) 
 
 ## ** overdispersion glmer
