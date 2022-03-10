@@ -236,13 +236,47 @@ library(parallel)
 poi_specs <- list(
     "right (time-re)" = rapi ~ time + gender + (time | id),
     "expec (fe)" =      rapi ~ time + gender + (1 | id),
-    "multi-fe" =        rapi ~ time + gender + (1 | gender)  + (1 | id),
     "zero gender-re"=   rapi ~ time + gender + (0 + gender |id),
     "gender-re" =       rapi ~ time + gender + (gender | id)
+    ## "multi-fe" =        rapi ~ time + gender + (1 | gender)  + (1 | id),
+    ## "gender-fe" =       rapi ~ time  + (1 | gender)  + (1 | id),
+
     )
 poi_res <- mclapply(poi_specs, function(x) glmer(x, df_rapi, family = "poisson"), mc.cores = 8)
 screenreg(poi_res)
 
+## ** model comparison
+## *** right (time-re)
+coef(poi_res$"right (time-re)")$id[1:5,]
+## different time slopes, different intercepts
+mean(coef(poi_res$"right (time-re)")$id$time)
+mean(coef(poi_res$"right (time-re)")$id$"(Intercept)")
+## mean of slopes is kinda close to fixef value, but not completely
+## same for mean of Intercepts and fixef Intercept
+fixef(poi_res$"right (time-re)")
+
+## *** expec (fe)
+coef(poi_res$"expec (fe)")$id[1:5,]
+coef(poi_res$"expec (fe)")$id$time
+## different intercepts, all same slope 
+mean(coef(poi_res$"expec (fe)")$id$"(Intercept)")
+## mean of intercepts is (again) close to fixef value 
+fixef(poi_res$"expec (fe)")
+
+## *** multi-fe
+coef(poi_res$"multi-fe")$id[1:5,]
+coef(poi_res$"multi-fe")$id$time
+## same time slope
+mean(coef(poi_res$"multi-fe")$id$"(Intercept)")
+fixef(poi_res$"multi-fe")
+## mean of individual intercepts again close to fixef mean 
+
+## ok this seems to be kinda pointless: doing FE for gender means I think there might be clustering on gender
+## but gender is dummy, and i control for it in regression anyways -> kinda like FE dummy 
+## -> should be identical to "gender-fe" =       rapi ~ time  + (1 | gender)  + (1 | id), isn't tho for some reason??, but (1|gender) seems so pointless that I think I can drop it
+
+## *** others
+## actually have idea what (non-1 | id) means 
 
 
 
