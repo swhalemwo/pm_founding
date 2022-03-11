@@ -1,6 +1,6 @@
 ## ** new test
 
-df_reg1 <- na.omit(df_reg[,c("iso3c", "year", "nbr_opened", "PC1_caf", "cnt_contemp_1985", "pct_cutoff_10M", "gptinc992j")])
+df_reg1 <- na.omit(df_reg[,c("iso3c", "year", "nbr_opened", "PC1_caf", "cnt_contemp_1985", "cnt_all_1985", "pct_cutoff_10M", "gptinc992j", "ghweal992j", "SP.POP.TOTLm", "NY.GDP.PCAP.CDk")])
 
 df_reg1 <- filter(df_reg1, pct_cutoff_10M < 1)
 
@@ -12,15 +12,73 @@ ols_lm <-      lm(nbr_opened ~ PC1_caf + cnt_contemp_1985 + pct_cutoff_10M + gpt
 ols_glm <-   lmer(nbr_opened ~ PC1_caf + cnt_contemp_1985 + pct_cutoff_10M + gptinc992j + (1|iso3c), df_reg1)
 poi_glm <-    glm(nbr_opened ~ PC1_caf + cnt_contemp_1985 + pct_cutoff_10M + gptinc992j, df_reg1, family = poisson)
 poi_glmm <- glmer(nbr_opened ~ PC1_caf + cnt_contemp_1985 + pct_cutoff_10M + gptinc992j + (1|iso3c), df_reg1, family = poisson)
-nb <-    glmer.nb(nbr_opened ~ PC1_caf + cnt_contemp_1985 + pct_cutoff_10M + gptinc992j + (1|iso3c), df_reg1)
 
 
 
-screenreg(list(ols_lm, ols_glm, poi_glm, poi_glmm, nb),
+screenreg(list(ols_lm, ols_glm, poi_glm, poi_glmm, nb, nb_all))
+
+
+nb_interest <-    glmer.nb(nbr_opened ~ PC1_caf + cnt_contemp_1985 + pct_cutoff_10M + (1|iso3c), df_reg1)
+
+nb_all <- glmer.nb(nbr_opened ~ PC1_caf + cnt_contemp_1985 + cnt_all_1985 +
+                         pct_cutoff_10M + gptinc992j + ghweal992j +
+                         SP.POP.TOTLm + NY.GDP.PCAP.CDk + (1|iso3c), df_reg1)
+
+
+nb_crols <- glmer.nb(nbr_opened ~ gptinc992j + ghweal992j + cnt_all_1985 + 
+                         SP.POP.TOTLm + NY.GDP.PCAP.CDk + (1|iso3c), df_reg1)
+
+nb_wb <- glmer.nb(nbr_opened ~ SP.POP.TOTLm + NY.GDP.PCAP.CDk + (1|iso3c), df_reg1)
+
+screenreg(list(nb_wb, nb_crols, nb_interest, nb_all))
+texreg(list(nb_wb, nb_crols, nb_interest, nb_all), file = paste0(TABLE_DIR, "nb.tex"))
+
+
+
+         ,
           custom.coef.map = list("(Intercept)" = "(Intercept)", "PC1_caf" = "PC1_caf",
                                  "cnt_contemp_1985" = "cnt_contemp_1985",
                                  "pct_cutoff_10M" = "pct_cutoff_10M", "gptinc992j" = "gptinc992j"))
 
+margins(poi_glmm)
+
+
+## ** specification oddities
+
+poi_glmmp1 <- glmer(nbr_opened ~ PC1_caf + cnt_contemp_1985 + pct_cutoff_10M + gptinc992j + (1|iso3c), df_reg1, family = poisson)
+## same as poi_glmm
+
+poi_glmmbar <- glmer(nbr_opened ~ PC1_caf + cnt_contemp_1985 + pct_cutoff_10M + gptinc992j + (1 || iso3c), df_reg1, family = poisson)
+## doesn't run 
+
+screenreg(list(poi_glmm, poi_glmmp1,nb),
+          custom.coef.map = list("(Intercept)" = "(Intercept)", "PC1_caf" = "PC1_caf",
+                                 "cnt_contemp_1985" = "cnt_contemp_1985",
+                                 "pct_cutoff_10M" = "pct_cutoff_10M", "gptinc992j" = "gptinc992j"))
+
+
+
+coef_df <- coef(poi_glmm)$iso3c
+coef_df$iso3c <- rownames(coef_df)
+
+intercept_df <- as_tibble(merge(
+    coef_df[,c("(Intercept)", "iso3c")],
+    df_reg1))
+    
+intercept_df_fltrd <- unique(intercept_df[,c("iso3c", "PC1_caf", "cnt_contemp_1985", "(Intercept)")])
+chart.Correlation(intercept_df_fltrd[,names(intercept_df_fltrd) != "iso3c"])
+
+    
+coef(poi_glmm)$iso3c %>%
+                 mutate(iso3c = rownames(.)) %>%
+                 select("iso3c", "(Intercept)") %>%
+                 merge(., unique(df_reg[,c("iso3c", "PC1_caf", "cnt_contemp_1985")])) %>%
+                 select("(Intercept)", "PC1_caf", "cnt_contemp_1985") %>%
+                 as_tibble() %>%
+                 chart.Correlation()
+                 
+                 chart.Correlation(.[,c("(Intercept)", "PC1_caf", "cnt_contemp_1985")])
+                 
 
 
 
@@ -46,7 +104,16 @@ pglm_between <- pglm(nbr_opened ~ PC1_caf + cnt_contemp_1985 + pct_cutoff_10M + 
                  family = poisson, model = "between", index = "iso3c")
 
 
-screenreg(list(pglm_within, pglm_pooling, pglm_random, pglm_between))
+pglm_all <- pglm(nbr_opened ~ PC1_caf + cnt_contemp_1985 + cnt_all_1985 +
+                         pct_cutoff_10M + gptinc992j + ghweal992j +
+                         SP.POP.TOTLm + NY.GDP.PCAP.CDk, family = poisson,
+                 data= df_reg1, model = "random", index = "iso3c")
+
+pglm_crol <- pglm(nbr_opened ~  SP.POP.TOTLm + NY.GDP.PCAP.CDk, family = poisson,
+                 data= df_reg1, model = "random", index = "iso3c")
+
+
+screenreg(list(pglm_within, pglm_pooling, pglm_random, pglm_between, pglm_crol, pglm_all))
 
 ## pglm_pooling and poi_glm are the same
 ## -> pooling just seems to be "i don't care" then, is basically treating observations as independent 
