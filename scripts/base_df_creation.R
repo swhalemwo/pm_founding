@@ -1,12 +1,12 @@
 
-create_excel_df <- function() {
+create_excel_df <- function(db_file) {
     #' read the excel sheet into R
 
     ## df <- read_excel("/home/johannes/Dropbox/phd/papers/org_pop/data/Private museum database.xlsx")
     ## df <- read_excel("/home/johannes/Dropbox/phd/papers/org_pop/data/Private museum database2.xlsx")
 
     ## 2: use more recent version
-    df <- read_excel(paste0(PMDB_DIR, "Private museum database2.xlsx"))
+    df <- read_excel(paste0(PMDB_DIR, db_file))
     
     ## removing header stuff 
     nrows <- nrow(df)-1
@@ -59,8 +59,8 @@ create_excel_df_diagnose <- function(df, verbose = 0){
     ## but don't think I need it as this point, don't update data that much
 }
 
-## dfx <- create_excel_df()
-## create_excel_df_diagnose(dfx)
+## dfx <- create_excel_df(PMDB_FILE)
+## create_excel_df_diagnose(dfx, verbose =0)
 
 
 
@@ -103,7 +103,7 @@ create_anls_df <- function(df_wb, df_open) {
 }
 
 
-## df_excl <- create_excel_df()
+## df_excl <- create_excel_df(PMDB_FILE)
 ## df_open <- aggregate_openings(df_excl)
 ## df_wb <- get_WB_data("NY.GDP.PCAP.CD")
 ## df_anls <- create_anls_df(df_wb, df_open)
