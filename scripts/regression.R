@@ -183,3 +183,97 @@ screenreg(list(reg3, reg4, reg5)
 plot(reg4q)
 nrow(filter(df_reg, nbr_opened_prop > 0))
 
+## ** tutorial Brown_2021_mixed
+
+TUT_DIR <- "/home/johannes/Dropbox/supplements/Brown_2021_mixed/"
+
+library(lme4)
+library(tidyverse)
+library(ggplot2)
+library(texreg)
+library(afex)
+
+tut_df <- as_tibble(read.csv(paste0(TUT_DIR, "rt_dummy_data.csv")))
+
+res_intercept <- lmer(RT ~ modality + (1 | PID) + (1 | stim), tut_df)
+
+res_slopes <- lmer(RT ~ modality + ( 1 + modality | PID) + (1+modality|stim), tut_df,
+                   control = lmerControl(optCtrl = list(maxfun = 1e10)))
+
+res_slopes_bobyqa <- lmer(RT ~ modality + ( 1 + modality | PID) + (1+modality|stim), tut_df, control = lmerControl(optimizer = "bobyqa"))
+
+
+
+res_slopes_reduced <- res_slopes <- lmer(RT ~  1+ ( 1 + modality | PID) + (1+modality|stim), tut_df)
+
+screenreg(list(res_slopes_zerocor, res_slopes_zerocor2, res_slopes_zerocor3))
+screenreg(list(res_slopes_zerocor, res_slopes))
+
+screenreg(list(res_intercept, res_slopes, res_slopes_bobyqa))
+
+all_fit(res_slopes_bobyqa)
+
+screenreg(list(res_slopes_bobyqa, res_slopes_reduced))
+
+anova(res_slopes, res_slopes_reduced)
+
+mixed(RT ~ modality + ( 1 + modality | PID) + (1+modality|stim), tut_df,
+      control = lmerControl(optimizer = "bobyqa"), method = "LRT")
+
+
+tut_df_interact <- as_tibble(read.csv(paste0(TUT_DIR, "rt_dummy_data_interaction.csv")))
+
+res_interact <- lmer(RT ~ 1 + modality + SNR + modality:SNR + (1 + modality| PID) + (1 + modality | stim), tut_df_interact)
+res_interact2 <- lmer(RT ~ 1 + modality + SNR + modality:SNR + (1 + modality + SNR | PID) + (1 + modality + SNR | stim), tut_df_interact)
+
+screenreg(list(res_interact, res_interact2))
+
+
+## *** zeroslopes
+res_slopes_zerocor <- lmer(RT ~ 1 + modality + ( 0 + modality | PID) + (1|PID) + (1+modality|stim), tut_df, control = lmerControl(optimizer = "bobyqa"))
+
+res_slopes_zerocor2 <- lmer(RT ~ modality + ( 0 + modality | PID) + (1+modality|stim), tut_df)
+res_slopes_zerocor3 <- lmer(RT ~ modality + ( 0 + modality | PID) + (0+modality|stim), tut_df)
+
+res_slopes_zerocor4 <- lmer(RT ~ modality + ( 1 + modality || PID) + (1+modality||stim), tut_df, control = lmerControl(optCtrl = list(maxfun = 1e10)))
+res_slopes_zerocor5 <- lmer(RT ~ modality + ( 1 + modality | PID) + (1+modality||stim), tut_df, control = lmerControl(optCtrl = list(maxfun = 1e10)))
+res_slopes_zerocor6 <- lmer(RT ~ 1 + modality + (1+ modality || PID) + (1+modality |stim), tut_df, control = lmerControl(optCtrl = list(maxfun = 1e12), optimizer = "bobyqa"))
+
+zerocor_allfit <- all_fit(res_slopes_zerocor6)
+
+
+coef(res_slopes_zerocor)$PID %>%  correlate()
+
+coef(res_slopes_zerocor6)$PID %>%  correlate()
+
+lapply(zerocor_allfit, function(x) coef(x)$PID %>% correlate())
+## only bobyqa has proper 0 correlations between intercepts and modalities
+
+coef(zerocor_allfit$bobyqa.)$PID %>% correlate()
+
+## bobyqa model of all_fit and res_slope_zerocor6 (also bobyqa) are different
+
+
+
+coef(res_slopes_zerocor)$PID
+cor(coef(res_slopes_zerocor)$PID$"(Intercept)", coef(res_slopes_zerocor)$PID$"modalityAudio-only") ## 0
+cor(coef(res_slopes_zerocor)$PID$"(Intercept)", coef(res_slopes_zerocor)$PID$"modalityAudiovisual") ## 0 
+cor(coef(res_slopes_zerocor)$PID$"modalityAudio-only", coef(res_slopes_zerocor)$PID$"modalityAudiovisual") ## -1
+## idk why there are now slopes for both modalities (audio only and audio visual)
+## correlation is -1 between them, and between each of them and intercept 0
+
+## double bar notation
+
+cor(coef(res_slopes_zerocor6)$PID$"(Intercept)", coef(res_slopes_zerocor6)$PID$"modalityAudio-only") # 0.75
+cor(coef(res_slopes_zerocor6)$PID$"(Intercept)", coef(res_slopes_zerocor6)$PID$"modalityAudiovisual") # 0.8
+cor(coef(res_slopes_zerocor6)$PID$"modalityAudio-only", coef(res_slopes_zerocor6)$PID$"modalityAudiovisual") # 0.2
+
+library(corrr)
+coef(zerocor_allfit$optimx.nlminb)$PID %>%
+                                  correlate()
+
+
+
+cor(coef(res_slopes)$PID$"(Intercept)", coef(res_slopes)$PID$"modalityAudiovisual")
+
+coef(res_slopes_zerocor2)$PID ## huh really no random intercepts
