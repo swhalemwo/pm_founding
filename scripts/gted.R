@@ -76,10 +76,14 @@ table(is.na(df_gted$rev$ProvisionID))
 
 sample(df_gted$rev$ProvisionID, 30)
 
+df_gted$rev$region <- countrycode(df_gted$rev$Country, "iso3c", "un.regionsub.name")
+
+df_gted$rev$region <- countrycode(df_gted$rev$Country, "iso3c", "un.region.name")
+
 df_gted$rev %>%
-    group_by(Country, Year) %>%
+    group_by(Country, Year,region) %>%
     summarize(rf_pct=sum(`RF % of Tax`)) %>%
-    viz_lines(dfx=.,x="Year", y="rf_pct", time_level = "ra", duration = 4, grp="Country", fill_up = F)
+    viz_lines(dfx=.,x="Year", y="rf_pct", time_level = "ra", duration = 4, grp="Country", fill_up = F, facets="region")
 
 
 ## ** merging tep and 
