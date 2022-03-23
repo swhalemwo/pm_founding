@@ -491,23 +491,35 @@ viz_lines <- function(dfx, x, y, time_level, duration, grp, extra =FALSE, div=FA
 
 ## viz_lines(mow_fndgs, x="founding_date1", y="cnt", time_level = "ra", duration = 5, grp = "type", extra = "cum_rate", max_lines = 8)
 
+## df_anls$region <- countrycode(df_anls$iso3c, "iso3c", "un.region.name")
+## viz_lines(df_anls, x="year", y="nbr_opened", time_level = "cut", duration = 5, grp = "country", div = "SP.POP.TOTL", max_lines = 12)
+
+## viz_lines(df_anls, x="year", y="nbr_opened", time_level = "cut", duration = 5, grp = "iso3c", div = "SP.POP.TOTL", max_lines = 7, facets = "region")
+
+
 ## viz_lines(df_anls, x="year", y="nbr_opened", time_level = "ra", duration = 5, grp = "country", div = "SP.POP.TOTL", max_lines = 12)
 
 ## viz_lines(df_anls, x="year", y="nbr_opened", time_level = "ra", duration = 5, grp = "country", extra = "rates", div = "SP.POP.TOTL", max_lines = 12)
 
-## viz_lines(df_anls, x="year", y="nbr_opened", time_level = "ra", duration = 5, grp = "country", extra = "cum_rate", div = "SP.POP.TOTL", max_lines = 12)
+## ## test for facets and rates, I guess only really good for finding outliers? 
+
+## viz_lines(df_anls, x="year", y="nbr_opened", time_level = "ra", duration = 5, grp = "iso3c", extra = "rates", div = "SP.POP.TOTL", max_lines = 12, facets = "region")
 
 
-## viz_lines(df_anls, x="year", y="nbr_opened", time_level = "ra", duration = 3, grp = "country", extra = "cum_rate", div = "SP.POP.TOTL", max_lines = 12)
+## ## viz_lines(df_anls, x="year", y="nbr_opened", time_level = "ra", duration = 5, grp = "country", extra = "cum_rate", div = "SP.POP.TOTL", max_lines = 12)
+
+## ## viz_lines(df_anls, x="year", y="nbr_opened", time_level = "ra", duration = 3, grp = "country", extra = "cum_rate", div = "SP.POP.TOTL", max_lines = 12)
 
 ## df_excl$cnt <- 1
 ## viz_lines(filter(df_excl, year_opened_int > 1984 & year_opened_int < 2021), x="year_opened_int", y="cnt", time_level = "ra", duration = 3, grp = "country")
 
 ## viz_lines(filter(df_excl, year_opened_int > 1984 & year_opened_int < 2021), x="year_opened_int", y="cnt", time_level = "ra", duration = 6, grp = "country", fill_up = T)
 
+## df_excl$region <- countrycode(df_excl$countrycode, "iso3c", "un.region.name")
 
-## df_anls$region <- countrycode(df_anls$iso3c, "iso3c", "region")
-## df_anls$region <- countrycode(df_anls$iso3c, "iso3c", "un.regionsub.name")
+## ## test with fill_up and facets
+## viz_lines(filter(df_excl, year_opened_int > 1984 & year_opened_int < 2021), x="year_opened_int", y="cnt", time_level = "ra", duration = 6, grp = "country", facets = "region", fill_up = T, max_lines = 6)
+
 ## viz_lines(df_anls, x="year", y="nbr_opened", time_level = "ra", duration = 5, grp = "region", extra = "cum_rate", div = "SP.POP.TOTL", max_lines = 12)
 
 
