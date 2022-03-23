@@ -68,6 +68,14 @@ colors_manual_light <- c("#a4e3a5","#f197c1","#98fff4","#f29a83","#2bcef0","#ffe
 
 colors_manual <- c("#01867b","#e2183d","#44ddb8","#891ba6","#93d93d","#ff3c8a","#006e00","#d2b1ff","#ff9e30","#009cf4","#ff6830","#86375a","#ae8400","#967649")
 
+colors_manual2 <- c("#6299ff", "#f89700", "#7d5aff", "#2c8700", "#d7016e", "#b8d15f", "#002564", "#ff3c65", "#018a67", "#ff7ecb", "#4b4e00", "#fdb694")
+
+colors_manual3 <- c("#ae002b", "#01ca89", "#ae69ff", "#a4d55b", "#0059d9", "#ffb91b", "#900089", "#ef0015", "#59b1ff", "#001945", "#fd99ff", "#534a7a")
+## i like this the most so far
+
+colors_manual4 <- c("#ffa68b", "#001d5b", "#f4be4a", "#79007e", "#538500", "#bf9eff", "#f2001c", "#00a0ef", "#9cd679", "#7c003c", "#01834c", "#ff768f")
+
+
 
 ## options(max.overlaps = 100) ## didn't work
 ## options("max.overlaps" = 100) ## didn't work
