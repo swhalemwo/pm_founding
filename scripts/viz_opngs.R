@@ -133,14 +133,14 @@ agg_y <- function(df_plt, y, grp, time_level, duration) {
     ## df_plt <- filter(df_plt, grp %!in% grps1)
     
     
-    df_plt_opnd <- as_tibble(aggregate(y ~ grp + x, df_plt, sum))
+    df_plt_opnd <- as_tibble(aggregate(y ~ grp + x + facetcol, df_plt, sum))
     ## df_plt_opnd2 <- df_plt_opnd[order(df_plt_opnd$grp),]
 
     ## if time_level is ra, apply custom rollmean function (time_level is year in that case)
     if (time_level != "cut") {
 
         df_plt_opnd <- df_plt_opnd %>%
-            group_by(grp) %>%
+            group_by(grp, facetcol) %>%
             mutate(y = rollmean_custom(y, win_len = duration))
     }
     return(df_plt_opnd)
@@ -277,19 +277,49 @@ viz_opngs <- function(df_plt, time_level, duration, geo_level, extra=FALSE, max_
 ## dev.off()
 
 
-
-actually_plot <- function(df_plt, max_lines) {
+actually_plot <- function(df_plt, max_lines, facets, grp) {
     #' filters the df for plotting, and plots it
 
 
-    grp_cnt <- aggregate(y_bu ~ grp, df_plt, sum)
-    max_grps <- grp_cnt[rev(order(grp_cnt$y_bu))[1:min(max_lines, nrow(grp_cnt))],"grp"]
+    if (facets == "facetcol") {
+        ## reduce df_plt to max_lines grps if facets aren't used
+        grp_cnt <- aggregate(y_bu ~ grp, df_plt, sum)
+        max_grps <- grp_cnt[rev(order(grp_cnt$y_bu))[1:min(max_lines, nrow(grp_cnt))],"grp"]
 
-    df_plt <- filter(df_plt, grp %in% max_grps)
+        df_plt <- filter(df_plt, grp %in% max_grps)
 
-    plt <- ggplot(df_plt, aes(x=x, y=y, color = grp)) +
-        scale_color_brewer(palette = "Paired") + 
+        df_plt$colr <- df_plt$grp
+        
+    } else {
+
+        ## create colors
+        df_plt <- df_plt %>%
+            group_by(facetcol) %>%
+            mutate(colr = as.character(as.numeric(factor(grp))))
+        table(df_plt$colr)
+
+        label_df <- df_plt %>%
+            group_by(grp) %>%
+            summarise(x = sample(x, size=1), label = sample(grp,1))
+
+        df_plt <- as_tibble(merge(df_plt, label_df, all.x = T))
+    }
+
+    plt <- ggplot(df_plt, aes(x=x, y=y, color = colr)) +
+        scale_color_manual(values = colors_manual3) +
+        ## scale_color_brewer(palette = "Paired") + 
         geom_line(size=1.5)
+
+    if (facets != "facetcol") {
+        ## when using facets, need separate condition anyways for plotting the labels
+        ## -> can get rid of global facetcol
+        
+        plt <- plt + 
+            facet_wrap(~facetcol, scales = "free") +
+            geom_label_repel(aes(label=label), fill="NA", show.legend = F)
+
+        
+    }
     print(plt)
     
     return(plt)
@@ -301,14 +331,21 @@ fill_up <- function(df, x, y, grp) {
     ## df$x <- df[[x]]
     ## df$y <- df[[y]]
     ## df$grp <- df[[grp]]
-
+    
     structure_df <- tidyr::expand(df, x=min(df$x):max(df$x), grp)
 
     ## aggregate (sum) original data
-    og_df_agg <- aggregate(y ~ x + grp, df, sum)
+    og_df_agg <- aggregate(y ~ x + grp + facetcol, df, sum)
+    ## og_df_agg <- aggregate(y ~ x + grp, df, sum)
 
     df_merge <- as_tibble(merge(structure_df, og_df_agg, all.x = TRUE))
     df_merge$y[which(is.na(df_merge$y))] <- 0
+
+    ## filling up facetcols with grp values: grps should be nested in facets
+    df_merge <- df_merge %>%
+        group_by(grp) %>%
+        mutate(facetcol = sample(facetcol[!is.na(facetcol)],1))
+
 
     return(df_merge)
 }
@@ -334,23 +371,28 @@ fill_up2 <- function(df, x, y, grp) {
     return(df_merge)
 }
 
-create_facets <- function(dfx, facets, max_lines) {
+create_facets <- function(dfx, facets, grp, max_lines) {
     #' create more viewable facets by splitting facet variable into facets with at most max_lines
 
+    
     for (i in unique(dfx[[facets]])) {
         ## print(i)
 
         ctr <- 1
+        unq_lines <- unique(dfx[which(dfx[[facets]]==i),][[grp]])
+        lines_selected <- c()
         ##
         while (TRUE) {
-            unq_lines <- unique(dfx[which(dfx[[facets]]==i),][[grp]])
+            unq_lines <- setdiff(unq_lines, lines_selected)
             ## print(unq_lines)
             ## 
             lines_selected <- unq_lines[1:min(max_lines, len(unq_lines))]
             dfx[which(dfx[[grp]] %in% lines_selected),"facetcol"] <- paste0(i, "-", ctr)
 
             ## dfx[which(dfx[[grp]] %in% lines_selected[[grp]]),"colr"] <- as.numeric(factor(
-            ## 
+            ##
+
+            
             ctr <- ctr+1
             if (len(unq_lines) <= max_lines) {
                 break
@@ -363,16 +405,18 @@ create_facets <- function(dfx, facets, max_lines) {
 
 ## dfx_bu <- dfx
 ## dfx <- dfx_bu
-## table(dfx$region)
-## dfx2 <- create_facets(dfx, "region")
-## table(unique(dfx2[,c("Country", "region")])$region)
+## table(dfx$facetcol)
+## dfx2 <- create_facets(dfx, "region", 6)
+## table(table(unique(dfx2[,c("Country", "facetcol")])$facetcol))
+
+
 
 
 
 
 
 viz_lines <- function(dfx, x, y, time_level, duration, grp, extra =FALSE, div=FALSE, max_lines=12,
-                      return ="df",fill_up = FALSE, facets=F)  {
+                      return ="df",fill_up = FALSE, facets="facetcol")  {
     #' general vizualization function
     #' dfx: overall dataframe, containing at least columns for
     #' x: the time series that ends up on the x axis
@@ -382,28 +426,38 @@ viz_lines <- function(dfx, x, y, time_level, duration, grp, extra =FALSE, div=FA
     #' division column optional for rates
     #' extra: one of "pop_rates" (population rates), "cum" (cumulative counts) and "cum_rate" (cumulative rate)
     #' fill_up: whether to impute missing x-grp observations, aggregates with sum (for now)
-
+    #' facet: always use facetcol in data for comfy aggregations, if something specified instead use that 
         
+    
     dfx$y <- dfx[[y]]
     dfx$x <- dfx[[x]]
     dfx$grp <- dfx[[grp]]
-
+    dfx$facetcol <- "facetcol"
+    ## global facetcol: even if not used, having it means I don't need separate agg_y calls
+    
     dfx <- set_time_level_gnrl(dfx, x, time_level = time_level, duration)
 
     ## rates are now conditional
     if (extra == "rates") {
-        
+
         dfx$div <- dfx[[div]]
         df_div_grp_sum <- prep_div(dfx, div, grp)
-        
+
     } else {
         df_div_grp_sum <- FALSE
     }
+
+
     
+    if (facets != "facetcol") {
+        dfx = create_facets(dfx, facets, grp, max_lines)
+    }
+
     if (fill_up) {
+        
         dfx <- fill_up(dfx, x, y, grp)
     }
-    
+
 
     df_plt <- agg_y(dfx, y, grp, time_level, duration)
 
@@ -418,8 +472,9 @@ viz_lines <- function(dfx, x, y, time_level, duration, grp, extra =FALSE, div=FA
     ##     geom_line()
     
     df_return <- df_plt
+    
 
-    plt <- actually_plot(df_plt, max_lines)
+    plt <- actually_plot(df_plt, max_lines, facets, grp)
 
     if  (return=="plot") {
         return(plt)
