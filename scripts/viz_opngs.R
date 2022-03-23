@@ -334,8 +334,45 @@ fill_up2 <- function(df, x, y, grp) {
     return(df_merge)
 }
 
+create_facets <- function(dfx, facets, max_lines) {
+    #' create more viewable facets by splitting facet variable into facets with at most max_lines
 
-viz_lines <- function(dfx, x, y, time_level, duration, grp, extra =FALSE, div=FALSE, max_lines=12, return ="df",fill_up = FALSE)  {
+    for (i in unique(dfx[[facets]])) {
+        ## print(i)
+
+        ctr <- 1
+        ##
+        while (TRUE) {
+            unq_lines <- unique(dfx[which(dfx[[facets]]==i),][[grp]])
+            ## print(unq_lines)
+            ## 
+            lines_selected <- unq_lines[1:min(max_lines, len(unq_lines))]
+            dfx[which(dfx[[grp]] %in% lines_selected),"facetcol"] <- paste0(i, "-", ctr)
+
+            ## dfx[which(dfx[[grp]] %in% lines_selected[[grp]]),"colr"] <- as.numeric(factor(
+            ## 
+            ctr <- ctr+1
+            if (len(unq_lines) <= max_lines) {
+                break
+            }
+        }
+        
+    }
+    return(dfx)
+}
+
+## dfx_bu <- dfx
+## dfx <- dfx_bu
+## table(dfx$region)
+## dfx2 <- create_facets(dfx, "region")
+## table(unique(dfx2[,c("Country", "region")])$region)
+
+
+
+
+
+viz_lines <- function(dfx, x, y, time_level, duration, grp, extra =FALSE, div=FALSE, max_lines=12,
+                      return ="df",fill_up = FALSE, facets=F)  {
     #' general vizualization function
     #' dfx: overall dataframe, containing at least columns for
     #' x: the time series that ends up on the x axis
