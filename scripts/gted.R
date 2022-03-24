@@ -18,6 +18,20 @@ len(table(df_gted$tep$`Beneficiaries - Level 1`))
 ## beneficiaries level 1: 12 categories, 937 non-profit things
 ## level 2 is not standardized
 
+table(is.na(df_gted$tep$`Beneficiaries - Level 2`))
+## 11k have some unstandardized beneficiaries, 11k don't
+
+grepl_term <- "collector"
+
+table(grepl(grepl_term, df_gted$tep$`Beneficiaries - Level 2`))
+sample(df_gted$tep$`Beneficiaries - Level 2`[grepl(grepl_term, df_gted$tep$`Beneficiaries - Level 2`)],2)
+## 515 about art, but mostly about stuff in word (particular, start, parties)
+## only 4 about " art "
+## only 2: about "collector"
+## 8 about "museum", but also sounds a lot like it could be about public ones? or could be outsourced ones like Stedelijk?
+## 24 about " cultural" ("cultural" has 194, but probably most agricultural)
+
+
 
 
 table(df_gted$tep$`Estimation method`)
