@@ -145,9 +145,29 @@ dev.off()
 
 ## need to focus on countries that report provision level data
 ## not just countries that report provisions for NPOs
-## but US not included -> try grepping that's a good trick
+## but US not included -> try grepping that's a good trick: 
+
+df_rf_pct <- df_gted$teprev %>%
+    group_by(Country, Year) %>%
+    summarize(rf_pct = sum(`RF % of Tax`), year=max(Year,1), iso3c=sample(Country,1)) %>%
+    select(iso3c, year, rf_pct) %>%
+    ungroup() %>%
+    na.omit() 
+
+table(df_gted$teprev$Year)
+table(df_rf_pct$year)
 
 
+df_rf_pct_npo <- df_gted$teprev_npo %>%
+    group_by(Country, Year) %>%
+    summarize(rf_pct = sum(`RF % of Tax`), year=max(Year,1), iso3c=sample(Country,1)) %>%
+    select(iso3c, year, rf_pct) %>%
+    ungroup() %>%
+    na.omit() 
+    
+    
+cpltns_checker(df_rf_pct[,c("year", "iso3c", "rf_pct")], "rf_pct")
+cpltns_checker(df_rf_pct_npo[,c("year", "iso3c", "rf_pct")], "rf_pct")
 
 
 ## can merge to df_gted_rev over `Provision ID`
