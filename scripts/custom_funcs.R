@@ -141,39 +141,49 @@ cpltns_checker <- function(vx, varx) {
     #' assesses completeness of variable in terms of df_anls PM coverage 
     # there's still a bug with cry_cvrg_geq3, which can be higher than 217 sometimes 
 
-    dfb <- df_anls[,c("countrycode", "year", "nbr_opened")]
-    dfc <- as_tibble(merge(dfb, vx, by = c("year", "countrycode"), all.x = TRUE))
 
-    cry_cvrg <- aggregate(year ~ countrycode, na.omit(dfc), length)
-    crys_geq3 <- cry_cvrg[which(cry_cvrg$year >= 3),]$countrycode
-    cry_pm_crvg_actual <- aggregate(nbr_opened ~ countrycode, na.omit(dfc), sum)
-    cry_pm_crvg_ideal <- aggregate(nbr_opened ~ countrycode, dfc, sum)
-    names(cry_pm_crvg_ideal) <- c("countrycode", "nbr_opened_ideal")
+    dfb <- df_anls[,c("iso3c", "year", "nbr_opened")]
+    dfc <- as_tibble(merge(dfb, vx, by = c("year", "iso3c"), all.x = TRUE))
+
+
+    cry_cvrg <- aggregate(year ~ iso3c, na.omit(dfc), length) ## how many observation periods
+    crys_geq3 <- cry_cvrg[which(cry_cvrg$year >= 3),]$iso3c ## countries with at least 3 obs
+    cry_pm_crvg_actual <- aggregate(nbr_opened ~ iso3c, na.omit(dfc), sum) ## number of PMs per country with data
+    cry_pm_crvg_ideal <- aggregate(nbr_opened ~ iso3c, dfc, sum) ## number of PMs that would be covered ideally
+    names(cry_pm_crvg_ideal) <- c("iso3c", "nbr_opened_ideal")
 
     cry_pm_cvrg_cprn <- as_tibble(merge(cry_pm_crvg_ideal, cry_pm_crvg_actual, all.x = TRUE))
     cry_pm_cvrg_cprn$nbr_opened[which(is.na(cry_pm_cvrg_cprn$nbr_opened))] <- 0
     cry_pm_cvrg_cprn$diff <- cry_pm_cvrg_cprn$nbr_opened - cry_pm_cvrg_cprn$nbr_opened_ideal
 
-    ## most_affected_crys <- unlist(lapply(sort(cry_pm_cvrg_cprn$diff)[1:4],
-    ##                                     function(x) (filter(cry_pm_cvrg_cprn, diff == x)$countrycode)))
+    ratio_opngs_cvrd <- sum(cry_pm_cvrg_cprn$nbr_opened)/sum(cry_pm_cvrg_cprn$nbr_opened_ideal)
+    ## percentage of PMs covered overall
+    ratio_opngs_cvrd_cry_avg <- mean(cry_pm_cvrg_cprn$nbr_opened/cry_pm_cvrg_cprn$nbr_opened_ideal, na.rm = T)
+    ## average country percentage of coverage of openings
 
-    most_affected_crys <- cry_pm_cvrg_cprn$countrycode[order(cry_pm_cvrg_cprn$diff)[1:4]]
+    ## most_affected_crys <- unlist(lapply(sort(cry_pm_cvrg_cprn$diff)[1:4],
+    ##                                     function(x) (filter(cry_pm_cvrg_cprn, diff == x)$iso3c)))
+
+    most_affected_crys <- cry_pm_cvrg_cprn$iso3c[order(cry_pm_cvrg_cprn$diff)[1:4]]
     
 
-    PMs_covered_raw <- sum(na.omit(dfc[which(dfc$countrycode %in% crys_geq3),])$nbr_opened)
+    PMs_covered_raw <- sum(na.omit(dfc)$nbr_opened)
 
-    cry_cvrg_geq3 <- sum(filter(dfc, countrycode %in% crys_geq3)$nbr_opened)
+    cry_cvrg_geq3 <- sum(filter(na.omit(dfc), iso3c %in% crys_geq3)$nbr_opened)
 
     nbr_of_crys_geq3 <- len(crys_geq3)
 
     ## how many of crys_geq3 that have at least one PM founded, maybe relevant for comparative purposes 
-    nbr_of_crys_geq1pm <- filter(aggregate(nbr_opened ~ countrycode, dfc, sum), countrycode %in% crys_geq3) %>%
-        filter(nbr_opened >= 1) %>%
+    nbr_of_crys_geq1pm <- aggregate(nbr_opened ~ iso3c, dfc, sum) %>%
+        filter(iso3c %in% crys_geq3 & nbr_opened >= 1) %>%
         nrow()
+    ## some nicer syntax
 
-    return(list(
+        return(list(
         varx=varx,
         nobs=nrow(vx),
+        ratio_opngs_cvrd=ratio_opngs_cvrd,
+        ratio_opngs_cvrd_cry_avg=ratio_opngs_cvrd_cry_avg,
         PMs_covered_raw=PMs_covered_raw,
         cry_cvrg_geq3=cry_cvrg_geq3,
         most_affected_crys = paste(most_affected_crys, collapse = "--"),
