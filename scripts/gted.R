@@ -192,3 +192,30 @@ df_gted$cry
 
 
 
+
+## ** improving labeling 
+
+## *** manual fix
+## not the same problem: #110 has fixed label positions (wants to label points on line), I want to label line
+
+
+
+## *** geom_textline
+
+df_geompath <- df_gted$rev %>%
+    group_by(Country, Year,region) %>%
+    summarize(rf_pct=sum(`RF % of Tax`)) %>%
+    viz_lines(dfx=.,x="Year", y="rf_pct", time_level = "ra", duration = 4, grp="Country", fill_up = F, facets="region")
+
+library(geomtextpath)
+
+df_geompath <- df_geompath %>%
+    group_by(grp) %>%
+    mutate(hjust=sample(seq(0.1,0.9, 0.1),1))
+
+
+filter(df_geompath, facetcol == "Europe-1") %>%
+    ggplot(aes(x=x, y=y, group=grp, color=grp)) +
+    geom_textpath(aes(label=grp, hjust=hjust), upright=F)
+## maybe can write function that bins x segments and distributes labels to them?
+
