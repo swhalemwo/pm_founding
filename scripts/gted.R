@@ -13,9 +13,12 @@ df_gted <- lapply(list(tep=1, ## tax expenditure provision
 
 names(df_gted$tep)
 
+table(df_gted$tep$`Beneficiaries - Level 1`)
 len(table(df_gted$tep$`Beneficiaries - Level 1`))
 ## beneficiaries level 1: 12 categories, 937 non-profit things
 ## level 2 is not standardized
+
+
 
 table(df_gted$tep$`Estimation method`)
 ## estimation method basically always revenue foregone
@@ -76,17 +79,20 @@ table(is.na(df_gted$rev$ProvisionID))
 
 sample(df_gted$rev$ProvisionID, 30)
 
-df_gted$rev$region <- countrycode(df_gted$rev$Country, "iso3c", "un.regionsub.name")
-
 df_gted$rev$region <- countrycode(df_gted$rev$Country, "iso3c", "un.region.name")
 
-df_gted$rev %>%
+plt_tax_gone <- df_gted$rev %>%
     group_by(Country, Year,region) %>%
     summarize(rf_pct=sum(`RF % of Tax`)) %>%
-    viz_lines(dfx=.,x="Year", y="rf_pct", time_level = "ra", duration = 4, grp="Country", fill_up = F, facets="region")
+    viz_lines(dfx=.,x="Year", y="rf_pct", time_level = "ra", duration = 4, grp="Country", fill_up = F, facets="region", return="plot")
+
+pdf(paste0(FIG_DIR, "gted_tax_gone.pdf"), width=16, height=10)
+plot(plt_tax_gone +
+     labs(title = "Percentage of Tax foregone according to GTED"))
+dev.off()
 
 
-## ** merging tep and 
+## ** merging tep and rev
 
 
 ## *** exploring ids
@@ -101,7 +107,31 @@ len(unique(df_gted$rev$ProvisionID))
 
 ## *** actual merging
 
-df_gted$tep[,c("Provision ID","Beneficiaries - Level 1","Policy objective - Level 1","Tax base - Level 1","Tax base - Level 2","Tax base - Level 3","TE Description","TE name (English)","Implementation and modifications","Time frame")]
+df_gted$teprev <- as_tibble(merge(
+    df_gted$tep[,c("Provision ID","Beneficiaries - Level 1","Policy objective - Level 1","Tax base - Level 1","Tax base - Level 2","Tax base - Level 3","TE Description","TE name (English)","Implementation and modifications","Time frame")],
+    df_gted$rev, by.x = "Provision ID", by.y = "ProvisionID"))
+
+## focus on provision to non-profits
+
+df_gted$teprev_npo <- 
+    filter(df_gted$teprev, `Beneficiaries - Level 1` == "Non-profit organizations/NGOs/Philanthropic organizations/foundations")
+len(unique(df_gted$teprev_npo$Country))
+## 51 countries are reporting provisions to NPO etc
+## US not included 
+
+plt_tax_gone_npo <- df_gted$teprev_npo %>%
+    group_by(Country, Year, region) %>%
+    summarize(rf_pct = sum(`RF % of Tax`)) %>%
+    viz_lines(x="Year", y="rf_pct", time_level = "ra", duration = 4, grp = "Country", facets="region", max_lines = 8, return = "plot")
+
+pdf(paste0(FIG_DIR, "gted_tax_gone_npo.pdf"), width = 16, height = 10)
+plot(plt_tax_gone_npo + 
+     labs(title = "Percentage of Tax foregone due to provisions to non-profits/foundations/NGO/philanthropy (GTED)"))
+dev.off()
+
+## need to focus on countries that report provision level data
+## not just countries that report provisions for NPOs
+## but US not included -> try grepping that's a good trick
 
 
 
