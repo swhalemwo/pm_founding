@@ -173,3 +173,22 @@ cpltns_checker(df_rf_pct_npo[,c("year", "iso3c", "rf_pct")], "rf_pct")
 ## can merge to df_gted_rev over `Provision ID`
 
 
+
+
+## ** exploring ben
+
+## number of beneficiaries
+df_gted$ben
+## also by ProvisionID, but only 15k rows -> coverage probably worse (rev had 104k),
+## and number of beneficiaries less telling than revenue forgone
+
+## ** exploring cry
+
+df_gted$cry
+
+## taxes collected in local currency unit (LCU), UNCTAD exchange rate (FX: probably foreign exchange)
+## still unclear what RF means, maybe revenue forgone? anyways refers to the different currencies
+
+
+
+
