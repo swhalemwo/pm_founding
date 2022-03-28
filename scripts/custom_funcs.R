@@ -141,6 +141,8 @@ cpltns_checker <- function(vx, varx) {
     #' assesses completeness of variable in terms of df_anls PM coverage 
     # there's still a bug with cry_cvrg_geq3, which can be higher than 217 sometimes 
 
+    vx <- as_tibble(na.omit(vx[,c("iso3c", "year", varx)]))
+
 
     dfb <- df_anls[,c("iso3c", "year", "nbr_opened")]
     dfc <- as_tibble(merge(dfb, vx, by = c("year", "iso3c"), all.x = TRUE))
