@@ -28,31 +28,8 @@ wb_search("tax rate")[1:8,]$indicator
 FRASER_DIR <- paste0(PROJECT_DIR, "data/Fraser Institute/")
 EFW_FILES <- list.files(FRASER_DIR, pattern = "csv")
 
-fraser_df <- 
-
-locate_col <- function(df, term) {
-    #' find the column labeled as term (if data is not clearly structured)
-    df_loc <- which(apply(df, 2, function(x) grepl(term, x)))
-    if (len(df_loc) > 1) {
-        stop("more than 1 colname found")
-    }
-    
-    row_nbr <- df_loc %% nrow(df) ## modulus to find row
-    col_nbr <- ceiling(df_loc/nrow(df)) ## find proper column
-    
-
-    return(list(
-        col_nbr=col_nbr,
-        row_nbr=row_nbr)
-        )
-    }
-    
-scramblematch<-function(query,target) {
-   Reduce("&",lapply(strsplit(query," ")[[1]],grepl,target,fixed=TRUE))
-}
-
-
 extract_efw_data <- function(filename) {
+    #' read in the EFW data, rename the data columns
     efw_df <- as_tibble(read.csv(paste0(FRASER_DIR, filename), skip=4))
 
     ## rel_cols <- c("Year", "ISO_Code", "marginal income tax rate")
