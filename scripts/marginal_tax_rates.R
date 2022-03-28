@@ -123,15 +123,24 @@ filter(efw_df, Year >=1985) %>%
 efw_base <- as_tibble(expand.grid(iso3c=unique(efw_df$ISO_Code), year = seq(1985, 2020)))
 efw_fill_up <- as_tibble(merge(efw_base, efw_df, all.x = T))
 
+## use na.rm=F to return leading NAs
 efw_fill_up <- efw_fill_up %>%
     select(iso3c, year, data_Top.marginal.income.tax.rate) %>%
     group_by(iso3c) %>%
-    mutate(tmirt_approx = na.approx(data_Top.marginal.income.tax.rate, na.rm = F)) ## use na.rm=F to return leading NAs
+    mutate(tmirt_approx_linear = na.approx(data_Top.marginal.income.tax.rate, na.rm = F),
+           tmirt_approx_step = na.locf(data_Top.marginal.income.tax.rate, na.rm = F))
 
 
-cpltns_checker(efw_fill_up, varx="tmirt_approx")
+cpltns_checker(efw_fill_up, varx="tmirt_approx_linear")
+cpltns_checker(efw_fill_up, varx="tmirt_approx_step")
 cpltns_checker(efw_fill_up, varx="data_Top.marginal.income.tax.rate")
-filter(efw_fill_up, iso3c=="DEU")
+filter(efw_fill_up, iso3c=="AGO")
+
+table(is.na(filter(efw_fill_up, is.na(tmirt_approx_linear))$tmirt_approx_step))
+
+filter(efw_fill_up, is.na(tmirt_approx_linear) & !is.na(tmirt_approx_step))
+## step interpolation carries over last value -> has the values for 2020
+
 
 ## if I somehow predict tax incentives, I shouldn't use linearly imputed values for predictions, rather impute predicted values linearly afterwards
 
