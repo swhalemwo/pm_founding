@@ -53,20 +53,90 @@ extract_efw_data <- function(filename) {
 }
     
 
-efw_dfs <- lapply(efw_files, extract_efw_data)
-
+efw_dfs <- lapply(EFW_FILES, extract_efw_data)
 efw_names <- unlist(lapply(efw_dfs, names))
 table(efw_names)
 ## names are consistent across datafiles
 
-locate_col(fraser_df, "marginal income tax")
+
+efw_df <- as_tibble(Reduce(function(x,y) rbind(x,y), efw_dfs))
 
 
-fraser_df[,col_nbr]
-fraser_df[,1]
+## efw_melt <- as_tibble(reshape2::melt(efw_df[,2:ncol(efw_df)], id=names(efw_df)[2:4]))
+## sample(na.omit(efw_melt$value), 100)
 
+## efw_melt$value[grepl("-", efw_melt$value)]
+
+## filter(efw_melt, grepl("[^-]-[^-]", efw_melt$value)) %>%
+##     select(variable) %>%
+##     table() %>%
+##     sort()
+
+## ## hyphens in data_Top.marginal.income.tax.rate and data_Top.marginal.income.and.payroll.tax.rate
+
+## filter(efw_melt, grepl("[^-]-[^-]", efw_melt$value))
+
+## ## look for other weird values
+
+## weird_values <- filter(efw_melt, grepl("[^0-9.]", efw_melt$value))$value
+## weird_values <- gsub(",", "", weird_values) ## filtering out commas
+## weird_values[is.na(as.numeric(weird_values))]
+## ## seems I capture all stuff like this 
+
+
+## differences don't seem super huge,
+## think it's best to use larger one since indicator is about top
+
+efw_clean_values <- function(values){
+                                   #     
+    print(values[1:10])
+    values_clean <- gsub(",", "", values)
+    splits <- strsplit(as.character(values_clean), split="-")
+    
+    splits_max <- as.numeric(unlist(lapply(splits, function(x) x[max(1,len(x))])))
+    return(splits_max)
 
     
+}
+
+## efw_remove_hyphens(efw_df$data_Top.marginal.income.tax.rate)
+
+## overwrite stuff, I don't like this but is fastest now 
+efw_df[,5:ncol(efw_df)] <- lapply(efw_df[,5:ncol(efw_df)], efw_clean_values)
+names(efw_df)[2:3] <- c("year", "iso3c")
+
+
+## efw_df$data_Top.marginal.income.tax.rate
+
+## cpltns_checker(efw_df[,c("data_Top.marginal.income.tax.rate
+    
+efw_df %>%
+    select(iso3c=ISO_Code, year=Year, tmitr=data_Top.marginal.income.tax.rate) %>%
+    cpltns_checker(varx="tmitr")
+
+efw_df$region <- countrycode(efw_df$ISO_Code, "iso3c", "un.region.name")
+
+filter(efw_df, Year >=1985) %>%
+    select(iso3c=ISO_Code, year=Year, tmitr=data_Top.marginal.income.tax.rate, region) %>%
+    viz_lines(x="year", y="tmitr", time_level = "ra", duration = 2, grp="iso3c", facets = "region", max_lines=8)
+
+efw_base <- as_tibble(expand.grid(iso3c=unique(efw_df$ISO_Code), year = seq(1985, 2020)))
+efw_fill_up <- as_tibble(merge(efw_base, efw_df, all.x = T))
+
+efw_fill_up <- efw_fill_up %>%
+    select(iso3c, year, data_Top.marginal.income.tax.rate) %>%
+    group_by(iso3c) %>%
+    mutate(tmirt_approx = na.approx(data_Top.marginal.income.tax.rate, na.rm = F)) ## use na.rm=F to return leading NAs
+
+
+cpltns_checker(efw_fill_up, varx="tmirt_approx")
+cpltns_checker(efw_fill_up, varx="data_Top.marginal.income.tax.rate")
+filter(efw_fill_up, iso3c=="DEU")
+
+## if I somehow predict tax incentives, I shouldn't use linearly imputed values for predictions, rather impute predicted values linearly afterwards
+
+## would reeaaaaaaaaally like to run some PCA on this EFW data, but would need better regression methods
+## also too data-driven 
 
 
 
