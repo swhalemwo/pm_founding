@@ -1,3 +1,4 @@
+## * wb api
 
 download_WB_data <- function(indx){
     #' downloads data with the WB API, can take single WB variable codes or vectors thereof

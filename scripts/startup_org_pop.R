@@ -25,7 +25,7 @@ ds <- docstring
 library(ggrepel)
 library(PerformanceAnalytics)
 library(factoextra)
-
+library(tidyr)
 
 
 options(show.error.messages = TRUE)

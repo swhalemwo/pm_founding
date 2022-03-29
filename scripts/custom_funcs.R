@@ -1,3 +1,6 @@
+## * custom funcs
+
+table = function (..., useNA = 'ifany') base::table(..., useNA = useNA)
 
 '%!in%' <- function(x,y)!('%in%'(x,y))
 len <- length
