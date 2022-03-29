@@ -1,12 +1,54 @@
 
 ## ** oecd
 filter_sdmx_results("marginal tax")
+filter_sdmx_results("TABLE_I7_TAX")
+
 
 filter_sdmx_results("tax rate")
 
 datasets_already_there <- list.files(OECD_DATA_DIR)
 options(timeout = 120)
 download_oecd_dataset("TABLE_I7", "TOP_MRATE")
+download_oecd_dataset("TABLE_I7", "PERS_ITAX")
+
+
+## works
+dfx <- get_dataset("TABLE_I7")
+table(dfx$TAX)
+
+oecd_mtr <- as_tibble(read.csv(paste0(OECD_DATA_DIR, "TABLE_I7")))
+
+mtr_cpr <- as_tibble(merge(
+    select(oecd_mtr, iso3c=COU, year=Time, ObsValue),
+    select(efw_df, iso3c, year, data_Top.marginal.income.tax.rate)))
+
+mtr_cpr$diff <- mtr_cpr$ObsValue - mtr_cpr$data_Top.marginal.income.tax.rate
+
+
+mtr_cpr$region <- countrycode(mtr_cpr$iso3c, "iso3c", "un.region.name")
+
+viz_lines(dfx=mtr_cpr, x="year", y="diff", time_level = "ra", duration = 1, grp="iso3c", facets = "region", max_lines = 8;)
+
+summary(mtr_cpr$diff)
+hist(mtr_cpr$diff, breaks = 30)
+## mean of -3.25 -> EFW/Fraser thinks there are higher MRTs than OECD
+## t-test?
+
+ttest <- t.test(mtr_cpr$ObsValue, mtr_cpr$data_Top.marginal.income.tax.rate, paired = T, alternative = "two.sided")
+
+
+
+
+## test_df <- as.data.frame(cbind(c(1,2,3, 1,2,3,1,2,3), c(4,5,6, 8,9,10, 3,4,5),
+##                                c(rep("a",3), rep("b",3), rep("c", 3))))
+## test_df$V1 <- as.numeric(test_df$V1)
+## test_df$V2 <- as.numeric(test_df$V2)
+## cor(test_df$V1, test_df$V2)
+## ggplot(test_df, aes(x=V1, y=V2, color=V3)) +
+##     geom_line()
+
+
+
 
 ## ** world bank
 ## only
@@ -57,7 +99,6 @@ efw_dfs <- lapply(EFW_FILES, extract_efw_data)
 efw_names <- unlist(lapply(efw_dfs, names))
 table(efw_names)
 ## names are consistent across datafiles
-
 
 efw_df <- as_tibble(Reduce(function(x,y) rbind(x,y), efw_dfs))
 
