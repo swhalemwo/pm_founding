@@ -16,7 +16,11 @@ source(paste0(SCRIPT_DIR, "tax_incentives.R"))
 source(paste0(SCRIPT_DIR, "cbn_dfs.R"))
 source(paste0(SCRIPT_DIR, "descriptives.R"))
 
-df_excl <- create_excel_df()
+PMDB_FILE <- "Private museum database2.xlsx"
+PMDB_FILE <- "Private museum database3.xlsx"
+
+
+df_excl <- create_excel_df(PMDB_FILE)
 df_open <- aggregate_openings(df_excl)
 df_wb <- get_WB_data(c("NY.GDP.PCAP.CD", "SP.POP.TOTL"))
 df_anls <- create_anls_df(df_wb, df_open)
