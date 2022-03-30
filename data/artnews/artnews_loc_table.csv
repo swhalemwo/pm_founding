@@ -1,0 +1,226 @@
+location, country2
+"London",GBR
+"Chicago",USA
+"New York",USA
+"Zurich",CHE
+"San Francisco",USA
+"Sydney",AUS
+"Rancho Mirage, California",USA
+"Fort Worth, Texas",USA
+"Fort Worth, Texas; New York",USA
+"Houston",USA
+"Santa Barbara, California",USA
+"Milan",ITA
+"Paris",FRA
+"Buenos Aires",BRA
+"Los Angeles",USA
+"Shawnee Mission, Kansas",USA
+"Miami Beach",USA
+"Newport Beach, California",USA
+"Palm Beach, Florida",USA
+"Rio de Janeiro",BRA
+"Louisville, Kentucky",USA
+"Dallas",USA
+"Martha's Vineyard, Massachusetts; New York; Roxbury, Connecticut",USA
+"Brussels",BEL
+"Minneapolis",USA
+"Aspen, Colorado; New York",USA
+"London; New York",GBR;USA
+"Aspen, Colorado; Chicago",USA
+"Dorset, England; Sydney",GBR;AUS
+"Toronto",CAN
+"Buenos Aires; New York",BRA;USA
+"Rome",ITA
+"Buckinghamshire, England; London",GBR
+"Cambridge, Massachusetts",USA
+"Kent, Connecticut; New York; Peninsula, Ohio",USA
+"San Antonio",USA
+"Tokyo",JPN
+"Fox Chapel, Pennsylvania",USA
+"Cleveland",USA
+"Athens",GRC
+"New Canaan, Connecticut",USA
+"New York; Washington, D.C.",USA
+"Boston",USA
+"Washington, D.C.",USA
+"New York; Wainscott, Long Island",USA
+"Taylor, Michigan",USA
+"Key Biscayne, Florida; New York",USA
+"Los Angeles; New York",USA
+"Berlin",DEU
+"Upperville, Virginia",USA
+"New York; Paris",USA;FRA
+"New York; Phoenix, Maryland",USA
+"Athens; London",GRC;GBR
+"New York; Oak Bluffs, Massachusetts; Santa Monica, California",USA
+"Beverly Hills, California",USA
+"Newbury, England",GBR
+"St. Louis, Missouri",USA
+"Stockholm",SWE
+"Pasadena, California",USA
+"Katonah, New York",USA
+"Geneva",CHE
+"Bethesda, Maryland",USA
+"Kings Point, Long Island; New York",USA
+"Bloomfield Hills, Michigan",USA
+"Evanston, Illinois",USA
+"Madrid",ESP
+"Tuscaloosa, Alabama",USA
+"Ocala, Florida",USA
+"Aspen, Colorado; Columbus, Ohio; London",USA;GBR
+"Seattle",USA
+"London; Paris",GBR;FRA
+"Birmingham, Michigan",USA
+"Manila",PHL
+"Oslo",SWE
+"Rye, New York",USA
+"Montreal",CAN
+"Milwaukee",USA
+"Charlottesville, Virginia",USA
+"New Rochelle, New York",USA
+"Forest Hills, New York; Washington, D.C.",USA
+"Denver; Englewood, Colorado",USA
+"London; Milan; Venice",GBR;ITA
+"Dallas; New York",USA
+"Amsterdam",NLD
+"London; Toronto",GBR;CAN
+"Honolulu",USA
+"London; Wigan, England",GBR
+"Miami; Washington, D.C.",USA
+"Berkshire, England; London",GBR
+"Greenwich, Connecticut; New York",USA
+"Venice",ITA
+"Beverly Farms, Massachusetts",USA
+"Monhegan Island, Maine; Washington, D.C.",USA
+"Columbus, Ohio; New York; Orlando, Florida",USA
+"Carbondale, Colorado",USA
+"Glasgow",GBR
+"Key Biscayne, Florida",USA
+"Mercer Island, Washington",USA
+"Bal Harbour, Florida; Montreal",USA;CAN
+"New York; Palm Beach, Florida",USA
+"New York; Westchester County, New York",USA
+"East Hampton, New York; Lincoln, Massachusetts; New York; Palm Beach, Florida",USA
+"Kapalua, Hawaii; Medina, Washington",USA
+"Montreal; New York",CAN;USA
+"Napa Valley, California; San Francisco",USA
+"New York; Rome",USA;ITA
+"Amsterdam; Brussels; Los Angeles",NLD;BEL;USA
+"Jackson, Wyoming",USA
+"South Yorkshire, England",GBR
+"Tarrytown, New York",USA
+"North Miami Beach, Florida; Toronto",USA;CAN
+"London; Tel Aviv",GBR;ISL
+"East Hampton, New York; Las Vegas; New York",USA
+"Kansas City, Missouri",USA
+"Laguna Beach, California; Minneapolis",USA
+"Vienna",AUT
+"Caracas, Venezuela; San José, Costa Rica",VEN;CRI
+"London; Marbella, Spain; Monte Carlo, Monaco; Paris",GBR;ESP;MCO;FRA
+"San Francisco; Sun Valley, Idaho",USA
+"New York; San Francisco; Sonoma, California",USA
+"Beverly Hills, California; New York; Palm Beach, Florida",USA
+"New York; St. Louis, Missouri",USA
+"Baltimore",USA
+"Aspen, Colorado; Connecticut; New York",USA
+"Miami Beach; New York",USA
+"Munich",DEU
+"Martha's Vineyard, Massachusetts; San Francisco; Woodside, California",USA
+"Aspen, Colorado; New York; Palm Beach, Florida",USA
+"New York; Palm Beach, Florida; Paris; Vienna; Wainscott, New York; Washington, D.C.",USA;FRA;AUT
+"Vail, Colorado",USA
+"Gstaad, Switzerland; Hong Kong; London; New York; Paris",CHE;HKG;GBR;USA;FRA
+"Des Moines, Iowa; Naples, Florida; New York",USA;ITA
+"Woodside, California",USA
+"Naples, Florida; Toronto",ITA;USA;CAN
+"Bellevue, Washington; New York",USA
+"Bellevue, Washington; St. Louis, Missouri",USA
+"Greens Farms, Connecticut; New York; Palm Beach, Florida",USA
+"Southampton, New York",USA
+"Milan; New York",ITA;USA
+"Geneva; Paris",CHE;FRA
+"Bridgehampton, New York; New York",USA
+"Rydal, Pennsylvania",USA
+"Mount Kisco, New York; New York",USA
+"Vail, Colorado; Weston, Massachusetts",USA
+"Denver",USA
+"Atlanta; London; Old Windsor, England",USA;GBR
+"Miami",USA
+"Atlanta",USA
+"São Paulo",BRA
+"Florida",USA
+"New York; Santa Monica, California",USA
+"Los Angeles; San Francisco",USA
+"New York; Washington, Connecticut",USA
+"Greenwich, Connecticut",USA
+"New York; Potomac, Maryland",USA
+"Colorado; Connecticut; New York",USA
+"Dutchess County, New York; New York",USA
+"Pound Ridge, New York",USA
+"Queens, New York",USA
+"Istanbul",TUR
+"Columbus, Ohio",USA
+"Manchester, England",GBR
+"Miami; New York",USA
+"Barbados; County Tipperary, Ireland; Geneva; Marbella, Spain",BRB;IRL;CHE;ESP
+"Cheshire, England",GBR
+"Los Angeles; New York; West Palm Beach, Florida",USA
+"Austin, Texas; Bristol, Virginia; Naples, Florida",USA;ITA
+"Philadelphia",USA
+"Palm Beach, Florida; Wynnewood, Pennsylvania",USA
+"Aspen, Colorado; Dallas",USA
+"Berlin; Los Angeles",DEU;USA
+"Incline Village, Nevada; New York",USA
+"Wayzata, Minnesota",USA
+"Grosse Pointe Farms, Michigan; Mackinac Island, Michigan",USA
+"New York; Southampton, New York",USA
+"Palm Beach, Florida; Westchester, New York",USA
+"Atherton, California",USA
+"Palo Alto, California",USA
+"Moscow",RUS
+"Las Vegas",USA
+"Arizona",USA
+"Moscow; New York",RUS;USA
+"Aspen, Colorado",USA
+"Aspen, Colorado; Marina del Rey, California",USA
+"Aspen, Colorado; Palm Beach, Florida",USA
+"Rancho Santa Fe, California",USA
+"Palm Beach, Florida; Rydal, Pennsylvania",USA
+"Glencoe, Illinois",USA
+"Naples, Florida",ITA;USA
+"Falls Church, Virginia; Washington, D.C.",USA
+"Bucks County, Pennsylvania",USA
+"Shanghai",CHN
+"Beijing; New York",CHN;USA
+"Beijing",CHN
+"Helsinki",FIN
+"Long Island, New York; New York; Palm Beach Gardens, Florida",USA
+"Palm Beach, Florida; Washington, D.C.",USA
+"New York; São Paulo",USA;BRA
+"Great Falls, Virginia",USA
+"New York; Ocala, Florida",USA
+"New York; Ridgefield, Connecticut",USA
+"New York; Zurich",USA;CHE
+"Seoul",KOR
+"London; Moscow",GBR;RUS
+"France; Kuala Lumpur, Malaysia",FRA;MYS
+"New York; Sydney",USA;AUS
+"Sharjah, UAE",ARE
+"Vancouver, British Columbia",CAN
+"Beirut",LBN
+"San Francisco; Sonoma, California",USA
+"London; Moscow; New York",GBR;RUS;USA
+"Stanford, California",USA
+"Connecticut",USA
+"Austin, Texas; Rutherford, California",USA
+"Bangkok",THA
+"London; Miami",GBR;USA
+"Austin, Texas",USA
+"Hong Kong; Taipei",HKG;TWN
+"La Jolla, California",USA
+"London; New York; Zurich",GBR;USA;CHE
+"Johannesburg",ZAF
+"Los Angeles; Moscow; New York",USA;RUS
+"Gloucestershire, England",GBR
+"California; Illinois",USA
+"Pacific Palisades, California",USA
