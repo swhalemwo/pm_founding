@@ -27,7 +27,11 @@ mtr_cpr$diff <- mtr_cpr$ObsValue - mtr_cpr$data_Top.marginal.income.tax.rate
 
 mtr_cpr$region <- countrycode(mtr_cpr$iso3c, "iso3c", "un.region.name")
 
-viz_lines(dfx=mtr_cpr, x="year", y="diff", time_level = "ra", duration = 1, grp="iso3c", facets = "region", max_lines = 8;)
+viz_lines(dfx=mtr_cpr, x="year", y="diff", time_level = "ra", duration = 1, grp="iso3c", facets = "region", max_lines = 8)
+
+viz_lines(dfx=mtr_cpr, x="year", y="ObsValue", time_level = "ra", duration = 1, grp="iso3c", facets = "region", max_lines = 8)
+
+
 
 summary(mtr_cpr$diff)
 hist(mtr_cpr$diff, breaks = 30)
@@ -35,6 +39,32 @@ hist(mtr_cpr$diff, breaks = 30)
 ## t-test?
 
 ttest <- t.test(mtr_cpr$ObsValue, mtr_cpr$data_Top.marginal.income.tax.rate, paired = T, alternative = "two.sided")
+
+
+
+## plotting the differences between OECD and EFW
+cpr_melt <- as_tibble(reshape2::melt(mtr_cpr, id=c("iso3c", "year", "region")))
+table(cpr_melt$variable)
+
+cpr_melt_facets <- as_tibble(
+    rbind(
+        filter(cpr_melt, variable =="ObsValue") %>%
+        create_facets(facets = "region", grp="iso3c", max_lines=4),
+        filter(cpr_melt, variable =="data_Top.marginal.income.tax.rate") %>%
+        create_facets(facets = "region", grp="iso3c", max_lines=4)))
+
+cpr_melt_facets <- cpr_melt_facets %>%
+    group_by(facetcol) %>%
+    mutate(colr = as.character(as.numeric(factor(iso3c))))
+
+
+    
+
+ggplot(cpr_melt_facets, aes(x=year, y=value, color=colr, linetype=variable)) +
+    geom_line() +
+    facet_wrap(~facetcol) +
+    scale_color_manual(values = colors_manual3)
+
 
 
 
