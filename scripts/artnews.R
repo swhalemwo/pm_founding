@@ -41,7 +41,9 @@ artnews_sum <- artnews_sep %>%
 
 artnews_sum$region <- countrycode(artnews_sum$iso3c, "iso3c", "un.region.name")
 
+pdf(paste0(FIG_DIR, "artnews_ranking.pdf"), width = 14, height = 10)
 viz_lines(na.omit(artnews_sum), x="year", y="cnt", grp="iso3c", facets = "region", time_level = "ra", duration = 2, fill_up = T, max_lines = 6)
+dev.off()
 
 
 ## ** trying to code location automatically, fails due to lack of standardization, and coding only a few hundred entries manually is fine
