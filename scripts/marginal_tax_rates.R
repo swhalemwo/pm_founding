@@ -152,14 +152,16 @@ names(efw_df)[2:3] <- c("year", "iso3c")
 ## cpltns_checker(efw_df[,c("data_Top.marginal.income.tax.rate
     
 efw_df %>%
-    select(iso3c=ISO_Code, year=Year, tmitr=data_Top.marginal.income.tax.rate) %>%
+    select(iso3c, year, tmitr=data_Top.marginal.income.tax.rate) %>%
     cpltns_checker(varx="tmitr")
 
-efw_df$region <- countrycode(efw_df$ISO_Code, "iso3c", "un.region.name")
+efw_df$region <- countrycode(efw_df$iso3c, "iso3c", "un.region.name")
 
-filter(efw_df, Year >=1985) %>%
-    select(iso3c=ISO_Code, year=Year, tmitr=data_Top.marginal.income.tax.rate, region) %>%
+pdf(paste0(FIG_DIR, "tmitr.pdf"), width=16, height=10)
+filter(efw_df, year >=1985) %>%
+    select(iso3c, year, tmitr=data_Top.marginal.income.tax.rate, region) %>%
     viz_lines(x="year", y="tmitr", time_level = "ra", duration = 2, grp="iso3c", facets = "region", max_lines=8)
+dev.off()
 
 efw_base <- as_tibble(expand.grid(iso3c=unique(efw_df$ISO_Code), year = seq(1985, 2020)))
 efw_fill_up <- as_tibble(merge(efw_base, efw_df, all.x = T))
