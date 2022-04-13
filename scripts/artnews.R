@@ -280,8 +280,41 @@ get_cpaer_clctrs <- function(artnews_genre_df, artnews_collection_df) {
 
 rel_clctrs <- get_cpaer_clctrs(artnews_genre_df, artnews_collection_df)
     
+rel_clctrs_loc <- as_tibble(merge(rel_clctrs, artnews_loc_df))
 
+rel_clctrs_time <- as_tibble(merge(rel_clctrs_loc, artnews_time_df))
 
+all_clctrs <- na.omit(as_tibble(merge(artnews_time_df, artnews_loc_df)))
+
+cnt_cpaer <- rel_clctrs_time %>%
+    group_by(country, year) %>%
+    summarize(cnt_cpaer = len(clctr_name))
+
+cnt_all <- all_clctrs %>%
+    group_by(country, year) %>%
+    summarize(cnt_all = len(clctr_name))
+
+cnt_clctrs <- as_tibble(merge(cnt_cpaer, cnt_all, all = T))
+## need to fill up missing values with 0, idk if best here or elsewhere
+
+cnt_clctrs$diff <- cnt_clctrs$cnt_all - cnt_clctrs$cnt_cpaer
+
+cnt_clctrs$region <- countrycode(cnt_clctrs$country, "iso3c", "un.region.name")
+
+cnt_clctrs <- cnt_clctrs %>%
+    rename(iso3c=country)
+
+pdf(paste0(FIG_DIR, "artnews_ranking_diff.pdf"), width = 17, height = 10)
+viz_lines(cnt_clctrs, x="year", y="diff", grp = "iso3c", facets = "region", time_level = "ra", duration = 2, fill_up = T, max_lines = 6)
+dev.off()
+
+pdf(paste0(FIG_DIR, "artnews_ranking_all.pdf"), width = 17, height = 10)
+viz_lines(cnt_clctrs, x="year", y="cnt_all", grp = "iso3c", facets = "region", time_level = "ra", duration = 2, fill_up = T, max_lines = 6)
+dev.off()
+
+pdf(paste0(FIG_DIR, "artnews_ranking_cpaer.pdf"), width = 17, height = 10)
+viz_lines(cnt_clctrs, x="year", y="cnt_cpaer", grp = "iso3c", facets = "region", time_level = "ra", duration = 2, fill_up = T, max_lines = 6)
+dev.off()
 
 
 
