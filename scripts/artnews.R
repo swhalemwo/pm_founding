@@ -33,28 +33,25 @@ generate_unq_nbrs_long <- function(dfx, group, vlu, aux_group) {
 
     dfx_unq_cntd <- vlus_in_list %>%
         group_by_at(group) %>%
-        summarize(nbr_unq = n_distinct(unq_vlus))
+        mutate(nbr_unq = n_distinct(unq_vlus))
     
+    
+    dfx_unq_cntd[,c(vlu)] <- list(dfx_unq_cntd$unq_vlus)
+
     return(dfx_unq_cntd)
 }
 
 
-generate_unq_nbrs_long(artnews_df_genre, group = "clctr_name", vlu="genre", aux_group = "year")
 
-## test_df <- data.frame(idx=c(1,1,1,2,2),vlu= c("b","a", "b", "b", "a"))
-
-## test_df %>%
-##     group_by(idx) %>%
-##     arrange(vlu) %>%
-##     summarize(unq_vlus = list(unique(vlu))) %>%
-##     as.data.frame()
-
-
-
-identical_checker <- function(dfx, vlu, group) {
+identical_checker <- function(dfx, vlu, group, aux_group=F) {
     #' checks whether values of vlu are identical for every entry of group, returns TRUE if they are identical
+    #' multi-value variables in long format can be passed by specifying aux_group
     
-    dfx_unq_cntd <- generate_unq_nbrs(dfx, group, vlu)
+    if (aux_group != FALSE) {
+        dfx_unq_cntd <- generate_unq_nbrs_long(dfx, group, vlu, aux_group)
+    } else {
+        dfx_unq_cntd <- generate_unq_nbrs(dfx, group, vlu)
+    }
         
     return_value <- FALSE
 
@@ -66,14 +63,17 @@ identical_checker <- function(dfx, vlu, group) {
 }
 
 
-get_changed_values <- function(dfx, vlu, group, verbose=F) {
+
+get_changed_values <- function(dfx, vlu, group, verbose=F, aux_group = F) {
     #' report the non-unique values per group
     #' also statistics would be nice
-    
 
-    dfx_unq_cntd <- generate_unq_nbrs(dfx, group, vlu)
     
-    
+    if (aux_group != FALSE) {
+        dfx_unq_cntd <- generate_unq_nbrs_long(dfx, group, vlu, aux_group)
+    } else {
+        dfx_unq_cntd <- generate_unq_nbrs(dfx, group, vlu)
+    }
 
     prop_calc_df <- dfx_unq_cntd %>%
         group_by_at(group) %>%
