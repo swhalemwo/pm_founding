@@ -42,12 +42,7 @@ artnews_sep <- readin_artnews()
 
 readin_artnews_genre <- function() {
     #' read in genre-classified artnews ranking
-    ##:ess-bp-start::browser@nil:##
-browser(expr=is.null(.ESSBP.[["@2@"]]));##:ess-bp-end:##
     
-    1
-    
-
     artnews_df <- as_tibble(read.csv(paste0(ARTNEWS_DIR, "ranking_genre.csv")))
 
     ## artnews_df %>%
