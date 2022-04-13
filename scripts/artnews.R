@@ -25,7 +25,9 @@ generate_unq_nbrs_long <- function(dfx, group, vlu, aux_group) {
     ##     select_at(c(group, vlu, "nbr_unq")) %>%
     ##     as.data.frame()
 
-    ## sort   
+    # value for vlu can't be "vlu" for some reason
+
+    ## arrange sorts the vlues within group and aux group
     vlus_in_list <- dfx %>%
         group_by_at(c(group, aux_group)) %>%
         arrange(get(vlu)) %>%
@@ -90,31 +92,60 @@ get_changed_values <- function(dfx, vlu, group, verbose=F, aux_group = F) {
             select_at(c(group,vlu)) %>%
             unique()
                 
-            print(non_identical_values)
+        ## print(non_identical_values)
     }
+    
 
-    if (verbose == F) {
-
-        return_obj <- list(
-            prop_ones = prop_ones,
-            cnt_non_ones = cnt_non_ones)
-    } else {
-        return_obj <- list(
-            prop_ones = prop_ones,
-            cnt_non_ones = cnt_non_ones,
-            non_identical_values = non_identical_values)
+    return_obj <- list(
+        prop_ones = prop_ones,
+        cnt_non_ones = cnt_non_ones)
+    
+    ## add the non-identical stuff if verbose is required
+    if (verbose) {
+        return_obj$non_identical_values = non_identical_values
+    }
         
-    }
     return(return_obj)
 
 }
            
 
+## *** testing
+## check that 
+generate_unq_nbrs(artnews_sep, group = "clctr_name", vlu="collection_focus")
 
-identical_checker(artnews_sep, vlu="collection_focus", group="clctr_name")
+
+## check that both nbr_unq and vlu column (genre) are properly generated for variable in long format
+generate_unq_nbrs_long(artnews_df_genre, group = "clctr_name", vlu="genre", aux_group = "year")
+
+## compare long and short generate_unq_numbers
+generate_unq_nbrs(artnews_df_genre, group = "clctr_name", vlu="collection_focus")
+
+## generating test df, testing that nbr_unq and vlu column (vlux) are properly generated
+test_df <- data.frame(idx=c(1,1,1,1,2,2,2,2),timex = c(1,1,2,2,1,1,2,2), vlux= c("b","a", "b", "b", "a", "b", "a", "b"))
+generate_unq_nbrs_long(test_df, group="idx", vlu="vlux", aux_group = "timex")
+
+
+## collection_focus string has some changes, is not identical for each collector
+generate_unq_nbrs(artnews_sep, group = "clctr_name", vlu="collection_focus")
+identical_checker(artnews_sep, vlu="collection_focus", group="clctr_name") 
+get_changed_values(artnews_sep, vlu="collection_focus", group="clctr_name", verbose = T)
+
+## collection focus is identical for every collector-year tho (duh, since only one observatin per collector year)
 identical_checker(artnews_sep, vlu="collection_focus", group=c("clctr_name", "year"))
 
-get_changed_values(artnews_sep, vlu="collection_focus", group="clctr_name", verbose = T)
+## test_df non-identical values are correctly recognized
+get_changed_values(test_df, vlu="vlux", group="idx", aux_group = "timex", verbose = T)
+
+## values for genre are the same for a collector for all years
+identical_checker(artnews_df_genre, vlu="genre", group="clctr_name", aux_group = "year")
+get_changed_values(artnews_df_genre, vlu="genre", group="clctr_name", aux_group = "year", verbose = T)
+
+
+## location values also don't change over time 
+get_changed_values(artnews_sep, vlu="location", group="clctr_name", aux_group = "year", verbose = T)
+
+
 
 ## ** actually artnews
 
