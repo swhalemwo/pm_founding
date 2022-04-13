@@ -54,7 +54,7 @@ def extract_cltr_info(nbr, ranking_soup):
 def extract_info(prfl, regex):
     """generic function for extracting information from profile using regex"""
 
-    return_obj = []
+    return_obj = ""
 
     res = re.findall(regex, str(prfl), re.S)
     if res != []:
@@ -103,16 +103,17 @@ def proc_year(year, genre):
     ranking_pd = genre_year_df.drop_duplicates()
     
     return(ranking_pd)
+
+
     
 areas = ["asian-art", "old-masters", "impressionism-and-post-impressionism", "postwar-art", "modern-art", "contemporary-art"]
 
 
-# proc_year(2020, "asian-art")
-# for i in range(1990, 2022):
+# x = proc_year(1990, "modern-art")
 
 
-keys = ['genre', 'year']
-cbns = [dict(zip(keys, combo)) for combo in product(areas, list(range(1990, 2022)))]
+keys = ['year', 'genre']
+cbns = [dict(zip(keys, combo)) for combo in product(list(range(1990, 2022)), areas)]
 
 
 dfs_ranking = [proc_year(i['year'], i['genre']) for i in cbns]
