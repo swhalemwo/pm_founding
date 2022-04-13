@@ -51,7 +51,7 @@ def extract_cltr_info(nbr, ranking_soup):
 
 def extract_info(prfl, regex):
 
-    return_obj = []
+    return_obj = ""
 
     res = re.findall(regex, str(prfl), re.S)
     if res != []:
@@ -69,6 +69,7 @@ def extract_info(prfl, regex):
 
 
 def proc_year(year):
+    print(year)
     ranking_soup = get_year_ranking(year)
     
     ranking_infos = [extract_cltr_info(i, ranking_soup) for i in range(1,201)]
