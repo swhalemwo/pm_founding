@@ -1,60 +1,10 @@
 ## * artnews collector ranking
 
+
+
 ARTNEWS_DIR <- paste0(PROJECT_DIR, "data/artnews/")
 
-readin_artnews <- function() {
-    #' just read in the artnews df, fix the country coding
-    
-    artnews_df <- as_tibble(read.csv(paste0(ARTNEWS_DIR, "ranking.csv")))
-
-
-    unique(artnews_df$location)
-
-    ## can use countrycode
-    ## multiple matches return NA -> will be manually coded
-    artnews_df$country1 <- countrycode(artnews_df$location, "country.name", "iso3c")
-
-    ## manually countrycoding the rest like a fucking LOSER
-    artnews_country_dict <- as_tibble(read.csv(paste0(ARTNEWS_DIR, "artnews_loc_table.csv")))
-
-    ## reading the manually coded countrycodes in
-    artnews_cbn <- as_tibble(merge(artnews_df, artnews_country_dict, all.x = T))
-
-    artnews_cbn$country3 <- ifelse(!is.na(artnews_cbn$country1), artnews_cbn$country1, artnews_cbn$country2)
-
-    ## filter(artnews_cbn, is.na(country1) & is.na(country2))$location
-    ## 14 people have no location
-    ## filter(artnews_cbn, clctr_name == "[]")
-    ## 5 have no name, could check them out since I have their position
-    ## filter(artnews_cbn, collection_focus == "[]")
-    ## 207 have no collection focus
-
-
-    artnews_sep <- separate_rows(artnews_cbn, country3, sep=";")
-    ## table(artnews_sep$country3) %>% sort()
-    ## countrycode(unique(artnews_sep$country3), "iso3c", "country.name")    
-
-    return (select(artnews_sep, location, clctr_name, collection_focus, industry, year, country=country3))
-}
-
-artnews_sep <- readin_artnews()
-## 14 
-
-readin_artnews_genre <- function() {
-    #' read in genre-classified artnews ranking
-    
-    artnews_df <- as_tibble(read.csv(paste0(ARTNEWS_DIR, "ranking_genre.csv")))
-
-    ## artnews_df %>%
-    ##     group_by(year) %>%
-    ##     summarize(clctr_nbr = len(unique(clctr_name))) %>%
-    ##     as.data.frame() %>%
-    ##     plot(type='l')
-
-    select(artnews_df, clctr_name, year, collection_focus, genre)
-
-        
-}
+## ** some helper functions to check uniqueness
 
 
 generate_unq_nbrs <- function(dfx, group, vlu) {
@@ -125,6 +75,64 @@ change_checker(artnews_sep, vlu="collection_focus", group="clctr_name")
 change_checker(artnews_sep, vlu="collection_focus", group=c("clctr_name", "year"))
 
 get_changed_values(artnews_sep, vlu="collection_focus", group="clctr_name", verbose = T)
+
+## ** actually artnews
+
+readin_artnews <- function() {
+    #' just read in the artnews df, fix the country coding
+    
+    artnews_df <- as_tibble(read.csv(paste0(ARTNEWS_DIR, "ranking.csv")))
+
+
+    unique(artnews_df$location)
+
+    ## can use countrycode
+    ## multiple matches return NA -> will be manually coded
+    artnews_df$country1 <- countrycode(artnews_df$location, "country.name", "iso3c")
+
+    ## manually countrycoding the rest like a fucking LOSER
+    artnews_country_dict <- as_tibble(read.csv(paste0(ARTNEWS_DIR, "artnews_loc_table.csv")))
+
+    ## reading the manually coded countrycodes in
+    artnews_cbn <- as_tibble(merge(artnews_df, artnews_country_dict, all.x = T))
+
+    artnews_cbn$country3 <- ifelse(!is.na(artnews_cbn$country1), artnews_cbn$country1, artnews_cbn$country2)
+
+    ## filter(artnews_cbn, is.na(country1) & is.na(country2))$location
+    ## 14 people have no location
+    ## filter(artnews_cbn, clctr_name == "[]")
+    ## 5 have no name, could check them out since I have their position
+    ## filter(artnews_cbn, collection_focus == "[]")
+    ## 207 have no collection focus
+
+
+    artnews_sep <- separate_rows(artnews_cbn, country3, sep=";")
+    ## table(artnews_sep$country3) %>% sort()
+    ## countrycode(unique(artnews_sep$country3), "iso3c", "country.name")    
+
+    return (select(artnews_sep, location, clctr_name, collection_focus, industry, year, country=country3))
+}
+
+artnews_sep <- readin_artnews()
+## 14 
+
+readin_artnews_genre <- function() {
+    #' read in genre-classified artnews ranking
+
+    
+    artnews_df <- as_tibble(read.csv(paste0(ARTNEWS_DIR, "ranking_genre.csv")))
+
+    ## artnews_df %>%
+    ##     group_by(year) %>%
+    ##     summarize(clctr_nbr = len(unique(clctr_name))) %>%
+    ##     as.data.frame() %>%
+    ##     plot(type='l')
+
+    select(artnews_df, clctr_name, year, collection_focus, genre)
+
+        
+}
+
 
 ## number of genres doesn't change for collector over year, content could still change 
     d1 <- artnews_df %>%
