@@ -149,23 +149,24 @@ get_changed_values(artnews_sep, vlu="location", group="clctr_name", aux_group = 
 
 ## ** actually artnews
 
-readin_artnews <- function() {
+readin_artnews_all <- function() {
     #' just read in the artnews df, fix the country coding
-    
-    artnews_df <- as_tibble(read.csv(paste0(ARTNEWS_DIR, "ranking.csv")))
+    #' returns
+    #' - time_df: clctr_name, year,
+    #' - location_df: clctr_name, location(s)
+    #' - maybe focus_df: clctr_name, collection_focus
+    #' -> if i want to combine different dfs, I have to join stuff together
 
+    artnews_df_all <- as_tibble(read.csv(paste0(ARTNEWS_DIR, "ranking.csv")))
 
-    unique(artnews_df$location)
-
-    ## can use countrycode
-    ## multiple matches return NA -> will be manually coded
-    artnews_df$country1 <- countrycode(artnews_df$location, "country.name", "iso3c")
+    ## can use countrycode, multiple matches return NA -> will be manually coded
+    artnews_df_all$country1 <- countrycode(artnews_df_all$location, "country.name", "iso3c")
 
     ## manually countrycoding the rest like a fucking LOSER
     artnews_country_dict <- as_tibble(read.csv(paste0(ARTNEWS_DIR, "artnews_loc_table.csv")))
 
     ## reading the manually coded countrycodes in
-    artnews_cbn <- as_tibble(merge(artnews_df, artnews_country_dict, all.x = T))
+    artnews_cbn <- as_tibble(merge(artnews_df_all, artnews_country_dict, all.x = T))
 
     artnews_cbn$country3 <- ifelse(!is.na(artnews_cbn$country1), artnews_cbn$country1, artnews_cbn$country2)
 
@@ -176,22 +177,64 @@ readin_artnews <- function() {
     ## filter(artnews_cbn, collection_focus == "[]")
     ## 207 have no collection focus
 
-
     artnews_sep <- separate_rows(artnews_cbn, country3, sep=";")
-    ## table(artnews_sep$country3) %>% sort()
-    ## countrycode(unique(artnews_sep$country3), "iso3c", "country.name")    
 
-    return (select(artnews_sep, location, clctr_name, collection_focus, industry, year, country=country3))
+    artnews_time_df <- artnews_sep %>%
+        select(clctr_name, year) %>%
+        unique()
+
+    ## locations don't change over time -> fine to not store location with time
+    identical_checker(artnews_sep, vlu="country3", group="clctr_name", aux_group = "year")
+    
+    artnews_loc_df <- artnews_sep %>%
+        select(clctr_name, country=country3) %>%
+        unique()
+
+    ## collection focus: some minor renmaing
+    identical_checker(artnews_sep, vlu="collection_focus", group="clctr_name", aux_group = "year")
+    get_changed_values(artnews_sep, vlu="collection_focus", group="clctr_name", verbose = T) 
+    ## only inconsistency is "Postwar and contemporary art" and "Contemporary art; Postwar art" for "Stefan T. Edlis and Gael Neeson" -> fine to recode
+    artnews_sep$collection_focus[which(artnews_sep$clctr_name == "Stefan T. Edlis and Gael Neeson" & 
+                                       artnews_sep$collection_focus == "Postwar and contemporary art")] <- "Contemporary art; Postwar art"
+    
+    artnews_collection_df <- artnews_sep %>%
+        select(clctr_name, collection_focus) %>%
+        unique()
+
+    return(list(
+        artnews_time_df=artnews_time_df,
+        artnews_loc_df=artnews_loc_df,
+        artnews_collection_df=artnews_collection_df))
 }
 
-artnews_sep <- readin_artnews()
-## 14 
+
+
+artnews_all_res <- readin_artnews_all()
+artnews_time_df <- artnews_all_res$artnews_time_df
+artnews_loc_df <- artnews_all_res$artnews_loc_df
+artnews_collection_df <- artnews_all_res$artnews_collection_df
+
+
+
+table(artnews_time_df$year)
+    
 
 readin_artnews_genre <- function() {
     #' read in genre-classified artnews ranking
-
     
-    artnews_df <- as_tibble(read.csv(paste0(ARTNEWS_DIR, "ranking_genre.csv")))
+    
+    artnews_df_genre <- as_tibble(read.csv(paste0(ARTNEWS_DIR, "ranking_genre.csv")))
+
+    identical_checker(artnews_df_genre, "location", "clctr_name")
+    identical_checker(artnews_df_genre, "genre", c("clctr_name", "year"))
+    
+    identical_res <- get_changed_values(artnews_df_genre, "genre", c("clctr_name", "year"), verbose = T)
+
+    identical_res$non_identical_values %>%
+        sort()
+
+    identical_res$non_identical_values[order(identical_res$non_identical_values$clctr_name),]
+    
 
     ## artnews_df %>%
     ##     group_by(year) %>%
@@ -205,6 +248,7 @@ readin_artnews_genre <- function() {
 }
 
 
+readin_artnews_genre <- function()
 ## number of genres doesn't change for collector over year, content could still change 
     d1 <- artnews_df %>%
         group_by(clctr_name, year) %>%
