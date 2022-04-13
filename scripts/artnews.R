@@ -221,55 +221,25 @@ table(artnews_time_df$year)
 
 readin_artnews_genre <- function() {
     #' read in genre-classified artnews ranking
-    
+    #' just use it to generate the genre df
     
     artnews_df_genre <- as_tibble(read.csv(paste0(ARTNEWS_DIR, "ranking_genre.csv")))
 
-    identical_checker(artnews_df_genre, "location", "clctr_name")
-    identical_checker(artnews_df_genre, "genre", c("clctr_name", "year"))
+    ## genres don't change over time
+    identical_checker(artnews_df_genre, group = "clctr_name", vlu="genre", aux_group = "year")
+
+    artnews_genre_df <- artnews_df_genre %>%
+        select(clctr_name, genre) %>%
+        unique()
     
-    identical_res <- get_changed_values(artnews_df_genre, "genre", c("clctr_name", "year"), verbose = T)
-
-    identical_res$non_identical_values %>%
-        sort()
-
-    identical_res$non_identical_values[order(identical_res$non_identical_values$clctr_name),]
-    
-
-    ## artnews_df %>%
-    ##     group_by(year) %>%
-    ##     summarize(clctr_nbr = len(unique(clctr_name))) %>%
-    ##     as.data.frame() %>%
-    ##     plot(type='l')
-
-    select(artnews_df, clctr_name, year, collection_focus, genre)
-
+    return (artnews_genre_df)
         
 }
 
-
-readin_artnews_genre <- function()
-## number of genres doesn't change for collector over year, content could still change 
-    d1 <- artnews_df %>%
-        group_by(clctr_name, year) %>%
-        summarize(nbr_genres_year = len(unique(genre))) %>%
-        group_by(clctr_name) %>%
-        summarize(nbr_genres_clctr_min = min(unique(nbr_genres_year)),
-                  nbr_genres_clctr_max = max(unique(nbr_genres_year))
-                  )
-    ## max and min are the same
-    d1$nbr_genres_clctr_min - d1$nbr_genres_clctr_max
-
-
-    d2 <- artnews_df %>%
-        group_by(clctr_name) %>%
-        summarize(nbr_genres = len(unique(genre)))
-        
-    d3 <- as_tibble(merge(d1,d2))
-    d3$diff <- d3$nbr_genres_clctr_max - d3$nbr_genres
-    hist(d3$diff)
-
 readin_artnews_genre()
+
+
+
 
 artnews_sep$cpaer <-
     table(grepl("modern|contempor|minimalism|conceptual|pop|postwar|expressionism|20th|abstract|last 20|", artnews_sep$collection_focus, ignore.case = T))
