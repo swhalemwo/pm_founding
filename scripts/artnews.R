@@ -236,9 +236,56 @@ readin_artnews_genre <- function() {
         
 }
 
-readin_artnews_genre()
+artnews_genre_df <- readin_artnews_genre()
+
+## ** genre combination
+
+get_cpaer_clctrs <- function(artnews_genre_df, artnews_collection_df) {
+    #' combine artnews_genre_df and artnews_collection_df, melt them and match collectors associated with modern/contemporary art
+
+    genre_cbn <- as_tibble(merge(artnews_collection_df, artnews_genre_df, all = T))
+
+    ## melting? idk if best way, but has some brutal simplicity
+    genre_melt <- as_tibble(melt(genre_cbn, id=c("clctr_name")))
+
+    rel_art_str <- "modern|contempor|minimalism|conceptual|pop|postwar|expressionis|20th|abstract|last 20|surrealism|1990|1945|Salvador Dalí|cubis|1980s"
+
+    genre_melt$cpaer <- grepl(rel_art_str, genre_melt$value, ignore.case = T)
+
+    ## checking non-matched values, think by now I got them all
+    filter(genre_melt, cpaer == FALSE)$value %>%
+                                     unique()
+
+    cpaer_clctrs <- filter(genre_melt, cpaer == T) %>%
+        select(clctr_name) %>%
+        unique()
+    ## 728 collectors when combining
+
+    ## ## see if it was worth it
+    ## artnews_collection_df$cpaer <- grepl(rel_art_str, artnews_collection_df$collection_focus, ignore.case = T)
+    ## filter(artnews_collection_df, cpaer == T) %>%
+    ##     select(clctr_name) %>%
+    ##     unique()
+    ## ## 599 when only looking at collection focus
+
+    ## artnews_genre_df$cpaer <- grepl(rel_art_str, artnews_genre_df$genre, ignore.case = T)
+    ## filter(artnews_genre_df, cpaer == T) %>%
+    ##     select(clctr_name) %>%
+    ##     unique()
+    ## ## 459 when only using the areas on the website
+    ## ## -> effort was worth it :)))
+
+    return(cpaer_clctrs)
+}
+
+rel_clctrs <- get_cpaer_clctrs(artnews_genre_df, artnews_collection_df)
+    
 
 
+
+
+
+## ** contemporary
 
 
 artnews_sep$cpaer <-
