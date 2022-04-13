@@ -32,13 +32,15 @@ change_checker <- function(dfx, vlu, group) {
 }
 
 
-get_changed_values <- function(dfx, vlu, group, verbose=F, return_value="info") {
+get_changed_values <- function(dfx, vlu, group, verbose=F) {
     #' report the non-unique values per group
     #' also statistics would be nice
     
 
     dfx_unq_cntd <- generate_unq_nbrs(dfx, group, vlu)
     
+    
+
     prop_calc_df <- dfx_unq_cntd %>%
         group_by_at(group) %>%
         summarize(group=sample(group,1), nbr_unq=sample(nbr_unq,1))
@@ -50,20 +52,24 @@ get_changed_values <- function(dfx, vlu, group, verbose=F, return_value="info") 
 
     if (verbose) {
 
-        filter(dfx_unq_cntd, nbr_unq > 1) %>%
+        non_identical_values <- filter(dfx_unq_cntd, nbr_unq > 1) %>%
             select_at(c(group,vlu)) %>%
-            unique() %>%
-            as.data.frame() %>%
-            print()
+            unique()
+                
+            print(non_identical_values)
     }
 
-    if (return_value == "info") {
+    if (verbose == F) {
 
         return_obj <- list(
             prop_ones = prop_ones,
             cnt_non_ones = cnt_non_ones)
     } else {
-        return_obj <- NULL
+        return_obj <- list(
+            prop_ones = prop_ones,
+            cnt_non_ones = cnt_non_ones,
+            non_identical_values = non_identical_values)
+        
     }
     return(return_obj)
 
@@ -71,8 +77,8 @@ get_changed_values <- function(dfx, vlu, group, verbose=F, return_value="info") 
            
 
 
-change_checker(artnews_sep, vlu="collection_focus", group="clctr_name")
-change_checker(artnews_sep, vlu="collection_focus", group=c("clctr_name", "year"))
+identical_checker(artnews_sep, vlu="collection_focus", group="clctr_name")
+identical_checker(artnews_sep, vlu="collection_focus", group=c("clctr_name", "year"))
 
 get_changed_values(artnews_sep, vlu="collection_focus", group="clctr_name", verbose = T)
 
