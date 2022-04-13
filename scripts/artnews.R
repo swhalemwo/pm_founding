@@ -17,8 +17,42 @@ generate_unq_nbrs <- function(dfx, group, vlu) {
     return (dfx_unq_cntd)
 }
 
-change_checker <- function(dfx, vlu, group) {
-    #' checks whether values of vlu are identical for every entry of group
+generate_unq_nbrs_long <- function(dfx, group, vlu, aux_group) {
+    #' generates the count of unique values for long variables,
+    #' aux_group needed to specify among which variable(s) vlus should be compared
+
+    ## filter(dfx_unq_cntd, clctr_name == "Karl-Heinrich Müller") %>%
+    ##     select_at(c(group, vlu, "nbr_unq")) %>%
+    ##     as.data.frame()
+
+    ## sort   
+    vlus_in_list <- dfx %>%
+        group_by_at(c(group, aux_group)) %>%
+        arrange(get(vlu)) %>%
+        summarize(unq_vlus = list(unique(get(vlu))))
+
+    dfx_unq_cntd <- vlus_in_list %>%
+        group_by_at(group) %>%
+        summarize(nbr_unq = n_distinct(unq_vlus))
+    
+    return(dfx_unq_cntd)
+}
+
+
+generate_unq_nbrs_long(artnews_df_genre, group = "clctr_name", vlu="genre", aux_group = "year")
+
+## test_df <- data.frame(idx=c(1,1,1,2,2),vlu= c("b","a", "b", "b", "a"))
+
+## test_df %>%
+##     group_by(idx) %>%
+##     arrange(vlu) %>%
+##     summarize(unq_vlus = list(unique(vlu))) %>%
+##     as.data.frame()
+
+
+
+identical_checker <- function(dfx, vlu, group) {
+    #' checks whether values of vlu are identical for every entry of group, returns TRUE if they are identical
     
     dfx_unq_cntd <- generate_unq_nbrs(dfx, group, vlu)
         
