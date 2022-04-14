@@ -1,7 +1,6 @@
 ## * artnews collector ranking
 
 
-
 ARTNEWS_DIR <- paste0(PROJECT_DIR, "data/artnews/")
 
 ## ** some helper functions to check uniqueness
@@ -111,7 +110,11 @@ get_changed_values <- function(dfx, vlu, group, verbose=F, aux_group = F) {
            
 
 ## *** testing
-## check that 
+## check that
+
+testing <- FALSE
+
+if (testing) {
 generate_unq_nbrs(artnews_sep, group = "clctr_name", vlu="collection_focus")
 
 
@@ -144,7 +147,7 @@ get_changed_values(artnews_df_genre, vlu="genre", group="clctr_name", aux_group 
 
 ## location values also don't change over time 
 get_changed_values(artnews_sep, vlu="location", group="clctr_name", aux_group = "year", verbose = T)
-
+}
 
 
 ## ** actually artnews
@@ -209,14 +212,6 @@ readin_artnews_all <- function() {
 
 
 
-artnews_all_res <- readin_artnews_all()
-artnews_time_df <- artnews_all_res$artnews_time_df
-artnews_loc_df <- artnews_all_res$artnews_loc_df
-artnews_collection_df <- artnews_all_res$artnews_collection_df
-
-
-
-table(artnews_time_df$year)
     
 
 readin_artnews_genre <- function() {
@@ -236,7 +231,6 @@ readin_artnews_genre <- function() {
         
 }
 
-artnews_genre_df <- readin_artnews_genre()
 
 ## ** genre combination
 
@@ -278,125 +272,74 @@ get_cpaer_clctrs <- function(artnews_genre_df, artnews_collection_df) {
     return(cpaer_clctrs)
 }
 
-rel_clctrs <- get_cpaer_clctrs(artnews_genre_df, artnews_collection_df)
+generate_artnews_data <- function() {
+
+    artnews_all_res <- readin_artnews_all()
+    artnews_time_df <- artnews_all_res$artnews_time_df
+    artnews_loc_df <- artnews_all_res$artnews_loc_df
+    artnews_collection_df <- artnews_all_res$artnews_collection_df
+    ## table(artnews_time_df$year)
+
+    artnews_genre_df <- readin_artnews_genre()
+
+    ## getting the relevant (contemporary/modern art collectors from all and genre dfs)
+    rel_clctrs <- get_cpaer_clctrs(artnews_genre_df, artnews_collection_df)
+    ## joining with location 
+    rel_clctrs_loc <- as_tibble(merge(rel_clctrs, artnews_loc_df))
+
+    ## joining with time 
+    rel_clctrs_time <- as_tibble(merge(rel_clctrs_loc, artnews_time_df))
+
+    ## also generating count for all artcollectors, not just modern/contemporary
+    all_clctrs <- na.omit(as_tibble(merge(artnews_time_df, artnews_loc_df)))
+
+    ## generate count of contemporary
+    cnt_cpaer <- rel_clctrs_time %>%
+        group_by(country, year) %>%
+        summarize(cnt_cpaer = len(clctr_name))
+
+    ## generate count of all 
+    cnt_all <- all_clctrs %>%
+        group_by(country, year) %>%
+        summarize(cnt_all = len(clctr_name))
+
+    ## merge
+    cnt_clctrs <- as_tibble(merge(cnt_cpaer, cnt_all, all = T))
+    ## need to fill up missing values with 0, idk if best here or elsewhere
+
+    fill_up_cols <- c("cnt_cpaer", "cnt_all")
+    cnt_clctrs[fill_up_cols][is.na(cnt_clctrs[fill_up_cols])] <- 0
+
+    cnt_clctrs$clctr_cpaer_all_diff <- cnt_clctrs$cnt_all - cnt_clctrs$cnt_cpaer
+
+    cnt_clctrs <- cnt_clctrs %>%
+        rename(iso3c=country)
+
+    return (cnt_clctrs)
+}
+
+
+
+artnews_descriptives <- function(cnt_clctrs) {
+    #' generates descriptive plots for artnews ranking
+
+    cnt_clctrs$region <- countrycode(cnt_clctrs$iso3c, "iso3c", "un.region.name")
+
+
+    pdf(paste0(FIG_DIR, "artnews_ranking_diff.pdf"), width = 17, height = 10)
+    viz_lines(na.omit(cnt_clctrs), x="year", y="clctr_cpaer_all_diff", grp = "iso3c", facets = "region", time_level = "ra", duration = 2, fill_up = T, max_lines = 6)
+    dev.off()
+
+    pdf(paste0(FIG_DIR, "artnews_ranking_all.pdf"), width = 17, height = 10)
+    viz_lines(na.omit(cnt_clctrs), x="year", y="cnt_all", grp = "iso3c", facets = "region", time_level = "ra", duration = 2, fill_up = T, max_lines = 6)
+    dev.off()
+
+    pdf(paste0(FIG_DIR, "artnews_ranking_cpaer.pdf"), width = 17, height = 10)
+    viz_lines(na.omit(cnt_clctrs), x="year", y="cnt_cpaer", grp = "iso3c", facets = "region", time_level = "ra", duration = 2, fill_up = T, max_lines = 6)
+    dev.off()
     
-rel_clctrs_loc <- as_tibble(merge(rel_clctrs, artnews_loc_df))
-
-rel_clctrs_time <- as_tibble(merge(rel_clctrs_loc, artnews_time_df))
-
-all_clctrs <- na.omit(as_tibble(merge(artnews_time_df, artnews_loc_df)))
-
-cnt_cpaer <- rel_clctrs_time %>%
-    group_by(country, year) %>%
-    summarize(cnt_cpaer = len(clctr_name))
-
-cnt_all <- all_clctrs %>%
-    group_by(country, year) %>%
-    summarize(cnt_all = len(clctr_name))
-
-cnt_clctrs <- as_tibble(merge(cnt_cpaer, cnt_all, all = T))
-## need to fill up missing values with 0, idk if best here or elsewhere
-
-cnt_clctrs$diff <- cnt_clctrs$cnt_all - cnt_clctrs$cnt_cpaer
-
-cnt_clctrs$region <- countrycode(cnt_clctrs$country, "iso3c", "un.region.name")
-
-cnt_clctrs <- cnt_clctrs %>%
-    rename(iso3c=country)
-
-pdf(paste0(FIG_DIR, "artnews_ranking_diff.pdf"), width = 17, height = 10)
-viz_lines(cnt_clctrs, x="year", y="diff", grp = "iso3c", facets = "region", time_level = "ra", duration = 2, fill_up = T, max_lines = 6)
-dev.off()
-
-pdf(paste0(FIG_DIR, "artnews_ranking_all.pdf"), width = 17, height = 10)
-viz_lines(cnt_clctrs, x="year", y="cnt_all", grp = "iso3c", facets = "region", time_level = "ra", duration = 2, fill_up = T, max_lines = 6)
-dev.off()
-
-pdf(paste0(FIG_DIR, "artnews_ranking_cpaer.pdf"), width = 17, height = 10)
-viz_lines(cnt_clctrs, x="year", y="cnt_cpaer", grp = "iso3c", facets = "region", time_level = "ra", duration = 2, fill_up = T, max_lines = 6)
-dev.off()
+}
 
 
 
-## ** contemporary
 
-
-artnews_sep$cpaer <-
-    table(grepl("modern|contempor|minimalism|conceptual|pop|postwar|expressionism|20th|abstract|last 20|", artnews_sep$collection_focus, ignore.case = T))
-
-unique(artnews_sep$collection_focus)
-
-artnews_sum <- artnews_sep %>%
-    select(country3, year, X) %>%
-    na.omit() %>%
-    group_by(iso3c=country3, year) %>%
-    summarize(cnt=len(X))
-
-artnews_sum$region <- countrycode(artnews_sum$iso3c, "iso3c", "un.region.name")
-
-pdf(paste0(FIG_DIR, "artnews_ranking.pdf"), width = 14, height = 10)
-viz_lines(na.omit(artnews_sum), x="year", y="cnt", grp="iso3c", facets = "region", time_level = "ra", duration = 2, fill_up = T, max_lines = 6)
-dev.off()
-
-
-## ** trying to code location automatically, fails due to lack of standardization, and coding only a few hundred entries manually is fine
-## library(maps)
-
-## data(world.cities)
-## world_cities <- as.tibble(world.cities)
-
-## world_cities[match(c("New York", "London", "Edinburgh"), world_cities$name),]
-
-## cities <- as.data.frame(c("New York", "London", "Edinburgh"))
-## names(cities) <- "name"
-## cities$xx <- 1
-
-## merge_test <- as_tibble(merge(world_cities, cities, all.x = T))
-
-## filter(merge_test, !is.na(xx)) %>%
-##     group_by(name) %>%
-##     top_n(1, pop)
-
-## ## use separate_rows, then merge with world_cities
-
-## sep_rows <- filter(artnews_df, is.na(country1)) %>%
-##     separate_rows(location, convert = T, sep=',|;') %>%
-##     select(name=location, year, clctr_name)
-
-## ## filter(sep_rows, clctr_name=="Aaron I. Fleischman")
-## filter(sep_rows, name=="Beirut")
-
-## sep_rows$name <- trimws(sep_rows$name)
-
-## ## dropping rows that are in the same country, but different cities
-## artnews_city_infer <- as_tibble(merge(
-##     select(world_cities, name, country.etc, pop),
-##     sep_rows))
-
-## filter(artnews_city_infer, name=="Beirut")
-
-## %>%
-##     select(country2=country.etc, year, clctr_name) %>% 
-##     unique()
-
-
-## ## i need it in long format because collectors can be in same country
-## ## at the end group_by(year, len(unique(clctr_name)) has to be 200 for all years
-
-
-## artnews_cbn <- as_tibble(merge(artnews_df, artnews_city_infer, all= T))
-
-## artnews_cbn %>%
-##     select(clctr_name, year, location, country1, country2) %>%
-
-
-
-      
-    
-
-## can probably grep the rest
-
-
-## ** use grepl for modern/contemporary 
-
-        
