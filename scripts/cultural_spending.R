@@ -279,17 +279,44 @@ imf_cpr <- filter(imf_df_melt,
        value != ""
        ) %>%
     mutate(value=as.numeric(value)) %>%
-    select(Country.Name, year, COFOG.Function.Code, value)
+    select(iso3c = Country.Name, year, cofog_code = COFOG.Function.Code, value)
 
-imf_cpr_wide <- pivot_wider(imf_cpr, names_from = COFOG.Function.Code)
+imf_cpr_wide <- pivot_wider(imf_cpr, names_from = cofog_code)
+
+imf_cpr_wide <- imf_cpr %>%
+    group_by(iso3c, cofog_code) %>%
+    mutate(vlu_mean = mean(value)) %>%
+    mutate(diff = value - vlu_mean)
+    
+imf_cpr_wide2 <-
+    imf_cpr_wide %>%
+    select(iso3c, year, cofog_code, diff) %>%
+    pivot_wider(names_from = cofog_code, values_from = diff)
+
+
+imf_cpr_wide %>%
+    group_by(iso3c) %>%
+    mutate(GF08_mean = mean(GF08, na.rm = T), GF0802_mean = mean(GF0802, na.rm = T))
+
+
+
+
 
 cor(imf_cpr_wide$GF08, imf_cpr_wide$GF0802, use = "complete.obs")
+cor(imf_cpr_wide2$GF08, imf_cpr_wide2$GF0802, use = "complete.obs")
+
 na.omit(imf_cpr_wide)
 
-plot(imf_cpr_wide$GF08, imf_cpr_wide$GF0802)
+plot(imf_cpr_wide2$GF08, imf_cpr_wide2$GF0802)
 ## hmm 0.85 correlation, that seems pretty good tbh
 ## but what if values are not missing at random, which they probably aren't?
 ## SOL?
 ## there could be countries that don't fund cultural services at all?
 
 ## also need to consider longitudinal nature, can't just throw them all together
+## demeaning both vars: correlation down to 0.63
+
+ggplot(imf_cpr_wide2, aes(x=GF08, y=GF0802, color=iso3c)) +
+    geom_point(show.legend=FALSE) +
+    xlim(-0.5, 0.5) +
+    ylim(-0.25, 0.25)
