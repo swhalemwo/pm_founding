@@ -198,9 +198,10 @@ cpltns_checker <- function(vx, varx) {
 }
 
     
-scramblematch<-function(query,target) {
-    #' returns true if query is substring of target
-    Reduce("&",lapply(strsplit(query," ")[[1]],grepl,target,fixed=TRUE))
+scramblematch<-function(query,target, ignore.case=T) {
+    #' returns true if query is substring of target, by default ignore case
+    ## Reduce("&",lapply(strsplit(query," ")[[1]],grepl,target,fixed=TRUE))
+    Reduce("&",lapply(strsplit(query," ")[[1]], grepl, target, ignore.case = ignore.case))
 }
 
 
