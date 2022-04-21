@@ -211,52 +211,65 @@ ex_interest <- imf_data(database_id = 'IFS',
 ## *** just bulk download
 
 
-imf_file <- "GFSCOFOG_04-16-2022 19-03-49-90_timeSeries.csv" ## all 
-imf_file <- "GFSCOFOG_04-21-2022 10-14-59-63_timeSeries.csv" ## just culture + recreation
+get_imf_data <- function() {
+    #' generate the IMF data: percentage of GDP spent on all kinds of culture/religion/recreation related activities
 
+    imf_file <- "GFSCOFOG_04-16-2022 19-03-49-90_timeSeries.csv" ## all 
+    imf_file <- "GFSCOFOG_04-21-2022 10-14-59-63_timeSeries.csv" ## just culture + recreation
 
+    imf_df <- as_tibble(read.csv(paste0(PROJECT_DIR, "data/IMF/", imf_file)))
 
-imf_df <- as_tibble(read.csv(paste0(PROJECT_DIR, "data/IMF/", imf_file)))
+    ## matching all the columns that don't have a year in them 
+    imf_non_year_cols <- names(imf_df)[!unlist(lapply(names(imf_df), function(x) scramblematch("^X\\d{4}$", x)))]
 
-## matching all the columns that don't have a year in them 
-imf_non_year_cols <- names(imf_df)[!unlist(lapply(names(imf_df), function(x) scramblematch("^X\\d{4}$", x)))]
+    imf_df_melt <- as_tibble(reshape2::melt(imf_df, id=imf_non_year_cols))
+    imf_df_melt <- rename(imf_df_melt, year=variable)
+    imf_df_melt$year <- as.numeric(substring(imf_df_melt$year, 2, 5))
 
+    ## names(imf_df_melt)
 
+    ## table(imf_df_melt$year)
+    ## table(imf_df_melt$COFOG.Function.Name)
+    ## table(imf_df_melt$Sector.Name)
+    ## table(imf_df_melt$Unit.Name)
+    ## table(imf_df_melt$Attribute)
 
-imf_df_melt <- as_tibble(reshape2::melt(imf_df, id=imf_non_year_cols))
-imf_df_melt <- rename(imf_df_melt, year=variable)
-imf_df_melt$year <- as.numeric(substring(imf_df_melt$year, 2, 5))
+    ## unique(imf_df_melt[,c("COFOG.Function.Name", "COFOG.Function.Code")])
 
-## names(imf_df_melt)
+    ## think it makes sense to be as broad as possible?
+    ## include as many items as possible, and filter later automatically?
+    ## but then there's no reason not to include other functions?
+    ## maybe there's a difference between
+    ## - proxy: assuming that a variable measures the same concept?
+    ## - imputation: seeing some empirical relationship without theoretical justification?
+    ## idk if that distinction can really be made
+    
+    imf_culture <- filter(imf_df_melt,
+                          ## COFOG.Function.Code == "GF08", 
+                          Sector.Name == "General government",
+                          Unit.Name == "Percent of GDP",
+                          ## Country.Name == "Germany",
+                          year >= 1985,
+                          Attribute == "Value",
+                          value != ""
+                          ) %>%
+        select(iso3c=Country.Name, year, COFOG.Function.Code, value)
 
-## table(imf_df_melt$year)
-## table(imf_df_melt$COFOG.Function.Name)
-## table(imf_df_melt$Sector.Name)
-## table(imf_df_melt$Unit.Name)
-## table(imf_df_melt$Attribute)
+    imf_culture$value <- as.numeric(imf_culture$value)
+    imf_culture$iso3c <- countrycode(imf_culture$iso3c, "country.name", "wb")
 
-## unique(imf_df_melt[,c("COFOG.Function.Name", "COFOG.Function.Code")])
+    imf_culture_wide <- pivot_wider(imf_culture, names_from = COFOG.Function.Code, values_from = value)
 
+    return(imf_culture_wide)
+}
 
-imf_culture <- filter(imf_df_melt,
-       COFOG.Function.Code == "GF08",
-       Sector.Name == "General government",
-       Unit.Name == "Percent of GDP",
-       ## Country.Name == "Germany",
-       year >= 1985,
-       Attribute == "Value",
-       value != ""
-       ) %>%
-    select(Country.Name, year, Indicator.Code, value)
+## get_imf_data()
+    
+## imf_culture$region <- countrycode(imf_culture$iso3c, "iso3c", "un.region.name")
 
-imf_culture$value <- as.numeric(imf_culture$value)
-imf_culture$iso3c <- countrycode(imf_culture$Country.Name, "country.name", "iso3c")
-imf_culture$region <- countrycode(imf_culture$iso3c, "iso3c", "un.region.name")
+## viz_lines(imf_culture, x="year", y="value", time_level = "ra", duration = 3, grp="iso3c", facets = "region", max_lines = 6)
 
-viz_lines(imf_culture, x="year", y="value", time_level = "ra", duration = 3, grp="iso3c", facets = "region", max_lines = 6)
-
-
-cpltns_checker(imf_culture, "value")
+## cpltns_checker(imf_culture, "value")
        
 
 ## GF0802: so far basically Europe plus handful of Asian countries, no US (LUL/Latin America, Africa), around 800-900 nobs
