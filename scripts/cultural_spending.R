@@ -145,11 +145,67 @@ viz_lines(un_df3, x="year", y="Value", grp="iso3c", time_level = "ra", duration 
 
 ## ** IMF
 
+## *** API 
+
 library(imfr)
 
 df_imf_ids <- as_tibble(imf_ids())
 filter(df_imf_ids, scramblematch("COFOG", description))
-filter(df_imf_ids, scramblematch("spending", description))
+filter(df_imf_ids, scramblematch("cofog", description))
+filter(df_imf_ids, scramblematch("finance", description))
 
 
-GFSCOFOG
+
+cofog_codelist <- imf_codelist("GFSCOFOG")
+
+cofog_codelist$codelist
+
+
+## codes seem to be columns?
+## but wouldn't codes be column names in long format?
+## example has 'FILR_PA', 'EREER_IX', which are not in imf_codelist("IFS")
+## example IFS has code "CL_INDICATOR_IFS", also "CL_INDICATOR_BOP" in r manual,
+## also CL_INDICATOR_DOT at https://meshry.com/blog/downloading-data-from-the-imf-api-using-r/
+## COFOG doesn't have INDICATOR code, guess that means API is fucking useless
+cofog_area <- as_tibble(imf_codes("CL_AREA_GFSCOFOG"))
+cofog_sector <- as_tibble(imf_codes("CL_SECTOR_GFSCOFOG"))
+cofog_unit <- as_tibble(imf_codes("CL_UNIT_GFSCOFOG"))
+cofog_cofog <- as_tibble(imf_codes("CL_COFOG_GFSCOFOG"))
+
+## also using return_raw doesn't make it work reeeeeeeee
+cofog_data <- imf_data(
+    database_id = "GFSCOFOG",
+    indicator = c("GF0802"),
+    return_raw = T)
+
+cofog_df <- cofog_data$CompactData$DataSet
+
+cofog_data <- imf_data(
+    database_id = "GFSCOFOG",
+    indicator = c("GF0602"))
+## cofog 
+
+
+
+## **** example
+
+imf_codelist("IFS")
+
+imf_codes("CL_INDICATOR_IFS")
+
+ex_interest <- imf_data(database_id = 'IFS',
+                        indicator = c('FILR_PA', 'EREER_IX'),
+                        freq = 'M')
+
+## maybe should still try to build indexer of all IMF data like for oecd
+## could be useful for searching for tax data
+
+
+
+
+
+
+
+
+
+## *** just bulk download
