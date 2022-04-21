@@ -209,3 +209,87 @@ ex_interest <- imf_data(database_id = 'IFS',
 
 
 ## *** just bulk download
+
+
+imf_file <- "GFSCOFOG_04-16-2022 19-03-49-90_timeSeries.csv" ## all 
+imf_file <- "GFSCOFOG_04-21-2022 10-14-59-63_timeSeries.csv" ## just culture + recreation
+
+
+
+imf_df <- as_tibble(read.csv(paste0(PROJECT_DIR, "data/IMF/", imf_file)))
+
+## matching all the columns that don't have a year in them 
+imf_non_year_cols <- names(imf_df)[!unlist(lapply(names(imf_df), function(x) scramblematch("^X\\d{4}$", x)))]
+
+
+
+imf_df_melt <- as_tibble(reshape2::melt(imf_df, id=imf_non_year_cols))
+imf_df_melt <- rename(imf_df_melt, year=variable)
+imf_df_melt$year <- as.numeric(substring(imf_df_melt$year, 2, 5))
+
+## names(imf_df_melt)
+
+## table(imf_df_melt$year)
+## table(imf_df_melt$COFOG.Function.Name)
+## table(imf_df_melt$Sector.Name)
+## table(imf_df_melt$Unit.Name)
+## table(imf_df_melt$Attribute)
+
+## unique(imf_df_melt[,c("COFOG.Function.Name", "COFOG.Function.Code")])
+
+
+imf_culture <- filter(imf_df_melt,
+       COFOG.Function.Code == "GF08",
+       Sector.Name == "General government",
+       Unit.Name == "Percent of GDP",
+       ## Country.Name == "Germany",
+       year >= 1985,
+       Attribute == "Value",
+       value != ""
+       ) %>%
+    select(Country.Name, year, Indicator.Code, value)
+
+imf_culture$value <- as.numeric(imf_culture$value)
+imf_culture$iso3c <- countrycode(imf_culture$Country.Name, "country.name", "iso3c")
+imf_culture$region <- countrycode(imf_culture$iso3c, "iso3c", "un.region.name")
+
+viz_lines(imf_culture, x="year", y="value", time_level = "ra", duration = 3, grp="iso3c", facets = "region", max_lines = 6)
+
+
+cpltns_checker(imf_culture, "value")
+       
+
+## GF0802: so far basically Europe plus handful of Asian countries, no US (LUL/Latin America, Africa), around 800-900 nobs
+## having all (GF08): 1400 nobs
+## have to do that properly lol
+
+
+## *** correlation check
+## compare cultural services (GF0802) and Expenditure on recreation, culture, & religion (GF08, overarching category)
+## have to do that systematically too 
+
+
+imf_cpr <- filter(imf_df_melt,
+       COFOG.Function.Code %in% c("GF08", "GF0802"),
+       Sector.Name == "General government",
+       Unit.Name == "Percent of GDP",
+       ## Country.Name == "Germany",
+       year >= 1985,
+       Attribute == "Value",
+       value != ""
+       ) %>%
+    mutate(value=as.numeric(value)) %>%
+    select(Country.Name, year, COFOG.Function.Code, value)
+
+imf_cpr_wide <- pivot_wider(imf_cpr, names_from = COFOG.Function.Code)
+
+cor(imf_cpr_wide$GF08, imf_cpr_wide$GF0802, use = "complete.obs")
+na.omit(imf_cpr_wide)
+
+plot(imf_cpr_wide$GF08, imf_cpr_wide$GF0802)
+## hmm 0.85 correlation, that seems pretty good tbh
+## but what if values are not missing at random, which they probably aren't?
+## SOL?
+## there could be countries that don't fund cultural services at all?
+
+## also need to consider longitudinal nature, can't just throw them all together
