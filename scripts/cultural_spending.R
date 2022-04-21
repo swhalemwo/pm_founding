@@ -1,0 +1,155 @@
+## * cultural spending stuff
+
+
+culture_df <- filter_sdmx_results("cultural services")
+filter(culture_df, !grepl("agricult", description.en, ignore.case = T))
+filter(culture_df, !grepl("agricult", description.en, ignore.case = T))$description.en
+filter(culture_df, !grepl("agricult", description.en, ignore.case = T))$id
+
+grepl("agricult", culture_df$description.en, ignore.case = T)
+
+
+
+filter_sdmx_results("museum") %>% as.data.frame()
+    
+
+## * check my original findings
+## no idea how I got those anymore
+
+culture_df2 <- filter_sdmx_results("cultural")
+
+## ** STAN generally 
+
+filter(culture_df2, grepl("STAN", sdmx_id, ignore.case = T))$description.en
+
+## ** stan08bis
+
+filter(culture_df2, sdmx_id == "STAN08BIS")
+
+df_stan08bis <- as_tibble(read.csv(paste0(OECD_DATA_DIR, "STAN08BIS")))
+as.data.frame(head(df_stan08bis))
+
+table(df_stan08bis$VAR) %>% sort() %>% as.data.frame()
+
+## ** STANI4_2016
+
+filter(culture_df2, sdmx_id == "STANI4_2016")
+df_stani4_2016 <- as_tibble(read.csv(paste0(OECD_DATA_DIR, "STANI4_2016")))
+
+table(df_stani4_2016$VAR) %>% sort()
+
+
+
+## ** ILO
+ilo_df <- as_tibble(read.csv(paste0(PROJECT_DIR, "data/ILO/EMP_TEMP_SEX_ECO_NB_A-filtered-2022-03-31.csv")))
+ilo_df <- as_tibble(read.csv(paste0(PROJECT_DIR, "data/ILO/EMP_TEMP_SEX_EC2_NB_A-filtered-2022-03-31.csv")))
+as.data.frame(head(ilo_df))
+
+
+ilo_df$iso3c <- countrycode(ilo_df$ref_area.label, "country.name", "iso3c")
+ilo_df$year <- ilo_df$time
+ilo_df$region <- countrycode(ilo_df$iso3c, "iso3c", "un.region.name")
+
+viz_lines(ilo_df, x="year", y="obs_value", time_level = "ra", grp= "iso3c", duration = 4, facets = "region", max_lines = 8)
+
+ilo_df %>%
+    group_by(iso3c) %>%
+    summarize(min_year = min(year)) %>%
+    pull(min_year) %>%
+    hist()
+
+
+
+cpltns_checker(ilo_df, "obs_value")
+
+## ** UN
+un_df <- as_tibble(read.csv(paste0(PROJECT_DIR, "data/UN/UNdata_Export_20220331_131339247.csv")))
+table(un_df$SNA93.Item.Code)
+
+un_df$iso3c <- countrycode(un_df$Country.or.Area, "country.name", "iso3c")
+un_df$region <- countrycode(un_df$iso3c, "iso3c", "un.region.name")
+un_df$year <- un_df$Year
+
+filter(un_df, SNA93.Item.Code=="R") %>% na.omit() %>%
+    cpltns_checker(varx="Value")
+    
+filter(un_df, SNA93.Item.Code=="R") %>%
+    pull(iso3c) %>%
+    table()
+              
+
+filter(un_df, SNA93.Item.Code=="R") %>%
+    viz_lines(x="year", y="Value", time_level = "ra", grp= "iso3c", duration = 4, facets = "region", max_lines = 8)
+
+un_dfs <- list(
+list(filename="UNdata_output_gross_value_added_fixed_assests_industry_cur_prices.csv", yearcol="Year"),
+list(filename="UNdata_value_added_cur_prices_ISIC.csv", yearcol="Year"),
+list(filename="UNdata_value_added_industry_constant_prices.csv", yearcol="Fiscal.Year"))
+
+check_un_cpltns <- function(filename, yearcol){
+    
+    un_dfx <- as_tibble(read.csv(paste0(PROJECT_DIR, "data/UN/", filename)))
+
+    un_dfx$iso3c <- countrycode(un_dfx$Country.or.Area, "country.name", "iso3c")
+    un_dfx$year <- un_dfx[[yearcol]]
+
+    cpltns_res <- un_dfx %>%
+        group_by(iso3c, year) %>%
+        summarize(some_val=1) %>%
+        cpltns_checker(varx="some_val")
+
+    return(cpltns_res)
+    
+}
+
+rbindlist(lapply(un_dfs, function(x) check_un_cpltns(x[['filename']], x[['yearcol']])))
+## only UNdata_output_gross_value_added_fixed_assests_industry_cur_prices.csv has any decent coverage
+
+un_df2 <- as_tibble(read.csv(paste0(PROJECT_DIR, "data/UN/", "UNdata_output_gross_value_added_fixed_assests_industry_cur_prices.csv")))
+
+## but also so many different things
+
+table(un_df2$Country.or.Area)
+table(un_df2$Item) %>% sort()
+
+un_df2$iso3c <- countrycode(un_df2$Country.or.Area, "country.name", "iso3c")
+un_df2$year <- un_df2$Year
+un_df2$region <- countrycode(un_df2$iso3c, "iso3c", "un.region.name")
+
+
+filter(un_df2, Item == "Equals: VALUE ADDED, GROSS, at basic prices") %>%
+    select(iso3c, year, Value, region) %>%
+    viz_lines(x="year", y="Value", grp="iso3c", time_level = "ra", duration = 4, facets = "region")
+    
+
+filter(un_df2, Item == "Equals: VALUE ADDED, GROSS, at basic prices") %>%
+    select(iso3c, year, Value, region) %>%
+    cpltns_checker(varx = "Value")
+
+## ** government expenditure by function
+
+un_df3 <- as_tibble(read.csv(paste0(PROJECT_DIR, "data/UN/UNdata_Gvt_consumption_expenditure.csv")))
+
+head(as.data.frame(un_df3))
+
+un_df3$iso3c <- countrycode(un_df3$Country.or.Area, "country.name", "iso3c")
+un_df3$year <- un_df3$Year
+un_df3$region <- countrycode(un_df3$iso3c, "iso3c", "un.region.name")
+
+un_df3 %>%
+    group_by(iso3c, year) %>%
+    summarize(some_val=1) %>%
+    cpltns_checker("some_val")
+
+viz_lines(un_df3, x="year", y="Value", grp="iso3c", time_level = "ra", duration = 4, max_lines = 8, facets = "region")
+
+## ** IMF
+
+library(imfr)
+
+df_imf_ids <- as_tibble(imf_ids())
+filter(df_imf_ids, scramblematch("COFOG", description))
+filter(df_imf_ids, scramblematch("spending", description))
+
+
+GFSCOFOG
