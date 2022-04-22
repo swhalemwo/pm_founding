@@ -125,6 +125,120 @@ un_df2$iso3c <- countrycode(un_df2$Country.or.Area, "country.name", "iso3c")
 un_df2$year <- un_df2$Year
 un_df2$region <- countrycode(un_df2$iso3c, "iso3c", "un.region.name")
 
+## pivoting UN df to wide to see how good coverage is if all variables are combined
+
+un_df2_wide <- select(un_df2, iso3c, year, Item, Value, Series) %>%
+    filter(Item != "") %>%
+    pivot_wider(names_from = Item, values_from = Value)
+
+filter(un_df2_wide, Series==1000) %>%
+    apply(2, function(x) cpltns_checker(varx = x))
+
+
+## compare coverage of series 1000 with no series restriction
+
+
+un_cpltns_check_1k <- lapply(head(unique(un_df2$Item),-1),
+       function(x) cpltns_checker(vx = filter(un_df2_wide, Series ==1000)[,c("iso3c", "year", x)], varx = x)) %>%
+    rbindlist() %>%
+    filter(PMs_covered_raw > 200)
+
+un_cpltns_check_all <- lapply(head(unique(un_df2$Item),-1),
+       function(x) cpltns_checker(vx = filter(un_df2_wide)[,c("iso3c", "year", x)], varx = x)) %>%
+    rbindlist() %>%
+    filter(PMs_covered_raw > 200)
+
+## calculating diffs of nobs and percentages of PM foundings covered depending on series choice
+merge(
+    select(un_cpltns_check_1k, varx, ratio_opngs_cvrd_1k = ratio_opngs_cvrd, nobs_1k = nobs),
+    select(un_cpltns_check_all, varx, ratio_opngs_cvrd_all = ratio_opngs_cvrd, nobs_all = nobs)) %>%
+    mutate(diff_nobs = nobs_all - nobs_1k, diff_ratio = ratio_opngs_cvrd_all - ratio_opngs_cvrd_1k)
+
+series_cprn <- as_tibble(merge(filter(un_df2, Series==1000) %>%
+    select(iso3c, year) %>%
+    unique() %>%
+    mutate(series1k=1), 
+filter(un_df2) %>%
+    select(iso3c, year) %>%
+    unique() %>%
+    mutate(series_all=1), all=T))
+
+series_cry_cprn <- filter(series_cprn, is.na(series1k)) %>%
+    count(iso3c) %>%
+    arrange(desc(n)) %>%
+    as.data.frame()
+
+## check if countries with non-1k Series change 
+non1k_crys <- na.omit(series_cry_cprn$iso3c)[1:9]
+
+filter(un_df2, iso3c %in% non1k_crys, Item =="Equals: VALUE ADDED, GROSS, at basic prices") %>%
+    count(iso3c,Series)
+
+## hmm now only testing for one Item, and for some countries
+## I think I should generalize this, but requires abstraction
+
+## I hope product does some good job of maximizing country-variables that differ in Series
+
+select(un_df2, iso3c, year, Item, Series) %>%
+    mutate(n=1) %>%
+    group_by(iso3c, Item, Series) %>%
+    summarize(cnt=sum(n), one=1) %>%
+    group_by(iso3c, Item) %>%
+    summarize(n2=sum(cnt), n1=sum(one), prod_cnt = prod(cnt), div_cnt = prod(1/cnt)) %>%
+    filter(n1==2) %>%
+    arrange(desc(prod_cnt))
+
+
+filter(un_df2, Item == "Gross fixed capital formation", iso3c== "ISL")$year %>% sort()
+
+## fuck with ISL it's that variables are reported in multiple formats
+## tbh this is also a good comparison: if country-year-variables are reported in same series, then I can run correlation
+
+## fucking abstractions
+## alternative is disruption: seeing if change in series causes change in values
+## fuck i'm getting tired
+
+                                                                        
+
+
+
+## want to see which countries have which variables on multiple series
+## 
+
+## hmm using only 1000 series decreases number by quite something
+
+un_df2_wide$ttl <- rowsum
+    
+
+
+## figuring out non-unique values are due to different Series 
+## un_df2_wide <- select(un_df2, iso3c, year, Item, Value, Series) %>%
+##     filter(Item != "") %>%
+##     unique() %>%
+##     pivot_wider(names_from = Item, values_from = Value, values_fn = length) %>%
+##     pivot_longer(cols = head(unique(un_df2$Item),-1))
+
+## filter(un_df2_wide, value > 1) %>%
+##     count(name) %>%
+##     arrange(n)
+
+## filter(un_df2, Item == "Equals: VALUE ADDED, GROSS, at basic prices") %>%
+##     select(iso3c, year, Item, Value) %>%
+##     count(iso3c, year, Item, Value) %>%
+##     filter(n>1) %>%
+##     count(iso3c)
+
+## filter(un_df2, Item == "Equals: VALUE ADDED, GROSS, at basic prices", iso3c=="BIH") %>%
+##     select(iso3c, Year, Series, Fiscal.year.type, Value) %>%
+##     group_by(Year) %>%
+##     as.data.frame()
+
+
+    
+    
+
+
+
 
 filter(un_df2, Item == "Equals: VALUE ADDED, GROSS, at basic prices") %>%
     select(iso3c, year, Value, region) %>%
@@ -282,7 +396,8 @@ get_imf_data <- function() {
 
 ## viz_lines(imf_culture, x="year", y="value", time_level = "ra", duration = 3, grp="iso3c", facets = "region", max_lines = 6)
 
-## cpltns_checker(imf_culture, "value")
+cpltns_checker(filter(imf_culture, COFOG.Function.Code=="GF0802"), "value")
+cpltns_checker(filter(imf_culture, COFOG.Function.Code=="GF08"), "value")
        
 
 ## GF0802: so far basically Europe plus handful of Asian countries, no US (LUL/Latin America, Africa), around 800-900 nobs
@@ -293,6 +408,7 @@ get_imf_data <- function() {
 ## *** correlation check
 ## compare cultural services (GF0802) and Expenditure on recreation, culture, & religion (GF08, overarching category)
 ## have to do that systematically too 
+
 
 
 imf_cpr <- filter(imf_df_melt,
