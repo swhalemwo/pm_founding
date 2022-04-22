@@ -63,28 +63,37 @@ ilo_df %>%
 cpltns_checker(ilo_df, "obs_value")
 
 ## ** UN
-un_df <- as_tibble(read.csv(paste0(PROJECT_DIR, "data/UN/UNdata_Export_20220331_131339247.csv")))
-table(un_df$SNA93.Item.Code)
 
-un_df$iso3c <- countrycode(un_df$Country.or.Area, "country.name", "iso3c")
-un_df$region <- countrycode(un_df$iso3c, "iso3c", "un.region.name")
-un_df$year <- un_df$Year
+## un_df <- as_tibble(read.csv(paste0(PROJECT_DIR, "data/UN/UNdata_Export_20220331_131339247.csv")))
+## table(un_df$SNA93.Item.Code)
 
-filter(un_df, SNA93.Item.Code=="R") %>% na.omit() %>%
-    cpltns_checker(varx="Value")
+## un_df$iso3c <- countrycode(un_df$Country.or.Area, "country.name", "iso3c")
+## un_df$region <- countrycode(un_df$iso3c, "iso3c", "un.region.name")
+## un_df$year <- un_df$Year
+
+## filter(un_df, SNA93.Item.Code=="R") %>% na.omit() %>%
+##     cpltns_checker(varx="Value")
     
-filter(un_df, SNA93.Item.Code=="R") %>%
-    pull(iso3c) %>%
-    table()
+## filter(un_df, SNA93.Item.Code=="R") %>%
+##     pull(iso3c) %>%
+##     table()
               
 
-filter(un_df, SNA93.Item.Code=="R") %>%
-    viz_lines(x="year", y="Value", time_level = "ra", grp= "iso3c", duration = 4, facets = "region", max_lines = 8)
+## filter(un_df, SNA93.Item.Code=="R") %>%
+##     viz_lines(x="year", y="Value", time_level = "ra", grp= "iso3c", duration = 4, facets = "region", max_lines = 8)
 
 un_dfs <- list(
 list(filename="UNdata_output_gross_value_added_fixed_assests_industry_cur_prices.csv", yearcol="Year"),
 list(filename="UNdata_value_added_cur_prices_ISIC.csv", yearcol="Year"),
-list(filename="UNdata_value_added_industry_constant_prices.csv", yearcol="Fiscal.Year"))
+list(filename="UNdata_value_added_industry_constant_prices.csv", yearcol="Fiscal.Year"),
+list(filename="UNdata_value_added_by_econ_activity_cur_prices_nat_cur.csv", yearcol="Year")
+)
+
+names(un_dfs) <- unlist(lapply(un_dfs, function(x) substring(x['filename'], first=1, last=nchar(x['filename'])-4)))
+
+un_df <- lapply(un_dfs, function(x) as_tibble(read.csv(paste0(PROJECT_DIR, "data/UN/", x['filename']))))
+
+
 
 check_un_cpltns <- function(filename, yearcol){
     
@@ -125,6 +134,10 @@ filter(un_df2, Item == "Equals: VALUE ADDED, GROSS, at basic prices") %>%
 filter(un_df2, Item == "Equals: VALUE ADDED, GROSS, at basic prices") %>%
     select(iso3c, year, Value, region) %>%
     cpltns_checker(varx = "Value")
+
+filter(un_df2, Item == "Equals: VALUE ADDED, GROSS, at basic prices") %>%
+    select(iso3c, year, Value, region) %>%
+    head()
 
 ## ** government expenditure by function
 
