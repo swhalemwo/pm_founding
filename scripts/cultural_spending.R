@@ -55,7 +55,7 @@ name_ilo_df <- function(x) {
 
 lapply(names(ilo_dfs), function(x)
     
-    )
+       )
 
 
 
@@ -83,6 +83,8 @@ ilo_df %>%
 cpltns_checker(filter(ilo_df, sex.label == "Sex: Total") , "obs_value")
 
 ## ** UN
+
+## *** exploration of all UN dfs related to cultural spending
 
 ## un_df <- as_tibble(read.csv(paste0(PROJECT_DIR, "data/UN/UNdata_Export_20220331_131339247.csv")))
 ## table(un_df$SNA93.Item.Code)
@@ -134,6 +136,8 @@ check_un_cpltns <- function(filename, yearcol){
 rbindlist(lapply(un_dfs, function(x) check_un_cpltns(x[['filename']], x[['yearcol']])))
 ## only UNdata_output_gross_value_added_fixed_assests_industry_cur_prices.csv has any decent coverage
 
+## *** exploration of output_gross_value_added_fixed_assests_industry_cur_prices
+
 un_df2 <- as_tibble(read.csv(paste0(PROJECT_DIR, "data/UN/", "UNdata_output_gross_value_added_fixed_assests_industry_cur_prices.csv")))
 
 ## but also so many different things
@@ -152,7 +156,7 @@ un_df2_wide <- select(un_df2, iso3c, year, Item, Value, Series) %>%
     pivot_wider(names_from = Item, values_from = Value)
 
 
-## compare coverage of series 1000 with no series restriction
+## *** compare coverage of series 1000 with no series restriction
 
 
 un_cpltns_check_1k <- lapply(head(unique(un_df2$Item),-1),
@@ -190,6 +194,8 @@ non1k_crys <- na.omit(series_cry_cprn$iso3c)[1:9]
 
 filter(un_df2, iso3c %in% non1k_crys, Item =="Equals: VALUE ADDED, GROSS, at basic prices") %>%
     count(iso3c,Series)
+
+## *** abstraction of series comparison 
 
 ## hmm now only testing for one Item, and for some countries
 ## I think I should generalize this, but requires abstraction
@@ -237,33 +243,80 @@ as_tibble(merge(series_data$s100, series_data$s200))
 
 series_combns <- as.data.frame(t(combn(names(series_data), m=2)))
 
-combn_dfs <- rbindlist(apply(series_combns, 1, function(x)
-    list(x1 = x['V1'],
-         x2 = x['V2'],
-         ovlp = nrow(merge(series_data[[x['V1']]][,c("iso3c", "year", "Item")],
-                           series_data[[x['V2']]][,c("iso3c", "year", "Item")])))))
+## combn_dfs <- rbindlist(apply(series_combns, 1, function(x)
+##     list(x1 = x['V1'],
+##          x2 = x['V2'],
+##          ovlp = nrow(merge(series_data[[x['V1']]][,c("iso3c", "year", "Item")],
+##                            series_data[[x['V2']]][,c("iso3c", "year", "Item")])))))
 
 ## says no overlap, but i had overlap before in ISL -> i'm tired of your fucking lying R
 ## probably due to inclusion of value column?
 ## hmm doesn't seem so
 ##  was actually due to inclusion of Series column -> yeeted
 
+
+## *** correlation calculations
+
+## wonder if I have to focus on the relative size of the overlap between two series?
+
+series_cprr <- function(s1, s2) {
+    #' compares two series
+
+    df1 <- series_data[[s1]]
+    df2 <- series_data[[s2]]
+
+    n1 <- nrow(df1)
+    n2 <- nrow(df2)
+
+    df_joint <- as_tibble(merge(
+        mutate(df1, Value1=Value) %>%
+        select(iso3c, year, Item, Value1),
+        mutate(df2, Value2=Value) %>%
+        select(iso3c, year, Item, Value2)))
+
+    n_joint = nrow(df_joint)
+
+    nj_crys <- len(unique(df_joint$iso3c))
+    nj_vars <- len(unique(df_joint$Item))
+    nj_time <- len(unique(df_joint$year))
+
+    corx = cor(df_joint$Value1, df_joint$Value2)
+
+    ## maybe add some more nuanced correlation: per item, or per item*country
+    ## var_cors <- df_joint %>%
+    ##     group_by(Item) %>%
+    ##     summarize(corx = cor(Value1, Value2), lenx = len(Value1)) %>%
+    ##     filter(lenx > 10)
+
+    return(list(
+        s1 = s1,
+        s2 = s2,
+        n1 = n1,
+        n2 = n2,
+        n_joint = n_joint,
+        corx = corx,
+        nj_crys =nj_crys,
+        nj_vars = nj_vars,
+        nj_time = nj_time))
+}
+
+## series_cprr("s1000", "s1100")
+
+combn_dfs <- rbindlist(apply(series_combns, 1, function(x) series_cprr(x['V1'], x['V2'])))
+    
+## *** plotting series overlaps
 library(igraph)
 
 g <- graph_from_data_frame(combn_dfs, directed = F)
 
+plot(g, edge.label = E(g)$n_joint, edge.width = E(g)$n_joint/100, title = "asdf")
 
-plot(g, edge.label = E(g)$ovlp, edge.width = E(g)$ovlp/100, title = "asdf")
-
-
-g.copy <- delete.edges(g, which(E(g)$ovlp == 0))
+g.copy <- delete.edges(g, which(E(g)$n_joint == 0))
 
 pdf(paste0(FIG_DIR, "UN_series_plot.pdf"), width = 8, height=6)
-plot(g.copy, edge.label = E(g.copy)$ovlp, edge.width = E(g.copy)$ovlp/100, vertex.size=30,
+plot(g.copy, edge.label = E(g.copy)$n_joint, edge.width = E(g.copy)$n_joint/100, vertex.size=30,
      main = "UN series overlap in country-year-variables")
 dev.off()
-
-
 
 ## still seems impossible to construct variables in tidyverse calls
 ## construct one-variable and pivot wider before filtering each series?
@@ -272,6 +325,33 @@ dev.off()
 un_df2 %>% mutate(!!paste0("dd", "jj") := 100)
 
 
+## *** comparison visualization
+## pick s1000 and s1100: have most overlap
+
+df_join <- as_tibble(merge(
+    select(series_data[['s1000']], iso3c, year, Item, Value1 = Value),
+    select(series_data[['s1100']], iso3c, year, Item, Value2 = Value))) %>%
+    pivot_longer(cols = c("Value1", "Value2"))
+
+
+pdf(paste0(FIG_DIR, "UN_series_1000_1100_comparison.pdf"), width = 18, height = 10)
+ggplot(df_join, aes(x=year, y=value, color = iso3c, linetype = name)) +
+    facet_wrap(~interaction(iso3c, substring(Item, 1, 30)), scales = "free") + 
+    geom_line() +
+    labs(title = "comparison of series 1000 and 1100 for countries and variables where both have data (UNdata_output_gross_value_added_fixed_assests_industry_cur_prices)")
+dev.off()
+
+
+## color by country
+## facet by variable?
+
+
+    
+
+
+
+
+## *** misc 
 
 
 ## want to see which countries have which variables on multiple series
