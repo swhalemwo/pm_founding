@@ -41,6 +41,24 @@ table(df_stani4_2016$VAR) %>% sort()
 
 
 ## ** ILO
+ilo_df_files <- list.files(paste0(PROJECT_DIR, "data/ILO"))
+names(ilo_df_files) <- lapply(ilo_df_files, function(x) substring(x, 1, nchar(x)-4))
+
+ilo_dfs <- lapply(ilo_df_files, function(x) as_tibble(read.csv(paste0(PROJECT_DIR, "data/ILO/", x))))
+
+name_ilo_df <- function(x) {
+    col_name = enquo(x)
+
+    select(ilo_dfs[[x]], ref_area.label, time, get(col_name) = obs_value)
+}
+    
+
+lapply(names(ilo_dfs), function(x)
+    
+    )
+
+
+
 ilo_df <- as_tibble(read.csv(paste0(PROJECT_DIR, "data/ILO/EMP_TEMP_SEX_ECO_NB_A-filtered-2022-03-31.csv")))
 ilo_df <- as_tibble(read.csv(paste0(PROJECT_DIR, "data/ILO/EMP_TEMP_SEX_EC2_NB_A-filtered-2022-03-31.csv")))
 as.data.frame(head(ilo_df))
@@ -60,7 +78,9 @@ ilo_df %>%
 
 
 
-cpltns_checker(ilo_df, "obs_value")
+
+
+cpltns_checker(filter(ilo_df, sex.label == "Sex: Total") , "obs_value")
 
 ## ** UN
 
