@@ -151,9 +151,6 @@ un_df2_wide <- select(un_df2, iso3c, year, Item, Value, Series) %>%
     filter(Item != "") %>%
     pivot_wider(names_from = Item, values_from = Value)
 
-filter(un_df2_wide, Series==1000) %>%
-    apply(2, function(x) cpltns_checker(varx = x))
-
 
 ## compare coverage of series 1000 with no series restriction
 
@@ -218,7 +215,62 @@ filter(un_df2, Item == "Gross fixed capital formation", iso3c== "ISL")$year %>% 
 ## alternative is disruption: seeing if change in series causes change in values
 ## fuck i'm getting tired
 
-                                                                        
+## use "s" prefix for the series values to have them as strings to have them nicer to edit
+
+un_df2$Series_m <- paste0("s", un_df2$Series)
+
+series_labels <- paste0("s", na.omit(unique(un_df2$Series)))
+names(series_labels) <- series_labels
+
+un_df2$one <- 1
+
+## construct series for each df
+## uses namesseries_one as identifier for merging
+
+series_data <- lapply(series_labels, function(x)
+    filter(un_df2, Series_m == x) %>%
+    select(iso3c, year, Series, Item, Value, !!paste0("one", x) := one))
+
+## series_data$`100`
+
+as_tibble(merge(series_data$s100, series_data$s200))
+
+series_combns <- as.data.frame(t(combn(names(series_data), m=2)))
+
+combn_dfs <- rbindlist(apply(series_combns, 1, function(x)
+    list(x1 = x['V1'],
+         x2 = x['V2'],
+         ovlp = nrow(merge(series_data[[x['V1']]][,c("iso3c", "year", "Item")],
+                           series_data[[x['V2']]][,c("iso3c", "year", "Item")])))))
+
+## says no overlap, but i had overlap before in ISL -> i'm tired of your fucking lying R
+## probably due to inclusion of value column?
+## hmm doesn't seem so
+##  was actually due to inclusion of Series column -> yeeted
+
+library(igraph)
+
+g <- graph_from_data_frame(combn_dfs, directed = F)
+
+
+plot(g, edge.label = E(g)$ovlp, edge.width = E(g)$ovlp/100, title = "asdf")
+
+
+g.copy <- delete.edges(g, which(E(g)$ovlp == 0))
+
+pdf(paste0(FIG_DIR, "UN_series_plot.pdf"), width = 8, height=6)
+plot(g.copy, edge.label = E(g.copy)$ovlp, edge.width = E(g.copy)$ovlp/100, vertex.size=30,
+     main = "UN series overlap in country-year-variables")
+dev.off()
+
+
+
+## still seems impossible to construct variables in tidyverse calls
+## construct one-variable and pivot wider before filtering each series?
+    
+## actually works now (https://stackoverflow.com/questions/56162309/new-column-from-string-in-dplyr):
+un_df2 %>% mutate(!!paste0("dd", "jj") := 100)
+
 
 
 
@@ -227,7 +279,7 @@ filter(un_df2, Item == "Gross fixed capital formation", iso3c== "ISL")$year %>% 
 
 ## hmm using only 1000 series decreases number by quite something
 
-un_df2_wide$ttl <- rowsum
+## un_df2_wide$ttl <- rowsum
     
 
 
