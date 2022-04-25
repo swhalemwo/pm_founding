@@ -346,7 +346,32 @@ dev.off()
 ## facet by variable?
 
 
-    
+## *** series transition
+
+## see how it looks like when series change
+
+sample_lines_id <- un_df2 %>%
+    group_by(iso3c, Item) %>%
+    summarize(nbr_series = len(unique(Series))) %>%
+    filter(nbr_series > 1) %>%
+    ungroup() %>%
+    select(iso3c, Item) %>%
+    sample_n(30)
+## for some reason it merges a whole lot of extra rows, need to use unique
+sample_lines_data <- as_tibble(unique(merge(select(un_df2, iso3c, year, Series),
+                                            sample_lines_id)))
+pdf(paste0(FIG_DIR, "UN_series_ovlp.pdf"), width = 18, height=10)
+## ggplot(sample_lines_data, aes(x = year, y=interaction(Series, Item, iso3c), fill = factor(Series))) +
+ggplot(sample_lines_data, aes(x = year, y=factor(Series), fill = factor(Series))) +    
+    facet_wrap(~interaction(Item, iso3c), scales = "free") + 
+    geom_tile() +
+    labs(title = "comparison of series coverage for sample of 30 country-variables which have more than one series (UNdata_output_gross_value_added_fixed_assests_industry_cur_prices)")
+dev.off()
+
+    ## ungroup() %>%
+    ## count(nbr_series)
+
+## *** series combining
 
 
 
