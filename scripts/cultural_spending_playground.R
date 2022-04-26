@@ -27,6 +27,10 @@
 
 oecd_cur_df <- as_tibble(read.csv(paste0(PROJECT_DIR, "data/OECD/fx_rates.csv")))
 oecd_cur_df <- select(oecd_cur_df, iso3c=LOCATION, year = TIME, oecd_fx = Value)
+
+filter(oecd_cur_df, iso3c == "DEU") %>%
+    ggplot(aes(x=year, y=oecd_fx)) +
+    geom_line()
  
 ## comparison
 

@@ -416,7 +416,7 @@ un_df3$Currency_tws <- trimws(un_df3$Currency)
 
 un_df3_cur <- un_df3 %>%
     group_by(iso3c, year) %>%
-    mutate(nbr_curs = len(unique(Currency_tws)))
+    mutate(nbr_curs = n_distinct(Currency_tws), nbr_series = n_distinct(Currency_tws))
 
 table(un_df3_cur$nbr_curs)
 
@@ -426,6 +426,113 @@ un_df3_cur %>%
     select(iso3c, Currency_tws) %>%
     unique() %>%
     as.data.frame()
+
+
+## merging item and currency data to see if/how currency changes are reflected in exchange rates
+## and whether that impacts coverage
+
+## rbind or merge + pivot_longer? rbind lol
+
+check_cry_cur <- function(cry) {
+
+    filter(un_df3, iso3c == cry) %>%
+        select(iso3c, year, Value, Series, Currency_tws) %>%
+        rbind(., select(., iso3c, year, Value, Series = Currency_tws) %>%
+                 ## add also a facet with all the currencies combined
+                 ## joins stuff of different series together tho 
+                 mutate(Currency_tws = "curs")) %>%
+        rbind(filter(wid_cur_df, iso3c == cry, year > STARTING_YEAR) %>%
+              mutate(Currency_tws = "wid", Series = "wid") %>%
+              select(iso3c, year, Value = value, Currency_tws = variable, Series)) %>%
+        ggplot(aes(x=year, y=Value, color = factor(Series))) +
+        facet_wrap(~Currency_tws, scales = "free_y", nrow=3) +
+        geom_line(size=1.5)
+
+}
+
+check_cry_cur("VEN")
+
+
+curs_to_yeet <- c(
+    "1999 ATS euro / euro","Austrian schilling",
+    "Azerbaijan manat",
+    "1999 BEF euro / euro", "Belgian franc",
+    "lev (re-denom. 1:1000)",
+    "Cyprus pound",
+    "Estonian kroon", "Estonian Kroon",
+    "1999 FIM euro / euro", "Finish markka",
+    "1999 FRF euro / euro", "French franc",
+    "1999 DEM euro / euro", "deutsche mark",
+    "2001 GRD euro / euro",
+    "1999 IEP euro / euro",
+    "1999 ITL euro / euro", "Italian lira",
+    "lats",
+    "Litas", "litas",
+    "1999 LUF Euro / Euro", "1999 LUF euro / euro", "Luxembourg franc",
+    "Maltese liri",
+    "1999 NLG euro / euro", "1999 NLG Euro / Euro",
+    "1999 PTE euro / euro", "Portuguese escudo",
+    "Romanian Leu",
+    "Russian ruble",
+    "Slovak koruna", "Slovak Koruna",
+    "Slovenian tolar", "tolar",
+    "1999 ESP euro / euro", "peseta",
+    "bolivar")
+
+filter(wid_cur_df, iso3c == "VEN") %>%
+    ggplot(aes(x=year, y=log10(value))) +
+    facet_wrap(~variable) +
+    geom_line()
+
+    
+    
+    
+    
+    
+
+)
+    
+curs_to_rename <- list(
+    list(from = "pataca", to = "Pataca"),
+    list(from = "Danish Krone (DDK.)", to = "Danish Krone"),
+    list(from = "forint", to = "Forint"),
+    list(from = "euro", to = "Euro"),
+    list(from = "pakistan rupee", to = "Pakistan Rupee"),
+    list(from = "Pakistan rupee", to = "Pakistan Rupee"),
+    list(from = "zloty", to = "Zloty"),
+    list(from = "Russian ruble (re-denom. 1:1000)", to = "Russian Ruble"),
+    list(from = "Swedish krona", to = "Swedish Krona")
+    
+    
+)
+    
+    
+## wid exchange rates are kinda constant -> are probably in Euro
+## actually should check market exchange rate for that 
+
+    
+
+## probably need some systematic checking of each country with multiple currencies
+## for MLT: could just drop liri, but have to make sure that exchange rate is in for the entire period
+
+## check how many instances of multiple currencies differ substantially
+## fuck the Series issue is fucking me 
+
+
+un_df3_cur %>%
+    ungroup() %>%
+    select(iso3c, year, Value, nbr_series, nbr_curs, Series, Currency) %>%
+    filter(nbr_curs > 1)
+
+
+
+%>%
+    ungroup() %>%
+    summarize(corx = cor(nbr_series, nbr_curs))
+
+cor(un_df3_cur2$nbr_curs, un_df3_cur2$nbr_series)
+
+
 ## fuuuuuuuuuuu
 
 
@@ -435,9 +542,11 @@ table(filter(un_df3_cur, nbr_curs > 1)$iso3c)
 
 ## WID
 
-currency_cmd <- paste0("select iso3c, year, value from wid_v2 where variable='xlcusp999i' and year>=", STARTING_YEAR)
-wid_currency_df <- as_tibble(dbGetQuery(con, currency_cmd))
-names(wid_currency_df)[3] <- "xlcusp999i"
+currency_cmd <- paste0("select iso3c, year, variable, value from wid_v2 where variable='xlcusp999i' or variable = 'xlcusx999i' and year>=", STARTING_YEAR)
+wid_cur_df <- as_tibble(dbGetQuery(con, currency_cmd))
+names(wid_cur_df)[3] <- "xlcusp999i"
+
+
 
 
 ## *** misc 
