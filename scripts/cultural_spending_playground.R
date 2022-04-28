@@ -62,3 +62,207 @@ cur_df_cpr %>%
     facet_wrap(~iso3c, scales = "free") +
     geom_line()
 dev.off()
+
+
+## ** more sophisticated UN series resolution attempts, abandoned in favor of brainlet strats
+## calculating diffs of nobs and percentages of PM foundings covered depending on series choice
+merge(
+    select(un_cpltns_check_1k, varx, ratio_opngs_cvrd_1k = ratio_opngs_cvrd, nobs_1k = nobs),
+    select(un_cpltns_check_all, varx, ratio_opngs_cvrd_all = ratio_opngs_cvrd, nobs_all = nobs)) %>%
+    mutate(diff_nobs = nobs_all - nobs_1k, diff_ratio = ratio_opngs_cvrd_all - ratio_opngs_cvrd_1k)
+
+series_cprn <- as_tibble(merge(filter(un_df2, Series==1000) %>%
+    select(iso3c, year) %>%
+    unique() %>%
+    mutate(series1k=1), 
+filter(un_df2) %>%
+    select(iso3c, year) %>%
+    unique() %>%
+    mutate(series_all=1), all=T))
+
+series_cry_cprn <- filter(series_cprn, is.na(series1k)) %>%
+    count(iso3c) %>%
+    arrange(desc(n)) %>%
+    as.data.frame()
+
+## check if countries with non-1k Series change 
+non1k_crys <- na.omit(series_cry_cprn$iso3c)[1:9]
+
+filter(un_df2, iso3c %in% non1k_crys, Item =="Equals: VALUE ADDED, GROSS, at basic prices") %>%
+    count(iso3c,Series)
+
+## *** abstraction of series comparison 
+
+## hmm now only testing for one Item, and for some countries
+## I think I should generalize this, but requires abstraction
+
+## I hope product does some good job of maximizing country-variables that differ in Series
+
+select(un_df2, iso3c, year, Item, Series) %>%
+    mutate(n=1) %>%
+    group_by(iso3c, Item, Series) %>%
+    summarize(cnt=sum(n), one=1) %>%
+    group_by(iso3c, Item) %>%
+    summarize(n2=sum(cnt), n1=sum(one), prod_cnt = prod(cnt), div_cnt = prod(1/cnt)) %>%
+    filter(n1==2) %>%
+    arrange(desc(prod_cnt))
+
+
+filter(un_df2, Item == "Gross fixed capital formation", iso3c== "ISL")$year %>% sort()
+
+## fuck with ISL it's that variables are reported in multiple formats
+## tbh this is also a good comparison: if country-year-variables are reported in same series, then I can run correlation
+
+## fucking abstractions
+## alternative is disruption: seeing if change in series causes change in values
+## fuck i'm getting tired
+
+## use "s" prefix for the series values to have them as strings to have them nicer to edit
+
+un_df2$Series_m <- paste0("s", un_df2$Series)
+
+series_labels <- paste0("s", na.omit(unique(un_df2$Series)))
+names(series_labels) <- series_labels
+
+un_df2$one <- 1
+
+## construct series for each df
+## uses namesseries_one as identifier for merging
+
+series_data <- lapply(series_labels, function(x)
+    filter(un_df2, Series_m == x) %>%
+    select(iso3c, year, Series, Item, Value, !!paste0("one", x) := one))
+
+## series_data$`100`
+
+as_tibble(merge(series_data$s100, series_data$s200))
+
+series_combns <- as.data.frame(t(combn(names(series_data), m=2)))
+
+## combn_dfs <- rbindlist(apply(series_combns, 1, function(x)
+##     list(x1 = x['V1'],
+##          x2 = x['V2'],
+##          ovlp = nrow(merge(series_data[[x['V1']]][,c("iso3c", "year", "Item")],
+##                            series_data[[x['V2']]][,c("iso3c", "year", "Item")])))))
+
+## says no overlap, but i had overlap before in ISL -> i'm tired of your fucking lying R
+## probably due to inclusion of value column?
+## hmm doesn't seem so
+##  was actually due to inclusion of Series column -> yeeted
+
+
+## *** correlation calculations
+
+## wonder if I have to focus on the relative size of the overlap between two series?
+
+series_cprr <- function(s1, s2) {
+    #' compares two series
+
+    df1 <- series_data[[s1]]
+    df2 <- series_data[[s2]]
+
+    n1 <- nrow(df1)
+    n2 <- nrow(df2)
+
+    df_joint <- as_tibble(merge(
+        mutate(df1, Value1=Value) %>%
+        select(iso3c, year, Item, Value1),
+        mutate(df2, Value2=Value) %>%
+        select(iso3c, year, Item, Value2)))
+
+    n_joint = nrow(df_joint)
+
+    nj_crys <- len(unique(df_joint$iso3c))
+    nj_vars <- len(unique(df_joint$Item))
+    nj_time <- len(unique(df_joint$year))
+
+    corx = cor(df_joint$Value1, df_joint$Value2)
+
+    ## maybe add some more nuanced correlation: per item, or per item*country
+    ## var_cors <- df_joint %>%
+    ##     group_by(Item) %>%
+    ##     summarize(corx = cor(Value1, Value2), lenx = len(Value1)) %>%
+    ##     filter(lenx > 10)
+
+    return(list(
+        s1 = s1,
+        s2 = s2,
+        n1 = n1,
+        n2 = n2,
+        n_joint = n_joint,
+        corx = corx,
+        nj_crys =nj_crys,
+        nj_vars = nj_vars,
+        nj_time = nj_time))
+}
+
+## series_cprr("s1000", "s1100")
+
+combn_dfs <- rbindlist(apply(series_combns, 1, function(x) series_cprr(x['V1'], x['V2'])))
+    
+## *** plotting series overlaps
+library(igraph)
+
+g <- graph_from_data_frame(combn_dfs, directed = F)
+
+plot(g, edge.label = E(g)$n_joint, edge.width = E(g)$n_joint/100, title = "asdf")
+
+g.copy <- delete.edges(g, which(E(g)$n_joint == 0))
+
+pdf(paste0(FIG_DIR, "UN_series_plot.pdf"), width = 8, height=6)
+plot(g.copy, edge.label = E(g.copy)$n_joint, edge.width = E(g.copy)$n_joint/100, vertex.size=30,
+     main = "UN series overlap in country-year-variables")
+dev.off()
+
+## still seems impossible to construct variables in tidyverse calls
+## construct one-variable and pivot wider before filtering each series?
+    
+## actually works now (https://stackoverflow.com/questions/56162309/new-column-from-string-in-dplyr):
+un_df2 %>% mutate(!!paste0("dd", "jj") := 100)
+
+
+## *** comparison visualization
+## pick s1000 and s1100: have most overlap
+
+df_join <- as_tibble(merge(
+    select(series_data[['s1000']], iso3c, year, Item, Value1 = Value),
+    select(series_data[['s1100']], iso3c, year, Item, Value2 = Value))) %>%
+    pivot_longer(cols = c("Value1", "Value2"))
+
+
+pdf(paste0(FIG_DIR, "UN_series_1000_1100_comparison.pdf"), width = 18, height = 10)
+ggplot(df_join, aes(x=year, y=value, color = iso3c, linetype = name)) +
+    facet_wrap(~interaction(iso3c, substring(Item, 1, 30)), scales = "free") + 
+    geom_line() +
+    labs(title = "comparison of series 1000 and 1100 for countries and variables where both have data (UNdata_output_gross_value_added_fixed_assests_industry_cur_prices)")
+dev.off()
+
+
+## color by country
+## facet by variable?
+
+
+## *** series transition
+
+## see how it looks like when series change
+
+sample_lines_id <- un_df2 %>%
+    group_by(iso3c, Item) %>%
+    summarize(nbr_series = len(unique(Series))) %>%
+    filter(nbr_series > 1) %>%
+    ungroup() %>%
+    select(iso3c, Item) %>%
+    sample_n(30)
+## for some reason it merges a whole lot of extra rows, need to use unique
+sample_lines_data <- as_tibble(unique(merge(select(un_df2, iso3c, year, Series),
+                                            sample_lines_id)))
+pdf(paste0(FIG_DIR, "UN_series_ovlp.pdf"), width = 18, height=10)
+## ggplot(sample_lines_data, aes(x = year, y=interaction(Series, Item, iso3c), fill = factor(Series))) +
+ggplot(sample_lines_data, aes(x = year, y=factor(Series), fill = factor(Series))) +    
+    facet_wrap(~interaction(Item, iso3c), scales = "free") + 
+    geom_tile() +
+    labs(title = "comparison of series coverage for sample of 30 country-variables which have more than one series (UNdata_output_gross_value_added_fixed_assests_industry_cur_prices)")
+dev.off()
+
+    ## ungroup() %>%
+    ## count(nbr_series)
