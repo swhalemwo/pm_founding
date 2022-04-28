@@ -364,54 +364,6 @@ filter(un_df_cur_caution,
 
 
 
-## *** misc 
-
-
-## want to see which countries have which variables on multiple series
-## 
-
-## hmm using only 1000 series decreases number by quite something
-
-## un_df2_wide$ttl <- rowsum
-    
-
-
-## figuring out non-unique values are due to different Series 
-## un_df2_wide <- select(un_df2, iso3c, year, Item, Value, Series) %>%
-##     filter(Item != "") %>%
-##     unique() %>%
-##     pivot_wider(names_from = Item, values_from = Value, values_fn = length) %>%
-##     pivot_longer(cols = head(unique(un_df2$Item),-1))
-
-## filter(un_df2_wide, value > 1) %>%
-##     count(name) %>%
-##     arrange(n)
-
-## filter(un_df2, Item == "Equals: VALUE ADDED, GROSS, at basic prices") %>%
-##     select(iso3c, year, Item, Value) %>%
-##     count(iso3c, year, Item, Value) %>%
-##     filter(n>1) %>%
-##     count(iso3c)
-
-## filter(un_df2, Item == "Equals: VALUE ADDED, GROSS, at basic prices", iso3c=="BIH") %>%
-##     select(iso3c, Year, Series, Fiscal.year.type, Value) %>%
-##     group_by(Year) %>%
-##     as.data.frame()
-
-
-
-filter(un_df2, Item == "Equals: VALUE ADDED, GROSS, at basic prices") %>%
-    select(iso3c, year, Value, region) %>%
-    viz_lines(x="year", y="Value", grp="iso3c", time_level = "ra", duration = 4, facets = "region")
-    
-
-filter(un_df2, Item == "Equals: VALUE ADDED, GROSS, at basic prices") %>%
-    select(iso3c, year, Value, region) %>%
-    cpltns_checker(varx = "Value")
-
-filter(un_df2, Item == "Equals: VALUE ADDED, GROSS, at basic prices") %>%
-    select(iso3c, year, Value, region) %>%
-    head()
 
 
 ## ** IMF
