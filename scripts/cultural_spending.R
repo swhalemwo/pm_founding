@@ -314,121 +314,8 @@ combine_un_series <- function() {
 }
 
 
-## *** add currencies
-wid_cur_df <- rename(wid_cur_df, conversion = value)
-
-wid_cur_df_wide <- pivot_wider(wid_cur_df, names_from = variable, values_from = conversion) %>%
-    filter(year >= STARTING_YEAR)
-    
-df_wb$GDP.TTL <- df_wb$NY.GDP.PCAP.CD * df_wb$SP.POP.TOTL
-
-un_df_cur_caution <- as_tibble(merge(un_df_caution, wid_cur_df_wide))
-
-un_df_cur_caution_gdp <- as_tibble(merge(un_df_cur_caution, select(df_wb, iso3c, year, GDP.TTL)))
-
-## should probably divide
-un_df_cur_caution_gdp$caution_dollar <- un_df_cur_caution_gdp$caution / un_df_cur_caution_gdp$xlcusx999i
-un_df_cur_caution_gdp$pct <- 100*(un_df_cur_caution_gdp$caution_dollar/un_df_cur_caution_gdp$GDP.TTL)
-
-
-
-filter(un_df_cur_caution_gdp, Item == "MIXED INCOME, NET")
-
-rbindlist(lapply(unique(un_df_cur_caution_gdp$Item), \(x)
-       cpltns_checker(vx = filter(un_df_cur_caution_gdp, Item == x)[,c("iso3c", "year")] %>%
-                          mutate(!!x := 1), varx = x))) %>%
-    filter(PMs_covered_raw > 200)
-
-pdf(paste0(FIG_DIR, "un_value_added.pdf"), width = 17, height = 10)
-filter(un_df_cur_caution_gdp, Item == "Recreation, culture and religion") %>%
-    viz_lines(x="year", y="pct", grp = "iso3c", time_level = "ra", duration = 4, facets = "region", max_lines = 8)
-dev.off()
-
-## hmmm some countries have absurdly high percentages still -> check them individually: un data or conversion factor
-## fortunately not that many 
-
-un_df_cur_caution_gdp %>%
-    group_by(iso3c, Item) %>%
-    summarize(max_pct = max(pct)) %>%
-    filter(max_pct > 5) %>%
-    count(iso3c) %>%
-    ;
-
-filter(un_df_cur_caution, 
-
-
-    
-
-
-
-
-
-
-
 
 ## ** IMF
-
-## *** API 
-
-library(imfr)
-
-df_imf_ids <- as_tibble(imf_ids())
-filter(df_imf_ids, scramblematch("COFOG", description))
-filter(df_imf_ids, scramblematch("cofog", description))
-filter(df_imf_ids, scramblematch("finance", description))
-
-
-
-cofog_codelist <- imf_codelist("GFSCOFOG")
-
-cofog_codelist$codelist
-
-
-## codes seem to be columns?
-## but wouldn't codes be column names in long format?
-## example has 'FILR_PA', 'EREER_IX', which are not in imf_codelist("IFS")
-## example IFS has code "CL_INDICATOR_IFS", also "CL_INDICATOR_BOP" in r manual,
-## also CL_INDICATOR_DOT at https://meshry.com/blog/downloading-data-from-the-imf-api-using-r/
-## COFOG doesn't have INDICATOR code, guess that means API is fucking useless
-cofog_area <- as_tibble(imf_codes("CL_AREA_GFSCOFOG"))
-cofog_sector <- as_tibble(imf_codes("CL_SECTOR_GFSCOFOG"))
-cofog_unit <- as_tibble(imf_codes("CL_UNIT_GFSCOFOG"))
-cofog_cofog <- as_tibble(imf_codes("CL_COFOG_GFSCOFOG"))
-
-## also using return_raw doesn't make it work reeeeeeeee
-cofog_data <- imf_data(
-    database_id = "GFSCOFOG",
-    indicator = c("GF0802"),
-    return_raw = T)
-
-cofog_df <- cofog_data$CompactData$DataSet
-
-cofog_data <- imf_data(
-    database_id = "GFSCOFOG",
-    indicator = c("GF0602"))
-## cofog 
-
-
-
-## **** example
-
-imf_codelist("IFS")
-
-imf_codes("CL_INDICATOR_IFS")
-
-ex_interest <- imf_data(database_id = 'IFS',
-                        indicator = c('FILR_PA', 'EREER_IX'),
-                        freq = 'M')
-
-## maybe should still try to build indexer of all IMF data like for oecd
-## could be useful for searching for tax data
-
-
-
-
-
-
-
 
 
 ## *** just bulk download
@@ -481,9 +368,14 @@ get_imf_data <- function() {
     imf_culture$value <- as.numeric(imf_culture$value)
     imf_culture$iso3c <- countrycode(imf_culture$iso3c, "country.name", "wb")
 
-    imf_culture_wide <- pivot_wider(imf_culture, names_from = COFOG.Function.Code, values_from = value)
+    ## imf_culture_wide <- pivot_wider(imf_culture, names_from = COFOG.Function.Code, values_from = value)
 
-    return(imf_culture_wide)
+    return(
+        select(imf_culture, iso3c, year, Item = COFOG.Function.Code, Value = value) %>%
+        mutate(Item = paste0("IMF_", Item))
+        )
+
+
 }
 
 get_imf_data()
@@ -558,3 +450,51 @@ ggplot(imf_cpr_wide2, aes(x=GF08, y=GF0802, color=iso3c)) +
     geom_point(show.legend=FALSE) +
     xlim(-0.5, 0.5) +
     ylim(-0.25, 0.25)
+
+## ** add currencies
+wid_cur_df <- rename(wid_cur_df, conversion = value)
+
+wid_cur_df_wide <- pivot_wider(wid_cur_df, names_from = variable, values_from = conversion) %>%
+    filter(year >= STARTING_YEAR)
+    
+df_wb$GDP.TTL <- df_wb$NY.GDP.PCAP.CD * df_wb$SP.POP.TOTL
+
+un_df_cur_caution <- as_tibble(merge(un_df_caution, wid_cur_df_wide))
+
+un_df_cur_caution_gdp <- as_tibble(merge(un_df_cur_caution, select(df_wb, iso3c, year, GDP.TTL)))
+
+## should probably divide
+un_df_cur_caution_gdp$caution_dollar <- un_df_cur_caution_gdp$caution / un_df_cur_caution_gdp$xlcusx999i
+un_df_cur_caution_gdp$pct <- 100*(un_df_cur_caution_gdp$caution_dollar/un_df_cur_caution_gdp$GDP.TTL)
+
+
+
+filter(un_df_cur_caution_gdp, Item == "MIXED INCOME, NET")
+
+rbindlist(lapply(unique(un_df_cur_caution_gdp$Item), \(x)
+       cpltns_checker(vx = filter(un_df_cur_caution_gdp, Item == x)[,c("iso3c", "year")] %>%
+                          mutate(!!x := 1), varx = x))) %>%
+    filter(PMs_covered_raw > 200)
+
+pdf(paste0(FIG_DIR, "un_value_added.pdf"), width = 17, height = 10)
+filter(un_df_cur_caution_gdp, Item == "Recreation, culture and religion") %>%
+    viz_lines(x="year", y="pct", grp = "iso3c", time_level = "ra", duration = 4, facets = "region", max_lines = 8)
+dev.off()
+
+## hmmm some countries have absurdly high percentages still -> check them individually: un data or conversion factor
+## fortunately not that many 
+
+un_df_cur_caution_gdp %>%
+    group_by(iso3c, Item) %>%
+    summarize(max_pct = max(pct)) %>%
+    filter(max_pct > 5) %>%
+    count(iso3c) %>%
+    ;
+
+filter(un_df_cur_caution, 
+
+
+    
+
+
+
