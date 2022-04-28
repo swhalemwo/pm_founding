@@ -164,8 +164,8 @@ check_mult_cur <- function(df) {
 }
 
 
-check_mult_cur(un_df3)
-check_mult_cur(un_df3_fltrd)
+## check_mult_cur(un_df3)
+## check_mult_cur(un_df3_fltrd)
 
 
     ## merging item and currency data to see if/how currency changes are reflected in exchange rates
@@ -278,44 +278,88 @@ construct_gvt_consumption_expenditure <- function() {
     ##     cpltns_checker(varx = "some_val")
     ## ## using all Series or not substantially affects sample size..
 
-    return(un_df3_fltrd)
+    return(select(un_df3_fltrd, iso3c, year, Item, Series, Value, Currency))
 }
     
     
 
-## *** asdf
+## *** series combining
+
+combine_un_series <- function() {
+    #' construct the UN series by combining un_df2 (output_gross_value_added_fixed_assests_industry_cur_prices) and un_df3 (govt consumption expenditure)
+    #' also construct cautious (only series 1000) and risky/SMOrc (mean of all series) for each indicator
+
+    un_df2 <- construct_un_df2()
+    un_df3 <- construct_gvt_consumption_expenditure()
+
+    un_df <- as_tibble(rbind(un_df2, un_df3))
+
+    un_df$region <- countrycode(un_df$iso3c, "iso3c", "un.region.name")
+
+    ## **** smorc: just calc mean
+    un_df_smorc <- un_df %>%
+        group_by(iso3c, year, Item, Series) %>%
+        summarize(Value = mean(Value), Item = paste0("UN_SMorc ", Item)) %>%
+        select(iso3c, year, Item, Value)
+
+    ## **** conservative
+    un_df_caution <- un_df %>%
+        filter(Series == 1000) %>%
+        mutate(Item = paste0("UN_caution ", Item)) %>%
+        select(iso3c, year, Item,  Value)
+
+
+    df_un_all <- rbind(un_df_smorc, un_df_caution)
+    return(df_un_all)
+}
+
+
+## *** add currencies
+wid_cur_df <- rename(wid_cur_df, conversion = value)
+
+wid_cur_df_wide <- pivot_wider(wid_cur_df, names_from = variable, values_from = conversion) %>%
+    filter(year >= STARTING_YEAR)
     
-    
-## wid exchange rates are kinda constant -> are probably in Euro
-## actually should check market exchange rate for that 
+df_wb$GDP.TTL <- df_wb$NY.GDP.PCAP.CD * df_wb$SP.POP.TOTL
+
+un_df_cur_caution <- as_tibble(merge(un_df_caution, wid_cur_df_wide))
+
+un_df_cur_caution_gdp <- as_tibble(merge(un_df_cur_caution, select(df_wb, iso3c, year, GDP.TTL)))
+
+## should probably divide
+un_df_cur_caution_gdp$caution_dollar <- un_df_cur_caution_gdp$caution / un_df_cur_caution_gdp$xlcusx999i
+un_df_cur_caution_gdp$pct <- 100*(un_df_cur_caution_gdp$caution_dollar/un_df_cur_caution_gdp$GDP.TTL)
+
+
+
+filter(un_df_cur_caution_gdp, Item == "MIXED INCOME, NET")
+
+rbindlist(lapply(unique(un_df_cur_caution_gdp$Item), \(x)
+       cpltns_checker(vx = filter(un_df_cur_caution_gdp, Item == x)[,c("iso3c", "year")] %>%
+                          mutate(!!x := 1), varx = x))) %>%
+    filter(PMs_covered_raw > 200)
+
+pdf(paste0(FIG_DIR, "un_value_added.pdf"), width = 17, height = 10)
+filter(un_df_cur_caution_gdp, Item == "Recreation, culture and religion") %>%
+    viz_lines(x="year", y="pct", grp = "iso3c", time_level = "ra", duration = 4, facets = "region", max_lines = 8)
+dev.off()
+
+## hmmm some countries have absurdly high percentages still -> check them individually: un data or conversion factor
+## fortunately not that many 
+
+un_df_cur_caution_gdp %>%
+    group_by(iso3c, Item) %>%
+    summarize(max_pct = max(pct)) %>%
+    filter(max_pct > 5) %>%
+    count(iso3c) %>%
+    ;
+
+filter(un_df_cur_caution, 
+
 
     
 
-## probably need some systematic checking of each country with multiple currencies
-## for MLT: could just drop liri, but have to make sure that exchange rate is in for the entire period
 
-## check how many instances of multiple currencies differ substantially
-## fuck the Series issue is fucking me 
-
-
-un_df3_cur %>%
-    ungroup() %>%
-    select(iso3c, year, Value, nbr_series, nbr_curs, Series, Currency) %>%
-    filter(nbr_curs > 1)
-
-
-
-## fuuuuuuuuuuu
-
-
-    
-table(filter(un_df3_cur, nbr_curs > 1)$iso3c)
-## **** currency converter
-
-## WID
-
-currency_cmd <- paste0("select iso3c, year, variable, value from wid_v2 where variable='xlcusp999i' or variable = 'xlcusx999i' and year>=", STARTING_YEAR)
-wid_cur_df <- as_tibble(dbGetQuery(con, currency_cmd))
 
 
 
@@ -490,7 +534,7 @@ get_imf_data <- function() {
     return(imf_culture_wide)
 }
 
-## get_imf_data()
+get_imf_data()
     
 ## imf_culture$region <- countrycode(imf_culture$iso3c, "iso3c", "un.region.name")
 
