@@ -41,46 +41,38 @@ table(df_stani4_2016$VAR) %>% sort()
 
 
 ## ** ILO
-ilo_df_files <- list.files(paste0(PROJECT_DIR, "data/ILO"))
-names(ilo_df_files) <- lapply(ilo_df_files, function(x) substring(x, 1, nchar(x)-4))
 
-ilo_dfs <- lapply(ilo_df_files, function(x) as_tibble(read.csv(paste0(PROJECT_DIR, "data/ILO/", x))))
 
-name_ilo_df <- function(x) {
-    col_name = enquo(x)
+proc_ilo_df <- function(ilo_df_id) {
+    #' process the ILO dfs (different resolution)
 
-    select(ilo_dfs[[x]], ref_area.label, time, get(col_name) = obs_value)
+    dfx <- ilo_dfs[[ilo_df_id]]
+
+    dfx$iso3c <- countrycode(dfx$ref_area.label, "country.name", "iso3c")
+    dfx$year <- dfx$time
+
+    dfx$Item <- ilo_df_id
+    dfx$Value <- dfx$obs_value
+
+    return(select(dfx, iso3c, year, Item, Value))
+
+
 }
-    
 
-lapply(names(ilo_dfs), function(x)
-    
-       )
+gen_ilo_df <- function() {
+    ilo_df_files <- list.files(paste0(PROJECT_DIR, "data/ILO"))
+    names(ilo_df_files) <- lapply(ilo_df_files, function(x) substring(x, 1, nchar(x)-4))
 
-
-
-ilo_df <- as_tibble(read.csv(paste0(PROJECT_DIR, "data/ILO/EMP_TEMP_SEX_ECO_NB_A-filtered-2022-03-31.csv")))
-ilo_df <- as_tibble(read.csv(paste0(PROJECT_DIR, "data/ILO/EMP_TEMP_SEX_EC2_NB_A-filtered-2022-03-31.csv")))
-as.data.frame(head(ilo_df))
+    ilo_dfs <- lapply(ilo_df_files, function(x) as_tibble(read.csv(paste0(PROJECT_DIR, "data/ILO/", x))))
 
 
-ilo_df$iso3c <- countrycode(ilo_df$ref_area.label, "country.name", "iso3c")
-ilo_df$year <- ilo_df$time
-ilo_df$region <- countrycode(ilo_df$iso3c, "iso3c", "un.region.name")
-
-viz_lines(ilo_df, x="year", y="obs_value", time_level = "ra", grp= "iso3c", duration = 4, facets = "region", max_lines = 8)
-
-ilo_df %>%
-    group_by(iso3c) %>%
-    summarize(min_year = min(year)) %>%
-    pull(min_year) %>%
-    hist()
+    ilo_df <- Reduce(function(x,y,...) rbind(x,y), lapply(names(ilo_dfs), proc_ilo_df))
+    return(ilo_df)
+}
 
 
 
 
-
-cpltns_checker(filter(ilo_df, sex.label == "Sex: Total") , "obs_value")
 
 ## ** UN
 
