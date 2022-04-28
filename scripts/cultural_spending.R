@@ -281,18 +281,24 @@ combine_un_series <- function() {
     #' construct the UN series by combining un_df2 (output_gross_value_added_fixed_assests_industry_cur_prices) and un_df3 (govt consumption expenditure)
     #' also construct cautious (only series 1000) and risky/SMOrc (mean of all series) for each indicator
 
+    
+
     un_df2 <- construct_un_df2()
     un_df3 <- construct_gvt_consumption_expenditure()
 
     un_df <- as_tibble(rbind(un_df2, un_df3))
 
-    un_df$region <- countrycode(un_df$iso3c, "iso3c", "un.region.name")
+    ## un_df$region <- countrycode(un_df$iso3c, "iso3c", "un.region.name")
 
+    
     ## **** smorc: just calc mean
     un_df_smorc <- un_df %>%
-        group_by(iso3c, year, Item, Series) %>%
-        summarize(Value = mean(Value), Item = paste0("UN_SMorc ", Item)) %>%
+        mutate(Item = paste0("UN_SMOrc ", Item)) %>%
+        group_by(iso3c, year, Item) %>%
+        summarize(Value = mean(Value)) %>%
         select(iso3c, year, Item, Value)
+
+
 
     ## **** conservative
     un_df_caution <- un_df %>%
@@ -442,6 +448,33 @@ ggplot(imf_cpr_wide2, aes(x=GF08, y=GF0802, color=iso3c)) +
     geom_point(show.legend=FALSE) +
     xlim(-0.5, 0.5) +
     ylim(-0.25, 0.25)
+
+
+## ** merging all
+
+cult_df <- as_tibble(Reduce(function(x,y) rbind(x,y),
+                            list(
+                                gen_ilo_df(),
+                                combine_un_series(),
+                                get_imf_data())))
+                                
+unique(cult_df$Item)
+
+cult_cpltns_res <- rbindlist(lapply(unique(cult_df$Item), \(x)
+       cpltns_checker(vx = filter(cult_df, Item == x)[,c("iso3c", "year")] %>%
+                          mutate(!!x := 1), varx = x))) %>%
+    as_tibble()
+ 
+cult_cpltns_res[order(cult_cpltns_res$nobs, decreasing = T),]
+
+filter(cult_df, Item == "UN_SMorc Recreation, culture and religion")
+
+    select(iso3c, year) %>%
+    unique()
+
+
+
+
 
 ## ** add currencies
 wid_cur_df <- rename(wid_cur_df, conversion = value)
