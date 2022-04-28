@@ -502,9 +502,22 @@ curs_to_rename <- list(
     list(from = "zloty", to = "Zloty"),
     list(from = "Russian ruble (re-denom. 1:1000)", to = "Russian Ruble"),
     list(from = "Swedish krona", to = "Swedish Krona")
-    
-    
 )
+
+## https://stackoverflow.com/questions/19265172/converting-two-columns-of-a-data-frame-to-a-named-vector
+curs_to_rename_cfg <- rbindlist(curs_to_rename) %>%
+    pull(from, to)
+
+## https://github.com/tidyverse/dplyr/issues/3899
+
+un_df3_fltrd <- filter(un_df3, Currency_tws %!in% curs_to_yeet)
+un_df3_fltrd$Currency_tws <- recode(un_df3_fltrd$Currency_tws, !!!curs_to_rename_cfg)
+
+
+
+    
+
+## *** asdf
     
     
 ## wid exchange rates are kinda constant -> are probably in Euro
