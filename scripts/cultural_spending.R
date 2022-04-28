@@ -84,134 +84,65 @@ cpltns_checker(filter(ilo_df, sex.label == "Sex: Total") , "obs_value")
 
 ## ** UN
 
-## *** exploration of all UN dfs related to cultural spending
+## *** WID currency converter
 
-## un_df <- as_tibble(read.csv(paste0(PROJECT_DIR, "data/UN/UNdata_Export_20220331_131339247.csv")))
-## table(un_df$SNA93.Item.Code)
+get_wid_cur_converter <- function() {
 
-## un_df$iso3c <- countrycode(un_df$Country.or.Area, "country.name", "iso3c")
-## un_df$region <- countrycode(un_df$iso3c, "iso3c", "un.region.name")
-## un_df$year <- un_df$Year
-
-## filter(un_df, SNA93.Item.Code=="R") %>% na.omit() %>%
-##     cpltns_checker(varx="Value")
-    
-## filter(un_df, SNA93.Item.Code=="R") %>%
-##     pull(iso3c) %>%
-##     table()
-              
-
-## filter(un_df, SNA93.Item.Code=="R") %>%
-##     viz_lines(x="year", y="Value", time_level = "ra", grp= "iso3c", duration = 4, facets = "region", max_lines = 8)
-
-un_dfs <- list(
-list(filename="UNdata_output_gross_value_added_fixed_assests_industry_cur_prices.csv", yearcol="Year"),
-list(filename="UNdata_value_added_cur_prices_ISIC.csv", yearcol="Year"),
-list(filename="UNdata_value_added_industry_constant_prices.csv", yearcol="Fiscal.Year"),
-list(filename="UNdata_value_added_by_econ_activity_cur_prices_nat_cur.csv", yearcol="Year")
-)
-
-names(un_dfs) <- unlist(lapply(un_dfs, function(x) substring(x['filename'], first=1, last=nchar(x['filename'])-4)))
-
-un_df <- lapply(un_dfs, function(x) as_tibble(read.csv(paste0(PROJECT_DIR, "data/UN/", x['filename']))))
-
-
-
-check_un_cpltns <- function(filename, yearcol){
-    
-    un_dfx <- as_tibble(read.csv(paste0(PROJECT_DIR, "data/UN/", filename)))
-
-    un_dfx$iso3c <- countrycode(un_dfx$Country.or.Area, "country.name", "iso3c")
-    un_dfx$year <- un_dfx[[yearcol]]
-
-    cpltns_res <- un_dfx %>%
-        group_by(iso3c, year) %>%
-        summarize(some_val=1) %>%
-        cpltns_checker(varx="some_val")
-
-    return(cpltns_res)
-    
+    currency_cmd <- paste0("select iso3c, year, variable, value from wid_v2 where variable='xlcusp999i' or variable = 'xlcusx999i' and year>=", STARTING_YEAR)
+    wid_cur_df <- as_tibble(dbGetQuery(con, currency_cmd))
+    return(wid_cur_df)
 }
 
-rbindlist(lapply(un_dfs, function(x) check_un_cpltns(x[['filename']], x[['yearcol']])))
-## only UNdata_output_gross_value_added_fixed_assests_industry_cur_prices.csv has any decent coverage
-
-## *** exploration of output_gross_value_added_fixed_assests_industry_cur_prices
-
-un_df2 <- as_tibble(read.csv(paste0(PROJECT_DIR, "data/UN/", "UNdata_output_gross_value_added_fixed_assests_industry_cur_prices.csv")))
-
-## but also so many different things
-
-table(un_df2$Country.or.Area)
-table(un_df2$Item) %>% sort()
-
-un_df2$iso3c <- countrycode(un_df2$Country.or.Area, "country.name", "iso3c")
-un_df2$year <- un_df2$Year
-un_df2$region <- countrycode(un_df2$iso3c, "iso3c", "un.region.name")
-
-## pivoting UN df to wide to see how good coverage is if all variables are combined
-
-un_df2_wide <- select(un_df2, iso3c, year, Item, Value, Series) %>%
-    filter(Item != "") %>%
-    pivot_wider(names_from = Item, values_from = Value)
-
-
-## *** compare coverage of series 1000 with no series restriction
-
-
-un_cpltns_check_1k <- lapply(head(unique(un_df2$Item),-1),
-       function(x) cpltns_checker(vx = filter(un_df2_wide, Series ==1000)[,c("iso3c", "year", x)], varx = x)) %>%
-    rbindlist() %>%
-    filter(PMs_covered_raw > 200)
-
-un_cpltns_check_all <- lapply(head(unique(un_df2$Item),-1),
-       function(x) cpltns_checker(vx = filter(un_df2_wide)[,c("iso3c", "year", x)], varx = x)) %>%
-    rbindlist() %>%
-    filter(PMs_covered_raw > 200)
-
-
-## *** series combining
-
-## **** smorc: just calc mean
-un_df2 %>%
-    group_by(iso3c, year, Item, Series) %>%
-    summarize(smorc = mean(Value))
-
-## **** conservative
-un_df2 %>%
-    filter(Series == 1000) %>%
-    select(iso3c, year, Item, caution = Value)
-
-
-names(un_df2)
-names(un_df3)
-
-## **** currency check
-
-un_df2_cur <- un_df2 %>%
-    group_by(iso3c, year) %>%
-    mutate(nbr_curs = len(unique(Currency)))
-
-table(filter(un_df2_cur, nbr_curs > 1)$iso3c)
-
-un_df2_cur %>%
-    ungroup %>%
-    filter(nbr_curs > 1) %>%
-    select(iso3c, Currency)%>%
-    unique()
+wid_cur_df <- get_wid_cur_converter()
 
 
 
-table(un_df2_cur$nbr_curs)
+## *** df2
 
-filter(un_df2_cur, nbr_curs > 1) %>%
-    select(iso3c, year, Item, Currency) %>%
-    as.data.frame()
+construct_un_df2 <- function() {
+    #' read in un_df2
+    un_df2 <- as_tibble(read.csv(paste0(PROJECT_DIR, "data/UN/", "UNdata_output_gross_value_added_fixed_assests_industry_cur_prices.csv")))
 
-## fuck some countries have multiple currencies
-## at least LTU and LVA have euros, and then only BGR left -> can take care of that manually
+    un_df2$iso3c <- countrycode(un_df2$Country.or.Area, "country.name", "iso3c")
+    un_df2$year <- un_df2$Year
+    un_df2$region <- countrycode(un_df2$iso3c, "iso3c", "un.region.name")
 
-## ***** un_df3
+    ## pivoting UN df to wide to see how good coverage is if all variables are combined
+
+    ## un_df2_cur %>%
+    ## ungroup %>%
+    ## filter(nbr_curs > 1) %>%
+    ## select(iso3c, Currency)%>%
+    ## unique()
+
+    
+    ## fuck some countries have multiple currencies
+    ## at least LTU and LVA have euros, and then only BGR left -> can take care of that manually
+
+    ## actually kinda helped that I did it with un_df3 before:
+    ## now can just yeet lats, litas, and lev (re-denom. 1:1000)
+
+    curs_to_yeet <- c("lev (re-denom. 1:1000)", "lats", "litas")
+    curs_to_rename <- c("euro" = "Euro")
+
+    un_df2_fltrd <- filter(un_df2, Currency %!in% curs_to_yeet, year >= STARTING_YEAR)
+    un_df2_fltrd$Currency <- recode(un_df2_fltrd$Currency, !!!curs_to_rename)
+
+    return(select(un_df2_fltrd, iso3c, year, Series, Item, Value, Currency))
+}
+
+## un_df2_fltrd %>%
+##     group_by(iso3c, year) %>%
+##     mutate(nbr_curs = len(unique(Currency))) %>%
+##     filter(nbr_curs > 1) %>%
+##     ungroup() %>%
+##     select(iso3c, Currency) %>%
+##     unique()
+## duplicate currencies gone 
+
+
+
+## *** un_df3
 
 check_mult_cur <- function(df) {
     #' check if there countries where there are multiple currencies
