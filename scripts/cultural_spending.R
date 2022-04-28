@@ -213,42 +213,34 @@ filter(un_df2_cur, nbr_curs > 1) %>%
 
 ## ***** un_df3
 
+check_mult_cur <- function(df) {
+    #' check if there countries where there are multiple currencies
+    #' requires iso3c, year and Currency
 
-un_df3 <- as_tibble(read.csv(paste0(PROJECT_DIR, "data/UN/UNdata_Gvt_consumption_expenditure.csv")))
+    cur_df <- df %>%
+        group_by(iso3c, year) %>%
+        mutate(nbr_curs = n_distinct(Currency_tws), nbr_series = n_distinct(Currency_tws))
 
-un_df3$iso3c <- countrycode(un_df3$Country.or.Area, "country.name", "iso3c")
-un_df3$year <- un_df3$Year
-un_df3$region <- countrycode(un_df3$iso3c, "iso3c", "un.region.name")
+    cur_anls_df <- cur_df %>%
+        ungroup() %>%
+        filter(nbr_curs > 1) %>%
+        select(iso3c, Currency_tws) %>%
+        unique() %>%
+        as.data.frame()
 
-## un_df3 %>%
-##     group_by(iso3c, year) %>%
-##     summarize(some_val=1) %>%
-##     cpltns_checker("some_val")
+    return(cur_anls_df)
 
-## viz_lines(un_df3, x="year", y="Value", grp="iso3c", time_level = "ra", duration = 4, max_lines = 8, facets = "region")
-
-
-un_df3$Currency_tws <- trimws(un_df3$Currency)
-
-un_df3_cur <- un_df3 %>%
-    group_by(iso3c, year) %>%
-    mutate(nbr_curs = n_distinct(Currency_tws), nbr_series = n_distinct(Currency_tws))
-
-table(un_df3_cur$nbr_curs)
-
-## manually investigate cases that have more than one currency at least for one year
-un_df3_cur %>%
-    ungroup() %>%
-    filter(nbr_curs > 1) %>%
-    select(iso3c, Currency_tws) %>%
-    unique() %>%
-    as.data.frame()
+}
 
 
-## merging item and currency data to see if/how currency changes are reflected in exchange rates
-## and whether that impacts coverage
+check_mult_cur(un_df3)
+check_mult_cur(un_df3_fltrd)
 
-## rbind or merge + pivot_longer? rbind lol
+
+    ## merging item and currency data to see if/how currency changes are reflected in exchange rates
+    ## and whether that impacts coverage
+
+    ## rbind or merge + pivot_longer? rbind lol
 
 check_cry_cur <- function(cry) {
     #' plot currencies and series for a country to determine for each country with multiple currencies whether to drop or rename currencies
@@ -268,64 +260,96 @@ check_cry_cur <- function(cry) {
 
 }
 
-check_cry_cur("DEU")
+## check_cry_cur("DEU")
 
 
-curs_to_yeet <- c(
-    "1999 ATS euro / euro","Austrian schilling",
-    "Azerbaijan manat",
-    "1999 BEF euro / euro", "Belgian franc",
-    "lev (re-denom. 1:1000)",
-    "Cyprus pound",
-    "Estonian kroon", "Estonian Kroon",
-    "1999 FIM euro / euro", "Finish markka",
-    "1999 FRF euro / euro", "French franc",
-    "1999 DEM euro / euro", "deutsche mark",
-    "2001 GRD euro / euro",
-    "1999 IEP euro / euro",
-    "1999 ITL euro / euro", "Italian lira",
-    "lats",
-    "Litas", "litas",
-    "1999 LUF Euro / Euro", "1999 LUF euro / euro", "Luxembourg franc",
-    "Maltese liri",
-    "1999 NLG euro / euro", "1999 NLG Euro / Euro",
-    "1999 PTE euro / euro", "Portuguese escudo",
-    "Romanian Leu",
-    "Russian ruble",
-    "Slovak koruna", "Slovak Koruna",
-    "Slovenian tolar", "tolar",
-    "1999 ESP euro / euro", "peseta",
-    "bolivar")
+construct_gvt_consumption_expenditure <- function() {
+    #' final construction function of un_df3
 
-## filter(wid_cur_df, iso3c == "VEN") %>%
-##     ggplot(aes(x=year, y=log10(value))) +
-##     facet_wrap(~variable) +
-##     geom_line()
+    un_df3 <- as_tibble(read.csv(paste0(PROJECT_DIR, "data/UN/UNdata_Gvt_consumption_expenditure.csv")))
+
+    un_df3$iso3c <- countrycode(un_df3$Country.or.Area, "country.name", "iso3c")
+    un_df3$year <- un_df3$Year
+    un_df3$region <- countrycode(un_df3$iso3c, "iso3c", "un.region.name")
+
+    ## un_df3 %>%
+    ##     group_by(iso3c, year) %>%
+    ##     summarize(some_val=1) %>%
+    ##     cpltns_checker("some_val")
+
+    ## viz_lines(un_df3, x="year", y="Value", grp="iso3c", time_level = "ra", duration = 4, max_lines = 8, facets = "region")
+
+
+    un_df3$Currency_tws <- trimws(un_df3$Currency) 
+    ## here: investigate which currencies have to be renamed or dropped (countries from check_mult_cur), investigation with check_cry_cur
+
+
+    curs_to_yeet <- c(
+        "1999 ATS euro / euro","Austrian schilling",
+        "Azerbaijan manat",
+        "1999 BEF euro / euro", "Belgian franc",
+        "lev (re-denom. 1:1000)",
+        "Cyprus pound",
+        "Estonian kroon", "Estonian Kroon",
+        "1999 FIM euro / euro", "Finish markka",
+        "1999 FRF euro / euro", "French franc",
+        "1999 DEM euro / euro", "deutsche mark",
+        "2001 GRD euro / euro",
+        "1999 IEP euro / euro",
+        "1999 ITL euro / euro", "Italian lira",
+        "lats",
+        "Litas", "litas",
+        "1999 LUF Euro / Euro", "1999 LUF euro / euro", "Luxembourg franc",
+        "Maltese liri",
+        "1999 NLG euro / euro", "1999 NLG Euro / Euro",
+        "1999 PTE euro / euro", "Portuguese escudo",
+        "Romanian Leu",
+        "Russian ruble",
+        "Slovak koruna", "Slovak Koruna",
+        "Slovenian tolar", "tolar",
+        "1999 ESP euro / euro", "peseta",
+        "bolivar")
+
+    ## filter(wid_cur_df, iso3c == "VEN") %>%
+    ##     ggplot(aes(x=year, y=log10(value))) +
+    ##     facet_wrap(~variable) +
+    ##     geom_line()
 
     
-curs_to_rename <- list(
-    list(from = "pataca", to = "Pataca"),
-    list(from = "Danish Krone (DDK.)", to = "Danish Krone"),
-    list(from = "forint", to = "Forint"),
-    list(from = "euro", to = "Euro"),
-    list(from = "pakistan rupee", to = "Pakistan Rupee"),
-    list(from = "Pakistan rupee", to = "Pakistan Rupee"),
-    list(from = "zloty", to = "Zloty"),
-    list(from = "Russian ruble (re-denom. 1:1000)", to = "Russian Ruble"),
-    list(from = "Swedish krona", to = "Swedish Krona")
-)
+    curs_to_rename <- list(
+        list(from = "pataca", to = "Pataca"),
+        list(from = "Danish Krone (DDK.)", to = "Danish Krone"),
+        list(from = "forint", to = "Forint"),
+        list(from = "euro", to = "Euro"),
+        list(from = "pakistan rupee", to = "Pakistan Rupee"),
+        list(from = "Pakistan rupee", to = "Pakistan Rupee"),
+        list(from = "zloty", to = "Zloty"),
+        list(from = "Russian ruble (re-denom. 1:1000)", to = "Russian Ruble"),
+        list(from = "Swedish krona", to = "Swedish Krona")
+    )
 
-## https://stackoverflow.com/questions/19265172/converting-two-columns-of-a-data-frame-to-a-named-vector
-curs_to_rename_cfg <- rbindlist(curs_to_rename) %>%
-    pull(from, to)
+    countries_to_yeet <- c("VEN")
+    ## VEN data is whack
 
-## https://github.com/tidyverse/dplyr/issues/3899
+    ## https://stackoverflow.com/questions/19265172/converting-two-columns-of-a-data-frame-to-a-named-vector
+    curs_to_rename_cfg <- rbindlist(curs_to_rename) %>%
+        pull(to, from)
 
-un_df3_fltrd <- filter(un_df3, Currency_tws %!in% curs_to_yeet)
-un_df3_fltrd$Currency_tws <- recode(un_df3_fltrd$Currency_tws, !!!curs_to_rename_cfg)
+    ## https://github.com/tidyverse/dplyr/issues/3899
 
+    un_df3_fltrd <- filter(un_df3, Currency_tws %!in% curs_to_yeet, iso3c %!in% countries_to_yeet, year >= STARTING_YEAR)
+    un_df3_fltrd$Currency_tws <- recode(un_df3_fltrd$Currency_tws, !!!curs_to_rename_cfg)
 
+    ## un_df3_fltrd %>%
+    ##     ## filter(Series == 1000) %>%
+    ##     group_by(iso3c, year) %>%
+    ##     summarize(some_val = 1) %>%
+    ##     cpltns_checker(varx = "some_val")
+    ## ## using all Series or not substantially affects sample size..
 
+    return(un_df3_fltrd)
+}
+    
     
 
 ## *** asdf
