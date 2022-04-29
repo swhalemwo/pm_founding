@@ -452,26 +452,67 @@ ggplot(imf_cpr_wide2, aes(x=GF08, y=GF0802, color=iso3c)) +
 
 ## ** merging all
 
-cult_df <- as_tibble(Reduce(function(x,y) rbind(x,y),
+df_cult <- as_tibble(Reduce(function(x,y) rbind(x,y),
                             list(
                                 gen_ilo_df(),
                                 combine_un_series(),
                                 get_imf_data())))
                                 
-unique(cult_df$Item)
+unique(df_cult$Item)
 
-cult_cpltns_res <- rbindlist(lapply(unique(cult_df$Item), \(x)
-       cpltns_checker(vx = filter(cult_df, Item == x)[,c("iso3c", "year")] %>%
+t1 = Sys.time()
+cult_cpltns_res <- rbindlist(lapply(unique(df_cult$Item), \(x)
+       cpltns_checker(vx = filter(df_cult, Item == x)[,c("iso3c", "year")] %>%
                           mutate(!!x := 1), varx = x))) %>%
     as_tibble()
- 
-cult_cpltns_res[order(cult_cpltns_res$nobs, decreasing = T),]
+t2 = Sys.time()
 
-filter(cult_df, Item == "UN_SMorc Recreation, culture and religion")
+as.numeric(t2-t1)/len(unique(df_cult$Item))*3000
 
-    select(iso3c, year) %>%
-    unique()
+cult_cpltns_res[order(cult_cpltns_res$nobs, decreasing = T),] %>%
+    select(varx, nobs, ratio_opngs_cvrd, nbr_of_crys_geq3)
 
+
+## ** substitution
+## *** exploring possibilities
+
+df_cult_wide <- df_cult %>%
+    ## filter(!scramblematch("UN_SMOrc", Item)) %>% ## uncomment to exclude SMOrc
+    na.omit() %>%
+    pivot_wider(names_from = Item, values_from = Value)
+    
+df_cult_wide$some_val <- 1
+cpltns_checker(df_cult_wide, "some_val")
+
+
+## *** getting vars
+
+## **** bruteforcing
+cult_vars <- filter(df_cult, !scramblematch("UN_SMOrc", Item)) %>%
+    pull(Item) %>%  unique()
+
+combns <- combn(cult_vars, 3, simplify = F)
+
+
+combn_res <- mclapply(combns, \(x) df_cult_wide[c("iso3c", "year", x)] %>%
+    pivot_longer(cols=x) %>%
+    na.omit() %>%
+    pivot_wider() %>%
+    mutate(!!paste(x, collapse = "---") := 1) %>%
+    cpltns_checker(varx=paste0(x, collapse = '---')), mc.cores = 8)
+    
+combn_res_df <- rbindlist(combn_res) %>%
+    as_tibble()
+
+combn_res_df[order(combn_res_df$nobs, decreasing = T),] %>%
+    select(varx, nobs)
+## 4k take around 1-2 minutes
+
+
+## **** nobs-based approach
+
+
+df <- data.frame(a=c(1,NA,NA,1,NA), b=c(NA,1,NA,1,NA), c=c(1,NA,NA,NA,1), d=c(1,1,1,1,NA))
 
 
 
