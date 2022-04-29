@@ -415,7 +415,8 @@ create_facets <- function(dfx, facets, grp, max_lines) {
 
 
 
-viz_lines <- function(dfx, x, y, time_level, duration, grp, extra =FALSE, div=FALSE, max_lines=12,
+viz_lines <- function(dfx, x ="year", y, time_level = "ra", duration = 4, grp = "iso3c",
+                      extra =FALSE, div=FALSE, max_lines=8,
                       return ="df",fill_up = FALSE, facets="facetcol")  {
     #' general vizualization function
     #' dfx: overall dataframe, containing at least columns for
