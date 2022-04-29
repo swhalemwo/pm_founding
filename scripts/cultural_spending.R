@@ -375,7 +375,7 @@ get_imf_data <- function() {
 ## ** merging all
 
 gen_cult_spending <- function() {
-    #' combine everything into nice 
+    #' combine everything into nice function
 
     df_cult <- as_tibble(Reduce(function(x,y) rbind(x,y),
                                 list(
