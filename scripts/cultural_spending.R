@@ -1,52 +1,13 @@
 ## * cultural spending stuff
 
 
-culture_df <- filter_sdmx_results("cultural services")
-filter(culture_df, !grepl("agricult", description.en, ignore.case = T))
-filter(culture_df, !grepl("agricult", description.en, ignore.case = T))$description.en
-filter(culture_df, !grepl("agricult", description.en, ignore.case = T))$id
-
-grepl("agricult", culture_df$description.en, ignore.case = T)
-
-
-
-filter_sdmx_results("museum") %>% as.data.frame()
-    
-
-## * check my original findings
-## no idea how I got those anymore
-
-culture_df2 <- filter_sdmx_results("cultural")
-
-## ** STAN generally 
-
-filter(culture_df2, grepl("STAN", sdmx_id, ignore.case = T))$description.en
-
-## ** stan08bis
-
-filter(culture_df2, sdmx_id == "STAN08BIS")
-
-df_stan08bis <- as_tibble(read.csv(paste0(OECD_DATA_DIR, "STAN08BIS")))
-as.data.frame(head(df_stan08bis))
-
-table(df_stan08bis$VAR) %>% sort() %>% as.data.frame()
-
-## ** STANI4_2016
-
-filter(culture_df2, sdmx_id == "STANI4_2016")
-df_stani4_2016 <- as_tibble(read.csv(paste0(OECD_DATA_DIR, "STANI4_2016")))
-
-table(df_stani4_2016$VAR) %>% sort()
-
-
-
 ## ** ILO
 
 
-proc_ilo_df <- function(ilo_df_id) {
+proc_ilo_df <- function(ilo_df_id, dfx) {
     #' process the ILO dfs (different resolution)
 
-    dfx <- ilo_dfs[[ilo_df_id]]
+    ## dfx <- ilo_dfs[[ilo_df_id]]
 
     dfx$iso3c <- countrycode(dfx$ref_area.label, "country.name", "iso3c")
     dfx$year <- dfx$time
@@ -66,7 +27,7 @@ gen_ilo_df <- function() {
     ilo_dfs <- lapply(ilo_df_files, function(x) as_tibble(read.csv(paste0(PROJECT_DIR, "data/ILO/", x))))
 
 
-    ilo_df <- Reduce(function(x,y,...) rbind(x,y), lapply(names(ilo_dfs), proc_ilo_df))
+    ilo_df <- Reduce(function(x,y,...) rbind(x,y), lapply(names(ilo_dfs), \(x) proc_ilo_df(x, dfx = ilo_dfs[[x]])))
     return(ilo_df)
 }
 
@@ -86,7 +47,9 @@ get_wid_cur_converter <- function() {
 }
 
 wid_cur_df <- get_wid_cur_converter()
-
+wid_cur_df <- rename(wid_cur_df, conversion = value)
+wid_cur_df_wide <- pivot_wider(wid_cur_df, names_from = variable, values_from = conversion) %>%
+    filter(year >= STARTING_YEAR)
 
 
 ## *** df2
@@ -391,14 +354,14 @@ get_imf_data <- function() {
 
 }
 
-get_imf_data()
+## get_imf_data()
     
 ## imf_culture$region <- countrycode(imf_culture$iso3c, "iso3c", "un.region.name")
 
 ## viz_lines(imf_culture, x="year", y="value", time_level = "ra", duration = 3, grp="iso3c", facets = "region", max_lines = 6)
 
-cpltns_checker(filter(imf_culture, COFOG.Function.Code=="GF0802"), "value")
-cpltns_checker(filter(imf_culture, COFOG.Function.Code=="GF08"), "value")
+## cpltns_checker(filter(imf_culture, COFOG.Function.Code=="GF0802"), "value")
+## cpltns_checker(filter(imf_culture, COFOG.Function.Code=="GF08"), "value")
        
 
 ## GF0802: so far basically Europe plus handful of Asian countries, no US (LUL/Latin America, Africa), around 800-900 nobs
@@ -406,205 +369,69 @@ cpltns_checker(filter(imf_culture, COFOG.Function.Code=="GF08"), "value")
 ## have to do that properly lol
 
 
-## *** correlation check
-## compare cultural services (GF0802) and Expenditure on recreation, culture, & religion (GF08, overarching category)
-## have to do that systematically too 
 
-
-
-imf_cpr <- filter(imf_df_melt,
-       COFOG.Function.Code %in% c("GF08", "GF0802"),
-       Sector.Name == "General government",
-       Unit.Name == "Percent of GDP",
-       ## Country.Name == "Germany",
-       year >= 1985,
-       Attribute == "Value",
-       value != ""
-       ) %>%
-    mutate(value=as.numeric(value)) %>%
-    select(iso3c = Country.Name, year, cofog_code = COFOG.Function.Code, value)
-
-imf_cpr_wide <- pivot_wider(imf_cpr, names_from = cofog_code)
-
-imf_cpr_wide <- imf_cpr %>%
-    group_by(iso3c, cofog_code) %>%
-    mutate(vlu_mean = mean(value)) %>%
-    mutate(diff = value - vlu_mean)
-    
-imf_cpr_wide2 <-
-    imf_cpr_wide %>%
-    select(iso3c, year, cofog_code, diff) %>%
-    pivot_wider(names_from = cofog_code, values_from = diff)
-
-
-imf_cpr_wide %>%
-    group_by(iso3c) %>%
-    mutate(GF08_mean = mean(GF08, na.rm = T), GF0802_mean = mean(GF0802, na.rm = T))
-
-
-
-
-
-cor(imf_cpr_wide$GF08, imf_cpr_wide$GF0802, use = "complete.obs")
-cor(imf_cpr_wide2$GF08, imf_cpr_wide2$GF0802, use = "complete.obs")
-
-na.omit(imf_cpr_wide)
-
-plot(imf_cpr_wide2$GF08, imf_cpr_wide2$GF0802)
-## hmm 0.85 correlation, that seems pretty good tbh
-## but what if values are not missing at random, which they probably aren't?
-## SOL?
-## there could be countries that don't fund cultural services at all?
-
-## also need to consider longitudinal nature, can't just throw them all together
-## demeaning both vars: correlation down to 0.63
-
-ggplot(imf_cpr_wide2, aes(x=GF08, y=GF0802, color=iso3c)) +
-    geom_point(show.legend=FALSE) +
-    xlim(-0.5, 0.5) +
-    ylim(-0.25, 0.25)
 
 
 ## ** merging all
 
-df_cult <- as_tibble(Reduce(function(x,y) rbind(x,y),
-                            list(
-                                gen_ilo_df(),
-                                combine_un_series(),
-                                get_imf_data())))
-                                
-unique(df_cult$Item)
+gen_cult_spending <- function() {
+    #' combine everything into nice 
 
-t1 = Sys.time()
-cult_cpltns_res <- rbindlist(lapply(unique(df_cult$Item), \(x)
-       cpltns_checker(vx = filter(df_cult, Item == x)[,c("iso3c", "year")] %>%
-                          mutate(!!x := 1), varx = x))) %>%
-    as_tibble()
-t2 = Sys.time()
+    df_cult <- as_tibble(Reduce(function(x,y) rbind(x,y),
+                                list(
+                                    gen_ilo_df(),
+                                    combine_un_series(),
+                                    get_imf_data())))
 
-as.numeric(t2-t1)/len(unique(df_cult$Item))*3000
-
-cult_cpltns_res[order(cult_cpltns_res$nobs, decreasing = T),] %>%
-    select(varx, nobs, ratio_opngs_cvrd, nbr_of_crys_geq3)
-
-
-## ** substitution
-## *** exploring possibilities
-
-df_cult_wide <- df_cult %>%
-    ## filter(!scramblematch("UN_SMOrc", Item)) %>% ## uncomment to exclude SMOrc
-    na.omit() %>%
-    pivot_wider(names_from = Item, values_from = Value)
     
-df_cult_wide$some_val <- 1
-cpltns_checker(df_cult_wide, "some_val")
+    ## *** completeness checks
+    ## unique(df_cult$Item)
+
+    ## cult_cpltns_res <- rbindlist(lapply(unique(df_cult$Item), \(x)
+    ##                                     cpltns_checker(vx = filter(df_cult, Item == x)[,c("iso3c", "year")] %>%
+    ##                                                        mutate(!!x := 1), varx = x))) %>%
+    ##     as_tibble()
+
+    ## cult_cpltns_res[order(cult_cpltns_res$nobs, decreasing = T),] %>%
+    ##     select(varx, nobs, ratio_opngs_cvrd, nbr_of_crys_geq3)
 
 
-## *** getting vars
-
-## **** bruteforcing
-cult_vars <- filter(df_cult, !scramblematch("UN_SMOrc", Item)) %>%
-    pull(Item) %>%  unique()
-
-combns <- combn(cult_vars, 3, simplify = F)
+    ## *** use UN_SMOrc Recreation, culture and religion (best coverage), add currencies
+    df_wb$GDP.TTL <- df_wb$NY.GDP.PCAP.CD * df_wb$SP.POP.TOTL
 
 
-combn_res <- mclapply(combns, \(x) df_cult_wide[c("iso3c", "year", x)] %>%
-    pivot_longer(cols=x) %>%
-    na.omit() %>%
-    pivot_wider() %>%
-    mutate(!!paste(x, collapse = "---") := 1) %>%
-    cpltns_checker(varx=paste0(x, collapse = '---')), mc.cores = 8)
-    
-combn_res_df <- rbindlist(combn_res) %>%
-    as_tibble()
+    un_df_smorc <- filter(df_cult, Item == "UN_SMOrc Recreation, culture and religion") %>% na.omit()
+    un_df_smorc_cur <- as_tibble(merge(un_df_smorc, wid_cur_df_wide))
+    summary(un_df_smorc_cur)
+    ## at least not too many NAs for the currency conversions...
+    un_df_smorc_cur_gdp <- as_tibble(merge(un_df_smorc_cur, select(df_wb, iso3c, year, GDP.TTL)))
+    un_df_smorc_cur_gdp <- un_df_smorc_cur_gdp %>%
+        mutate(smorc_dollar_fx = Value/xlcusx999i, smorc_dollar_ppp = Value/xlcusp999i) %>%
+        mutate(pct_fx = 100*(smorc_dollar_fx/GDP.TTL), region = countrycode(iso3c, "iso3c", "un.region.name"))
 
-combn_res_df[order(combn_res_df$nobs, decreasing = T),] %>%
-    select(varx, nobs)
-## 4k take around 1-2 minutes
+    ## validity checks: yeet some countries/country years that are outstandingly weird
 
-
-## **** nobs-based approach
+    ## un_df3 <- construct_gvt_consumption_expenditure()
+    ## un_df3$Currency_tws <- trimws(un_df3$Currency)
+    ## check_cry_cur("QAT")
 
 
-## **** ask on SO
-## https://stackoverflow.com/questions/72055576/select-set-of-columns-so-that-each-row-has-at-least-one-non-na-entry#72055576
+    un_df_smorc_clean <- filter(un_df_smorc_cur_gdp, iso3c != "UKR" | year > 1996,
+                                iso3c != "SMR",
+                                iso3c != "ECU",
+                                iso3c != "QAT")
 
-df_cult_wide_optim <- df_cult_wide[,3:ncol(df_cult_wide)]
+    return(select(un_df_smorc_clean, iso3c, year, pct_fx))
 
-
-best <- function(df){
-    best <- which.max(colSums(sapply(df, complete.cases)))
-    while(any(rowSums(sapply(df[best], complete.cases)) == 0)){
-        
-        best <- c(best, which.max(sapply(df[apply(is.na(df[best]), 1, all), ],  \(x) sum(complete.cases(x)))))
-    }
-    best
 }
 
-best_vars <- best(df_cult_wide_optim)
+## un_df_smorc_clean = gen_cult_spending()
 
-
-
-
-## pull(`UN_SMOrc Recreation, culture and religion`)
-
-## most of the work seems to be done by UN_SMOrc Recreation, culture and religion
-
-## yup seems to work: 
-## most numbers of NAs are 6, while best is 7 vars
-
-## hmm need to check more for how many countries I have only one variable
-
-df_cult_wide$nbr_nas <- apply(is.na(df_cult_wide[names(best_vars)]),1,sum)
-
-filter(df_cult_wide, nbr_nas == 6) %>% select(names(best_vars)) %>%
-    is.na() %>% apply(2, \(x) len(x) - sum(x))
-
-## assess overall coverage of best_vars
-select(df_cult_wide, names(best_vars)) %>%
-    apply(2, is.na) %>% apply(2, \(x) len(x) - sum(x))
-
-## find too other indicators that have largest overlap
-filter(df_cult_wide_optim, !is.na(`UN_SMOrc Recreation, culture and religion`)) %>%
-    apply(2, is.na) %>% apply(2, \(x) len(x) - sum(x)) %>% sort(decreasing = T) %>% enframe()
-## fuck coverage not good
-
-## *** add currencies
-
-un_df_smorc <- filter(df_cult, Item == "UN_SMOrc Recreation, culture and religion") %>% na.omit()
-un_df_smorc_cur <- as_tibble(merge(un_df_smorc, wid_cur_df_wide))
-summary(un_df_smorc_cur)
-## at least not too many NAs for the currency conversions...
-un_df_smorc_cur_gdp <- as_tibble(merge(un_df_smorc_cur, select(df_wb, iso3c, year, GDP.TTL)))
-un_df_smorc_cur_gdp <- un_df_smorc_cur_gdp %>%
-    mutate(smorc_dollar_fx = Value/xlcusx999i, smorc_dollar_ppp = Value/xlcusp999i) %>%
-    mutate(pct_fx = 100*(smorc_dollar_fx/GDP.TTL), region = countrycode(iso3c, "iso3c", "un.region.name"))
-
-## validity checks: yeet some countries/country years that are outstandingly weird
-
-## un_df3 <- construct_gvt_consumption_expenditure()
-## un_df3$Currency_tws <- trimws(un_df3$Currency)
-## check_cry_cur("QAT")
-
-
-un_df_smorc_clean <- filter(un_df_smorc_cur_gdp, iso3c != "UKR" | year > 1996,
-       iso3c != "SMR",
-       iso3c != "ECU",
-       iso3c != "QAT")
-
-
-
-
-
-pdf(paste0(FIG_DIR, "UN_SMOrc_gvt_expenditure.pdf"), width = 17, height = 10)
-viz_lines(un_df_smorc_clean, y="pct_fx", facets = "region")
-## viz_lines(un_df_smorc_cur_gdp, y="pct_fx", facets = "region")
-dev.off()
-
-
-
-
+## pdf(paste0(FIG_DIR, "UN_SMOrc_gvt_expenditure.pdf"), width = 17, height = 10)
+## un_df_smorc_clean$region <- countrycode(un_df_smorc_clean$iso3c, "iso3c", "un.region.name")
+## viz_lines(un_df_smorc_clean, y="pct_fx", facets = "region")
+## ## viz_lines(un_df_smorc_cur_gdp, y="pct_fx", facets = "region")
+## dev.off()
 
 
 
@@ -614,47 +441,7 @@ dev.off()
 ## UN_SMOrc Recreation, culture and religion is doing a lot of the heavy lifting 
 
 
-## ** add currencies
-wid_cur_df <- rename(wid_cur_df, conversion = value)
 
-wid_cur_df_wide <- pivot_wider(wid_cur_df, names_from = variable, values_from = conversion) %>%
-    filter(year >= STARTING_YEAR)
-    
-df_wb$GDP.TTL <- df_wb$NY.GDP.PCAP.CD * df_wb$SP.POP.TOTL
-
-un_df_cur_caution <- as_tibble(merge(un_df_caution, wid_cur_df_wide))
-
-un_df_cur_caution_gdp <- as_tibble(merge(un_df_cur_caution, select(df_wb, iso3c, year, GDP.TTL)))
-
-## should probably divide
-un_df_cur_caution_gdp$caution_dollar <- un_df_cur_caution_gdp$caution / un_df_cur_caution_gdp$xlcusx999i
-un_df_cur_caution_gdp$pct <- 100*(un_df_cur_caution_gdp$caution_dollar/un_df_cur_caution_gdp$GDP.TTL)
-
-
-
-filter(un_df_cur_caution_gdp, Item == "MIXED INCOME, NET")
-
-rbindlist(lapply(unique(un_df_cur_caution_gdp$Item), \(x)
-       cpltns_checker(vx = filter(un_df_cur_caution_gdp, Item == x)[,c("iso3c", "year")] %>%
-                          mutate(!!x := 1), varx = x))) %>%
-    filter(PMs_covered_raw > 200)
-
-pdf(paste0(FIG_DIR, "un_value_added.pdf"), width = 17, height = 10)
-filter(un_df_cur_caution_gdp, Item == "Recreation, culture and religion") %>%
-    viz_lines(x="year", y="pct", grp = "iso3c", time_level = "ra", duration = 4, facets = "region", max_lines = 8)
-dev.off()
-
-## hmmm some countries have absurdly high percentages still -> check them individually: un data or conversion factor
-## fortunately not that many 
-
-un_df_cur_caution_gdp %>%
-    group_by(iso3c, Item) %>%
-    summarize(max_pct = max(pct)) %>%
-    filter(max_pct > 5) %>%
-    count(iso3c) %>%
-    ;
-
-filter(un_df_cur_caution, 
 
 
     

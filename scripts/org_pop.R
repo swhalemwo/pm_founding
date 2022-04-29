@@ -16,6 +16,7 @@ source(paste0(SCRIPT_DIR, "tax_incentives.R"))
 source(paste0(SCRIPT_DIR, "artnews.R"))
 source(paste0(SCRIPT_DIR, "cbn_dfs.R"))
 source(paste0(SCRIPT_DIR, "descriptives.R"))
+source(paste0(SCRIPT_DIR, "cultural_spending.R"))
 
 PMDB_FILE <- "Private museum database2.xlsx"
 PMDB_FILE <- "Private museum database3.xlsx"
