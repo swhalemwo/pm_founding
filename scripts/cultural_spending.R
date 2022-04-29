@@ -176,7 +176,7 @@ check_cry_cur <- function(cry) {
                  mutate(Currency_tws = "curs")) %>%
         rbind(filter(wid_cur_df, iso3c == cry, year > STARTING_YEAR) %>%
               mutate(Currency_tws = "wid", Series = "wid") %>%
-              select(iso3c, year, Value = value, Currency_tws = variable, Series)) %>%
+              select(iso3c, year, Value = conversion, Currency_tws = variable, Series)) %>%
         ggplot(aes(x=year, y=Value, color = factor(Series))) +
         facet_wrap(~Currency_tws, scales = "free_y", nrow=3) +
         geom_line(size=1.5)
@@ -260,8 +260,23 @@ construct_gvt_consumption_expenditure <- function() {
 
     ## https://github.com/tidyverse/dplyr/issues/3899
 
+    
+
     un_df3_fltrd <- filter(un_df3, Currency_tws %!in% curs_to_yeet, iso3c %!in% countries_to_yeet, year >= STARTING_YEAR)
     un_df3_fltrd$Currency_tws <- recode(un_df3_fltrd$Currency_tws, !!!curs_to_rename_cfg)
+
+    ## manual adjustments
+    un_df3_fltrd <- un_df3_fltrd %>% 
+        mutate(Value = ifelse(iso3c == "BLR" & Series == 1000, Value/10000, Value),
+               Value = ifelse(iso3c == "BLR" & Series == 1100, Value/1,Value))
+    ## %>% 
+    ##     filter(iso3c == "BLR") %>% select(iso3c, year, Series, Value)
+
+        
+    ## filter(un_df3_fltrd, iso3c == "BLR") %>% select(iso3c, year, Series, Value)
+        
+    
+
 
     ## un_df3_fltrd %>%
     ##     ## filter(Series == 1000) %>%
@@ -523,21 +538,81 @@ best <- function(df){
     while(any(rowSums(sapply(df[best], complete.cases)) == 0)){
         
         best <- c(best, which.max(sapply(df[apply(is.na(df[best]), 1, all), ],  \(x) sum(complete.cases(x)))))
-
     }
-
     best
-
 }
 
 best_vars <- best(df_cult_wide_optim)
 
-apply(is.na(df_cult_wide[names(best_vars)]),1,sum) %>%
-    hist()
 
+
+
+## pull(`UN_SMOrc Recreation, culture and religion`)
+
+## most of the work seems to be done by UN_SMOrc Recreation, culture and religion
 
 ## yup seems to work: 
 ## most numbers of NAs are 6, while best is 7 vars
+
+## hmm need to check more for how many countries I have only one variable
+
+df_cult_wide$nbr_nas <- apply(is.na(df_cult_wide[names(best_vars)]),1,sum)
+
+filter(df_cult_wide, nbr_nas == 6) %>% select(names(best_vars)) %>%
+    is.na() %>% apply(2, \(x) len(x) - sum(x))
+
+## assess overall coverage of best_vars
+select(df_cult_wide, names(best_vars)) %>%
+    apply(2, is.na) %>% apply(2, \(x) len(x) - sum(x))
+
+## find too other indicators that have largest overlap
+filter(df_cult_wide_optim, !is.na(`UN_SMOrc Recreation, culture and religion`)) %>%
+    apply(2, is.na) %>% apply(2, \(x) len(x) - sum(x)) %>% sort(decreasing = T) %>% enframe()
+## fuck coverage not good
+
+## *** add currencies
+
+un_df_smorc <- filter(df_cult, Item == "UN_SMOrc Recreation, culture and religion") %>% na.omit()
+un_df_smorc_cur <- as_tibble(merge(un_df_smorc, wid_cur_df_wide))
+summary(un_df_smorc_cur)
+## at least not too many NAs for the currency conversions...
+un_df_smorc_cur_gdp <- as_tibble(merge(un_df_smorc_cur, select(df_wb, iso3c, year, GDP.TTL)))
+un_df_smorc_cur_gdp <- un_df_smorc_cur_gdp %>%
+    mutate(smorc_dollar_fx = Value/xlcusx999i, smorc_dollar_ppp = Value/xlcusp999i) %>%
+    mutate(pct_fx = 100*(smorc_dollar_fx/GDP.TTL), region = countrycode(iso3c, "iso3c", "un.region.name"))
+
+## validity checks: yeet some countries/country years that are outstandingly weird
+
+## un_df3 <- construct_gvt_consumption_expenditure()
+## un_df3$Currency_tws <- trimws(un_df3$Currency)
+## check_cry_cur("QAT")
+
+
+un_df_smorc_clean <- filter(un_df_smorc_cur_gdp, iso3c != "UKR" | year > 1996,
+       iso3c != "SMR",
+       iso3c != "ECU",
+       iso3c != "QAT")
+
+
+
+
+
+pdf(paste0(FIG_DIR, "UN_SMOrc_gvt_expenditure.pdf"), width = 17, height = 10)
+viz_lines(un_df_smorc_clean, y="pct_fx", facets = "region")
+## viz_lines(un_df_smorc_cur_gdp, y="pct_fx", facets = "region")
+dev.off()
+
+
+
+
+
+
+
+
+## hmm the basically all variables that combine have decent coverage -> could try imputing 
+
+## UN_SMOrc Recreation, culture and religion is doing a lot of the heavy lifting 
+
 
 ## ** add currencies
 wid_cur_df <- rename(wid_cur_df, conversion = value)
