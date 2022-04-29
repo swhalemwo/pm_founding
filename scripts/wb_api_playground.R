@@ -9,6 +9,11 @@ gdp_vars$indicator
 gdp_vars$indicator_id
 
 filter(gdp_vars, indicator_id == "NY.GDP.MKTP.CD")$indicator_desc
+filter(gdp_vars, indicator_id == "NY.GDP.PCAP.CD")$indicator_desc
+filter(gdp_vars, scramblematch("PPP", indicator_desc))
+filter(gdp_vars, indicator_id == "NY.GDP.PCAP.PP.CD")$indicator_desc
+
+
 
 ## try C1.12
 
