@@ -512,10 +512,32 @@ combn_res_df[order(combn_res_df$nobs, decreasing = T),] %>%
 ## **** nobs-based approach
 
 
-df <- data.frame(a=c(1,NA,NA,1,NA), b=c(NA,1,NA,1,NA), c=c(1,NA,NA,NA,1), d=c(1,1,1,1,NA))
+## **** ask on SO
+## https://stackoverflow.com/questions/72055576/select-set-of-columns-so-that-each-row-has-at-least-one-non-na-entry#72055576
+
+df_cult_wide_optim <- df_cult_wide[,3:ncol(df_cult_wide)]
 
 
+best <- function(df){
+    best <- which.max(colSums(sapply(df, complete.cases)))
+    while(any(rowSums(sapply(df[best], complete.cases)) == 0)){
+        
+        best <- c(best, which.max(sapply(df[apply(is.na(df[best]), 1, all), ],  \(x) sum(complete.cases(x)))))
 
+    }
+
+    best
+
+}
+
+best_vars <- best(df_cult_wide_optim)
+
+apply(is.na(df_cult_wide[names(best_vars)]),1,sum) %>%
+    hist()
+
+
+## yup seems to work: 
+## most numbers of NAs are 6, while best is 7 vars
 
 ## ** add currencies
 wid_cur_df <- rename(wid_cur_df, conversion = value)
