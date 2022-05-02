@@ -315,7 +315,11 @@ generate_artnews_data <- function() {
     cnt_clctrs <- cnt_clctrs %>%
         rename(iso3c=country)
 
-    return (cnt_clctrs)
+    return (select(cnt_clctrs,
+                   iso3c, year, 
+                   clctr_cnt_cpaer = cnt_cpaer,
+                   clctr_cnt_all = cnt_all,
+                   clctr_cpaer_all_diff = clctr_cpaer_all_diff))
 }
 
 
