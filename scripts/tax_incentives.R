@@ -4,6 +4,7 @@ tax_vars_all <- c("NPO.tax.exemption", "Individual.Tax.Incentives", "Corporate.T
 
 tax_vars_caf <- c("NPO.tax.exemption", "Individual.Tax.Incentives", "Corporate.Tax.Incentives", "Estate.Tax.Reducable.by.donation", "money_score", "time_score")
 
+tax_vars_rtgb <- c("NPO.tax.exemption", "Individual.Tax.Incentives")
 
 
 read_in_tax_incentives <- function() {
@@ -208,7 +209,7 @@ get_taxinc_dfs <- function() {
     #' atm var specifications hardcoded here, not sure if they should be moved outside later 
     #' atm also each list specified explicitly, maybe should be generalized into list of configs 
 
-
+    
     df_taxinc <- read_in_tax_incentives()
     
     ## constructing the 
@@ -221,6 +222,14 @@ get_taxinc_dfs <- function() {
                     list(pca = res.pca.caf, lbl = "caf"))
 
     res.pca.dfs <- lapply(res.pca, function(x) create_pca_df(df_taxinc, pca.res = x$pca, id.col = "iso3c", nbr.factors = 2, rename_cols = x$lbl))
+
+     df_manual_sums <- df_taxinc %>% 
+               mutate(sum_core = NPO.tax.exemption + Individual.Tax.Incentives,
+                      sum_more = NPO.tax.exemption + Individual.Tax.Incentives + Corporate.Tax.Incentives + Donations.after.death.exempt,
+                      rtgb_score = ifelse(Score < 0, NA, Score)) %>%
+        select(iso3c, sum_core, sum_more, rtgb_score)
+    
+    res.pca.dfs[[3]] <- df_manual_sums
 
     res.pca.cbn <- as_tibble(Reduce(function(x,y,...) merge(x,y,by="iso3c", all=TRUE), res.pca.dfs))
     return(res.pca.cbn)
