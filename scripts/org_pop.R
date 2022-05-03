@@ -33,6 +33,74 @@ df_reg <- get_df_reg(df_anls)
 
 get_all_descriptives()
 
+## *** another shitty analysis
+
+df_reg1 <- df_reg[,c("iso3c", "nbr_opened", "SP.POP.TOTLm", "NY.GDP.PCAP.CDk", "pct_fx", "ghweal992j")] %>% na.omit()
+
+x_within <- pglm(nbr_opened ~ SP.POP.TOTLm + NY.GDP.PCAP.CDk + pct_fx + ghweal992j, data = df_reg1, family = negbin, model = "within", index = "iso3c", method = "bfgs", effect = "individual")
+
+x_random <- pglm(nbr_opened ~ SP.POP.TOTLm + NY.GDP.PCAP.CDk + pct_fx + ghweal992j, data = df_reg1, family = negbin, model = "random", index = "iso3c", method = "bfgs", effect = "individual")
+x_between <- pglm(nbr_opened ~ SP.POP.TOTLm + NY.GDP.PCAP.CDk + pct_fx + ghweal992j, data = df_reg1, family = negbin, model = "between", index = "iso3c", method = "bfgs", effect = "individual")
+x_pooling <- pglm(nbr_opened ~ SP.POP.TOTLm + NY.GDP.PCAP.CDk + pct_fx + ghweal992j, data = df_reg1, family = negbin, model = "pooling", index = "iso3c", method = "bfgs", effect = "individual")
+x_random <- pglm(nbr_opened ~ pct_fx + ghweal992j, data = df_reg1, family = negbin, model = "random", index = "iso3c")
+
+screenreg(x_pooling)
+screenreg(x_within)
+screenreg(x_random)
+screenreg(x_between)
+
+f <- nbr_opened ~ SP.POP.TOTLm + NY.GDP.PCAP.CDk + ghweal992j + gptinc992j + pct_cutoff_10M + cnt_contemp + tmitr_approx_linear_2020step + pct_fx + clctr_cnt_cpaer
+res_start <- pglm(f, index = "iso3c", family = poisson, model = "within", effect = "individual",
+     data = na.omit(df_reg[,c("iso3c", "year", "nbr_opened", labels(terms(f)))]))
+
+f <- nbr_opened ~ SP.POP.TOTLm + NY.GDP.PCAP.CDk + ghweal992j + gptinc992j + pct_cutoff_10M + cnt_contemp + tmitr_approx_linear_2020step + pct_fx + clctr_cnt_cpaer
+res_start2 <- pglm(f, index = "iso3c", family = poisson, model = "random", effect = "individual",
+     data = na.omit(df_reg[,c("iso3c", "year", "nbr_opened", labels(terms(f)))]))
+
+phtest(f, data = na.omit(df_reg[,c("iso3c", "year", "nbr_opened", labels(terms(f)))]))
+## hausman test not available for pglm
+
+f <- nbr_opened ~ SP.POP.TOTLm + NY.GDP.PCAP.CDk + ghweal992j + gptinc992j + pct_cutoff_10M + tmitr_approx_linear_2020step + pct_fx + clctr_cnt_cpaer + cnt_contemp_2000 +  sum_core 
+res_crsc <- pglm(f, index = "iso3c", family = poisson, model = "random", effect = "individual",
+                  data = na.omit(df_reg[,c("iso3c", "year", "nbr_opened", labels(terms(f)))]))
+
+## drop the cultural spending
+f <- nbr_opened ~ SP.POP.TOTLm + NY.GDP.PCAP.CDk + ghweal992j + gptinc992j + pct_cutoff_10M + tmitr_approx_linear_2020step + clctr_cnt_cpaer + cnt_contemp_2000 +  sum_core 
+res_crsc2 <- pglm(f, index = "iso3c", family = poisson, model = "random", effect = "individual",
+                  data = na.omit(df_reg[,c("iso3c", "year", "nbr_opened", labels(terms(f)))]))
+
+
+
+
+
+screenreg(list(res_start, res_start2, res_crsc, res_crsc2))
+
+## follow https://stackoverflow.com/questions/49033016/plm-or-lme4-for-random-and-fixed-effects-model-on-panel-data
+## replicate plm in glm 
+
+## first: fixed effects
+
+f <- nbr_opened ~ SP.POP.TOTLm + NY.GDP.PCAP.CDk + ghweal992j + gptinc992j + pct_cutoff_10M + cnt_contemp + tmitr_approx_linear_2020step + pct_fx + clctr_cnt_cpaer + iso3c
+res_poiglm_fe <- glm(f, data = na.omit(df_reg[,c("iso3c", "year", "nbr_opened", labels(terms(f)))]), family=poisson)
+
+varnames <- as.list(labels(terms(f)))
+names(varnames) <- varnames
+screenreg(list(res_poiglm_fe, res_start), custom.coef.map = varnames)
+## huh amazing, coefs and SEs are really the same
+## AIC and LL aren't tho
+## well this is LSVD or maybe MLVD
+
+## random effects
+
+f <- nbr_opened ~ SP.POP.TOTLm + NY.GDP.PCAP.CDk + ghweal992j + gptinc992j + pct_cutoff_10M + tmitr_approx_linear_2020step + clctr_cnt_cpaer + cnt_contemp_2000 +  sum_core + (1|iso3c)
+res_poiglm_re <- glmer(f,
+                       data = na.omit(df_reg[,c("iso3c", "year", "nbr_opened", head(labels(terms(f)),-1))]),
+                       family = poisson)
+varnames <- as.list(head(labels(terms(f)),-1))
+names(varnames) <- varnames
+screenreg(list(res_poiglm_re, res_crsc2), custom.coef.map = varnames, digits = 3)
+## very similar, but some differences: ginis, cnt_contemp_2000, sum_core
+
 
 ## *** remaining variables construction, not directly related to structure, have to be functionalized somewhere
 

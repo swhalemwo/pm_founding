@@ -178,7 +178,7 @@ screenreg(reg3)
 screenreg(reg4)
 screenreg(reg5)
 
-screenreg(list(reg3, reg4, reg5)
+screenreg(list(reg3, reg4, reg5))
 
 plot(reg4q)
 nrow(filter(df_reg, nbr_opened_prop > 0))
@@ -277,3 +277,82 @@ coef(zerocor_allfit$optimx.nlminb)$PID %>%
 cor(coef(res_slopes)$PID$"(Intercept)", coef(res_slopes)$PID$"modalityAudiovisual")
 
 coef(res_slopes_zerocor2)$PID ## huh really no random intercepts
+
+
+## * fatalities
+df_fatal <- as_tibble(read.csv("/home/johannes/Dropbox/supplements/Stock_2020_econometrics/Fatalities2.csv"))
+
+
+filter(df_fatal, year %in% c(1982, 1988)) %>%
+    mutate(fatal_rate = fatal/(pop/10000)) %>%
+    select(state, year, fatal_rate, beertax) %>%
+    ggplot(aes(x=beertax, y=fatal_rate)) +
+    geom_point() +
+    geom_smooth(method = lm) + 
+    facet_wrap(~year, ncol=1, scales = "free")
+
+
+filter(df_fatal, year %in% c(1982, 1988)) %>%
+    mutate(fatal_rate = fatal/(pop/10000)) %>%
+    select(state, year, fatal_rate, beertax) %>%
+    pivot_wider(id_cols = state, names_from = year, values_from = c(fatal_rate, beertax)) %>%
+    mutate(fatal_rate_diff = fatal_rate_1988 - fatal_rate_1982,
+           beertax_diff = beertax_1988 - beertax_1982) %>%
+    ggplot(aes(x=beertax_diff, y=fatal_rate_diff)) +
+    geom_point() +
+    geom_smooth(method = lm, show.legend = T) +
+      stat_poly_eq(formula= y~x, 
+      aes(label=paste(..eq.label.., ..rr.label.., sep="~~~")),
+      parse=T)
+
+df_fatal$fatal_rate = df_fatal$fatal/(df_fatal$pop/10000)
+
+
+fe1 <- lmer(fatal_rate ~ beertax + (1 | state), df_fatal)
+fe2 <- lm(fatal_rate ~ beertax, df_fatal,  index = "state"))
+fe3.1 <- plm(fatal_rate ~ beertax, df_fatal)
+fe3.2 <- plm(fatal_rate ~ beertax, df_fatal, effect = "time", index = "state")
+fe3.3 <- plm(fatal_rate ~ beertax, df_fatal, effect = "twoways", index = "state")
+fe3.4 <- plm(fatal_rate ~ beertax, df_fatal, model = "random", index = "state")
+fe3.5 <- plm(fatal_rate ~ beertax, df_fatal, model = "between", index = "state")
+screenreg(list(fe1, fe2, fe3.1, fe3.2, fe3.3, fe3.4, fe3.5))
+
+r.squared(fe3.1, type = "cor", )
+
+df_fatal %>% select(state, year, drinkage)
+
+df_fatal$iso3c <- "USA"
+
+viz_lines(df_fatal, y="drinkage", grp = "state", facets = "iso3c")
+viz_lines(df_fatal, y="income", grp = "state", facets = "iso3c")
+viz_lines(df_fatal, y="fatal_rate", grp = "state", facets = "iso3c")
+## can't see a reason why you wouldn't use continuous measure for drinkage
+## interpretation: if a state changes to drinking age 20, fatalities go up/down
+## this seems completely garbage: can not really tell if stuff goes up or down
+
+
+fe4.1 <- plm(fatal_rate ~ beertax, df_fatal, index = c("year", "state"))
+fe4.2 <- plm(fatal_rate ~ beertax, df_fatal, index = c("state", "year"), effect = "twoways")
+screenreg(list(fe3.1, fe4.1, fe4.2))
+## fuck the second index gets ignored -> needs effect = "twoways"
+
+
+## all variables 
+fe_all_year <- plm(fatal_rate ~ beertax + drinkage + jail + I(miles/1000) + unemp + log(income) + year , df_fatal, index = "state")
+
+fe_all_2index <- plm(fatal_rate ~ beertax + drinkage + jail + miles + unemp + log(income), df_fatal, index = c("state", "year"), effect = "twoways")
+# this has pretty much all 
+
+screenreg(list(fe_all_year, fe_all_2index))
+fixef(fe_all_2index, effect = "twoways")
+
+coeftest(fe_all_year, vcov = vcovHC(fe_all_year, cluster = "group"))
+coeftest(fe_all_2index, vcov = vcovHC(fe_all_2index, cluster = "group"))
+
+## quite different results
+## maybe should compare to book results visually
+## facet_wrap(~variable)
+## with effect="twoways" the coefs are all like in book (except miles)
+## standard errors are also all pretty close (within ~95% guestimate)
+
+
