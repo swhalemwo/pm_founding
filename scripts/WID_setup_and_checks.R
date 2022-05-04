@@ -373,20 +373,57 @@ get_wealth_df <- function() {
     #' store as global so I don't have to reload everything from CH if I want to change cutoff
     #' use threshold for now (easiest)
 
-    wealth_cmd_all <- paste0("select iso3c, variable, percentile, year, value from wid_v2 where variable='thweal992j' and year >=", STARTING_YEAR)
+    ## currency_cmd <- paste0("select iso3c, year, value from wid_v2 where variable='xlcusp999i' and year>=", STARTING_YEAR)
+    ## currency_df <- as_tibble(dbGetQuery(con, currency_cmd))
+    ## names(currency_df)[3] <- "xlcusp999i"
 
-    wealth_df <- as_tibble(dbGetQuery(con, wealth_cmd_all))
+    currency_cmd_fx <- paste0("select iso3c, year, variable, value from wid_v2 where variable='xlcusx999i' or variable='inyixx999i' and year>=", STARTING_YEAR)    
+    cur_df_fx <- as_tibble(dbGetQuery(con, currency_cmd_fx))
 
-    currency_cmd <- paste0("select iso3c, year, value from wid_v2 where variable='xlcusp999i' and year>=", STARTING_YEAR)
-    currency_df <- as_tibble(dbGetQuery(con, currency_cmd))
-    names(currency_df)[3] <- "xlcusp999i"
+    
+    oecd_cur_df <- as_tibble(read.csv(paste0(PROJECT_DIR, "data/OECD/fx_rates.csv")))
+    oecd_cur_df <- select(oecd_cur_df, iso3c=LOCATION, year = TIME, value = Value) %>% mutate(variable = "xlcusx999i")
+
+    currency_df <- as_tibble(rbind(cur_df_fx, oecd_cur_df)) %>%
+        group_by(iso3c, year, variable) %>%
+        summarise(value=mean(value)
+                  ## , asdf="x"
+                  )
+    
+    ## only including currency conversion for 2021
+    cur_df_fltrd <- filter(currency_df, !(variable == "xlcusx999i" & year != 2021))
+
+    ## add currency conversion for cuba for 2021
+    cur_df_fltrd[nrow(cur_df_fltrd)+1,] <- list("CUB", 2021, "xlcusx999i", 1)
+
+
+    ## put 2021 conversion factor everywhere
+    cur_df_wide <- cur_df_fltrd %>% pivot_wider(names_from = variable, values_from = value)
+    cur_df_wide <- cur_df_wide %>%
+        group_by(iso3c) %>%
+        mutate(xlcusx999i = na.omit(xlcusx999i))
+
+    ## viz_lines(cur_df, y="value", grp = "iso3c", facets = "asdf")
+
 
     ## ggplot(filter(currency_df, xlcusp999i < 10), aes(x=year, y=xlcusp999i, color=iso3c)) +
     ##     geom_line()
 
 
-    wealth_cur_df <- as_tibble(merge(wealth_df, currency_df, all.x = T))
-    wealth_cur_df$wealth_cur <- wealth_cur_df$value/wealth_cur_df$xlcusp999i
+    ## wealth_cur_df <- as_tibble(merge(wealth_df, currency_df, all.x = T))
+    ## wealth_cur_df$wealth_cur <- wealth_cur_df$value/wealth_cur_df$xlcusx999i
+
+    wealth_cmd_all <- paste0("select iso3c, variable, percentile, year, value from wid_v2 where variable='thweal992j' and year >=", STARTING_YEAR)
+
+    wealth_df <- as_tibble(dbGetQuery(con, wealth_cmd_all))
+
+
+    wealth_cur_df <- as_tibble(merge(wealth_df, cur_df_wide, all.x = T))
+    wealth_cur_df$wealth_usd21 <-  (wealth_cur_df$value * wealth_cur_df$inyixx999i)/wealth_cur_df$xlcusx999i
+
+    ## filter(wealth_cur_df, percentile == c("p90p100")) %>%
+    ##     mutate(region = countrycode(iso3c, "iso3c", "un.region.name")) %>% 
+    ##     viz_lines(y="wealth_usd21", facets = "region")
 
     ## there are still quite some NAs
     ## table(filter(wealth_cur_df, is.na(wealth_cur))$iso3c)
@@ -400,8 +437,6 @@ get_wealth_df <- function() {
 
 
 
-## ggplot(filter(wealth_cur_df, iso3c=="DEU", year==2000), aes(x=pct_lo, y=log10(value))) +
-##     geom_point()
 
 
 get_wealth_cutoff_pct <- function(wealth_cur_df, cutoff) {

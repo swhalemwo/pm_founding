@@ -120,6 +120,114 @@ pdf(paste0(FIG_DIR, "inequalities_pca.pdf"), width = 14, height = 10)
 grid.arrange(grobs = c(pca_inc_plts, pca_weal_plts, pca_ineqall_plts), ncol=3, as.table=FALSE)
 dev.off()
 
+## *** change to market exchange rate, also use OECD FX rates to fill up
+STARTING_YEAR <- 1995
+
+currency_cmd_ppp <- paste0("select iso3c, year, value from wid_v2 where variable='xlcusp999i' and year>=", STARTING_YEAR)
+currency_cmd_fx <- paste0("select iso3c, year, value from wid_v2 where variable='xlcusx999i' and year>=", STARTING_YEAR)
+
+cur_df_ppp <- as_tibble(dbGetQuery(con, currency_cmd_ppp))
+names(cur_df_ppp)[3] <- "xlcusp999i"
+
+cur_df_fx <- as_tibble(dbGetQuery(con, currency_cmd_fx))
+names(cur_df_fx)[3] <- "xlcusx999i"
+
+cur_cpr <- as_tibble(merge(cur_df_ppp, cur_df_fx, all=T))
+filter(cur_cpr, is.na(xlcusp999i))
+
+filter(cur_cpr, is.na(xlcusx999i)) %>% pull(iso3c) %>% unique()
+## 493 NAs of xlcusx on combination, 414 of xlcusp Sadge
+## goes down to aroudn 138/304 when starting in 1995
+
+cur_cbn <- as_tibble(merge(cur_cpr, oecd_cur_df, all.x = T))
+
+## check that oecd exchange rates are same as WID
+## calculate absolute, then relative difference to account for currencies with different magnitude
+filter(cur_cbn, !is.na(oecd_fx)) %>%
+    mutate(diff_abs = oecd_fx - xlcusx999i) %>%
+    mutate(diff_rel_oecd = diff_abs/oecd_fx, diff_rel_wid = diff_abs/xlcusx999i) %>% 
+    filter(diff_rel_oecd > 0.1 | diff_rel_wid > 0.1) %>%
+    select(iso3c, year, diff_abs, xlcusx999i, oecd_fx, diff_rel_oecd, diff_rel_wid) 
+## only 11 country-years: 1 ARG, 1 LTU, 9 SVK
+## largest rel_diff is around 43%, most are 10-20% -> no order-of-magnitude diffs -> just mean? yeah why not
+
+## *** integrate more currencies from FXTOP
+
+##  CUB  SSD  TKM  IRQ  HND  SYR  MNE  PRK  BIH  SRB  GEO  UZB 
+## 7182 4256 2394 2128 1330 1330 1064 1064  532  532  266  266 
+
+
+filter(wealth_cur_df, is.na(xlcusx999i)) %>%
+    group_by(iso3c, year) %>%
+    select(iso3c, year) %>%
+    unique() %>% as.data.frame()
+## 84 country-years don't have conversion
+
+FXTOP_DIR <- paste0(PROJECT_DIR, "data/fxtop/")
+
+read_fxtop <- function(filename) {
+    dfx <- read.csv(paste0(FXTOP_DIR, filename), sep = ";", header = F)
+    dfx$iso3c <- substring(filename, 1, 3)
+    dfx <- dfx[2:nrow(dfx),] ## skip first row with column names 
+    dfx$value <- 1/as.numeric(dfx$V4)
+    dfx$year <- as.numeric(dfx$V2)
+
+    return(dfx %>% select(year = year, iso3c = iso3c, value = value))
+}
+
+fx_top_df <- as_tibble(Reduce(function(x,y) rbind(x,y), lapply(list.files(FXTOP_DIR), read_fxtop)))
+
+cur_check <- rbind(
+fx_top_df %>% mutate(orgn = "fxtop"),
+filter(currency_df, iso3c %in% unique(fx_top_df$iso3c)) %>% select (iso3c =iso3c, year=year, value=xlcusx999i) %>% mutate(orgn = "wid"))
+
+ggplot(cur_check, aes(x=year, y=value, color =  orgn, group = orgn)) +
+    facet_wrap(~iso3c, scales = "free") +
+    geom_point() + 
+    geom_line()
+
+filter(wealth_cur_df, iso3c == "TKM", percentile %in% c("p90p100", "p95p100", "p99p100")) %>%
+    ggplot(aes(x=year, y=value, group = percentile, color = percentile)) +
+    geom_line()
+
+
+
+## **** check which currency Cuba uses: done
+
+filter(fx_top_df, iso3c == "CUB") %>% as.data.frame()
+
+p1 <- ggplot(filter(fx_top_df, iso3c == "CUB"), aes(x=year, y=as.numeric(value), color=name, group=name)) +
+    geom_line()
+
+filter(currency_df, iso3c=="CUB")
+filter(wealth_cur_df, iso3c == "CUB")
+
+p2 <- filter(wealth_cur_df, iso3c == "CUB", percentile %in% c("p90p100", "p95p100", "p99p100")) %>%
+    ggplot(aes(x=year, y=value, group = percentile, color = percentile)) +
+    geom_line()
+
+grid.arrange(p1,p2)
+
+## **** check completeness of new version of calculating wealth with price index
+filter(wealth_cur_df, is.na(inyixx999i)) %>% pull(iso3c) %>% unique()
+filter(wealth_cur_df, is.na(inyixx999i)) %>% select(iso3c, year) %>% unique() %>% as.data.frame()
+
+filter(cur_df_wide, is.na(inyixx999i)) %>% select(iso3c, year) %>% unique()
+filter(cur_df_wide, iso3c=="CHN") %>% as.data.frame()
+
+
+
+filter(wealth_cur_df, is.na(xlcusx999i)) %>% pull(iso3c) %>% table() %>% sort(decreasing = T)
+
+
+
+## *** also check uniqueness of WID country-years: done 
+## cur_df_fx/ppp %>% mutate(x=1) %>% group_by(iso3c, year) %>% mutate(sumx = sum(x)) %>% pull(sumx) %>% max()
+
+## ggplot(filter(wealth_cur_df, iso3c=="DEU", year==2000), aes(x=pct_lo, y=log10(value))) +
+##     geom_point()
+
+
 ## ** visualizing cutoff lines, Russia weird
 
 
