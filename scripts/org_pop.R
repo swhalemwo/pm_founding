@@ -80,24 +80,38 @@ screenreg(list(res_start, res_start2, res_crsc, res_crsc2))
 
 ## first: fixed effects
 
-f <- nbr_opened ~ SP.POP.TOTLm + NY.GDP.PCAP.CDk + ghweal992j + gptinc992j + pct_cutoff_10M + cnt_contemp + tmitr_approx_linear_2020step + pct_fx + clctr_cnt_cpaer + iso3c
+df_reg$hwni_30M <- (df_reg$SP.POP.TOTL * df_reg$pct_cutoff_30M)/100
+
+df_reg %>%
+    mutate(region = countrycode(iso3c, "iso3c", "un.region.name")) %>%
+    select(iso3c, year, hwni_30M, region) %>%
+    na.omit() %>% 
+    viz_lines(y="hwni_30M", facets = "region")
+
+f <- nbr_opened ~ SP.POP.TOTLm + NY.GDP.PCAP.CDk + ghweal992j + gptinc992j  + cnt_contemp + tmitr_approx_linear_2020step + pct_fx + clctr_cnt_cpaer + iso3c
 res_poiglm_fe <- glm(f, data = na.omit(df_reg[,c("iso3c", "year", "nbr_opened", labels(terms(f)))]), family=poisson)
 
 varnames <- as.list(labels(terms(f)))
 names(varnames) <- varnames
 screenreg(list(res_poiglm_fe, res_start), custom.coef.map = varnames)
+
 ## huh amazing, coefs and SEs are really the same
 ## AIC and LL aren't tho
 ## well this is LSVD or maybe MLVD
 
 ## random effects
 
-f <- nbr_opened ~ SP.POP.TOTLm + NY.GDP.PCAP.CDk + ghweal992j + gptinc992j + pct_cutoff_10M + tmitr_approx_linear_2020step + clctr_cnt_cpaer + cnt_contemp_2000 +  sum_core + (1|iso3c)
+f <- nbr_opened ~ SP.POP.TOTLm + NY.GDP.PCAP.CDk + ghweal992j + gptinc992j + hwni_30M + tmitr_approx_linear_2020step + clctr_cnt_cpaer + cnt_contemp_2000 +  sum_core + I(year-1995) + (1|iso3c) 
+
 res_poiglm_re <- glmer(f,
-                       data = na.omit(df_reg[,c("iso3c", "year", "nbr_opened", head(labels(terms(f)),-1))]),
+                       ## data = na.omit(df_reg[,c("iso3c", "year", "nbr_opened", head(labels(terms(f)),-1))]),
+                       data = df_reg,
                        family = poisson)
+
 varnames <- as.list(head(labels(terms(f)),-1))
 names(varnames) <- varnames
+screenreg(res_poiglm_re)
+
 screenreg(list(res_poiglm_re, res_crsc2), custom.coef.map = varnames, digits = 3)
 ## very similar, but some differences: ginis, cnt_contemp_2000, sum_core
 
