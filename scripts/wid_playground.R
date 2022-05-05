@@ -219,6 +219,63 @@ filter(cur_df_wide, iso3c=="CHN") %>% as.data.frame()
 
 filter(wealth_cur_df, is.na(xlcusx999i)) %>% pull(iso3c) %>% table() %>% sort(decreasing = T)
 
+### **** compare new and old wealth constructions
+
+get_wealth_df_old <- function() {
+
+    #' get the basic wealth df (in USD PPP)
+    #' store as global so I don't have to reload everything from CH if I want to change cutoff
+    #' use threshold for now (easiest)
+
+    wealth_cmd_all <- paste0("select iso3c, variable, percentile, year, value from wid_v2 where variable='thweal992j' and year >=", STARTING_YEAR)
+
+    wealth_df <- as_tibble(dbGetQuery(con, wealth_cmd_all))
+
+    currency_cmd <- paste0("select iso3c, year, value from wid_v2 where variable='xlcusx999i' and year>=", STARTING_YEAR)
+    currency_df <- as_tibble(dbGetQuery(con, currency_cmd))
+    names(currency_df)[3] <- "xlcusp999i"
+
+    ## ggplot(filter(currency_df, xlcusp999i < 10), aes(x=year, y=xlcusp999i, color=iso3c)) +
+    ##     geom_line()
+
+
+    wealth_cur_df <- as_tibble(merge(wealth_df, currency_df, all.x = T))
+    wealth_cur_df$wealth_cur <- wealth_cur_df$value/wealth_cur_df$xlcusp999i
+
+    ## there are still quite some NAs
+    ## table(filter(wealth_cur_df, is.na(wealth_cur))$iso3c)
+    ## North Korea, South Sudan
+    ## nobody cares bro 
+
+    wealth_cur_df$pct_lo <- as.numeric(unlist(lapply(strsplit(wealth_cur_df$percentile, split='p'), function(x) x[2])))
+
+    return(na.omit(wealth_cur_df))
+}
+
+wealth_df_old <- get_wealth_df_old()
+wealth_df <- get_wealth_df()
+
+dfx <- merge(
+filter(wealth_df_old, percentile == "p90p100") %>% select(iso3c, year, wealth_cur),
+filter(wealth_df, percentile == "p90p100") %>% select(iso3c, year, wealth_usd21 =wealth_usd21_wo_price_index)) %>%
+    mutate(diff = wealth_cur - wealth_usd21) %>% as_tibble() %>%
+    mutate(diff_cpr = wealth_usd21/wealth_cur)
+
+filter(dfx, iso3c == "DEU") %>% as.data.frame()
+
+wealth_df <- get_wealth_df()
+
+filter(wealth_df, percentile == "p99p100") %>%
+    mutate(region = countrycode(iso3c, "iso3c", "un.region.name")) %>%
+    filter(region == "Europe") %>% 
+    viz_lines(facets = "region", grp = "iso3c", y="wealth_usd21", max_lines = 4)
+
+## hmm NLD/DEU/SVK: still difference in 2021, there shouldn't be one tho: price index is 1, currency conversion is the same
+## need to check that tomorrow
+
+
+dfx %>% mutate(region = countrycode(iso3c, "iso3c", "un.region.name")) %>% 
+viz_lines(y="pct_cutoff_30M", facets = "region")
 
 
 ## *** also check uniqueness of WID country-years: done 

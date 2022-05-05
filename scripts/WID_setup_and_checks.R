@@ -376,6 +376,7 @@ get_wealth_df <- function() {
     ## currency_cmd <- paste0("select iso3c, year, value from wid_v2 where variable='xlcusp999i' and year>=", STARTING_YEAR)
     ## currency_df <- as_tibble(dbGetQuery(con, currency_cmd))
     ## names(currency_df)[3] <- "xlcusp999i"
+    
 
     currency_cmd_fx <- paste0("select iso3c, year, variable, value from wid_v2 where variable='xlcusx999i' or variable='inyixx999i' and year>=", STARTING_YEAR)    
     cur_df_fx <- as_tibble(dbGetQuery(con, currency_cmd_fx))
@@ -389,11 +390,11 @@ get_wealth_df <- function() {
         summarise(value=mean(value)
                   ## , asdf="x"
                   )
-    
+
     ## only including currency conversion for 2021
     cur_df_fltrd <- filter(currency_df, !(variable == "xlcusx999i" & year != 2021))
 
-    ## add currency conversion for cuba for 2021
+    ## add fx rate for cuba for 2021, 1 according to fxtop
     cur_df_fltrd[nrow(cur_df_fltrd)+1,] <- list("CUB", 2021, "xlcusx999i", 1)
 
 
@@ -403,38 +404,24 @@ get_wealth_df <- function() {
         group_by(iso3c) %>%
         mutate(xlcusx999i = na.omit(xlcusx999i))
 
-    ## viz_lines(cur_df, y="value", grp = "iso3c", facets = "asdf")
 
-
-    ## ggplot(filter(currency_df, xlcusp999i < 10), aes(x=year, y=xlcusp999i, color=iso3c)) +
-    ##     geom_line()
-
-
-    ## wealth_cur_df <- as_tibble(merge(wealth_df, currency_df, all.x = T))
-    ## wealth_cur_df$wealth_cur <- wealth_cur_df$value/wealth_cur_df$xlcusx999i
-
+    ## getting wealth df
     wealth_cmd_all <- paste0("select iso3c, variable, percentile, year, value from wid_v2 where variable='thweal992j' and year >=", STARTING_YEAR)
-
     wealth_df <- as_tibble(dbGetQuery(con, wealth_cmd_all))
 
-
     wealth_cur_df <- as_tibble(merge(wealth_df, cur_df_wide, all.x = T))
-    wealth_cur_df$wealth_usd21 <-  (wealth_cur_df$value * wealth_cur_df$inyixx999i)/wealth_cur_df$xlcusx999i
 
-    ## filter(wealth_cur_df, percentile == c("p90p100")) %>%
-    ##     mutate(region = countrycode(iso3c, "iso3c", "un.region.name")) %>% 
-    ##     viz_lines(y="wealth_usd21", facets = "region")
-
-    ## there are still quite some NAs
-    ## table(filter(wealth_cur_df, is.na(wealth_cur))$iso3c)
-    ## North Korea, South Sudan
-    ## nobody cares bro 
-
-    wealth_cur_df$pct_lo <- as.numeric(unlist(lapply(strsplit(wealth_cur_df$percentile, split='p'), function(x) x[2])))
+    ## converting to comparable dollar amounts 
+     wealth_cur_df <- wealth_cur_df %>%
+         mutate(wealth_usd21 = value/xlcusx999i,
+                ## wealth_usd21 = (value * inyixx999i)/xlcusx999i,
+                pct_lo = sapply(strsplit(percentile, split = 'p'), \(x) as.numeric(x[2])))
 
     return(na.omit(wealth_cur_df))
 }
 
+
+              
 
 
 
@@ -446,7 +433,7 @@ get_wealth_cutoff_pct <- function(wealth_cur_df, cutoff) {
     df_wealth <- wealth_cur_df %>%
         filter(iso3c != "ESP") %>% ## filter out crappy Spain data 
         group_by(iso3c, year) %>%
-        do(wealth_cutoff(.$pct_lo, .$wealth_cur, cutoff_amt =cutoff, iso3c = .$iso3c, year= .$year))
+        do(wealth_cutoff(.$pct_lo, .$wealth_usd21, cutoff_amt =cutoff, iso3c = .$iso3c, year= .$year))
 
 
     return(df_wealth)
@@ -461,7 +448,7 @@ get_hnwi_pcts <- function(diag=FALSE) {
     ## HNWIs
     ## df_wealth <- get_wealth_cutoff_pct(wealth_cur_df, 5e+06)
 
-    cutoff_vlus <- c(1e6, 2.5e6, 5e6, 10e6, 50e6, 100e6, 250e6,500e6)
+    cutoff_vlus <- c(1e6, 5e6, 10e6, 30e6, 50e6, 100e6, 250e6,500e6)
 
 
     df_wealth_list <- mclapply(cutoff_vlus, function(x) get_wealth_cutoff_pct(wealth_cur_df, x), mc.cores = 8)
