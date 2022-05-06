@@ -393,6 +393,7 @@ get_imf_data <- function() {
 
 gen_cult_spending <- function() {
     #' combine everything into nice function
+    
 
     df_cult <- as_tibble(Reduce(function(x,y) rbind(x,y),
                                 list(
@@ -415,15 +416,18 @@ gen_cult_spending <- function() {
 
     ## *** use UN_SMOrc Recreation, culture and religion (best coverage), add currencies
     df_wb$GDP.TTL <- df_wb$NY.GDP.PCAP.CD * df_wb$SP.POP.TOTL
+    
 
 
     un_df_smorc <- filter(df_cult, Item == "UN_SMOrc Recreation, culture and religion") %>% na.omit()
     un_df_smorc_cur <- as_tibble(merge(un_df_smorc, wid_cur_df_wide))
-    summary(un_df_smorc_cur)
+
     ## at least not too many NAs for the currency conversions...
     un_df_smorc_cur_gdp <- as_tibble(merge(un_df_smorc_cur, select(df_wb, iso3c, year, GDP.TTL)))
+
     un_df_smorc_cur_gdp <- un_df_smorc_cur_gdp %>%
-        mutate(smorc_dollar_fx = Value/xlcusx999i, smorc_dollar_ppp = Value/xlcusp999i) %>%
+        mutate(value_constant = Value/inyixx999i) %>% 
+        mutate(smorc_dollar_fx = value_constant/xlcusx999i, smorc_dollar_ppp = value_constant/xlcusp999i) %>%
         mutate(pct_fx = 100*(smorc_dollar_fx/GDP.TTL), region = countrycode(iso3c, "iso3c", "un.region.name"))
 
     ## validity checks: yeet some countries/country years that are outstandingly weird
@@ -433,12 +437,16 @@ gen_cult_spending <- function() {
     ## check_cry_cur("QAT")
 
 
+
     un_df_smorc_clean <- filter(un_df_smorc_cur_gdp, iso3c != "UKR" | year > 1996,
                                 iso3c != "SMR",
                                 iso3c != "ECU",
-                                iso3c != "QAT")
+                                iso3c != "QAT",
+                                iso3c != "GEO") ## weirdly high now after changing to constant prices too 
+    
+    ## viz_lines(un_df_smorc_clean, y="pct_fx", facets = "region")
 
-    return(select(un_df_smorc_clean, iso3c, year, pct_fx))
+    return(select(un_df_smorc_clean, iso3c, year, smorc_dollar_fx, pct_fx))
 
 }
 
