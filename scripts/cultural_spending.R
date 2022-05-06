@@ -40,9 +40,7 @@ gen_ilo_df <- function() {
 ## *** WID currency converter
 
 get_wid_cur_converter <- function() {
-
-    ## currency_cmd <- paste0("select iso3c, year, variable, value from wid_v2 where ((variable='xlcusp999i' or variable = 'xlcusx999i') and year = 2021) or variable = 'inyixx999i' and year>=", STARTING_YEAR)
-    ## wid_cur_df <- as_tibble(dbGetQuery(con, currency_cmd))
+    #' generate currency converter df for all kinds of purposes
 
     currency_cmd <- paste0("select iso3c, year, variable, value from wid_v2 where (variable='xlcusx999i' or variable='inyixx999i' or variable='xlcusp999i') and year>=", STARTING_YEAR)
 
@@ -50,20 +48,30 @@ get_wid_cur_converter <- function() {
     ## add fx rate for cuba for 2021, 1 according to fxtop
     cur_df_raw[nrow(cur_df_raw)+1,] <- list("CUB", 2021, "xlcusx999i", 1)
 
-    cur_df <- pivot_wider(cur_df_raw, names_from = variable, values_from = value)
+    oecd_cur_df <- as_tibble(read.csv(paste0(PROJECT_DIR, "data/OECD/fx_rates.csv"))) %>% 
+        select(iso3c=LOCATION, year = TIME, value = Value) %>%
+        mutate(variable = "xlcusx999i")
+
+    cur_df_cbn <- as_tibble(rbind(cur_df_raw, oecd_cur_df)) %>%
+        group_by(iso3c, year, variable) %>%
+        summarise(value=mean(na.omit(value))) %>%
+        ungroup() # ungroup needed to not automatically include year when creating 2021 series 
+
+
+    cur_df <- pivot_wider(cur_df_cbn, names_from = variable, values_from = value)
 
     ## construct fx and ppp rates for 2021 for constant price series
     cur_df <- cur_df %>% merge(
-            filter(cur_df, year == 2021) %>%
-            mutate(xlcusx999i_2021 = xlcusx999i,
-                   xlcusp999i_2021 = xlcusp999i) %>%
-            select(iso3c, xlcusx999i_2021, xlcusp999i_2021)) %>%
+                             filter(cur_df, year == 2021) %>%
+                             mutate(xlcusx999i_2021 = xlcusx999i,
+                                    xlcusp999i_2021 = xlcusp999i) %>%
+                             select(iso3c, xlcusx999i_2021, xlcusp999i_2021)) %>%
         as_tibble()
 
     return(cur_df)
 }
 
-wid_cur_df_wide <- get_wid_cur_converter()
+cur_df <- get_wid_cur_converter()
 
 
 
