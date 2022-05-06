@@ -41,15 +41,32 @@ gen_ilo_df <- function() {
 
 get_wid_cur_converter <- function() {
 
-    currency_cmd <- paste0("select iso3c, year, variable, value from wid_v2 where variable='xlcusp999i' or variable = 'xlcusx999i' and year>=", STARTING_YEAR)
-    wid_cur_df <- as_tibble(dbGetQuery(con, currency_cmd))
-    return(wid_cur_df)
+    ## currency_cmd <- paste0("select iso3c, year, variable, value from wid_v2 where ((variable='xlcusp999i' or variable = 'xlcusx999i') and year = 2021) or variable = 'inyixx999i' and year>=", STARTING_YEAR)
+    ## wid_cur_df <- as_tibble(dbGetQuery(con, currency_cmd))
+
+    currency_cmd <- paste0("select iso3c, year, variable, value from wid_v2 where (variable='xlcusx999i' or variable='inyixx999i' or variable='xlcusp999i') and year>=", STARTING_YEAR)
+
+    cur_df_raw <- as_tibble(dbGetQuery(con, currency_cmd))
+    ## add fx rate for cuba for 2021, 1 according to fxtop
+    cur_df_raw[nrow(cur_df_raw)+1,] <- list("CUB", 2021, "xlcusx999i", 1)
+
+    cur_df <- pivot_wider(cur_df_raw, names_from = variable, values_from = value)
+
+    ## construct fx and ppp rates for 2021 for constant price series
+    cur_df <- cur_df %>% merge(
+            filter(cur_df, year == 2021) %>%
+            mutate(xlcusx999i_2021 = xlcusx999i,
+                   xlcusp999i_2021 = xlcusp999i) %>%
+            select(iso3c, xlcusx999i_2021, xlcusp999i_2021)) %>%
+        as_tibble()
+
+    return(cur_df)
 }
 
-wid_cur_df <- get_wid_cur_converter()
-wid_cur_df <- rename(wid_cur_df, conversion = value)
-wid_cur_df_wide <- pivot_wider(wid_cur_df, names_from = variable, values_from = conversion) %>%
-    filter(year >= STARTING_YEAR)
+wid_cur_df_wide <- get_wid_cur_converter()
+
+
+
 
 
 ## *** df2
