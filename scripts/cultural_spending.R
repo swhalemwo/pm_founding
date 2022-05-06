@@ -427,16 +427,18 @@ gen_cult_spending <- function() {
     df_wb$GDP.TTL <- df_wb$NY.GDP.PCAP.CD * df_wb$SP.POP.TOTL
     
 
-
+    
     un_df_smorc <- filter(df_cult, Item == "UN_SMOrc Recreation, culture and religion") %>% na.omit()
-    un_df_smorc_cur <- as_tibble(merge(un_df_smorc, wid_cur_df_wide))
+    
+    un_df_smorc_cur <- as_tibble(merge(un_df_smorc, cur_df))
 
     ## at least not too many NAs for the currency conversions...
     un_df_smorc_cur_gdp <- as_tibble(merge(un_df_smorc_cur, select(df_wb, iso3c, year, GDP.TTL)))
 
     un_df_smorc_cur_gdp <- un_df_smorc_cur_gdp %>%
         mutate(value_constant = Value/inyixx999i) %>% 
-        mutate(smorc_dollar_fx = value_constant/xlcusx999i, smorc_dollar_ppp = value_constant/xlcusp999i) %>%
+        mutate(smorc_dollar_fx = value_constant/xlcusx999i_2021,
+               smorc_dollar_ppp = value_constant/xlcusp999i_2021) %>% #
         mutate(pct_fx = 100*(smorc_dollar_fx/GDP.TTL), region = countrycode(iso3c, "iso3c", "un.region.name"))
 
     ## validity checks: yeet some countries/country years that are outstandingly weird
