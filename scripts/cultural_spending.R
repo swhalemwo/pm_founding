@@ -274,7 +274,7 @@ construct_gvt_consumption_expenditure <- function() {
     ##     cpltns_checker(varx = "some_val")
     ## ## using all Series or not substantially affects sample size..
 
-    return(select(un_df3_fltrd, iso3c, year, Item, Series, Value, Currency))
+    return(select(un_df3_fltrd, iso3c, year, Item, Series, Value, Currency_tws))
 }
     
     
