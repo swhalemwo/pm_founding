@@ -162,16 +162,17 @@ check_cry_cur <- function(cry) {
                  ## add also a facet with all the currencies combined
                  ## joins stuff of different series together tho 
                  mutate(Currency_tws = "curs")) %>%
-        rbind(filter(wid_cur_df, iso3c == cry, year > STARTING_YEAR) %>%
-              mutate(Currency_tws = "wid", Series = "wid") %>%
-              select(iso3c, year, Value = conversion, Currency_tws = variable, Series)) %>%
+        rbind(filter(cur_df, iso3c == cry) %>%
+              mutate(Currency_tws = "wid", Series = "xlcusx999i") %>%
+              select(iso3c, year, Value = xlcusx999i,  Currency_tws, Series)) %>%
         ggplot(aes(x=year, y=Value, color = factor(Series))) +
         facet_wrap(~Currency_tws, scales = "free_y", nrow=3) +
         geom_line(size=1.5)
 
 }
+un_df3 <- construct_gvt_consumption_expenditure()
 
-## check_cry_cur("DEU")
+check_cry_cur("MEX")
 
 
 construct_gvt_consumption_expenditure <- function() {
