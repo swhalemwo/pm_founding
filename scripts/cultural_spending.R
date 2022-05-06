@@ -157,22 +157,22 @@ check_cry_cur <- function(cry) {
     #' plot currencies and series for a country to determine for each country with multiple currencies whether to drop or rename currencies
 
     filter(un_df3, iso3c == cry) %>%
-        select(iso3c, year, Value, Series, Currency_tws) %>%
-        rbind(., select(., iso3c, year, Value, Series = Currency_tws) %>%
+        select(iso3c, year, Value, Series, Currency) %>%
+        rbind(., select(., iso3c, year, Value, Series = Currency) %>%
                  ## add also a facet with all the currencies combined
                  ## joins stuff of different series together tho 
-                 mutate(Currency_tws = "curs")) %>%
+                 mutate(Currency = "curs")) %>%
         rbind(filter(cur_df, iso3c == cry) %>%
-              mutate(Currency_tws = "wid", Series = "xlcusx999i") %>%
-              select(iso3c, year, Value = xlcusx999i,  Currency_tws, Series)) %>%
+              mutate(Currency = "wid", Series = "xlcusx999i") %>%
+              select(iso3c, year, Value = xlcusx999i,  Currency, Series)) %>%
         ggplot(aes(x=year, y=Value, color = factor(Series))) +
-        facet_wrap(~Currency_tws, scales = "free_y", nrow=3) +
+        facet_wrap(~Currency, scales = "free_y", nrow=3) +
         geom_line(size=1.5)
 
 }
-un_df3 <- construct_gvt_consumption_expenditure()
 
-check_cry_cur("MEX")
+## un_df3 <- construct_gvt_consumption_expenditure()
+## check_cry_cur("MEX")
 
 
 construct_gvt_consumption_expenditure <- function() {
@@ -274,7 +274,7 @@ construct_gvt_consumption_expenditure <- function() {
     ##     cpltns_checker(varx = "some_val")
     ## ## using all Series or not substantially affects sample size..
 
-    return(select(un_df3_fltrd, iso3c, year, Item, Series, Value, Currency_tws))
+    return(select(un_df3_fltrd, iso3c, year, Item, Series, Value, Currency = Currency_tws))
 }
     
     
