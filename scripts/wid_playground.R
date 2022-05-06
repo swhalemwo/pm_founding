@@ -1,3 +1,4 @@
+## * wid playground
 ## ** HWNI calculations
 
 dbGetQuery(con, "show tables")

@@ -202,3 +202,51 @@ get_all_descriptives <- function(){
 }
 
 ## get_all_descriptives()
+
+## * descriptives based on df_reg
+
+
+df_reg$hnwi_30M <- (df_reg$pct_cutoff_30M * df_reg$SP.POP.TOTL)/100
+df_reg$smorc_dollar_fx <- df_reg$smorc_dollar_fx/1e6
+
+rel_vars <- c("nbr_opened" = "Number of Private Museums opened",
+              "sum_core" = "Tax incentives",
+              "tmitr_approx_linear_2020step" = "Marginal Income Tax Rate (%)",
+              "hnwi_30M" = "# HNWIs with net worth >= 30M",
+              "gptinc992j" = "Gini of pre-tax income",
+              "ghweal992j"= "Gini of net wealth",
+              "smorc_dollar_fx" = "Gvt cultural spending (millions)",
+              "NY.GDP.PCAP.CDk" = "GDP per capita (thousands)",
+              "SP.POP.TOTLm" = "Population (millions)",
+              "cnt_contemp_1985" = "# Museums of contemporary art in 1985",
+              "clctr_cnt_cpaer" = "# Collectors in Artnews collector list"
+              )
+
+
+
+
+
+get_more_vrbl_info <- function(x) {
+
+df_reg %>% select(iso3c, year, x) %>% na.omit() %>%
+    mutate(vrbl = x) %>% 
+    summarize(nbr_crys = n_distinct(iso3c),
+              min_time = min(year), max_time = max(year),
+              time_range = paste0(min_time, "-", max_time),
+              vrbl = unique(vrbl)) %>%
+    select(vrbl, nbr_crys, time_range) %>% as.list()
+}
+## get_more_vrbl_info("smorc_dollar_fx")
+
+more_vrbl_info <- rbindlist(lapply(names(rel_vars), get_more_vrbl_info))
+
+
+                  
+              
+var_table <- describe(df_reg[,names(rel_vars)]) %>% select("Country-years" = n, mean, sd, median, min, max)
+rownames(var_table) <- recode(rownames(var_table), !!!rel_vars)
+var_table$`# Countries` <- more_vrbl_info$nbr_crys
+
+var_xtbl <- xtable(var_table, caption = "main variables (all monetary variables are in or based on 2021 constant US dollars)", label = "var_desc", digits = c(0, 0, rep(2,6)))
+
+print(var_xtbl, file = paste0(TABLE_DIR, "var_desc.tex"), include.rownames = T, hline.after =c(-1,0,7,11))
