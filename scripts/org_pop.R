@@ -27,6 +27,7 @@ PMDB_FILE <- "Private museum database4.xlsx"
 df_excl <- create_excel_df(PMDB_FILE)
 df_open <- aggregate_openings(df_excl)
 df_wb <- get_WB_data(c("NY.GDP.PCAP.CD", "SP.POP.TOTL"))
+cur_df <- gen_cur_df()
 df_anls <- create_anls_df(df_wb, df_open)
 
 df_reg <- get_df_reg(df_anls)
