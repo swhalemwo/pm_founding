@@ -4,7 +4,8 @@ table = function (..., useNA = 'ifany') base::table(..., useNA = useNA)
 
 '%!in%' <- function(x,y)!('%in%'(x,y))
 len <- length
-
+adf <- as.data.frame
+atb <- as_tibble
 
 ## https://stats.stackexchange.com/questions/123366/lmer-standardized-regression-coefficients
 lm.beta.lmer <- function(mod) {
