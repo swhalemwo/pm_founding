@@ -110,7 +110,15 @@ get_df_reg <- function(df_anls) { #
     fill_up_cols <- unique(c(names(mow_cntns), names(mow_crssctn), names(df_artnews)))
     
     df_reg[fill_up_cols][is.na(df_reg[fill_up_cols])] <- 0
-    
+
+    ## generate counts from percentages for HNWI
+    hnwi_names <- names(df_hnwi)[3:ncol(df_hnwi)]
+
+    hnwi_cnts <- as_tibble((df_reg[hnwi_names] * df_reg$SP.POP.TOTL)/100)
+    names(hnwi_cnts) <- gsub("pct_cutoff", "hnwi_nbr", hnwi_names)
+    df_reg <- as_tibble(cbind(df_reg, hnwi_cnts))
+
+
 
     return(df_reg)
 }

@@ -206,7 +206,7 @@ get_all_descriptives <- function(){
 ## * descriptives based on df_reg
 
 
-df_reg$hnwi_30M <- (df_reg$pct_cutoff_30M * df_reg$SP.POP.TOTL)/100
+
 df_reg$smorc_dollar_fx <- df_reg$smorc_dollar_fx/1e6
 
 rel_vars <- c("nbr_opened" = "Number of Private Museums opened",
