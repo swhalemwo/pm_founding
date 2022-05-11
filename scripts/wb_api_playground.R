@@ -212,3 +212,29 @@ aggregate(population ~ year, data = df_wb_population_molt, function(x){sum(is.na
 aggregate(population ~ country, data = df_wb_population_molt, function(x){sum(is.na(x))}, na.action = NULL)
 ## population seems good, some missing stuff for Gaza/Kuwait, nobody cares
 
+
+## * check GDP missing values
+indx <- c("NY.GDP.PCAP.CD", "SP.POP.TOTL")
+x <- get_WB_data(indx)
+
+## look at gdp gaps -> compare with WID: most GDP gaps are also WID gaps -> not really worth looking for more data
+
+cvrg_gdp <- x %>% filter(year >= 1995) %>%
+    group_by(iso3c) %>% 
+    mutate(nbr_nas = sum(is.na(NY.GDP.PCAP.CD))) %>%
+    filter(nbr_nas > 0) %>%
+    select(iso3c, nbr_nas) %>% 
+    summarize(nbr_nas = mean(nbr_nas)) %>% arrange(nbr_nas) %>% adf() %>%
+    mutate(countryname = countrycode(iso3c, "wb", "country.name"))
+
+lapply(gsub("pct_cutoff", "hnwi_nbr", hnwi_names), \(x)
+       cpltns_checker(df_reg[,c("iso3c", "year", x)], varx = x)) %>%
+    rbindlist()
+
+cvrg_wid <- df_reg %>% select(iso3c, year, hnwi_nbr_30M) %>%
+    filter(year >= 1995) %>% 
+    group_by(iso3c) %>%
+    summarize(nbr_nas_hnwi = sum(is.na(hnwi_nbr_30M))) %>%
+    filter(nbr_nas_hnwi > 0)
+
+merge(cvrg_gdp, cvrg_wid) %>% arrange(nbr_nas)
