@@ -238,3 +238,32 @@ cvrg_wid <- df_reg %>% select(iso3c, year, hnwi_nbr_30M) %>%
     filter(nbr_nas_hnwi > 0)
 
 merge(cvrg_gdp, cvrg_wid) %>% arrange(nbr_nas)
+
+## * year combinations
+
+df_reg[,c("iso3c", "year", rel_lngtd_vars)] %>%
+    pivot_longer()
+
+na_nbr_df <- (1-is.na(df_reg[rel_lngtd_vars])) %>% atb()
+
+na_nbr_df$id_cbn <- apply(na_nbr_df, 1, \(x) paste(x, collapse = "-"))
+na_nbr_df$sum <- apply(na_nbr_df[rel_lngtd_vars], 1, sum)
+
+table(na_nbr_df$id_cbn) %>% sort()
+
+## hmm
+## question is if a country-year is included in combination
+## need to generate all combinations first 
+## country-years are nested: if cy has variable a, and also variable a and b, i want it has part of a-b variable set
+## can pick the highest combination: but that's what I already have with id_cbn 
+
+## now don't have the total count of a combination: 939 have at most, but don't know how many have 0-0-0-0-0-1-1
+
+
+vrbl_cnbs <- list(
+    all_vars = rel_lngtd_vars,
+    no_cult_spending = rel_lngtd_vars[rel_lngtd_vars != "smorc_dollar_fx"],
+    no_cult_spend_and_mitr = rel_lngtd_vars[rel_lngtd_vars %!in% c("smorc_dollar_fx", "tmitr_approx_linear_2020step")],
+    controls = c("NY.GDP.PCAP.CDk", "SP.POP.TOTLm"))
+
+    
