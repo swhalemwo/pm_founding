@@ -250,3 +250,36 @@ var_table$`# Countries` <- more_vrbl_info$nbr_crys
 var_xtbl <- xtable(var_table, caption = "main variables (all monetary variables are in or based on 2021 constant US dollars)", label = "var_desc", digits = c(0, 0, rep(2,6)))
 
 print(var_xtbl, file = paste0(TABLE_DIR, "var_desc.tex"), include.rownames = T, hline.after =c(-1,0,7,11))
+
+## * coverage visualizations
+
+rel_lngtd_vars <- c("tmitr_approx_linear_2020step",
+                    "hnwi_nbr_30M",
+                    "gptinc992j",
+                    "ghweal992j",
+                    "smorc_dollar_fx",
+                    "NY.GDP.PCAP.CDk",
+                    "SP.POP.TOTLm")
+
+
+
+cpltns_vrbl_plot <- df_reg %>% select(c("iso3c", "year", rel_lngtd_vars)) %>%
+    pivot_longer(cols=rel_lngtd_vars) %>%
+    na.omit() %>%
+    group_by(year, name) %>%
+    summarize(nbr_crys = len(iso3c)) %>%
+    ggplot(aes(x=year, y=nbr_crys, color = name, group=name)) +
+    geom_line(size = 1.5) +
+    scale_color_manual(values = colors_manual3)
+
+plt_to_pdf <- function(plt, width, height) {
+    fig_name <- deparse(substitute(plt))
+    
+    pdf(paste0(FIG_DIR, fig_name, ".pdf"), width = width, height = height)
+    plot(plt)
+    dev.off()
+}
+
+plt_to_pdf(cpltns_vrbl_plot, width = 8, height = 4)
+
+
