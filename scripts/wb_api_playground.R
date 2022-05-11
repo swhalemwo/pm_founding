@@ -11,6 +11,14 @@ gdp_vars$indicator_id
 filter(gdp_vars, indicator_id == "NY.GDP.MKTP.CD")$indicator_desc
 filter(gdp_vars, indicator_id == "NY.GDP.PCAP.CD")$indicator_desc
 filter(gdp_vars, scramblematch("PPP", indicator_desc))
+filter(gdp_vars, scramblematch("constant", indicator_desc))$indicator_id
+
+## looking for best way to get GDP pcap in constant 2021 USD
+filter(gdp_vars, scramblematch("NY.GDP", indicator_id) & scramblematch("constant", indicator)) %>% select(indicator_id, indicator) %>% as.data.frame()
+
+filter(gdp_vars, scramblematch("deflat", indicator)) %>% select(indicator_id, indicator) %>% as.data.frame()
+
+
 filter(gdp_vars, indicator_id == "NY.GDP.PCAP.PP.CD")$indicator_desc
 
 
