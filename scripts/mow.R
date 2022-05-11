@@ -72,7 +72,7 @@ get_mow_dfs <- function() {
     
     sets <- list("contemp"=set_contemp, "art"=set_art, "all"=set_all)
 
-    years <- c(1985, 2000,2020)
+    years <- c(1985, 1990, 1995, 2000, 2005, 2010,2020)
     set_year_cbns <- as_tibble(expand.grid(set=names(sets), year=years))
     
     res_mow_agg <- apply(set_year_cbns, 1, function(x) mow_tag_year_cnt(mow_df=mow_tag, year=x['year'], setx=x['set'], sets=sets))

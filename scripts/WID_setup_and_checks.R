@@ -280,6 +280,8 @@ export_wid_cpltns_check <- function(res_df, tbl_label, tbl_caption) {
 
 ## ** HWNI calculation
 
+hnwi_cutoff_vlus <- c(1e6, 5e6, 30e6, 200e6, 1000e6)
+
 
 RootLinearInterpolant <- function (x, y, y0 = 0) {
     #' calculate intercept of threshold function 
@@ -308,6 +310,8 @@ sanitize_number <- function(nbr) {
         lbl <- paste0(nbr/1000, "K")
     } else if (nbr >= 1e6 & nbr < 1e+9) {
         lbl <- paste0(nbr/1e6, "M")
+    } else if (nbr >= 1e9 & nbr < 1e12) {
+        lbl <- paste0(nbr/1e9, "B")
     } else {
         lbl <- paste0(nbr)
     }
@@ -417,10 +421,11 @@ get_hnwi_pcts <- function(diag=FALSE) {
     ## HNWIs
     ## df_wealth <- get_wealth_cutoff_pct(wealth_cur_df, 5e+06)
 
-    cutoff_vlus <- c(1e6, 5e6, 10e6, 30e6, 50e6, 100e6, 250e6,500e6)
+    ## cutoff_vlus <- c(1e6, 5e6, 10e6, 30e6, 50e6, 100e6, 250e6,500e6)
+    ## hnwi_cutoff_vlus <- c(1e6, 5e6, 30e6, 200e6, 1000e6)
 
 
-    df_wealth_list <- mclapply(cutoff_vlus, function(x) get_wealth_cutoff_pct(wealth_cur_df, x), mc.cores = 8)
+    df_wealth_list <- mclapply(hnwi_cutoff_vlus, function(x) get_wealth_cutoff_pct(wealth_cur_df, x), mc.cores = 8)
     df_wealth_cbn <- as_tibble(Reduce(function(x,y,...) merge(x,y, all=TRUE), df_wealth_list))
 
     
@@ -428,7 +433,7 @@ get_hnwi_pcts <- function(diag=FALSE) {
     if (diag) {
         return_cols <- names(df_wealth_cbn)
     } else {
-        vlu_columns <- unlist(lapply(cutoff_vlus, function(x) paste0("pct_cutoff_", sanitize_number(x))))
+        vlu_columns <- unlist(lapply(hnwi_cutoff_vlus, function(x) paste0("pct_cutoff_", sanitize_number(x))))
         return_cols <- c("iso3c", "year", vlu_columns)
     }
     
