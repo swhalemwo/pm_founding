@@ -239,6 +239,11 @@ cvrg_wid <- df_reg %>% select(iso3c, year, hnwi_nbr_30M) %>%
 
 merge(cvrg_gdp, cvrg_wid) %>% arrange(nbr_nas)
 
+
+## other approach
+filter(df_reg, is.na(NY.GDP.PCAP.CD) & !is.na(hnwi_nbr_30M)) %>% select(country, year) %>% adf()
+## hmm 57 country years, and mostly with countries that existed then... Somalia, Afghanistan, Vuvuzela, Liberia
+
 ## * year combinations
 
 df_reg[,c("iso3c", "year", rel_lngtd_vars)] %>%
