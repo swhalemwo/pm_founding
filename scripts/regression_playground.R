@@ -1,3 +1,65 @@
+## ** new version 
+
+f <- nbr_opened ~ sum_core + cnt_contemp_1995 +  gptinc992j_lag4 + shweal992j_p90p100_lag4 + tmitr_approx_linear_2020step_lag2 + ti_tmitr_interact_lag2 + smorc_dollar_fxm_lag4 + NY.GDP.PCAP.CDk_lag1 + SP.POP.TOTLm_lag2 + clctr_cnt_cpaer_lag2 + (1|iso3c)
+
+## hnwi_nbr_1M_lag4 +
+
+dfx <- merge(cbn_dfs[["cbn_all"]], select(df_reg, iso3c, year, nbr_opened)) %>% atb() %>% select(all.vars(f))
+
+dfx2 <-
+    apply(dfx[2, 2, \(i) i)
+
+
+res <- glmer.nb(f, dfx)
+
+
+
+scale_vars <- c("hnwi_nbr_1M", "hnwi_nbr_5M", "hnwi_nbr_30M", "hnwi_nbr_200M", "hnwi_nbr_1B")
+scale_vars <- all_rel_vars
+
+c(
+    apply(df_reg[scale_vars], 2, scale) %>% apply(2, sd, na.rm = T),
+    apply(df_reg[setdiff(all_rel_vars, scale_vars)], 2, \(x) round(sd(x, na.rm = T),3))
+    ) %>% as.list() %>% adf() %>%
+pivot_longer(cols = names(.)) %>% na.omit() %>% 
+ggplot(aes(x=name, y=value)) + geom_bar(stat = "identity") +
+theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+## try with rescaling all 
+
+
+
+df_scl <- cbind(df_reg[c(base_vars, "nbr_opened")],
+                apply(df_reg[scale_vars], 2, scale),
+                df_reg[setdiff(all_rel_vars, scale_vars)]) %>% atb() %>% na.omit()
+
+
+
+f <- paste0(c(reg_spec$vrbl, crscn_vars, "(1 | iso3c)"), collapse = " + ") %>% paste0("nbr_opened ~ ",.)  %>% as.formula()
+
+t1 = Sys.time()
+res_scl <- glmer.nb(f, df_scl)
+t2 = Sys.time()
+t2-t1
+screenreg(res_scl)
+
+
+## 
+names(cbn_dfs[["cbn_all"]])
+
+
+
+
+
+
+%>% plot()
+
+
+## 
+
+glmer.nb(nbr_opened ~ sum_core + cnt_contemp_1995 +  gptinc992j_lag4 + shweal992j_p90p100_lag4 + tmitr_approx_linear_2020step_lag2 + ti_tmitr_interact_lag2 +  NY.GDP.PCAP.CDk_lag1 + SP.POP.TOTLm_lag2 + clctr_cnt_cpaer_lag2 + (1|iso3c), dfx)
+
+
 ## ** new test
 
 df_reg1 <- na.omit(df_reg[,c("iso3c", "year", "nbr_opened", "PC1_caf", "cnt_contemp_1985", "cnt_all_1985", "pct_cutoff_10M", "gptinc992j", "ghweal992j", "SP.POP.TOTLm", "NY.GDP.PCAP.CDk")])
