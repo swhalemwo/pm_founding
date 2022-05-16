@@ -437,7 +437,12 @@ gen_cult_spending <- function() {
         mutate(value_constant = Value/inyixx999i) %>% 
         mutate(smorc_dollar_fx = value_constant/xlcusx999i_2021,
                smorc_dollar_ppp = value_constant/xlcusp999i_2021) %>% #
-        mutate(pct_fx = 100*(smorc_dollar_fx/GDP.TTL), region = countrycode(iso3c, "iso3c", "un.region.name"))
+        mutate(pct_fx = 100*(smorc_dollar_fx/GDP.TTL),
+               region = countrycode(iso3c, "iso3c", "un.region.name"),
+               ## smorc_dollar_fxm = smorc_dollar_fx/1e6)
+               smorc_dollar_fxm = smorc_dollar_fx/1e8)
+    
+
 
     ## validity checks: yeet some countries/country years that are outstandingly weird
 
@@ -455,7 +460,7 @@ gen_cult_spending <- function() {
     
     ## viz_lines(un_df_smorc_clean, y="pct_fx", facets = "region")
 
-    return(select(un_df_smorc_clean, iso3c, year, smorc_dollar_fx, pct_fx))
+    return(select(un_df_smorc_clean, iso3c, year, smorc_dollar_fxm, pct_fx))
 
 }
 

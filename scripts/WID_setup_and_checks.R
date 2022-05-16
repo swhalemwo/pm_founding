@@ -517,6 +517,8 @@ get_all_ineqs <- function() {
     gini_df <- get_ginis()
     all_ineqs <- as_tibble(Reduce(function(x,y,...) merge(x,y, all = T), list(wealth_ineq_df, inc_ineq_df, gini_df)))
 
+    all_ineqs[,3:ncol(all_ineqs)] <- all_ineqs[,3:ncol(all_ineqs)]*100
+
     return(all_ineqs)
 }
 
