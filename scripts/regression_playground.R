@@ -6,8 +6,8 @@ f <- nbr_opened ~ sum_core + cnt_contemp_1995 +  gptinc992j_lag4 + shweal992j_p9
 
 dfx <- merge(cbn_dfs[["cbn_all"]], select(df_reg, iso3c, year, nbr_opened)) %>% atb() %>% select(all.vars(f))
 
-dfx2 <-
-    apply(dfx[2, 2, \(i) i)
+## dfx2 <-
+##     apply(dfx[2, 2, \(i) i)
 
 
 res <- glmer.nb(f, dfx)
@@ -37,6 +37,117 @@ df_scl <- cbind(df_reg[c(base_vars, "nbr_opened")],
 
 f <- paste0(c(reg_spec$vrbl, crscn_vars, "(1 | iso3c)"), collapse = " + ") %>% paste0("nbr_opened ~ ",.)  %>% as.formula()
 
+
+## ** stata comparison 
+
+stata_test_vars <- c("nbr_opened", "hnwi_nbr_30M", "gptinc992j", "ghweal992j", "tmitr_approx_linear_2020step", "ti_tmitr_interact", "smorc_dollar_fxm", "NY.GDP.PCAP.CDk", "SP.POP.TOTLm", "clctr_cnt_cpaer", "sum_core", "cnt_contemp_1995")
+
+df_scl %>% select(c(all_of(c(base_vars, stata_test_vars)))) %>%
+    mutate(iso3c_num = as.numeric(factor(iso3c))) %>% 
+    write.table(paste0(PROJECT_DIR, "data/processed/df_scl.csv"), sep = ",", row.names = F)
+
+## *** R
+
+f_stata_cprn <- paste0(stata_test_vars[2:len(stata_test_vars)], collapse = " + ")
+f_stata_cprn <- paste0("nbr_opened ~ ", f_stata_cprn)
+f_stata_cprn <- paste0(f_stata_cprn, " + ", "(1 | iso3c)")
+
+res <- glmer.nb(f_stata_cprn, df_scl)
+screenreg(res)
+
+
+res_glm <- glm.nb(f_stata_cprn, df_scl)
+
+
+library(pglm)
+
+f_pglm <- paste0(stata_test_vars[2:len(stata_test_vars)], collapse = " + ")
+
+f_pglm <- paste0("nbr_opened ~ ", f_pglm)
+
+res2 <- pglm(f_pglm, data = df_scl, index = c("iso3c", "year"),
+             model = "random", family = poisson, effect = "individual")
+
+res3 <- pglm(f_pglm, data = df_scl, index = c("iso3c", "year"),
+             model = "random", family = negbin, effect = "individual", method = "bfgs")
+
+res4 <- pglm(f_pglm, data = df_scl, index = c("iso3c", "year"),
+             model = "random", family = negbin, effect = "individual", method = "nr")
+
+## res5 <- pglm(f_pglm, data = df_scl, index = c("iso3c", "year"),
+##              model = "random", family = negbin, effect = "individual", method = "Sann")
+
+
+
+screenreg(list(res, res2, res3, res4))
+
+optim_methods <- c("nr", "bfgs", "bfgsr", "bhhh", "sann", "cg", "nm") ## all methods 
+optim_methods <- c("bfgs", "bfgsr", "cg", "nm") ## methods actually working for negbin
+
+
+
+res_optim_methods <- mclapply(optim_methods, \(x) pglm(f_pglm, data = df_scl, index = c("iso3c", "year"),
+                                                       model = "random", family = negbin, method = x), mc.cores = 7)
+
+
+## screenreg(res_optim_methods[c(1:4, 6:7)], custom.model.names = optim_methods[c(1:4, 6:7)])
+screenreg(res_optim_methods, custom.model.names = optim_methods)
+
+reg_pltx <- plotreg(res_optim_methods, type = "forest", custom.model.names = optim_methods)
+
+y <- edit_plotreg(reg_pltx)
+
+
+
+
+
+## **** testing optimization methods with poisson
+## all optim methods seem to work, and to produce pretty similar results
+
+poisson_optim <- mclapply(optim_methods, \(x) pglm(f_pglm, data = df_scl, index = c("iso3c", "year"),
+                                                   model = "random", family = poisson, method = x), mc.cores = 7)
+
+screenreg(poisson_optim, custom.model.names = optim_methods)
+
+plotreg(poisson_optim)
+edit_plotreg(plotreg(poisson_optim, type = "forest", custom.model.names = optim_methods))
+
+
+
+## **** SO posting
+data("PatentsRDUS", package="pglm")
+
+
+optim_methods <- c("nr", "bfgs", "bfgsr", "bhhh", "sann", "cg", "nm")
+
+## la_res <- lapply(optim_methods, \(x) pglm(patents ~ lag(log(rd), 0:5) + scisect + log(capital72) + factor(year),
+##                                           PatentsRDUS, family = negbin, model = "within", print.level = 3,
+##                                           method = x, index = c('cusip', 'year')))
+
+la_res <- mclapply(optim_methods, \(x) pglm(patents ~ log(rd) + scisect + log(capital72), 
+                                          PatentsRDUS, family = negbin, model = "random", 
+                                          method = x, index = c('cusip')), mc.cores = 7)
+
+
+
+pglm(patents ~ log(rd) + scisect + log(capital72) + factor(year), PatentsRDUS, family = negbin, model = "random", index = c("cusip"), method = "nr")
+
+
+data(Hedonic, package = "plm")
+ra_res <- lapply(optim_methods, \(x) pglm(mv ~ crim + zn + indus + nox + age + rm, Hedonic, family = gaussian,
+                                          model = "random", print.level = 3, method = x, index = "townid"))
+
+
+screenreg(ra_res, custom.model.names = optim_methods)
+
+write.table(PatentsRDUS, paste0(PROJECT_DIR, "data/processed/PatentsRDUS.csv"), row.names = F, sep=",")
+
+
+
+
+
+## ** something lol
+
 t1 = Sys.time()
 res_scl <- glmer.nb(f, df_scl)
 t2 = Sys.time()
@@ -55,7 +166,7 @@ names(cbn_dfs[["cbn_all"]])
 %>% plot()
 
 
-## 
+
 
 glmer.nb(nbr_opened ~ sum_core + cnt_contemp_1995 +  gptinc992j_lag4 + shweal992j_p90p100_lag4 + tmitr_approx_linear_2020step_lag2 + ti_tmitr_interact_lag2 +  NY.GDP.PCAP.CDk_lag1 + SP.POP.TOTLm_lag2 + clctr_cnt_cpaer_lag2 + (1|iso3c), dfx)
 

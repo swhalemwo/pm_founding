@@ -40,10 +40,55 @@ list in 1/6
 
 xtset iso3c_num year
 
+xtsum nbr_opened
+
 /* have to change some variable names (no capitals, no dots) */
 
-xtnbreg nbr_opened hnwi_nbr_30m gptinc992j ghweal992j tmitr_approx_linear_2020step ti_tmitr_interact smorc_dollar_fxm nygdppcapcdk sppoptotlm clctr_cnt_cpaer sum_core cnt_contemp_1995, re irr
+/* negative binomial re*/
+
+xtnbreg nbr_opened hnwi_nbr_30m gptinc992j ghweal992j tmitr_approx_linear_2020step ti_tmitr_interact smorc_dollar_fxm nygdppcapcdk sppoptotlm clctr_cnt_cpaer sum_core cnt_contemp_1995, re
+
+estimates store model1
+
+/* poisson re*/
+
+xtpoisson nbr_opened hnwi_nbr_30m gptinc992j ghweal992j tmitr_approx_linear_2020step ti_tmitr_interact smorc_dollar_fxm nygdppcapcdk sppoptotlm clctr_cnt_cpaer sum_core cnt_contemp_1995, re
+
+estimates store model2
+
+xtnbreg nbr_opened hnwi_nbr_30m gptinc992j ghweal992j tmitr_approx_linear_2020step ti_tmitr_interact smorc_dollar_fxm nygdppcapcdk sppoptotlm clctr_cnt_cpaer sum_core cnt_contemp_1995, re
+
+
+estimates table model1 model2, star(.05 .01 .001)
 
 /* converges really quick huh */
 estimates table, star(.05 .01 .001)
 
+/* ** pglm example for SO */
+
+clear
+import delimited /home/johannes/Dropbox/phd/papers/org_pop/data/processed/PatentsRDUS.csv
+
+gen logrd = log(rd)
+gen logcapital72 = log(capital72)
+
+
+gen scisect2 = 0
+replace scisect2 = 1 if scisect=="yes"
+
+xtset cusip year
+
+xtnbreg patents logrd scisect2 logcapital72, re
+estimates table, star(.05 .01 .001)
+
+
+
+
+/* ** scrap */
+
+/* negbin fe, doesn't converge? */
+/* also much stuff dropped because of all zeroes DV */
+
+xtnbreg nbr_opened hnwi_nbr_30m gptinc992j ghweal992j tmitr_approx_linear_2020step ti_tmitr_interact smorc_dollar_fxm nygdppcapcdk sppoptotlm clctr_cnt_cpaer sum_core cnt_contemp_1995, fe
+
+estimates store model3
