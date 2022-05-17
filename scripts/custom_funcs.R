@@ -256,4 +256,28 @@ return(Tab)
 
 
 
-xtsum(df_scl, nbr_opened, iso3c)
+## xtsum(df_scl, nbr_opened, iso3c)
+
+edit_plotreg <- function(reg_plt) {
+
+    #' set the x-axes free and add 4 columsn to  plot_reg result
+    #' for some reason is able to modify the original object
+
+    ## reg_plt_dis: reg plt disassembled
+    ## plot code has to be run twice for some reason
+    ## also modifies the original plot reg_plt object??
+    reg_plt_dis <- ggplot_build(reg_plt)
+    reg_plt_dis$layout$facet$params$free$x <- T
+    reg_plt_dis$layout$facet$params$ncol <- 4
+    reg_plt_dis$layout$facet$params$nrow <- NULL
+    reg_plt_edt <- ggplot_gtable(reg_plt_dis)
+                                        # reg_plt_dis: reg plt disassembled
+    reg_plt_dis <- ggplot_build(reg_plt)
+    reg_plt_dis$layout$facet$params$free$x <- T
+    reg_plt_dis$layout$facet$params$ncol <- 4
+    reg_plt_dis$layout$facet$params$nrow <- NULL
+    reg_plt_edt <- ggplot_gtable(reg_plt_dis)
+    ## plot(reg_plt_edt)
+
+    return(reg_plt)
+}
