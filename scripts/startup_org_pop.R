@@ -21,12 +21,12 @@ library(OECD)
 library(rsdmx)
 library(data.table)
 library(wbstats)
-ds <- docstring
 library(ggrepel)
 library(PerformanceAnalytics)
 library(factoextra)
 library(tidyr)
 
+ds <- docstring
 
 options(show.error.messages = TRUE)
 options(show.error.locations = TRUE)
