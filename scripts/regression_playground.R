@@ -128,77 +128,31 @@ chart.Correlation(df_scl[stata_test_vars])
 ## - clctr_cnt_cpaer and cnt_contemp 1995
 
 ## **** RStata
-library(RStata)
 
-options(RStata.StataPath = "/usr/local/stata14/stata")
-options(RStata.StataVersion = 14)
 
-iv_vars <- stata_test_vars[2:len(stata_test_vars)]
-iv_vars_stata <- gsub("\\.", "_", iv_vars)
-
+iv_vars <- stata_test_vars[2:8]
 stata_output_vars <- c(iv_vars, c("cons", "ln_r", "ln_s"))
-stata_output_vars_for_stata <- c(iv_vars_stata, c("cons", "ln_r", "ln_s"))
+
 
 gof_names <- c("N", "log_likelihood", "N_g", "Chi2", "p", "df")
 
+stata_res_raw <- get_stata_result(iv_vars, stata_output_vars, gof_names)
+
+stata_res_parsed <- parse_stata_res(stata_res_raw, stata_output_vars, gof_names)
 
 
 
-## the different stata matrices have some overlapping (row/col) names, is not allowed for svmat
-## -> generate generic names (actual names throw weird errors)
-
-res_names <- paste0("r", seq(len(stata_output_vars)*2 + len(gof_names)))
-
-## for gof and cbn matrix turn into wide and transpose to avoid backslashes (stata syntax, but messy in plain text)
-
-stata_code = list(
-    panel_setup = "xtset iso3c_num year",
-    reg_cmd = paste0("xtnbreg nbr_opened ", paste(iv_vars_stata, collapse = " "), ", re"),
-    coef_cmd = "mata: b=st_matrix(\"e(b)\")' \n mata: st_matrix(\"b_stata\", b)",
-    se_cmd = "mata: se=sqrt(diagonal(st_matrix(\"e(V)\"))) \n mata: st_matrix(\"se_stata\", se)",
-    gof_cmd = "matrix gof = ( e(N), e(ll), e(N_g), e(chi2), e(p), e(df_m))'", 
-    cbn_cmd = "matrix stata_return = (b_stata', se_stata', gof')",
-    rename_cmd = paste0("matrix colnames stata_return = ", paste0(res_names, collapse = " ")),
-    sv_cmd = "svmat stata_return \n keep stata_return* \n drop if missing(stata_return1)")
 
 
-stata_src <- paste(stata_code, collapse = "\n")
-stata_res <- stata(stata_src, data.in = df_scl, data.out = T, stata.echo = F) %>% atb()
-
-stata_res_parsed <- stata_res %>% pivot_longer(cols = names(stata_res)) %>%
-    mutate(meaning = c(paste0("coef_", stata_output_vars), paste0("se_", stata_output_vars),
-                       paste0("gof_", gof_names)),
-           variable = c(stata_output_vars, stata_output_vars, gof_names)) %>%
-    select(meaning, value, variable) %>%
-    mutate(is_coef = substring(meaning, 1, 5) == "coef_",
-           is_se = substring(meaning, 1, 3) == "se_",
-           is_gof  = substring(meaning, 1, 4) == "gof_") %>% adf()
-
-t_values <- filter(stata_res_parsed, is_coef)$value / filter(stata_res_parsed, is_se)$value
-p_values <- pnorm(abs(t_values), lower.tail = F)*2
-
-coef_df <- data.frame(vrbl_name = stata_output_vars,
-                      coef = filter(stata_res_parsed, is_coef)$value,
-                      se = filter(stata_res_parsed, is_se)$value,
-                      pvalues = p_values)
-
-gof_df <- data.frame(gof_names = gof_names,
-                     gof_value = filter(stata_res_parsed, is_gof)$value)
-
-res_list <- list(coef_df = coef_df, gof_df = gof_df)
-
-
-saveRDS(res_list, file = paste0(PROJECT_DIR, "data/processed/res_list"))
-readRDS(file = paste0(PROJECT_DIR, "data/processed/res_list"))
    
-x <- createTexreg(coef.names = stata_output_vars,
-             coef = filter(stata_res_parsed, is_coef)$value,
-             se = filter(stata_res_parsed, is_se)$value,
-             pvalues = p_values,
-             gof.names = gof_names,
-             gof = filter(stata_res_parsed, is_gof)$value)
+## x <- createTexreg(coef.names = stata_output_vars,
+##              coef = filter(stata_res_parsed, is_coef)$value,
+##              se = filter(stata_res_parsed, is_se)$value,
+##              pvalues = p_values,
+##              gof.names = gof_names,
+##              gof = filter(stata_res_parsed, is_gof)$value)
              
-screenreg(x)
+## screenreg(x)
              
 
 
