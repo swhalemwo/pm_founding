@@ -32,15 +32,10 @@ theme(axis.text.x = element_text(angle = 45, hjust = 1))
 df_scl <- df_reg %>%
     select(all_of(c(base_vars, "nbr_opened", all_rel_vars)))%>%
     na.omit() %>% ## first select all relevant vars and omit to rescale relative to combination
-    mutate(across(all_of(all_rel_vars), scale_wo_attr)) ## scale the relevant ones
+    mutate(across(all_of(all_rel_vars), scale_wo_attr), ## scale the relevant ones
+           iso3c_num = as.numeric(factor(iso3c)))
 
 ## apply(df_scl[all_rel_vars], 2, sd)
-
-
-
-
-
-
 
 
 f <- paste0(c(reg_spec$vrbl, crscn_vars, "(1 | iso3c)"), collapse = " + ") %>% paste0("nbr_opened ~ ",.)  %>% as.formula()
@@ -87,15 +82,17 @@ res4 <- pglm(f_pglm, data = df_scl, index = c("iso3c", "year"),
 
 
 
-screenreg(list(res, res2, res3, res4))
+screenreg(list(res2, res3, res4))
 
 optim_methods <- c("nr", "bfgs", "bfgsr", "bhhh", "sann", "cg", "nm") ## all methods 
 optim_methods <- c("bfgs", "bfgsr", "cg", "nm") ## methods actually working for negbin
-
+optim_methods <- c("nr", "bhhh", "nm")
 
 
 res_optim_methods <- mclapply(optim_methods, \(x) pglm(f_pglm, data = df_scl, index = c("iso3c", "year"),
                                                        model = "random", family = negbin, method = x), mc.cores = 7)
+
+
 
 
 ## screenreg(res_optim_methods[c(1:4, 6:7)], custom.model.names = optim_methods[c(1:4, 6:7)])
@@ -120,7 +117,52 @@ screenreg(poisson_optim, custom.model.names = optim_methods)
 plotreg(poisson_optim)
 edit_plotreg(plotreg(poisson_optim, type = "forest", custom.model.names = optim_methods))
 
+## **** testing correlations
 
+
+
+chart.Correlation(df_scl[stata_test_vars])
+## some high ones:
+## - hnwi and smorc_dollar_fxm/clctr_cnt_cpaer/cnt_contemp_1995
+## - smorc_dollar_fxm and clctr_cnt_cpaer/cnt_contemp_1995 
+## - clctr_cnt_cpaer and cnt_contemp 1995
+
+## **** RStata
+library(RStata)
+
+options(RStata.StataPath = "/usr/local/stata14/stata")
+options(RStata.StataVersion = 14)
+
+iv_vars <- stata_test_vars[2:len(stata_test_vars)]
+iv_vars_stata <- gsub("\\.", "_", iv_vars)
+
+stata_output_vars <- c(iv_vars, c("cons", "ln_r", "ln_s"))
+stata_output_vars_for_stata <- c(iv_vars_stata, c("cons", "ln_r", "ln_s"))
+
+gof_names <- c("N", "log_likelihood", "N_g", "Chi2", "p", "df")
+
+## for gof and cbn matrix turn into wide and transpose to avoid backslashes (stata syntax, but messy in plain text)
+
+res_names <- paste0("r", seq(len(stata_output_vars)*2 + len(gof_names)))
+
+
+stata_code = list(
+    panel_setup = "xtset iso3c_num year",
+    reg_cmd = paste0("xtnbreg nbr_opened ", paste(iv_vars_stata, collapse = " "), ", re"),
+    coef_cmd = "mata: b=st_matrix(\"e(b)\")' \n mata: st_matrix(\"b_stata\", b)",
+    se_cmd = "mata: se=sqrt(diagonal(st_matrix(\"e(V)\"))) \n mata: st_matrix(\"se_stata\", se)",
+    gof_cmd = "matrix gof = ( e(N), e(ll), e(N_g), e(chi2), e(p), e(df_m))'", 
+    cbn_cmd = "matrix stata_return = (b_stata', se_stata', gof')",
+    rename_cmd = paste0("matrix colnames stata_return = ", paste0(res_names, collapse = " ")),
+    sv_cmd = "svmat stata_return \n keep stata_return* \n drop if missing(stata_return1)")
+
+
+stata_src <- paste(stata_code, collapse = "\n")
+x <- stata(stata_src, data.in = df_scl, data.out = T) %>% atb()
+
+stata("ds", data.in = df_scl)
+
+## gptinc992j ghweal992j tmitr_approx_linear_2020step ti_tmitr_interact smorc_dollar_fxm nygdppcapcdk sppoptotlm clctr_cnt_cpaer sum_core cnt_contemp_1995
 
 ## **** SO posting
 data("PatentsRDUS", package="pglm")
@@ -136,6 +178,8 @@ la_res <- mclapply(optim_methods, \(x) pglm(patents ~ log(rd) + scisect + log(ca
                                           PatentsRDUS, family = negbin, model = "random", 
                                           method = x, index = c('cusip')), mc.cores = 7)
 
+sel <- c(3,4,5,6,7)
+screenreg(la_res[sel], custom.model.names = optim_methods[sel])
 
 
 pglm(patents ~ log(rd) + scisect + log(capital72) + factor(year), PatentsRDUS, family = negbin, model = "random", index = c("cusip"), method = "nr")

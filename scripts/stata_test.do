@@ -28,7 +28,29 @@ xttab msp
 xttrans msp
 
 
+/* automated */
 
+clear
+import delimited /home/johannes/Dropbox/phd/papers/org_pop/data/processed/df_scl.csv
+
+xtset iso3c_num year
+
+xtnbreg nbr_opened hnwi_nbr_30m gptinc992j ghweal992j tmitr_approx_linear_2020step ti_tmitr_interact smorc_dollar_fxm nygdppcapcdk sppoptotlm clctr_cnt_cpaer sum_core cnt_contemp_1995, re
+
+mata: b=st_matrix("e(b)")' 
+ mata: st_matrix("b_stata", b)
+mata: se=sqrt(diagonal(st_matrix("e(V)"))) 
+ mata: st_matrix("se_stata", se)
+matrix gof = ( e(N), e(ll), e(N_g), e(chi2), e(p), e(df_m))'
+matrix stata_return = (b_stata', se_stata', gof')
+matrix colnames stata_return = r1 r2 r3 r4 r5 r6 r7 r8 r9 r10 r11 r12 r13 r14 r15 r16 r17 r18 r19 r20 r21 r22 r23 r24 r25 r26 r27 r28 r29 r30 r31 r32 r33 r34
+svmat stata_return
+ keep stata_return* 
+ drop if missing(stata_return1)
+
+
+
+save myauto
 
 
 
@@ -48,21 +70,93 @@ xtsum nbr_opened
 
 xtnbreg nbr_opened hnwi_nbr_30m gptinc992j ghweal992j tmitr_approx_linear_2020step ti_tmitr_interact smorc_dollar_fxm nygdppcapcdk sppoptotlm clctr_cnt_cpaer sum_core cnt_contemp_1995, re
 
-estimates store model1
+estimates store negbin
+
+/* testing to save */
+
+matrix b_wide = e(b)
+matrix b = b_wide'
+
+matrix s = (  _se[gptinc992j], _se[hnwi_nbr_30m])
+
+/* https://stackoverflow.com/questions/23955939/saving-coefficients-and-standard-errors-as-variables */
+/* https://www.stata.com/statalist/archive/2013-04/msg00185.html */
+mata: b=st_matrix("e(b)")'
+mata: st_matrix("b_stata", b)
+mata: se=sqrt(diagonal(st_matrix("e(V)")))
+mata: st_matrix("se_stata", se)
+getmata se, force
+
+local my_matrix_rownames : rowfullnames b
+display `my_matrix_rownames'
+
+scalar asdfj = _se[cnt_contemp_1995]
+
+scalar cnt_contemp_1995_se =  _se[cnt_contemp_1995]
+
+matrix gof = ( e(N) \ e(ll) \ e(N_g) \ e(chi2) \ e(p) \ e(df_m))
+
+matrix cbn = b_stata \ se_stata \ gof
+
+svmat cbn
+keep *r
+
+
+
+/* put the coefs in the data */
+svmat k
+/* throw out everything that doesn't start with k */
+keep k* 
+save myauto
+
+estat 
+
+predict Fitted, xb
+predict Epsilon2, deviance replace
+
+
+/* Scatter plot */
+scatter Epsilon Fitted 
+graph export mygraph.pdf, replace
+
+summarize nbr_opened Fitted, var
+
+
+
+scatter Fitted
+
+
+
+
 
 /* poisson re*/
 
 xtpoisson nbr_opened hnwi_nbr_30m gptinc992j ghweal992j tmitr_approx_linear_2020step ti_tmitr_interact smorc_dollar_fxm nygdppcapcdk sppoptotlm clctr_cnt_cpaer sum_core cnt_contemp_1995, re
 
-estimates store model2
+estimates store poisson
 
-xtnbreg nbr_opened hnwi_nbr_30m gptinc992j ghweal992j tmitr_approx_linear_2020step ti_tmitr_interact smorc_dollar_fxm nygdppcapcdk sppoptotlm clctr_cnt_cpaer sum_core cnt_contemp_1995, re
+lrtest poisson negbin, force
+/* p = 0.0435, just under 0.05.. :( */
 
 
-estimates table model1 model2, star(.05 .01 .001)
+estimates table negbin poisson, star(.05 .01 .001)
 
 /* converges really quick huh */
 estimates table, star(.05 .01 .001)
+
+/* ** export */
+
+eststo negbin
+esttab negbin using "/home/johannes/Dropbox/phd/papers/org_pop/data/processed/stata_output"
+
+
+
+
+
+
+
+
+
 
 /* ** pglm example for SO */
 
