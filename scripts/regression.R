@@ -217,13 +217,17 @@ gen_cbn_dfs <- function(lngtd_vars, crscn_vars, vrbl_cnbs) {
     #' checks whether a country-year has coverage for all the lags for all the variables required by combination
     #' needs lngtd_vars and crscn_vars to set which to variables need to be named as lag
 
+    
+
     cvrg_lags <- lapply(lngtd_vars, \(x) lapply(seq(1,5), \(i) gen_lag(vrbl=x, lag=i) %>%
                                                                select(iso3c, year, value =paste0(x, "_lag", i)) %>%
                                                                mutate(lag=i, vrbl = x, lag_col = "_lag")) %>%
                                          Reduce(\(x,y) rbind(x,y), .)) %>%
         Reduce(\(x,y) rbind(x,y), .)
 
-    cvrg_crscn <- lapply(crscn_vars, \(x) select(df_reg, iso3c, year, value = x) %>%
+    
+
+    cvrg_crscn <- lapply(crscn_vars, \(x) select(df_reg, iso3c, year, value = all_of(x)) %>%
                                       mutate(vrbl = x, lag_col = "", lag=""))
 
     ## convert lag to string to allow having empty string for lag of cross-sectional variables
@@ -248,12 +252,35 @@ gen_cbn_dfs <- function(lngtd_vars, crscn_vars, vrbl_cnbs) {
         select(iso3c, year, vrbl_lag, value) %>%
         pivot_wider(names_from = vrbl_lag, values_from = value)
 
-    cbn_dfs <- lapply(cbn_cvrg, \(x) atb(merge(select(x, iso3c, year), df_all_lags)))
+    cbn_dfs <- lapply(cbn_cvrg, \(x) atb(merge(select(all_of(x), iso3c, year), df_all_lags)))
 
     return(cbn_dfs)
 }
 
-run_vrbl_mdl_vars <- function(mdl_vars, df_cbn) {
+gen_mdl_id <- function(reg_spec, cbn_name, mdl_name) {
+
+    df_idx <- reg_spec %>% pivot_wider(names_from = vrbl, values_from = lag)
+    df_idx$cbn_name <- cbn_name
+    df_idx$mdl_name <- mdl_name
+
+    
+    file_id <- paste(
+        mdl_name,
+        cbn_name,
+        paste0(reg_spec$lag, collapse = ""),  sep = "---")
+
+    df_idx$file_id <- file_id
+
+
+    return(df_idx)
+}
+        
+
+
+REG_RES_FILE <- "/home/johannes/ownCloud/reg_res/v1.csv"
+    
+
+run_vrbl_mdl_vars <- function(mdl_vars, df_cbn, cbn_name, mdl_name, reg_spec) {
     #' run one regression given the model vars
 
     ## mdl_vars <- vrbl_cnbs[["no_cult_spending_and_mitr"]]
@@ -266,23 +293,37 @@ run_vrbl_mdl_vars <- function(mdl_vars, df_cbn) {
                                                                            
     f <- paste0("nbr_opened ~ ", f_rhs)
 
+    df_idx <- gen_mdl_id(reg_spec, cbn_name, mdl_name)
+
+
+    ## save id to df_id to keep track
+    write.table(df_idx, file = REG_RES_FILE, append = T)
+
+    ## see if i can save "regression result"
+    file_id <- df_idx$file_id
+    write.table(mtcars, paste0(REG_RES_DIR, file_id))
+
     ## print(f)
 
     ## now run f on df_cbn
 
-    return(list(formula=f, nrow=nrow(df_cbn)))
+    return(list(# formula=f,
+                nrow=nrow(df_cbn), file_id = file_id))
 
 }
 
-run_cbn <- function(cbn_vars, base_vars, ctrl_vars, cbn_name) {
+run_cbn <- function(cbn_vars, base_vars, ctrl_vars, cbn_name, reg_spec) {
     #' run a combination
 
     df_cbn <- cbn_dfs[[cbn_name]]
 
     ## generate the models
     cbn_models <- gen_cbn_models(cbn_vars, base_vars, ctrl_vars)
+    
+
  
-    lapply(cbn_models, \(x) run_vrbl_mdl_vars(x, df_cbn)) %>% rbindlist() %>% atb()
+    lapply(names(cbn_models), \(x) run_vrbl_mdl_vars(cbn_models[[x]], df_cbn, cbn_name, mdl_name = x, reg_spec)) %>%
+        rbindlist() %>% atb()
    
 }
 
@@ -304,7 +345,7 @@ run_spec <- function(reg_spec, base_vars) {
     spec_cbn_names <- names(spec_cbns)
     names(spec_cbn_names) <- spec_cbn_names
 
-    lapply(spec_cbn_names, \(x) run_cbn(spec_cbns[[x]], base_vars, ctrl_vars, x))
+    lapply(spec_cbn_names, \(x) run_cbn(spec_cbns[[x]], base_vars, ctrl_vars, x, reg_spec))
 
 }
 
@@ -327,13 +368,14 @@ lngtd_vars <- c(hnwi_vars, inc_ineq_vars, weal_ineq_vars, non_thld_lngtd_vars)
 all_rel_vars <- unique(c(hnwi_vars, inc_ineq_vars, weal_ineq_vars, non_thld_lngtd_vars, crscn_vars))
 
 
-## vrbl_thld_choices <- gen_vrbl_thld_choices(hnwi_vars, inc_ineq_vars, weal_ineq_vars)
-## reg_spec <- gen_reg_spec(non_thld_lngtd_vars)
 
 
 vrbl_cbns <- gen_cbns(all_rel_vars)
 
 cbn_dfs <- gen_cbn_dfs(lngtd_vars, crscn_vars, vrbl_cbns)
+
+vrbl_thld_choices <- gen_vrbl_thld_choices(hnwi_vars, inc_ineq_vars, weal_ineq_vars)
+reg_spec <- gen_reg_spec(non_thld_lngtd_vars)
 
 
 run_spec(reg_spec, base_vars)
@@ -342,7 +384,14 @@ run_spec(reg_spec, base_vars)
 ## df_reg_lags <- gen_lag_df(reg_spec, crscn_vars, base_vars)
 
 
+x <- sapply(lngtd_vars, \(x) scramblematch(x, reg_spec$vrbl)) %>% apply(2, any) + 0
+tibble(var_name = names(x), present = x)
 
+merge(tibble(vrbl = lngtd_vars), 
+      reg_spec, all.x = T, sort = T)
+
+
+    
 
 
 ## generate the combinations with a bunch of grepling 
