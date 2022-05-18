@@ -281,3 +281,11 @@ edit_plotreg <- function(reg_plt) {
 
     return(reg_plt)
 }
+
+
+scale_wo_attr <- function(x) {
+    #' scale vector without returning attributes
+    scld <- scale(x)
+    attributes(scld) <- NULL
+    return(scld)
+}

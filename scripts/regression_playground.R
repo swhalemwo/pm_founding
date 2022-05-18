@@ -29,9 +29,17 @@ theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
 
 
-df_scl <- cbind(df_reg[c(base_vars, "nbr_opened")],
-                apply(df_reg[scale_vars], 2, scale),
-                df_reg[setdiff(all_rel_vars, scale_vars)]) %>% atb() %>% na.omit()
+df_scl <- df_reg %>%
+    select(all_of(c(base_vars, "nbr_opened", all_rel_vars)))%>%
+    na.omit() %>% ## first select all relevant vars and omit to rescale relative to combination
+    mutate(across(all_of(all_rel_vars), scale_wo_attr)) ## scale the relevant ones
+
+## apply(df_scl[all_rel_vars], 2, sd)
+
+
+
+
+
 
 
 
