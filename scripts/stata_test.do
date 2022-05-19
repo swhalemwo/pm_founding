@@ -144,6 +144,11 @@ estimates table negbin poisson, star(.05 .01 .001)
 /* converges really quick huh */
 estimates table, star(.05 .01 .001)
 
+/* see if xtpoisson also drops groups with all zero outcome: yes it does */
+xtpoisson nbr_opened hnwi_nbr_30m gptinc992j ghweal992j tmitr_approx_linear_2020step ti_tmitr_interact smorc_dollar_fxm nygdppcapcdk sppoptotlm clctr_cnt_cpaer sum_core cnt_contemp_1995, fe
+
+
+
 /* ** export */
 
 eststo negbin
