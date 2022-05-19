@@ -32,7 +32,7 @@ options(RStata.StataVersion = 14)
 
 REG_RES_DIR <- "/home/johannes/ownCloud/reg_res/v1/"
 
-get_stata_result <- function(iv_vars, stata_output_vars, gof_names) {
+get_stata_result <- function(iv_vars, stata_output_vars, gof_names, dfx) {
     #' run the xtnbreg regression with stata() given independent vars,
     #' also give stata_output_vars since also needed in parse_stata_res
 
@@ -58,7 +58,10 @@ get_stata_result <- function(iv_vars, stata_output_vars, gof_names) {
 
 
     stata_src <- paste(stata_code, collapse = "\n")
-    stata_res <- stata(stata_src, data.in = df_scl, data.out = T, stata.echo = T) %>% atb()
+
+    
+    
+    stata_res <- stata(stata_src, data.in = dfx, data.out = T, stata.echo = T) %>% atb()
 
     return(stata_res)
 }
@@ -97,7 +100,7 @@ parse_stata_res <- function(stata_res, stata_output_vars, gof_names){
 
 
 
-save_parsed_res <- function(stata_res_parsed, idx) {
+save_parsed_res <- function(res_list, idx) {
     #' save the parsed stata res to id
 
     saveRDS(res_list, file = paste0(REG_RES_DIR, idx))
@@ -151,7 +154,7 @@ gen_reg_spec <- function(non_thld_lngd_vars) {
         mutate(lag = sample(seq(1,5),1))
 
     ## lag TI*TMITR interaction with same lag as TMITR
-    lngtd_vars[which(lngtd_vars$vrbl == "ti_tmitr_interact"),]$lag <- filter(lngtd_vars, vrbl == "tmitr_approx_linear_2020step")$lag
+    lngtd_vars[which(lngtd_vars$vrbl == "ti_tmitr_interact"),]$lag <- filter(lngtd_vars, vrbl == "tmitr_approx_linear20step")$lag
 
     return(lngtd_vars)
 }
@@ -183,7 +186,7 @@ gen_cbns <- function(rel_vars) {
     vrbl_cbns <- list(
         cbn_all=rel_vars,
         cbn_no_cult_spending = rel_vars[!grepl("smorc_dollar_fx", rel_vars)],
-        cbn_no_cult_spending_and_mitr = rel_vars[!grepl("smorc_dollar_fx|tmitr_approx_linear_2020step|ti_tmitr_interact", rel_vars)],
+        cbn_no_cult_spending_and_mitr = rel_vars[!grepl("smorc_dollar_fx|tmitr_approx_linear20step|ti_tmitr_interact", rel_vars)],
         cbn_controls = rel_vars[rel_vars %in% c(base_vars) | grepl("SP.POP.TOTLm|NY.GDP.PCAP.CDk", rel_vars)])
 
     return(vrbl_cbns)
@@ -236,6 +239,7 @@ gen_cbn_dfs <- function(lngtd_vars, crscn_vars, vrbl_cnbs) {
                              cvrg_crscn) %>% atb()
 
 
+    ## generate whether a country is covered by a combination
     cbn_cvrg <- lapply(vrbl_cbns, \(cbn_vars)
                        cvrg_lags_crscn %>%
                        filter(vrbl %in% cbn_vars) %>% 
@@ -254,22 +258,51 @@ gen_cbn_dfs <- function(lngtd_vars, crscn_vars, vrbl_cnbs) {
 
     cbn_dfs <- lapply(cbn_cvrg, \(x) atb(merge(select(all_of(x), iso3c, year), df_all_lags)))
 
+    cbn_dfs <- lapply(cbn_dfs, \(x) mutate(x, across(all_of(setdiff(names(x), base_vars)), scale_wo_attr)) %>%
+                                    mutate(iso3c_num = as.numeric(factor(iso3c))))
+
+
+
+    ## add iso3c_num to make stata happy 
+    ## cbn_dfs <- lapply(cbn_dfs, \(x) mutate(x, iso3c_num = as.numeric(factor(iso3c))))
+
+    ## add nbr_opened
+    cbn_dfs <- lapply(cbn_dfs, \(x) merge(x, select(df_reg, iso3c, year, nbr_opened), all.x = T) %>% atb())
+
+    
     return(cbn_dfs)
 }
 
 gen_mdl_id <- function(reg_spec, cbn_name, mdl_name) {
+    #' generate unique id for each model
 
-    df_idx <- reg_spec %>% pivot_wider(names_from = vrbl, values_from = lag)
-    df_idx$cbn_name <- cbn_name
-    df_idx$mdl_name <- mdl_name
+    ## get id: need information which variable is there (X if not there), also of lag of each variable that is there
+    
+
+    df_idx <- merge(tibble(vrbl = lngtd_vars), 
+                   reg_spec, all.x = T) %>%
+        mutate(lag_str = as.character(lag)) %>%
+        mutate(lag_str = ifelse(is.na(lag_str), "X", lag_str)) %>%
+        select(variable=vrbl, value = lag_str)
+
+    df_idx[nrow(df_idx)+1,] <- list("cbn_name", cbn_name)
+    df_idx[nrow(df_idx)+1,] <- list("mdl_name", mdl_name)
+
+    mdl_id <- paste0(df_idx$value, collapse = "")
+    df_idx$mdl_id <- mdl_id
+    
+
+    ## df_idx <- reg_spec %>% pivot_wider(names_from = vrbl, values_from = lag)
+    ## df_idx$cbn_name <- cbn_name
+    ## df_idx$mdl_name <- mdl_name
 
     
-    file_id <- paste(
-        mdl_name,
-        cbn_name,
-        paste0(reg_spec$lag, collapse = ""),  sep = "---")
+    ## file_id <- paste(
+    ##     mdl_name,
+    ##     cbn_name,
+    ##     paste0(reg_spec$lag, collapse = ""),  sep = "---")
 
-    df_idx$file_id <- file_id
+    ## df_idx$file_id <- file_id
 
 
     return(df_idx)
@@ -277,35 +310,48 @@ gen_mdl_id <- function(reg_spec, cbn_name, mdl_name) {
         
 
 
-REG_RES_FILE <- "/home/johannes/ownCloud/reg_res/v1.csv"
+
     
 
 run_vrbl_mdl_vars <- function(mdl_vars, df_cbn, cbn_name, mdl_name, reg_spec) {
     #' run one regression given the model vars
 
-    ## mdl_vars <- vrbl_cnbs[["no_cult_spending_and_mitr"]]
     
-    ## right hand side of formula
-
-    ## f_rhs <- paste0(mdl_vars[mdl_vars %!in% ctrl_vars], collapse = " + ") %>%
-    f_rhs <- paste0(mdl_vars[mdl_vars %!in% base_vars], collapse = " + ") %>%        
-        paste0(., " + (1|iso3c)")
-                                                                           
-    f <- paste0("nbr_opened ~ ", f_rhs)
 
     df_idx <- gen_mdl_id(reg_spec, cbn_name, mdl_name)
+    file_id <- df_idx$mdl_id[1]
+    print(file_id)
 
+    ## mdl_vars_bu <- mdl_vars
+    ## mdl_vars <- mdl_vars_bu
+
+    ## DEBUG: SEE WHY STATA DOESN'T LIKE VARIABLE; EITHER LENGTH OR UNDERSCORE BEFORE NUMBER
+    ## not underscore before variable
+    ## mdl_vars <- gsub("tmitr_approx_linear2020step_lag4", "tmitr_approx_linear20step_lag4", mdl_vars)
+    ## df_cbn$tmitr_approx_linear20step_lag4 <- df_cbn$tmitr_approx_linear2020step_lag4
+    ## df_cbn$tmitr_approxlag4 <- df_cbn$tmitr_approx_linear_2020step_lag4
+
+    iv_vars <- mdl_vars[mdl_vars %!in% base_vars]
+    print(iv_vars)
+    
+    stata_output_vars <- c(iv_vars, c("cons", "ln_r", "ln_s"))
+    gof_names <- c("N", "log_likelihood", "N_g", "Chi2", "p", "df")
+
+    dfx <- select(df_cbn, all_of(c(base_vars, "iso3c_num", "nbr_opened",iv_vars)))
+
+    stata_res_raw <- get_stata_result(iv_vars = iv_vars, stata_output_vars = stata_output_vars,
+                                      gof_names = gof_names, dfx = dfx)
+
+    if (nrow(stata_res_raw) > 1) {stop("something wrong")} ## debug 
+
+    stata_res_parsed <- parse_stata_res(stata_res_raw, stata_output_vars, gof_names)
+
+    save_parsed_res(stata_res_parsed, idx = file_id)
+    
 
     ## save id to df_id to keep track
-    write.table(df_idx, file = REG_RES_FILE, append = T)
+    write.table(df_idx, file = REG_RES_FILE, append = T, col.names = F, row.names = F)
 
-    ## see if i can save "regression result"
-    file_id <- df_idx$file_id
-    write.table(mtcars, paste0(REG_RES_DIR, file_id))
-
-    ## print(f)
-
-    ## now run f on df_cbn
 
     return(list(# formula=f,
                 nrow=nrow(df_cbn), file_id = file_id))
@@ -361,7 +407,7 @@ hnwi_vars <- sapply(hnwi_cutoff_vlus, \(x) paste0("hnwi_nbr_", sanitize_number(x
 inc_ineq_vars <- c("sptinc992j_p90p100", "sptinc992j_p99p100", "gptinc992j")
 weal_ineq_vars <- c("shweal992j_p90p100", "shweal992j_p99p100", "ghweal992j")
 
-non_thld_lngtd_vars <- c("tmitr_approx_linear_2020step", "ti_tmitr_interact", "smorc_dollar_fxm", "NY.GDP.PCAP.CDk", "SP.POP.TOTLm", "clctr_cnt_cpaer")
+non_thld_lngtd_vars <- c("tmitr_approx_linear20step", "ti_tmitr_interact", "smorc_dollar_fxm", "NY.GDP.PCAP.CDk", "SP.POP.TOTLm", "clctr_cnt_cpaer")
 
 lngtd_vars <- c(hnwi_vars, inc_ineq_vars, weal_ineq_vars, non_thld_lngtd_vars)
 
@@ -377,28 +423,23 @@ cbn_dfs <- gen_cbn_dfs(lngtd_vars, crscn_vars, vrbl_cbns)
 vrbl_thld_choices <- gen_vrbl_thld_choices(hnwi_vars, inc_ineq_vars, weal_ineq_vars)
 reg_spec <- gen_reg_spec(non_thld_lngtd_vars)
 
-
-run_spec(reg_spec, base_vars)
+REG_RES_FILE <- "/home/johannes/ownCloud/reg_res/v1.csv"
 
 
 ## df_reg_lags <- gen_lag_df(reg_spec, crscn_vars, base_vars)
 
 
-x <- sapply(lngtd_vars, \(x) scramblematch(x, reg_spec$vrbl)) %>% apply(2, any) + 0
-tibble(var_name = names(x), present = x)
-
-merge(tibble(vrbl = lngtd_vars), 
-      reg_spec, all.x = T, sort = T)
-
-
-    
-
+## orders longitudinal variables alphabetically
+## maybe I should do that generally?
 
 ## generate the combinations with a bunch of grepling 
+run_spec(reg_spec, base_vars)
+
+run_vrbl_mdl_vars(mdl_vars = c("tmitr_approx_linear2020step_lag4", "NY.GDP.PCAP.CDk_lag3", "SP.POP.TOTLm_lag1"), 
+                  df_cbn = cbn_dfs$cbn_all,
+                  cbn_name = "cbn_all",
+                  mdl_name = "tmitr_approx_linear_2020step_lag4",
+                  reg_spec = reg_spec)
 
 
-
-
-
-
-screenreg(glmer.nb(f, data = df_reg_lags))
+                  

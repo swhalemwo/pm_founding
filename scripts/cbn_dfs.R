@@ -119,7 +119,7 @@ get_df_reg <- function(df_anls) { #
     df_reg <- as_tibble(cbind(df_reg, hnwi_cnts))
 
     ## generate interaction
-    df_reg$ti_tmitr_interact <- df_reg$sum_core*df_reg$tmitr_approx_linear_2020step
+    df_reg$ti_tmitr_interact <- df_reg$sum_core*df_reg$tmitr_approx_linear20step
 
 
 

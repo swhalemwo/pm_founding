@@ -97,10 +97,10 @@ construct_mtrs <- function() {
         group_by(iso3c) %>%
         mutate(tmitr_approx_linear = na.approx(tmitr, na.rm = F),
                tmitr_approx_step = na.locf(tmitr, na.rm = F),
-               tmitr_approx_linear_2020step = tmitr_approx_linear)
+               tmitr_approx_linear20step = tmitr_approx_linear)
 
     ## fill in last values manually like a fucking tool
-    efw_fill_up2[which(efw_fill_up2$year == 2020),c("tmitr_approx_linear_2020step")] <- efw_fill_up2[which(efw_fill_up2$year == 2019),c("tmitr_approx_linear_2020step")]
+    efw_fill_up2[which(efw_fill_up2$year == 2020),c("tmitr_approx_linear20step")] <- efw_fill_up2[which(efw_fill_up2$year == 2019),c("tmitr_approx_linear20step")]
 
     return(efw_fill_up2)
     
