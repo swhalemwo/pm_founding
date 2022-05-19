@@ -62,7 +62,7 @@ mow_art <- as_tibble(merge(filter(df_mow[,c("idx", "name", "name_eng", "founding
 
 
 
-MOW_DUPL_FILE <- paste0(MOW_DIR, "dupl.csv")
+MOW_DUPL_FILE <- paste0(PROJECT_DIR, "data/git_files/", "mow_dupl.csv")
 mow_dupls <- read.csv(MOW_DUPL_FILE, header = FALSE)
 names(mow_dupls) <- c("name", "dupl", "idx")
 

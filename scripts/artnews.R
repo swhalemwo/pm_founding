@@ -166,7 +166,7 @@ readin_artnews_all <- function() {
     artnews_df_all$country1 <- countrycode(artnews_df_all$location, "country.name", "iso3c")
 
     ## manually countrycoding the rest like a fucking LOSER
-    artnews_country_dict <- as_tibble(read.csv(paste0(ARTNEWS_DIR, "artnews_loc_table.csv")))
+    artnews_country_dict <- as_tibble(read.csv(paste0(PROJECT_DIR, "data/git_files/artnews_loc_table.csv")))
 
     ## reading the manually coded countrycodes in
     artnews_cbn <- as_tibble(merge(artnews_df_all, artnews_country_dict, all.x = T))
