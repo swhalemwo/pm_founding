@@ -170,6 +170,47 @@ stata("ds", data.in = df_scl)
 
 ## gptinc992j ghweal992j tmitr_approx_linear_2020step ti_tmitr_interact smorc_dollar_fxm nygdppcapcdk sppoptotlm clctr_cnt_cpaer sum_core cnt_contemp_1995
 
+## ** poisson fe 
+
+stata_test_lngtd_vars <- setdiff(stata_test_vars, crscn_vars)
+
+f_pglm_fe <- paste0(stata_test_lngtd_vars[2:len(stata_test_lngtd_vars)], collapse = " + ")
+f_pglm_fe <- paste0("nbr_opened ~ ", f_pglm_fe)
+
+library(MASS)
+
+nb_fe <- pglm(f_pglm_fe, data = df_scl, index = c("iso3c", "year"),
+             model = "within", family = negbin, effect = "individual")
+
+
+
+nb_fe_ind <- pglm(f_pglm_fe, data = df_scl, index = c("iso3c", "year"),
+             model = "within", family = negbin, effect = "individual")
+
+nb_fe_year <- pglm(f_pglm_fe, data = df_scl, index = c("year"),
+             model = "within", family = negbin, effect = "individual")
+
+nb_fe_two1 <- pglm(f_pglm_fe, data = df_scl, index = c("iso3c", "year"),
+             model = "within", family = negbin, effect = "twoways")
+
+## probably need "pooling" for "twoways"
+nb_fe_two2 <- pglm(f_pglm, data = df_scl, index = c("year", "iso3c"),
+                   model = "pooling", family = negbin, effect = "twoways")
+
+nb_fe_time1 <- pglm(f_pglm_fe, data = df_scl, index = c("year"),
+             model = "within", family = negbin, effect = "time")
+
+nb_fe_time2 <- pglm(f_pglm_fe, data = df_scl, index = c("iso3c"),
+             model = "within", family = negbin, effect = "time")
+
+
+
+screenreg(list(nb_fe_ind, nb_fe_year, nb_fe_two1, nb_fe_two2, nb_fe_time1, nb_fe_time2))
+## wondering if time-invariant variables can be used with twoways
+## probably not: probably FE are additive: unit FE + time FE, not multiplicative: unit fe * time fe
+## strange that it works tho 
+
+
 ## **** SO posting
 data("PatentsRDUS", package="pglm")
 
