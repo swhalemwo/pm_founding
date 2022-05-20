@@ -43,7 +43,7 @@ f <- paste0(c(reg_spec$vrbl, crscn_vars, "(1 | iso3c)"), collapse = " + ") %>% p
 
 ## ** stata comparison 
 
-stata_test_vars <- c("nbr_opened", "hnwi_nbr_30M", "gptinc992j", "ghweal992j", "tmitr_approx_linear_2020step", "ti_tmitr_interact", "smorc_dollar_fxm", "NY.GDP.PCAP.CDk", "SP.POP.TOTLm", "clctr_cnt_cpaer", "sum_core", "cnt_contemp_1995")
+stata_test_vars <- c("nbr_opened", "hnwi_nbr_30M", "gptinc992j", "ghweal992j", "tmitr_approx_linear20step", "ti_tmitr_interact", "smorc_dollar_fxm", "NY.GDP.PCAP.CDk", "SP.POP.TOTLm", "clctr_cnt_cpaer", "sum_core", "cnt_contemp_1995")
 
 df_scl %>% select(c(all_of(c(base_vars, stata_test_vars)))) %>%
     mutate(iso3c_num = as.numeric(factor(iso3c))) %>% 
@@ -82,6 +82,7 @@ res4 <- pglm(f_pglm, data = df_scl, index = c("iso3c", "year"),
 
 
 
+
 screenreg(list(res2, res3, res4))
 
 optim_methods <- c("nr", "bfgs", "bfgsr", "bhhh", "sann", "cg", "nm") ## all methods 
@@ -102,6 +103,12 @@ reg_pltx <- plotreg(res_optim_methods, type = "forest", custom.model.names = opt
 
 y <- edit_plotreg(reg_pltx)
 
+
+vif_res1 <- plm(f_pglm, data = df_scl, index = c("iso3c", "year"), model = "pooling", family = negbin, method = "nm")
+vif_res2 <- lm(f_pglm, data = df_scl)
+
+vif(vif_res)
+vif(vif_res2)
 
 
 
