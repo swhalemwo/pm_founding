@@ -627,4 +627,47 @@ coeftest(fe_all_2index, vcov = vcovHC(fe_all_2index, cluster = "group"))
 ## with effect="twoways" the coefs are all like in book (except miles)
 ## standard errors are also all pretty close (within ~95% guestimate)
 
+## * paralellization test
 
+
+## parLapply: gets stuck and can't even quit 
+library(doParallel)
+## no_cores <- 5
+## registerDoParallel(cores=no_cores)  
+## cl <- makeCluster(no_cores, type="FORK")
+## parLapply(cl, all_specs_flat[11:20], \(x) run_spec(x, base_vars))
+
+## doParallel: also gets stuck and can't be quitted
+no_cores <- 5
+cl <- makeCluster(no_cores, type="FORK")  
+registerDoParallel(cl)  
+result <- foreach(i=all_specs_flat[11:20]) %dopar% run_spec(i, base_vars)
+
+
+
+
+
+run_vrbl_mdl_vars(mdl_vars = c("tmitr_approx_linear2020step_lag4", "NY.GDP.PCAP.CDk_lag3", "SP.POP.TOTLm_lag1"), 
+                  df_cbn = cbn_dfs$cbn_all,
+                  cbn_name = "cbn_all",
+                  mdl_name = "tmitr_approx_linear_2020step_lag4",
+                  reg_spec = reg_spec)
+
+
+## timeout
+
+
+timeout_test <- function(timeout_sec) {
+    #' how long function runs 
+    Sys.sleep(timeout_sec)
+    return(T)
+}
+
+converged <- F
+
+
+converged <- withTimeout(timeout_test(1), timeout = 2)
+converged <- withTimeout(timeout_test(3), timeout = 2, onTimeout = "silent")
+
+if (is.null(converged)) {print("not converged")} else {print("converged")}
+                  

@@ -316,6 +316,7 @@ gen_mdl_id <- function(reg_spec, cbn_name, mdl_name) {
 timeout_stata <- function(iv_vars, stata_output_vars, gof_names, dfx, file_id) {
     #' run stata command, time it out if taking too long
 
+
     pid <- Sys.getpid()
     cur_wd <- getwd()
     new_dir <- paste0(cur_wd, "/pid_dir/", pid)
@@ -328,6 +329,7 @@ timeout_stata <- function(iv_vars, stata_output_vars, gof_names, dfx, file_id) {
 
     setwd(new_dir)
 
+
     stata_res_raw <- get_stata_result(iv_vars = iv_vars, stata_output_vars = stata_output_vars,
                                       gof_names = gof_names, dfx = dfx)
 
@@ -336,6 +338,7 @@ timeout_stata <- function(iv_vars, stata_output_vars, gof_names, dfx, file_id) {
     if (nrow(stata_res_raw) > 1) {stop("something wrong")} ## debug 
 
     stata_res_parsed <- parse_stata_res(stata_res_raw, stata_output_vars, gof_names)
+
 
     save_parsed_res(stata_res_parsed, idx = file_id)
     return(T)
@@ -434,7 +437,7 @@ run_spec <- function(reg_spec, base_vars) {
     ## lapply(spec_cbn_names, \(x) run_cbn(spec_cbns[[x]], base_vars, ctrl_vars, x, reg_spec))
     for (i in spec_cbn_names) {
 
-        print(paste0(i, " startjj"))
+        ## print(paste0(i, " startjj"))
         
         ## withTimeout(
         ##     expr = run_cbn(spec_cbns[[i]], base_vars, ctrl_vars, i, reg_spec), timeout = 0.01)
@@ -466,14 +469,11 @@ vary_spec <- function(reg_spec){
 
 ## make sure select isn't masked
 select <- dplyr::select
-
 base_vars <- c("iso3c", "year")
 crscn_vars <- c("sum_core", "cnt_contemp_1995")
-
 hnwi_vars <- sapply(hnwi_cutoff_vlus, \(x) paste0("hnwi_nbr_", sanitize_number(x)))
 inc_ineq_vars <- c("sptinc992j_p90p100", "sptinc992j_p99p100", "gptinc992j")
 weal_ineq_vars <- c("shweal992j_p90p100", "shweal992j_p99p100", "ghweal992j")
-
 non_thld_lngtd_vars <- c("tmitr_approx_linear20step", "ti_tmitr_interact", "smorc_dollar_fxm", "NY.GDP.PCAP.CDk", "SP.POP.TOTLm", "clctr_cnt_cpaer")
 
 lngtd_vars <- c(hnwi_vars, inc_ineq_vars, weal_ineq_vars, non_thld_lngtd_vars)
@@ -488,21 +488,8 @@ cbn_dfs <- gen_cbn_dfs(lngtd_vars, crscn_vars, vrbl_cbns)
 vrbl_thld_choices <- gen_vrbl_thld_choices(hnwi_vars, inc_ineq_vars, weal_ineq_vars)
 
 
-REG_RES_DIR <- "/home/johannes/ownCloud/reg_res/v2/"
-REG_RES_FILE <- "/home/johannes/ownCloud/reg_res/v2.csv"
-
-
-## df_reg_lags <- gen_lag_df(reg_spec, crscn_vars, base_vars)
-
-
-## orders longitudinal variables alphabetically
-## maybe I should do that generally?
-
-## generate the combinations with a bunch of grepling 
-
-
-## reg_spec <- gen_reg_spec(non_thld_lngtd_vars)
-## x <- run_spec(reg_spec, base_vars)
+REG_RES_DIR <- "/home/johannes/ownCloud/reg_res/v3/"
+REG_RES_FILE <- "/home/johannes/ownCloud/reg_res/v3.csv"
 
 
 
@@ -528,48 +515,7 @@ t2 = Sys.time()
 
 print(t2-t1)
 
-stop("asdf")
-
-## parLapply: gets stuck and can't even quit 
-library(doParallel)
-## no_cores <- 5
-## registerDoParallel(cores=no_cores)  
-## cl <- makeCluster(no_cores, type="FORK")
-## parLapply(cl, all_specs_flat[11:20], \(x) run_spec(x, base_vars))
-
-## doParallel: also gets stuck and can't be quitted
-no_cores <- 5
-cl <- makeCluster(no_cores, type="FORK")  
-registerDoParallel(cl)  
-result <- foreach(i=all_specs_flat[11:20]) %dopar% run_spec(i, base_vars)
 
 
-
-
-
-run_vrbl_mdl_vars(mdl_vars = c("tmitr_approx_linear2020step_lag4", "NY.GDP.PCAP.CDk_lag3", "SP.POP.TOTLm_lag1"), 
-                  df_cbn = cbn_dfs$cbn_all,
-                  cbn_name = "cbn_all",
-                  mdl_name = "tmitr_approx_linear_2020step_lag4",
-                  reg_spec = reg_spec)
-
-
-## timeout
-
-
-timeout_test <- function(timeout_sec) {
-    #' how long function runs 
-    Sys.sleep(timeout_sec)
-    return(T)
-}
-
-converged <- F
-
-
-converged <- withTimeout(timeout_test(1), timeout = 2)
-converged <- withTimeout(timeout_test(3), timeout = 2, onTimeout = "silent")
-
-if (is.null(converged)) {print("not converged")} else {print("converged")}
-                  
 
 
