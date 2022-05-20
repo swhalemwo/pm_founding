@@ -405,8 +405,9 @@ run_cbn <- function(cbn_vars, base_vars, ctrl_vars, cbn_name, reg_spec) {
     
 
  
-    lapply(names(cbn_models), \(x) run_vrbl_mdl_vars(cbn_models[[x]], df_cbn, cbn_name, mdl_name = x, reg_spec)) %>%
-        rbindlist() %>% atb()
+    lapply(names(cbn_models), \(x) run_vrbl_mdl_vars(cbn_models[[x]], df_cbn, cbn_name, mdl_name = x, reg_spec))
+    ## %>%
+    ## rbindlist() %>% atb()
    
 }
 
@@ -421,6 +422,7 @@ run_spec <- function(reg_spec, base_vars) {
     rel_vars_spec <- c(base_vars, crscn_vars, spec_vars)
 
     spec_cbns <- gen_cbns(rel_vars_spec)
+
     
     ## generate specification-specific control vars
     ctrl_vars <- setdiff(spec_cbns$cbn_controls, base_vars)
@@ -428,14 +430,42 @@ run_spec <- function(reg_spec, base_vars) {
     spec_cbn_names <- names(spec_cbns)
     names(spec_cbn_names) <- spec_cbn_names
 
-    lapply(spec_cbn_names, \(x) run_cbn(spec_cbns[[x]], base_vars, ctrl_vars, x, reg_spec))
 
+    ## lapply(spec_cbn_names, \(x) run_cbn(spec_cbns[[x]], base_vars, ctrl_vars, x, reg_spec))
+    for (i in spec_cbn_names) {
+
+        print(paste0(i, " startjj"))
+        
+        ## withTimeout(
+        ##     expr = run_cbn(spec_cbns[[i]], base_vars, ctrl_vars, i, reg_spec), timeout = 0.01)
+            
+        run_cbn(spec_cbns[[i]], base_vars, ctrl_vars, i, reg_spec)
+
+
+        ## withTimeout(Sys.sleep(2), timeout = 1, envir = .GlobalEnv)
+            
+
+        print(paste0(i, " end"))
+    }
+
+
+
+}
+
+vary_spec <- function(reg_spec){
+    #' for a spec, vary each variable along all lags 
+   
+    varied_specs <- lapply(reg_spec$vrbl, \(x) lapply(seq(1,5), \(t)
+                                      mutate(reg_spec, lag = ifelse(vrbl == x, t, lag))))
+    varied_specs_long <- Reduce(\(x, y) c(x,y), varied_specs) %>% unique()
+
+    return (varied_specs_long)
 }
 
 
 
-
-
+## make sure select isn't masked
+select <- dplyr::select
 
 base_vars <- c("iso3c", "year")
 crscn_vars <- c("sum_core", "cnt_contemp_1995")
@@ -524,4 +554,22 @@ run_vrbl_mdl_vars(mdl_vars = c("tmitr_approx_linear2020step_lag4", "NY.GDP.PCAP.
                   reg_spec = reg_spec)
 
 
+## timeout
+
+
+timeout_test <- function(timeout_sec) {
+    #' how long function runs 
+    Sys.sleep(timeout_sec)
+    return(T)
+}
+
+converged <- F
+
+
+converged <- withTimeout(timeout_test(1), timeout = 2)
+converged <- withTimeout(timeout_test(3), timeout = 2, onTimeout = "silent")
+
+if (is.null(converged)) {print("not converged")} else {print("converged")}
                   
+
+
