@@ -26,6 +26,7 @@ library(PerformanceAnalytics)
 library(factoextra)
 library(tidyr)
 library(pglm)
+library(R.utils)
 
 ds <- docstring
 

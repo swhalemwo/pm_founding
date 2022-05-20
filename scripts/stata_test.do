@@ -37,6 +37,9 @@ xtset iso3c_num year
 
 xtnbreg nbr_opened hnwi_nbr_30m gptinc992j ghweal992j tmitr_approx_linear_2020step ti_tmitr_interact smorc_dollar_fxm nygdppcapcdk sppoptotlm clctr_cnt_cpaer sum_core cnt_contemp_1995, re
 
+
+estat vce, corr
+
 mata: b=st_matrix("e(b)")' 
  mata: st_matrix("b_stata", b)
 mata: se=sqrt(diagonal(st_matrix("e(V)"))) 
