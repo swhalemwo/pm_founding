@@ -30,7 +30,7 @@ library(RStata)
 options(RStata.StataPath = "/usr/local/stata14/stata")
 options(RStata.StataVersion = 14)
 
-REG_RES_DIR <- "/home/johannes/ownCloud/reg_res/v1/"
+
 
 get_stata_result <- function(iv_vars, stata_output_vars, gof_names, dfx) {
     #' run the xtnbreg regression with stata() given independent vars,
@@ -45,6 +45,9 @@ get_stata_result <- function(iv_vars, stata_output_vars, gof_names, dfx) {
 
     ## for gof and stata_return matrix turn into wide and transpose to avoid backslashes:
     ## backslash would be easier in stata syntax, but is messy in plain text
+
+    # print(Sys.getpid())    
+    
 
     stata_code = list(
         panel_setup = "xtset iso3c_num year",
@@ -61,7 +64,7 @@ get_stata_result <- function(iv_vars, stata_output_vars, gof_names, dfx) {
 
     
     
-    stata_res <- stata(stata_src, data.in = dfx, data.out = T, stata.echo = T) %>% atb()
+    stata_res <- stata(stata_src, data.in = dfx, data.out = T, stata.echo = F) %>% atb()
 
     return(stata_res)
 }
@@ -138,6 +141,7 @@ gen_vrbl_thld_choices <- function(hnwi_vars, inc_ineq_vars, weal_ineq_vars) {
 
 
 gen_reg_spec <- function(non_thld_lngd_vars) {
+    
     #' generate the regression specification: basically just choice of some variables/thresholds and lag lengths
 
     ## could also just sample here, probably have to
@@ -309,57 +313,90 @@ gen_mdl_id <- function(reg_spec, cbn_name, mdl_name) {
 }
         
 
+timeout_stata <- function(iv_vars, stata_output_vars, gof_names, dfx, file_id) {
+    #' run stata command, time it out if taking too long
 
-
+    pid <- Sys.getpid()
+    cur_wd <- getwd()
+    new_dir <- paste0(cur_wd, "/pid_dir/", pid)
+    present_dirs <- list.dirs(paste0(cur_wd, "/pid_dir"), recursive = F)
+    if (new_dir %!in% present_dirs) {
     
+        mkdir_cmd <- paste0("mkdir ", new_dir)
+        system(mkdir_cmd)
+    }
 
-run_vrbl_mdl_vars <- function(mdl_vars, df_cbn, cbn_name, mdl_name, reg_spec) {
-    #' run one regression given the model vars
-
-    
-
-    df_idx <- gen_mdl_id(reg_spec, cbn_name, mdl_name)
-    file_id <- df_idx$mdl_id[1]
-    print(file_id)
-
-    ## mdl_vars_bu <- mdl_vars
-    ## mdl_vars <- mdl_vars_bu
-
-    ## DEBUG: SEE WHY STATA DOESN'T LIKE VARIABLE; EITHER LENGTH OR UNDERSCORE BEFORE NUMBER
-    ## not underscore before variable
-    ## mdl_vars <- gsub("tmitr_approx_linear2020step_lag4", "tmitr_approx_linear20step_lag4", mdl_vars)
-    ## df_cbn$tmitr_approx_linear20step_lag4 <- df_cbn$tmitr_approx_linear2020step_lag4
-    ## df_cbn$tmitr_approxlag4 <- df_cbn$tmitr_approx_linear_2020step_lag4
-
-    iv_vars <- mdl_vars[mdl_vars %!in% base_vars]
-    print(iv_vars)
-    
-    stata_output_vars <- c(iv_vars, c("cons", "ln_r", "ln_s"))
-    gof_names <- c("N", "log_likelihood", "N_g", "Chi2", "p", "df")
-
-    dfx <- select(df_cbn, all_of(c(base_vars, "iso3c_num", "nbr_opened",iv_vars)))
+    setwd(new_dir)
 
     stata_res_raw <- get_stata_result(iv_vars = iv_vars, stata_output_vars = stata_output_vars,
                                       gof_names = gof_names, dfx = dfx)
+
+    setwd(cur_wd)
 
     if (nrow(stata_res_raw) > 1) {stop("something wrong")} ## debug 
 
     stata_res_parsed <- parse_stata_res(stata_res_raw, stata_output_vars, gof_names)
 
     save_parsed_res(stata_res_parsed, idx = file_id)
+    return(T)
+    }
+
     
+    
+    
+
+
+    
+
+run_vrbl_mdl_vars <- function(mdl_vars, df_cbn, cbn_name, mdl_name, reg_specx) {
+    #' run one regression given the model vars
+          
+    df_idx <- gen_mdl_id(reg_specx, cbn_name, mdl_name)
+    file_id <- df_idx$mdl_id[1]
+    ## print(file_id)
+
+    iv_vars <- mdl_vars[mdl_vars %!in% base_vars]
+
+    ## print("---")
+
+    ## print(iv_vars)
+    
+    stata_output_vars <- c(iv_vars, c("cons", "ln_r", "ln_s"))
+    gof_names <- c("N", "log_likelihood", "N_g", "Chi2", "p", "df")
+
+    dfx <- select(df_cbn, all_of(c(base_vars, "iso3c_num", "nbr_opened",iv_vars)))
+
+    ## Sys.sleep(runif(1)/10)
+    ## newenv <- new.env()
+    
+    converged <- withTimeout(timeout_stata(iv_vars, stata_output_vars, gof_names, dfx, file_id), timeout = 10)
+
+
+    ## # converged <- T
+    
+
+    if (is.null(converged)) {
+        df_idx$cvrgd <- 0 # if converged is null, it means the convergence failed
+        print("convergence failed")
+    } else {
+        df_idx$cvrgd <- 1
+    }
+
+    ## timeout_stata(iv_vars, stata_output_vars, gof_names, dfx, file_id)
+    ## stata("ds", data.in = dfx, stata.echo = F)
 
     ## save id to df_id to keep track
     write.table(df_idx, file = REG_RES_FILE, append = T, col.names = F, row.names = F)
 
-
-    return(list(# formula=f,
-                nrow=nrow(df_cbn), file_id = file_id))
-
+    ## return(list(# formula=f,
+    ##     nrow=nrow(df_cbn), file_id = file_id))
+    ## print("done")
 }
 
 run_cbn <- function(cbn_vars, base_vars, ctrl_vars, cbn_name, reg_spec) {
     #' run a combination
+
+    print(paste0("run cbn ", which(names(vrbl_cbns) == cbn_name)))
 
     df_cbn <- cbn_dfs[[cbn_name]]
 
@@ -414,16 +451,15 @@ lngtd_vars <- c(hnwi_vars, inc_ineq_vars, weal_ineq_vars, non_thld_lngtd_vars)
 all_rel_vars <- unique(c(hnwi_vars, inc_ineq_vars, weal_ineq_vars, non_thld_lngtd_vars, crscn_vars))
 
 
-
-
 vrbl_cbns <- gen_cbns(all_rel_vars)
 
 cbn_dfs <- gen_cbn_dfs(lngtd_vars, crscn_vars, vrbl_cbns)
 
 vrbl_thld_choices <- gen_vrbl_thld_choices(hnwi_vars, inc_ineq_vars, weal_ineq_vars)
-reg_spec <- gen_reg_spec(non_thld_lngtd_vars)
 
-REG_RES_FILE <- "/home/johannes/ownCloud/reg_res/v1.csv"
+
+REG_RES_DIR <- "/home/johannes/ownCloud/reg_res/v2/"
+REG_RES_FILE <- "/home/johannes/ownCloud/reg_res/v2.csv"
 
 
 ## df_reg_lags <- gen_lag_df(reg_spec, crscn_vars, base_vars)
@@ -433,7 +469,53 @@ REG_RES_FILE <- "/home/johannes/ownCloud/reg_res/v1.csv"
 ## maybe I should do that generally?
 
 ## generate the combinations with a bunch of grepling 
-run_spec(reg_spec, base_vars)
+
+
+## reg_spec <- gen_reg_spec(non_thld_lngtd_vars)
+## x <- run_spec(reg_spec, base_vars)
+
+
+
+## generate 100 specs
+reg_specs <- lapply(seq(1,100), \(x) gen_reg_spec(non_thld_lngtd_vars)) %>% unique()
+
+## for each of the 100, generate the spec variations -> 3.7k total 
+all_spec_variations <- lapply(reg_specs, \(x) vary_spec(x))
+
+## flatten the 3.7k 
+all_specs_flat <- Reduce(\(x, y) c(x,y), all_spec_variations) %>% unique()
+
+
+## t1 = Sys.time()
+## lapply(all_specs_flat, \(x) run_spec(x, base_vars))
+## t2 = Sys.time()
+
+
+## gets stuck after ~70 models, which isn't even a complete spec per thread..
+t1 = Sys.time()
+mclapply(all_specs_flat[1:5], \(x) run_spec(x, base_vars), mc.cores = 5)
+t2 = Sys.time()
+
+print(t2-t1)
+
+stop("asdf")
+
+## parLapply: gets stuck and can't even quit 
+library(doParallel)
+## no_cores <- 5
+## registerDoParallel(cores=no_cores)  
+## cl <- makeCluster(no_cores, type="FORK")
+## parLapply(cl, all_specs_flat[11:20], \(x) run_spec(x, base_vars))
+
+## doParallel: also gets stuck and can't be quitted
+no_cores <- 5
+cl <- makeCluster(no_cores, type="FORK")  
+registerDoParallel(cl)  
+result <- foreach(i=all_specs_flat[11:20]) %dopar% run_spec(i, base_vars)
+
+
+
+
 
 run_vrbl_mdl_vars(mdl_vars = c("tmitr_approx_linear2020step_lag4", "NY.GDP.PCAP.CDk_lag3", "SP.POP.TOTLm_lag1"), 
                   df_cbn = cbn_dfs$cbn_all,
