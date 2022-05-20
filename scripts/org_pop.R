@@ -33,6 +33,8 @@ df_anls <- create_anls_df(df_wb, df_open)
 
 df_reg <- get_df_reg(df_anls)
 
+## write.table(select(df_reg, -matches("name")), paste0(PROJECT_DIR, "data/processed/df_reg.csv"))
+
 get_all_descriptives()
 
 ## *** another shitty analysis
