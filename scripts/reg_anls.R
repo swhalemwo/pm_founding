@@ -40,6 +40,16 @@ all_mdl_res <- lapply(unique(df_reg_anls_cfgs$mdl_id), read_reg_res)
 coef_df <- lapply(all_mdl_res, \(x) atb(x[["coef_df"]])) %>% bind_rows()
 gof_df <- lapply(all_mdl_res, \(x) x[["gof_df"]]) %>% bind_rows() %>% atb()
 
+gof_df_cbn <- merge(gof_df, df_reg_anls_cfgs_wide) %>% atb()
+
+filter(gof_df_cbn, gof_names == "log_likelihood") %>%
+    ggplot(aes(x = gof_value)) +
+    geom_histogram(binwidth = 2) +
+    facet_wrap(~cbn_name, ncol = 1)
+
+## ok makes sense: cbn_all models have best fit: most variables, least observations
+## fit gets worse the more variables are removed and the more cases are added
+
 
 
 vrbl <- "hnwi_nbr_1M"
