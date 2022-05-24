@@ -242,7 +242,11 @@ gen_cbn_models <- function(cbn_vars, base_vars, ctrl_vars) {
                    full = c(cbn_vars)
                    )
 
-    all_cbn_models <- c(single_var_models, models)
+    ## all_cbn_models <- c(single_var_models, models)
+
+    
+    all_cbn_models <- list(full = c(cbn_vars))
+    
     return(all_cbn_models)
 }
 
@@ -622,17 +626,17 @@ print(t2-t1)
 ## ** running with hopefully better ids
 
 
-REG_RES_DIR <- "/home/johannes/ownCloud/reg_res/v12/"
-REG_RES_FILE_LAGS <- "/home/johannes/ownCloud/reg_res/v12_lags.csv"
-REG_RES_FILE_CFGS <- "/home/johannes/ownCloud/reg_res/v12_cfgs.csv"
-REG_SPEC_DIR <- "/home/johannes/ownCloud/reg_res/v12_specs/"
-MDL_START_FILE <- "/home/johannes/ownCloud/reg_res/v12_start.csv"
-MDL_END_FILE <- "/home/johannes/ownCloud/reg_res/v12_end.csv"
+REG_RES_DIR <- "/home/johannes/ownCloud/reg_res/v13/"
+REG_RES_FILE_LAGS <- "/home/johannes/ownCloud/reg_res/v13_lags.csv"
+REG_RES_FILE_CFGS <- "/home/johannes/ownCloud/reg_res/v13_cfgs.csv"
+REG_SPEC_DIR <- "/home/johannes/ownCloud/reg_res/v13_specs/"
+MDL_START_FILE <- "/home/johannes/ownCloud/reg_res/v13_start.csv"
+MDL_END_FILE <- "/home/johannes/ownCloud/reg_res/v13_end.csv"
 
 
 
 ## generate basic spec of lag, variable and threshold choices
-NBR_SPECS <- 2
+NBR_SPECS <- 15
 
 reg_specs <- lapply(seq(1,NBR_SPECS), \(x) gen_reg_spec(non_thld_lngtd_vars)) %>% unique()
 ## generate variations of basic reg_spec
