@@ -52,9 +52,42 @@ filter(gof_df_cbn, gof_names == "log_likelihood") %>%
 
 
 
-vrbl <- "hnwi_nbr_1M"
+vrbl <- "hnwi_nbr_30M"
 vrbl <- "NY.GDP.PCAP.CDk"
 vrbl_lag <- paste0(vrbl, "_lag")
+
+library(stringr)
+
+df_anls <- coef_df %>%
+    mutate(vrbl_name_unlag = gsub("_lag[1-5]", "", vrbl_name)) %>%
+    filter(vrbl_name_unlag != vrbl_name) %>% ## only use the lag variables
+    mutate(lag = as.numeric(substring(str_extract(vrbl_name, "_lag(\\d+)"), 5))) %>%
+    merge(df_reg_anls_cfgs_wide) %>% atb() %>%
+    filter(vrbl_varied == vrbl_name_unlag, cbn_name != "cbn_controls") %>%
+    mutate(t_value = coef/se, 
+           sig = ifelse(pvalues < 0.05, 1, 0))
+    
+
+unique(df_anls$vrbl_name_unlag)
+
+
+
+df_anls$vrbl_name_unlag <- factor(df_anls$vrbl_name_unlag, levels = c(ti_vars, hnwi_vars, inc_ineq_vars, weal_ineq_vars, cult_spending_vars, ctrl_vars_lngtd))
+
+pdf(paste0(FIG_DIR, "first_reg_res.pdf"), width = 8, height = 12)
+ggplot(df_anls, aes(x=lag, y=coef, group = base_lag_spec)) +
+    geom_line(show.legend = F, alpha = 0.1) +
+    geom_point(aes(color = t_value, shape = factor(sig)), show.legend = T, size = 3) + 
+    facet_grid(cols = vars(cbn_name), rows = vars(vrbl_name_unlag), scales = "free_y", switch = "y") +
+    theme(strip.text.y.left = element_text(angle = 0)) +
+    scale_color_gradient2(low = "blue", mid = "grey", high = "red") +
+    scale_shape_manual(values = c(1,4))
+dev.off()
+        
+
+
+        
+
 
 df_anls <- filter(coef_df, scramblematch(vrbl_lag, vrbl_name)) %>% 
     mutate(lag = as.numeric(substring(vrbl_name, nchar(vrbl_lag)+1))) %>%
