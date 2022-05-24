@@ -30,6 +30,32 @@ library(RStata)
 options(RStata.StataPath = "/usr/local/stata14/stata")
 options(RStata.StataVersion = 14)
 
+cleanup_old_stata_procs <- function() {
+    #' yeet old (older than 12 secs) stata processes
+
+    print("cleaning up old processes...")
+
+    ps_tbl1 <- ps() %>% select(pid, name)
+    ps_tbl1$t1 <- Sys.time()
+
+    Sys.sleep(12)
+
+    ps_tbl2 <- ps() %>% select(pid, name)
+    ps_tbl2$t2 <- Sys.time()
+
+
+    ## merges on id: will only list stata processes that already existed 12 secs ago
+    ps_tbl <- merge(ps_tbl1, ps_tbl2) %>% atb()
+    ps_tbl_overdue <- filter(ps_tbl, name == "stata")
+
+    print(ps_tbl_overdue)
+
+    lapply(ps_tbl_overdue$pid, \(x) tryCatch({ps_kill(ps_handle(x))}, error = \(e){}))
+    print(paste0("terminated ", nrow(ps_tbl_overdue), " old stata process(es)"))
+          
+
+    ## ps_handle(ps_tbl_overdue$pid)
+}
 
 
 get_stata_result <- function(iv_vars, stata_output_vars, gof_names, dfx, verbose) {
@@ -342,6 +368,7 @@ gen_mdl_id <- function(reg_spec) {
 
 timeout_stata <- function(iv_vars, stata_output_vars, gof_names, dfx, file_id, verbose) {
     #' run stata command, time it out if taking too long
+
     
     setwd(PROJECT_DIR)
 
@@ -356,7 +383,6 @@ timeout_stata <- function(iv_vars, stata_output_vars, gof_names, dfx, file_id, v
     }
 
     setwd(new_dir)
-
 
     stata_res_raw <- get_stata_result(iv_vars = iv_vars, stata_output_vars = stata_output_vars,
                                       gof_names = gof_names, dfx = dfx, verbose = verbose)
@@ -382,17 +408,22 @@ timeout_stata <- function(iv_vars, stata_output_vars, gof_names, dfx, file_id, v
 run_vrbl_mdl_vars <- function(reg_spec, verbose = F) {
     #' run one regression given the model vars
     
-
+    
     df_cbn <- cbn_dfs[[reg_spec$cbn_name]]
+
 
     id_res <- gen_mdl_id(reg_spec)
 
     df_idx <- id_res$df_idx
     other_cfgs <- id_res$other_cfgs
           
-
     file_id <- df_idx$mdl_id[1]
-    ## print(file_id)
+
+    ## saving reg spec information to debug later 
+    saveRDS(reg_spec, file = paste0(REG_SPEC_DIR, file_id))
+    ## write model id to start_file to see which models don't converge
+    write.table(file_id, MDL_START_FILE, append = T, col.names = F, row.names = F)
+
 
     iv_vars <- reg_spec$mdl_vars[reg_spec$mdl_vars %!in% base_vars]
 
@@ -407,32 +438,36 @@ run_vrbl_mdl_vars <- function(reg_spec, verbose = F) {
 
     ## Sys.sleep(runif(1)/10)
     ## newenv <- new.env()
-    
-    converged <- withTimeout(timeout_stata(iv_vars, stata_output_vars, gof_names, dfx, file_id, verbose = verbose),
-                             timeout = 10)
 
+    converged <- tryCatch({
+        fscaret::timeout(timeout_stata(iv_vars, stata_output_vars, gof_names, dfx, file_id, verbose = verbose),
+                         seconds = 5)},
+        error=function(e) {NULL})
+                             
+    ## converged <- withTimeout(timeout_stata(iv_vars, stata_output_vars, gof_names, dfx, file_id, verbose = verbose),
+    ##                          timeout = 1)
 
     ## converged <- T
     
     if (is.null(converged)) {
         df_idx$cvrgd <- 0 # if converged is null, it means the convergence failed
         other_cfgs$cvrgd <- 0
+        
+        cleanup_old_stata_procs()
+        
         print("convergence failed")
     } else {
         df_idx$cvrgd <- 1
         other_cfgs$cvrgd <- 1
     }
 
-    ## timeout_stata(iv_vars, stata_output_vars, gof_names, dfx, file_id)
-    ## stata("ds", data.in = dfx, stata.echo = F)
-
     ## save id to df_id to keep track
     write.table(df_idx, file = REG_RES_FILE_LAGS, append = T, col.names = F, row.names = F)
     write.table(other_cfgs, file = REG_RES_FILE_CFGS, append = T, col.names = F, row.names = F)
 
-    ## return(list(# formula=f,
-    ##     nrow=nrow(df_cbn), file_id = file_id))
-    ## print("done")
+    ## write model id to end file to debug convergence failure
+    write.table(file_id, MDL_END_FILE, append = T, col.names = F, row.names = F)
+    
 }
 
 ## run_cbn <- function(cbn_vars, base_vars, ctrl_vars, cbn_name, reg_spec) {
@@ -534,6 +569,7 @@ vary_spec <- function(reg_spec){
 ## make sure select isn't masked
 select <- dplyr::select
 lag <- dplyr::lag
+timeout <- fscaret::timeout
 
 base_vars <- c("iso3c", "year")
 crscn_vars <- c("sum_core", "cnt_contemp_1995")
@@ -586,9 +622,13 @@ print(t2-t1)
 ## ** running with hopefully better ids
 
 
-REG_RES_DIR <- "/home/johannes/ownCloud/reg_res/v10/"
-REG_RES_FILE_LAGS <- "/home/johannes/ownCloud/reg_res/v10_lags.csv"
-REG_RES_FILE_CFGS <- "/home/johannes/ownCloud/reg_res/v10_cfgs.csv"
+REG_RES_DIR <- "/home/johannes/ownCloud/reg_res/v12/"
+REG_RES_FILE_LAGS <- "/home/johannes/ownCloud/reg_res/v12_lags.csv"
+REG_RES_FILE_CFGS <- "/home/johannes/ownCloud/reg_res/v12_cfgs.csv"
+REG_SPEC_DIR <- "/home/johannes/ownCloud/reg_res/v12_specs/"
+MDL_START_FILE <- "/home/johannes/ownCloud/reg_res/v12_start.csv"
+MDL_END_FILE <- "/home/johannes/ownCloud/reg_res/v12_end.csv"
+
 
 
 ## generate basic spec of lag, variable and threshold choices
@@ -609,25 +649,54 @@ reg_spec_mdls <- lapply(reg_spec_cbns, gen_spec_mdl_info) %>% Reduce(\(x,y) c(x,
 ## gen_mdl_id(reg_spec_mdls[[2]])
 
 
-mclapply(reg_spec_mdls,run_vrbl_mdl_vars, mc.cores = 10)
+mclapply(reg_spec_mdls,run_vrbl_mdl_vars, mc.cores = 6)
 
-## ** debugging lag: no difference
+## ** convergence debug
 
-## pick some model where only lag varies
+started_mdls <- atb(read.csv(MDL_START_FILE, header = F))
+finished_mdls <- atb(read.csv(MDL_END_FILE, header = F))
 
-reg_lag_test1 <- reg_spec_mdls[[3]]
-reg_lag_test2 <- reg_spec_mdls[[34]]
-reg_lag_test3 <- reg_spec_mdls[[127]]
+unfinished_mdls <- setdiff(started_mdls$V1, finished_mdls$V1)
 
-run_vrbl_mdl_vars(reg_lag_test1, verbose = T)
-run_vrbl_mdl_vars(reg_lag_test2, verbose = T)
-run_vrbl_mdl_vars(reg_lag_test3, verbose = T)
+mdl_test <- readRDS(paste0(REG_SPEC_DIR, unfinished_mdls[2]))
 
-select(cbn_dfs$cbn_all, iso3c, year, hnwi_nbr_1B_lag1, hnwi_nbr_1B_lag2, hnwi_nbr_1B_lag3, hnwi_nbr_1B_lag3) %>%
-    filter(iso3c== "USA") %>% adf()
-## lagging doesn't work 
+run_vrbl_mdl_vars(mdl_test, verbose = T)
+
+lapply(unfinished_mdls, \(x) readRDS(paste0(REG_SPEC_DIR, x)) %>% run_vrbl_mdl_vars())
+
+mclapply(unfinished_mdls, \(x) readRDS(paste0(REG_SPEC_DIR, x)) %>% run_vrbl_mdl_vars(), mc.cores = 4) 
+
+stata_time_test <- function(n) {
+    stata(paste0("sleep ", n*1000))
+}
+
+withTimeout({stata_time_test(2)}, timeout = 1)
+
+withTimeout(Sys.sleep(2), timeout = 1, TimeoutException = function(ex) {message("Timeout. Skipping.")})
+
+library(R.utils)
+
+library(fscaret)
+x <- fscaret::timeout(stata_time_test(2), seconds = 1)
+
+x <- tryCatch({fscaret::timeout(Sys.sleep(2), seconds = 1)}, error = function(e) {NULL})
+
+stata_inf_loop <- function() {
+    pid <- Sys.getpid()
+
+    print(pid)
+    
+    stata("while 1 == 1 {
+ds
+}")}
 
 
 
-gen_lag("hnwi_nbr_1B", 1) %>% filter(iso3c == "USA") %>% adf()
-gen_lag("hnwi_nbr_1B", 2) %>% filter(iso3c == "USA") %>% adf()
+## get all processes
+library(ps)
+
+timeout(stata_inf_loop(), seconds = 2)
+
+## only run this when not converged: wait for 12 secs
+
+

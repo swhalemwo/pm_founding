@@ -671,3 +671,23 @@ converged <- withTimeout(timeout_test(3), timeout = 2, onTimeout = "silent")
 
 if (is.null(converged)) {print("not converged")} else {print("converged")}
                   
+## ** debugging lag: no difference
+
+## pick some model where only lag varies
+
+reg_lag_test1 <- reg_spec_mdls[[3]]
+reg_lag_test2 <- reg_spec_mdls[[34]]
+reg_lag_test3 <- reg_spec_mdls[[127]]
+
+run_vrbl_mdl_vars(reg_lag_test1, verbose = T)
+run_vrbl_mdl_vars(reg_lag_test2, verbose = T)
+run_vrbl_mdl_vars(reg_lag_test3, verbose = T)
+
+select(cbn_dfs$cbn_all, iso3c, year, hnwi_nbr_1B_lag1, hnwi_nbr_1B_lag2, hnwi_nbr_1B_lag3, hnwi_nbr_1B_lag3) %>%
+    filter(iso3c== "USA") %>% adf()
+## lagging doesn't work 
+
+
+
+gen_lag("hnwi_nbr_1B", 1) %>% filter(iso3c == "USA") %>% adf()
+gen_lag("hnwi_nbr_1B", 2) %>% filter(iso3c == "USA") %>% adf()

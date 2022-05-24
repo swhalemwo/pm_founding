@@ -42,7 +42,8 @@ gof_df <- lapply(all_mdl_res, \(x) x[["gof_df"]]) %>% bind_rows() %>% atb()
 
 
 
-vrbl <- "hnwi_nbr_30M"
+vrbl <- "hnwi_nbr_1M"
+vrbl <- "NY.GDP.PCAP.CDk"
 vrbl_lag <- paste0(vrbl, "_lag")
 
 df_anls <- filter(coef_df, scramblematch(vrbl_lag, vrbl_name)) %>% 
