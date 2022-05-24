@@ -113,6 +113,8 @@ save_parsed_res <- function(res_list, idx) {
 
 
 gen_lag <- function(vrbl, lag) {
+
+    
     #' lag vrbl by lag years
 
     lag <- as.numeric(lag)
@@ -281,26 +283,42 @@ gen_cbn_dfs <- function(lngtd_vars, crscn_vars, vrbl_cnbs) {
     return(cbn_dfs)
 }
 
-gen_mdl_id <- function(reg_spec) {
-
+gen_lag_id <- function(reg_spec) {
+    #' generate the variable choice lag part of the id
     
-    #' generate unique id for each model
-
-    ## get id: need information which variable is there (X if not there), also of lag of each variable that is there
-    
-
     df_idx <- merge(tibble(vrbl = lngtd_vars), 
           reg_spec$lngtd_vrbls, all.x = T) %>%
         mutate(lag_str = as.character(lag)) %>%
         mutate(lag_str = ifelse(is.na(lag_str), "X", lag_str)) %>%
         select(variable=vrbl, value = lag_str)
 
+    return(df_idx)
+}
+    
+
+
+
+gen_mdl_id <- function(reg_spec) {
+    #' generate unique id for each model
+
+    ## get id: need information which variable is there (X if not there), also of lag of each variable that is there
+    
+
+    ## df_idx <- merge(tibble(vrbl = lngtd_vars), 
+    ##       reg_spec$lngtd_vrbls, all.x = T) %>%
+    ##     mutate(lag_str = as.character(lag)) %>%
+    ##     mutate(lag_str = ifelse(is.na(lag_str), "X", lag_str)) %>%
+    ##     select(variable=vrbl, value = lag_str)
+    df_idx <- gen_lag_id(reg_spec)
+
+
     vrbl_lag_id <- paste0(df_idx$value, collapse = "")
 
 
     other_cfgs <- data.frame(rbind(c("cbn_name", reg_spec$cbn_name),
                                    c("mdl_name", reg_spec$mdl_name),      
-                                   c("vrbl_varied", reg_spec$vrbl_varied))) %>%
+                                   c("vrbl_varied", reg_spec$vrbl_varied),
+                                   c("base_lag_spec", reg_spec$base_lag_spec))) %>%
         select(variable = X1, value = X2)
 
     cfg_id <- paste0(other_cfgs$value, collapse = '--')
