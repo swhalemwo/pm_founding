@@ -553,7 +553,7 @@ cbn_dfs <- gen_cbn_dfs(lngtd_vars, crscn_vars, vrbl_cbns)
 
 vrbl_thld_choices <- gen_vrbl_thld_choices(hnwi_vars, inc_ineq_vars, weal_ineq_vars)
 
-
+## ** first sloppy version 
 
 REG_RES_DIR <- "/home/johannes/ownCloud/reg_res/v5/"
 REG_RES_FILE <- "/home/johannes/ownCloud/reg_res/v5.csv"
@@ -586,17 +586,18 @@ print(t2-t1)
 ## ** running with hopefully better ids
 
 
-REG_RES_DIR <- "/home/johannes/ownCloud/reg_res/v5/"
-REG_RES_FILE_LAGS <- "/home/johannes/ownCloud/reg_res/v5_lags.csv"
-REG_RES_FILE_CFGS <- "/home/johannes/ownCloud/reg_res/v5_cfgs.csv"
+REG_RES_DIR <- "/home/johannes/ownCloud/reg_res/v10/"
+REG_RES_FILE_LAGS <- "/home/johannes/ownCloud/reg_res/v10_lags.csv"
+REG_RES_FILE_CFGS <- "/home/johannes/ownCloud/reg_res/v10_cfgs.csv"
 
 
 ## generate basic spec of lag, variable and threshold choices
-NBR_SPECS <- 30
+NBR_SPECS <- 2
 
-reg_specs <- lapply(seq(1,NBR_SPECS), \(x) gen_reg_spec(non_thld_lngtd_vars))
+reg_specs <- lapply(seq(1,NBR_SPECS), \(x) gen_reg_spec(non_thld_lngtd_vars)) %>% unique()
 ## generate variations of basic reg_spec
-reg_spec_varyns <- lapply(reg_specs, vary_spec)%>% Reduce(\(x,y) c(x,y), .) %>% unique()
+reg_spec_varyns <- lapply(reg_specs, vary_spec)%>% Reduce(\(x,y) c(x,y), .) 
+
 
 ## add the combination info 
 reg_spec_cbns <- lapply(reg_spec_varyns, \(x) gen_spec_cbn_info(x, base_vars)) %>% Reduce(\(x,y) c(x,y), .)
@@ -604,8 +605,29 @@ reg_spec_cbns <- lapply(reg_spec_varyns, \(x) gen_spec_cbn_info(x, base_vars)) %
 
 reg_spec_mdls <- lapply(reg_spec_cbns, gen_spec_mdl_info) %>% Reduce(\(x,y) c(x,y), .)
 
-run_vrbl_mdl_vars(reg_spec_mdls[[2]])
+## run_vrbl_mdl_vars(reg_spec_mdls[[2]])
 ## gen_mdl_id(reg_spec_mdls[[2]])
 
-mclapply(reg_spec_mdls,run_vrbl_mdl_vars, mc.cores = 6)
 
+mclapply(reg_spec_mdls,run_vrbl_mdl_vars, mc.cores = 10)
+
+## ** debugging lag: no difference
+
+## pick some model where only lag varies
+
+reg_lag_test1 <- reg_spec_mdls[[3]]
+reg_lag_test2 <- reg_spec_mdls[[34]]
+reg_lag_test3 <- reg_spec_mdls[[127]]
+
+run_vrbl_mdl_vars(reg_lag_test1, verbose = T)
+run_vrbl_mdl_vars(reg_lag_test2, verbose = T)
+run_vrbl_mdl_vars(reg_lag_test3, verbose = T)
+
+select(cbn_dfs$cbn_all, iso3c, year, hnwi_nbr_1B_lag1, hnwi_nbr_1B_lag2, hnwi_nbr_1B_lag3, hnwi_nbr_1B_lag3) %>%
+    filter(iso3c== "USA") %>% adf()
+## lagging doesn't work 
+
+
+
+gen_lag("hnwi_nbr_1B", 1) %>% filter(iso3c == "USA") %>% adf()
+gen_lag("hnwi_nbr_1B", 2) %>% filter(iso3c == "USA") %>% adf()
