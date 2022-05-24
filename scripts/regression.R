@@ -533,6 +533,8 @@ vary_spec <- function(reg_spec){
 
 ## make sure select isn't masked
 select <- dplyr::select
+lag <- dplyr::lag
+
 base_vars <- c("iso3c", "year")
 crscn_vars <- c("sum_core", "cnt_contemp_1995")
 hnwi_vars <- sapply(hnwi_cutoff_vlus, \(x) paste0("hnwi_nbr_", sanitize_number(x)))
