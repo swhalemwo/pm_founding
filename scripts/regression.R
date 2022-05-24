@@ -631,12 +631,12 @@ print(t2-t1)
 ## ** running with hopefully better ids
 
 
-REG_RES_DIR <- "/home/johannes/ownCloud/reg_res/v13/"
-REG_RES_FILE_LAGS <- "/home/johannes/ownCloud/reg_res/v13_lags.csv"
-REG_RES_FILE_CFGS <- "/home/johannes/ownCloud/reg_res/v13_cfgs.csv"
-REG_SPEC_DIR <- "/home/johannes/ownCloud/reg_res/v13_specs/"
-MDL_START_FILE <- "/home/johannes/ownCloud/reg_res/v13_start.csv"
-MDL_END_FILE <- "/home/johannes/ownCloud/reg_res/v13_end.csv"
+REG_RES_DIR <- "/home/johannes/ownCloud/reg_res/v14/"
+REG_RES_FILE_LAGS <- "/home/johannes/ownCloud/reg_res/v14_lags.csv"
+REG_RES_FILE_CFGS <- "/home/johannes/ownCloud/reg_res/v14_cfgs.csv"
+REG_SPEC_DIR <- "/home/johannes/ownCloud/reg_res/v14_specs/"
+MDL_START_FILE <- "/home/johannes/ownCloud/reg_res/v14_start.csv"
+MDL_END_FILE <- "/home/johannes/ownCloud/reg_res/v14_end.csv"
 
 
 
@@ -660,6 +660,25 @@ reg_spec_mdls <- lapply(reg_spec_cbns, gen_spec_mdl_info) %>% Reduce(\(x,y) c(x,
 
 mclapply(reg_spec_mdls,run_vrbl_mdl_vars, mc.cores = 6)
 
-## ** convergence debug
+## ** multi_lag_testing
 
+test_mdl1 <- reg_spec_mdls[[1]]
 
+test_mdl1$mdl_vars <- c(test_mdl1$mdl_vars, "sptinc992j_p99p100_lag2", "sptinc992j_p99p100_lag3", "sptinc992j_p99p100_lag4", "sptinc992j_p99p100_lag5", "smorc_dollar_fxm_lag1", "smorc_dollar_fxm_lag3", "smorc_dollar_fxm_lag4", "smorc_dollar_fxm_lag5")
+
+run_vrbl_mdl_vars(test_mdl1, verbose = T)
+## huh that works pretty well.... maybe all my work was for nothing?
+## maybe should have been more 
+
+test_mdl2 <- reg_spec_mdls[[3]]
+test_mdl2$mdl_vars <- c(test_mdl2$mdl_vars, "sptinc992j_p99p100_lag2", "sptinc992j_p99p100_lag3", "sptinc992j_p99p100_lag4", "sptinc992j_p99p100_lag5", "hnwi_nbr_1B_lag2", "hnwi_nbr_1B_lag3", "hnwi_nbr_1B_lag4")
+run_vrbl_mdl_vars(test_mdl2, verbose = T)
+
+## full model doesn't run
+## also not when removing clctr_cnt_cpaer_lags
+## also not when also removing additional population lags
+## also not when removing additional GDP lags
+## also not when removing additional shweal lags
+## runs after also removing additional hnwi_lags
+## runs with 1 and 2 additional hnwi_lags, breaks down when adding third additional lag
+## -> seems my hunch was completely correct
