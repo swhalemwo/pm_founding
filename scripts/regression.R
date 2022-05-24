@@ -160,7 +160,7 @@ gen_reg_spec <- function(non_thld_lngd_vars) {
     ## lag TI*TMITR interaction with same lag as TMITR
     lngtd_vars[which(lngtd_vars$vrbl == "ti_tmitr_interact"),]$lag <- filter(lngtd_vars, vrbl == "tmitr_approx_linear20step")$lag
 
-    reg_spec <- list(lngtd_vars = lngtd_vars)
+    reg_spec <- list(lngtd_vrbls = lngtd_vars)
 
     return(reg_spec)
 }
@@ -228,13 +228,15 @@ gen_cbn_dfs <- function(lngtd_vars, crscn_vars, vrbl_cnbs) {
 
     
 
-    cvrg_lags <- lapply(lngtd_vars, \(x) lapply(seq(1,5), \(i) gen_lag(vrbl=x, lag=i) %>%
-                                                               select(iso3c, year, value =paste0(x, "_lag", i)) %>%
-                                                               mutate(lag=i, vrbl = x, lag_col = "_lag")) %>%
-                                         Reduce(\(x,y) rbind(x,y), .)) %>%
+    cvrg_lags <- lapply(lngtd_vars, \(x)
+                        lapply(seq(1,5), \(i)
+                               gen_lag(vrbl=x, lag=i) %>%
+                               select(iso3c, year, value =paste0(x, "_lag", i)) %>%
+                               mutate(lag=i, vrbl = x, lag_col = "_lag")) %>%
+                        Reduce(\(x,y) rbind(x,y), .)) %>%
         Reduce(\(x,y) rbind(x,y), .)
 
-    
+
 
     cvrg_crscn <- lapply(crscn_vars, \(x) select(df_reg, iso3c, year, value = all_of(x)) %>%
                                       mutate(vrbl = x, lag_col = "", lag=""))
@@ -484,14 +486,24 @@ gen_spec_cbn_info <- function(reg_spec, base_vars) {
 
 }
 
+
+
 vary_spec <- function(reg_spec){
     #' for a spec, vary each variable along all lags 
+
     
-    varied_specs <- lapply(reg_spec[["lngtd_vars"]]$vrbl,
-                           \(x) lapply(seq(1,5),
-                                       \(t) list("lngtd_vrbls" = mutate(reg_spec[["lngtd_vars"]], lag = ifelse(vrbl == x, t, lag)),
-                                                 "vrbl_varied" = x,
-                                                 "lag_len" = t)))
+    
+    varied_specs <-
+        lapply(reg_spec[["lngtd_vrbls"]]$vrbl,
+               \(x)
+               lapply(seq(1,5),
+                      \(t)
+                      list("lngtd_vrbls" = mutate(reg_spec[["lngtd_vrbls"]],
+                                                  lag = ifelse(vrbl == x, t, lag)),
+                           "vrbl_varied" = x,
+                           "lag_len" = t,
+                           "base_lag_spec" = paste0(gen_lag_id(reg_spec)$value, collapse = ""))))
+
 
     
     varied_specs_long <- Reduce(\(x, y) c(x,y), varied_specs) %>% unique()
