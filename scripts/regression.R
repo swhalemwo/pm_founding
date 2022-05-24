@@ -32,7 +32,7 @@ options(RStata.StataVersion = 14)
 
 
 
-get_stata_result <- function(iv_vars, stata_output_vars, gof_names, dfx) {
+get_stata_result <- function(iv_vars, stata_output_vars, gof_names, dfx, verbose) {
     #' run the xtnbreg regression with stata() given independent vars,
     #' also give stata_output_vars since also needed in parse_stata_res
 
@@ -64,7 +64,7 @@ get_stata_result <- function(iv_vars, stata_output_vars, gof_names, dfx) {
 
     
     
-    stata_res <- stata(stata_src, data.in = dfx, data.out = T, stata.echo = F) %>% atb()
+    stata_res <- stata(stata_src, data.in = dfx, data.out = T, stata.echo = verbose) %>% atb()
 
     return(stata_res)
 }
@@ -320,9 +320,10 @@ gen_mdl_id <- function(reg_spec) {
 }
         
 
-timeout_stata <- function(iv_vars, stata_output_vars, gof_names, dfx, file_id) {
+timeout_stata <- function(iv_vars, stata_output_vars, gof_names, dfx, file_id, verbose) {
     #' run stata command, time it out if taking too long
-
+    
+    setwd(PROJECT_DIR)
 
     pid <- Sys.getpid()
     cur_wd <- getwd()
@@ -338,7 +339,7 @@ timeout_stata <- function(iv_vars, stata_output_vars, gof_names, dfx, file_id) {
 
 
     stata_res_raw <- get_stata_result(iv_vars = iv_vars, stata_output_vars = stata_output_vars,
-                                      gof_names = gof_names, dfx = dfx)
+                                      gof_names = gof_names, dfx = dfx, verbose = verbose)
 
     setwd(cur_wd)
 
@@ -358,7 +359,7 @@ timeout_stata <- function(iv_vars, stata_output_vars, gof_names, dfx, file_id) {
 
     
 ## run_vrbl_mdl_vars <- function(mdl_vars, df_cbn, cbn_name, mdl_name, reg_specx) {
-run_vrbl_mdl_vars <- function(reg_spec) {
+run_vrbl_mdl_vars <- function(reg_spec, verbose = F) {
     #' run one regression given the model vars
     
 
@@ -387,7 +388,8 @@ run_vrbl_mdl_vars <- function(reg_spec) {
     ## Sys.sleep(runif(1)/10)
     ## newenv <- new.env()
     
-    converged <- withTimeout(timeout_stata(iv_vars, stata_output_vars, gof_names, dfx, file_id), timeout = 10)
+    converged <- withTimeout(timeout_stata(iv_vars, stata_output_vars, gof_names, dfx, file_id, verbose = verbose),
+                             timeout = 10)
 
 
     ## converged <- T
