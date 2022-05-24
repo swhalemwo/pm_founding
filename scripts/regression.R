@@ -582,6 +582,11 @@ inc_ineq_vars <- c("sptinc992j_p90p100", "sptinc992j_p99p100", "gptinc992j")
 weal_ineq_vars <- c("shweal992j_p90p100", "shweal992j_p99p100", "ghweal992j")
 non_thld_lngtd_vars <- c("tmitr_approx_linear20step", "ti_tmitr_interact", "smorc_dollar_fxm", "NY.GDP.PCAP.CDk", "SP.POP.TOTLm", "clctr_cnt_cpaer")
 
+ctrl_vars <- c("NY.GDP.PCAP.CDk", "SP.POP.TOTLm", "clctr_cnt_cpaer", "cnt_contemp_1995")
+ctrl_vars_lngtd <- ctrl_vars[ctrl_vars %!in% crscn_vars]
+ti_vars <- c("tmitr_approx_linear20step", "ti_tmitr_interact")
+cult_spending_vars <- c("smorc_dollar_fxm")
+
 lngtd_vars <- c(hnwi_vars, inc_ineq_vars, weal_ineq_vars, non_thld_lngtd_vars)
 
 all_rel_vars <- unique(c(hnwi_vars, inc_ineq_vars, weal_ineq_vars, non_thld_lngtd_vars, crscn_vars))

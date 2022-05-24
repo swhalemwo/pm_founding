@@ -97,11 +97,7 @@ df_anls <- filter(coef_df, scramblematch(vrbl_lag, vrbl_name)) %>%
 
 hist(df_anls$coef, breaks = 800)
 
-table(df_anls$mdl_name)
-len(unique(df_anls$lag_spec))
 
-
-## 
 
 ggplot(df_anls, aes(x=lag, y=coef, group=interaction(mdl_name, base_lag_spec))) +
     facet_wrap(~cbn_name) +
