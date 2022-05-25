@@ -151,11 +151,11 @@ other_var_names <- unique(best_mdl_coefs$vrbl_name_unlag)[unique(best_mdl_coefs$
 
 best_mdl_coefs$vrbl_name_unlag <- factor(best_mdl_coefs$vrbl_name_unlag, levels = c(vrbl_levels, other_var_names))
 
-
+pdf(paste0(FIG_DIR, "best_models.pdf"), width = 8, height = 12)
 ggplot(best_mdl_coefs, aes(x=lag, y=coef, color = t_value)) +
     geom_quasirandom(aes(shape = factor(sig)), height = 0, width = 0.33, show.legend=F, size = 3) +
     facet_grid(cols = vars(cbn_name), rows = vars(vrbl_name_unlag), scales="free", switch = "y") +
     theme(strip.text.y.left = element_text(angle = 0)) + 
     scale_color_gradient2(low = "blue", mid = "grey", high = "red") +
     scale_shape_manual(values = c(1,4))
-
+dev.off()
