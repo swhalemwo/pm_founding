@@ -655,17 +655,24 @@ print(t2-t1)
 ## ** running with hopefully better ids
 
 
-REG_RES_DIR <- "/home/johannes/ownCloud/reg_res/v15/"
-REG_RES_FILE_LAGS <- "/home/johannes/ownCloud/reg_res/v15_lags.csv"
-REG_RES_FILE_CFGS <- "/home/johannes/ownCloud/reg_res/v15_cfgs.csv"
-REG_SPEC_DIR <- "/home/johannes/ownCloud/reg_res/v15_specs/"
-MDL_START_FILE <- "/home/johannes/ownCloud/reg_res/v15_start.csv"
-MDL_END_FILE <- "/home/johannes/ownCloud/reg_res/v15_end.csv"
+batch_version <- "v16"
+REG_MONKEY_DIR <- "/home/johannes/ownCloud/reg_res/"
+REG_RES_DIR <- paste0(REG_MONKEY_DIR,  batch_version, "/")
+REG_RES_FILE_LAGS <- paste0(REG_MONKEY_DIR, batch_version, "_lags.csv")
+REG_RES_FILE_CFGS <- paste0(REG_MONKEY_DIR, batch_version, "_cfgs.csv")
+REG_SPEC_DIR <- paste0(REG_MONKEY_DIR, batch_version, "_specs/")
+MDL_START_FILE <- paste0(REG_MONKEY_DIR, batch_version, "_start.csv")
+MDL_END_FILE <- paste0(REG_MONKEY_DIR, batch_version, "_end.csv")
+## generate existing dirs: have to normalizePath (remove //), and paste additional "/" at the end reeee
+existing_dirs <- paste0(normalizePath(list.dirs(REG_MONKEY_DIR, recursive = F)), "/")
+if (REG_RES_DIR %!in% existing_dirs){ system(paste0("mkdir ", REG_RES_DIR))}
+if (REG_SPEC_DIR %!in% existing_dirs){ system(paste0("mkdir ", REG_SPEC_DIR))}
 
-
+PID_DIR <- "/home/johannes/pid_dir/"
+   
 
 ## generate basic spec of lag, variable and threshold choices
-NBR_SPECS <- 1000
+NBR_SPECS <- 10
 
 reg_specs <- lapply(seq(1,NBR_SPECS), \(x) gen_reg_spec(non_thld_lngtd_vars)) %>% unique()
 ## generate variations of basic reg_spec
