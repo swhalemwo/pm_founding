@@ -35,7 +35,9 @@ df_reg_anls_cfgs_wide <- df_reg_anls_cfgs %>% select(variable, value, mdl_id, la
 
 ## read_reg_res(df_reg_anls_cfgs$mdl_id[[1]])
 
-all_mdl_res <- lapply(unique(df_reg_anls_cfgs$mdl_id), read_reg_res)
+
+
+all_mdl_res <- lapply(unique(filter(df_reg_anls_cfgs, cvrgd == 1)$mdl_id), read_reg_res)
 
 coef_df <- lapply(all_mdl_res, \(x) atb(x[["coef_df"]])) %>% bind_rows()
 gof_df <- lapply(all_mdl_res, \(x) x[["gof_df"]]) %>% bind_rows() %>% atb()
@@ -44,8 +46,8 @@ gof_df_cbn <- merge(gof_df, df_reg_anls_cfgs_wide) %>% atb()
 
 filter(gof_df_cbn, gof_names == "log_likelihood") %>%
     ggplot(aes(x = gof_value)) +
-    geom_histogram(binwidth = 2) +
-    facet_wrap(~cbn_name, ncol = 1)
+    geom_histogram(binwidth = 0.1) +
+    facet_wrap(~cbn_name, ncol = 1, scales = "free")
 
 ## ok makes sense: cbn_all models have best fit: most variables, least observations
 ## fit gets worse the more variables are removed and the more cases are added
@@ -58,6 +60,7 @@ vrbl_lag <- paste0(vrbl, "_lag")
 
 library(stringr)
 
+## construct the within-change df 
 df_anls <- coef_df %>%
     mutate(vrbl_name_unlag = gsub("_lag[1-5]", "", vrbl_name)) %>%
     filter(vrbl_name_unlag != vrbl_name) %>% ## only use the lag variables
@@ -67,18 +70,33 @@ df_anls <- coef_df %>%
     mutate(t_value = coef/se, 
            sig = ifelse(pvalues < 0.05, 1, 0))
     
-
 unique(df_anls$vrbl_name_unlag)
 
 
-
+## order the factors
 df_anls$vrbl_name_unlag <- factor(df_anls$vrbl_name_unlag, levels = c(ti_vars, hnwi_vars, inc_ineq_vars, weal_ineq_vars, cult_spending_vars, ctrl_vars_lngtd))
 
-pdf(paste0(FIG_DIR, "first_reg_res.pdf"), width = 8, height = 12)
-ggplot(df_anls, aes(x=lag, y=coef, group = base_lag_spec)) +
-    geom_line(show.legend = F, alpha = 0.1) +
-    geom_point(aes(color = t_value, shape = factor(sig)), show.legend = T, size = 3) + 
-    facet_grid(cols = vars(cbn_name), rows = vars(vrbl_name_unlag), scales = "free_y", switch = "y") +
+
+df_anls2 <- df_anls %>% group_by(vrbl_name_unlag, cbn_name) %>%
+    mutate(base_lag_spec_id = as.numeric(factor(base_lag_spec))) %>%
+    filter(base_lag_spec_id <= 20)
+
+
+
+
+
+
+
+
+## shouldn't group by base_lag_spec when selecting
+## see if some aux vars can be constructed to select on 
+library(ggbeeswarm)
+
+pdf(paste0(FIG_DIR, "first_reg_res3.pdf"), width = 8, height = 12)
+ggplot(df_anls2, aes(x=lag, y=coef, group = base_lag_spec)) +
+    geom_line(show.legend = F, alpha = 0.15) +
+    geom_quasirandom(aes(color = t_value, shape = factor(sig)), size = 2, height = 0, width = 0.3) + 
+    facet_grid(cols = vars(cbn_name), rows = vars(vrbl_name_unlag), scales = "free", switch = "y") +
     theme(strip.text.y.left = element_text(angle = 0)) +
     scale_color_gradient2(low = "blue", mid = "grey", high = "red") +
     scale_shape_manual(values = c(1,4))
