@@ -30,6 +30,15 @@ library(RStata)
 options(RStata.StataPath = "/usr/local/stata14/stata")
 options(RStata.StataVersion = 14)
 
+cleanup_old_r_procs <- function() {
+    #' kill old R procs, not used so far
+    
+    ps() %>% filter(name == "R", pid != Sys.getpid()) %>%
+        pull(pid) %>%
+        lapply(\(x) ps_kill(ps_handle(x)))
+
+}
+
 cleanup_old_stata_procs <- function() {
     #' yeet old (older than 12 secs) stata processes
 
@@ -372,18 +381,22 @@ gen_mdl_id <- function(reg_spec) {
 
 timeout_stata <- function(iv_vars, stata_output_vars, gof_names, dfx, file_id, verbose) {
     #' run stata command, time it out if taking too long
-
     
-    setwd(PROJECT_DIR)
+    
+    ## setwd(PROJECT_DIR)
 
-    pid <- Sys.getpid()
     cur_wd <- getwd()
-    new_dir <- paste0(cur_wd, "/pid_dir/", pid)
-    present_dirs <- list.dirs(paste0(cur_wd, "/pid_dir"), recursive = F)
+    
+    pid <- Sys.getpid()
+    new_dir <- paste0(PID_DIR, pid)
+    
+    present_dirs <- list.dirs(paste0(PID_DIR), recursive = F)
+    
     if (new_dir %!in% present_dirs) {
     
         mkdir_cmd <- paste0("mkdir ", new_dir)
         system(mkdir_cmd)
+
     }
 
     setwd(new_dir)
@@ -391,16 +404,21 @@ timeout_stata <- function(iv_vars, stata_output_vars, gof_names, dfx, file_id, v
     stata_res_raw <- get_stata_result(iv_vars = iv_vars, stata_output_vars = stata_output_vars,
                                       gof_names = gof_names, dfx = dfx, verbose = verbose)
 
-    setwd(cur_wd)
+    ## setwd(cur_wd)
+    ## print(pid)
+    ## print(Sys.getpid())
 
     if (nrow(stata_res_raw) > 1) {stop("something wrong")} ## debug 
 
     stata_res_parsed <- parse_stata_res(stata_res_raw, stata_output_vars, gof_names)
 
-
     save_parsed_res(stata_res_parsed, idx = file_id)
-    return(T)
-    }
+    
+    return(list(
+        result = T,
+        pid = pid))
+    ## return("asdf")
+}
 
     
     
@@ -441,25 +459,31 @@ run_vrbl_mdl_vars <- function(reg_spec, verbose = F) {
     dfx <- select(df_cbn, all_of(c(base_vars, "iso3c_num", "nbr_opened",iv_vars)))
 
     ## Sys.sleep(runif(1)/10)
-    ## newenv <- new.env()
-
-    converged <- tryCatch({
+    
+    ## use trycatch with fscaret to terminate stata command if it doesn't converge
+    converged <- suppressWarnings(tryCatch({
         fscaret::timeout(timeout_stata(iv_vars, stata_output_vars, gof_names, dfx, file_id, verbose = verbose),
                          seconds = 5)},
-        error=function(e) {NULL})
+        error=function(e) {list(result = NULL, pid = Sys.getpid())}))
                              
     ## converged <- withTimeout(timeout_stata(iv_vars, stata_output_vars, gof_names, dfx, file_id, verbose = verbose),
     ##                          timeout = 1)
 
     ## converged <- T
+    proc_dir <- paste0(PID_DIR, converged$pid)
     
-    if (is.null(converged)) {
+    rmdir_cmd <- paste0("rm -r ", proc_dir)
+    system(rmdir_cmd)
+
+    
+    if (is.null(converged$result)) {
         df_idx$cvrgd <- 0 # if converged is null, it means the convergence failed
         other_cfgs$cvrgd <- 0
-        
+        print("convergence failed")
+    
         cleanup_old_stata_procs()
         
-        print("convergence failed")
+    
     } else {
         df_idx$cvrgd <- 1
         other_cfgs$cvrgd <- 1
@@ -657,8 +681,35 @@ reg_spec_mdls <- sapply(reg_spec_cbns, gen_spec_mdl_info)
 ## run_vrbl_mdl_vars(reg_spec_mdls[[2]])
 ## gen_mdl_id(reg_spec_mdls[[2]])
 
+mclapply(reg_spec_mdls[1:2000],run_vrbl_mdl_vars, mc.cores = 6)
 
-mclapply(reg_spec_mdls,run_vrbl_mdl_vars, mc.cores = 6)
+## ps() %>% filter(name == "R", pid != Sys.getpid()) %>% pull(ps_handle) %>% lapply(ps_kill)
+
+
+
+
+lapply(reg_spec_mdls[1:10],run_vrbl_mdl_vars)
+
+## ** pid bugfixing
+
+timeout_test <- function() {
+    cur_dir <- getwd()
+    pid <- Sys.getpid()
+    new_dir = paste0(PROJECT_DIR, "pid_dir/", pid)
+
+    system(paste0("mkdir ", new_dir))
+    setwd(new_dir)
+    
+
+    x <- 1+1
+    print(x)
+
+    setwd(cur_dir)
+    
+}
+
+timeout(timeout_test(), seconds = 2)
+
 
 ## ** multi_lag_testing
 

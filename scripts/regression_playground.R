@@ -735,6 +735,29 @@ ds
 
 ## get all processes
 library(ps)
+library(dplyr)
+atb <- as_tibble
+adf <- as.data.frame
+
+ps1 <- ps() %>% select(pid, status1 = status, name)
+ps1$t1 <- Sys.time()
+Sys.sleep(10)
+ps2 <- ps() %>% select(pid, status2 = status, name)
+ps2$t2 <- Sys.time()
+Sys.sleep(10)
+ps3 <- ps() %>% select(pid, status3 = status, name)
+ps3$t3 <- Sys.time()
+
+
+ps_tbl <- Reduce(\(x,y) merge(x, filter(y, name == "R")), list(ps1, ps2, ps3)) %>% atb()
+
+select(ps_tbl, pid, status1, status2, status3) %>% adf()
+
+
+
+filter(ps_tbl, status1=="sleeping", status2=="sleeping", status3=="sleeping", pid != 2653630) %>% pull(pid) %>%
+        lapply(\(x) ps_kill(ps_handle(x)))
+
 
 timeout(stata_inf_loop(), seconds = 2)
 
