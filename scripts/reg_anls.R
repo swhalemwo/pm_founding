@@ -42,6 +42,7 @@ all_mdl_res <- lapply(unique(filter(df_reg_anls_cfgs, cvrgd == 1)$mdl_id), read_
 coef_df <- lapply(all_mdl_res, \(x) atb(x[["coef_df"]])) %>% bind_rows()
 gof_df <- lapply(all_mdl_res, \(x) x[["gof_df"]]) %>% bind_rows() %>% atb()
 
+## add the model details as variables 
 gof_df_cbn <- merge(gof_df, df_reg_anls_cfgs_wide) %>% atb()
 
 gof_df_cbn$cbn_name <- factor(gof_df_cbn$cbn_name, levels = names(vrbl_cbns))
@@ -67,30 +68,28 @@ vrbl_lag <- paste0(vrbl, "_lag")
 library(stringr)
 
 ## construct the within-change df 
-df_anls <- coef_df %>%
+df_anls_base <- coef_df %>%
     mutate(vrbl_name_unlag = gsub("_lag[1-5]", "", vrbl_name)) %>%
-    filter(vrbl_name_unlag != vrbl_name) %>% ## only use the lag variables
-    mutate(lag = as.numeric(substring(str_extract(vrbl_name, "_lag(\\d+)"), 5))) %>%
     merge(df_reg_anls_cfgs_wide) %>% atb() %>%
-    filter(vrbl_varied == vrbl_name_unlag, cbn_name != "cbn_controls") %>%
     mutate(t_value = coef/se, 
            sig = ifelse(pvalues < 0.05, 1, 0))
+
+
+## ** within base-spec changes
+
+df_anls_within <- df_anls_base %>%
+    filter(vrbl_name_unlag != vrbl_name) %>% ## only use the lag variables
+    mutate(lag = as.numeric(substring(str_extract(vrbl_name, "_lag(\\d+)"), 5))) %>%
+    filter(vrbl_varied == vrbl_name_unlag, cbn_name != "cbn_controls") %>%
+    group_by(vrbl_name_unlag, cbn_name) %>%
+    mutate(base_lag_spec_id = as.numeric(factor(base_lag_spec))) %>%
+    filter(base_lag_spec_id <= 20)
     
 unique(df_anls$vrbl_name_unlag)
 
 
 ## order the factors
-df_anls$vrbl_name_unlag <- factor(df_anls$vrbl_name_unlag, levels = c(ti_vars, hnwi_vars, inc_ineq_vars, weal_ineq_vars, cult_spending_vars, ctrl_vars_lngtd))
-
-
-df_anls2 <- df_anls %>% group_by(vrbl_name_unlag, cbn_name) %>%
-    mutate(base_lag_spec_id = as.numeric(factor(base_lag_spec))) %>%
-    filter(base_lag_spec_id <= 20)
-
-
-
-
-
+df_anls_within$vrbl_name_unlag <- factor(df_anls_within$vrbl_name_unlag, levels = c(ti_vars, hnwi_vars, inc_ineq_vars, weal_ineq_vars, cult_spending_vars, ctrl_vars_lngtd))
 
 
 
@@ -98,8 +97,8 @@ df_anls2 <- df_anls %>% group_by(vrbl_name_unlag, cbn_name) %>%
 ## see if some aux vars can be constructed to select on 
 library(ggbeeswarm)
 
-pdf(paste0(FIG_DIR, "first_reg_res3.pdf"), width = 8, height = 12)
-ggplot(df_anls2, aes(x=lag, y=coef, group = base_lag_spec)) +
+pdf(paste0(FIG_DIR, "first_reg_within.pdf"), width = 8, height = 12)
+ggplot(df_anls_within, aes(x=lag, y=coef, group = base_lag_spec)) +
     geom_line(show.legend = F, alpha = 0.15) +
     geom_quasirandom(aes(color = t_value, shape = factor(sig)), size = 2, height = 0, width = 0.3) + 
     facet_grid(cols = vars(cbn_name), rows = vars(vrbl_name_unlag), scales = "free", switch = "y") +
@@ -109,33 +108,54 @@ ggplot(df_anls2, aes(x=lag, y=coef, group = base_lag_spec)) +
 dev.off()
         
 
+## ** coefs from all models
 
-        
+df_anls_all <- df_anls_base %>%
+    filter(vrbl_name_unlag != vrbl_name) %>% ## only use lagged variables
+    mutate(lag = as.numeric(substring(str_extract(vrbl_name, "_lag(\\d+)"), 5))) %>%
+    filter(cbn_name != "cbn_controls") %>%
+    group_by(vrbl_name_unlag, cbn_name, lag) %>%
+    slice_sample(n=10)
+
+table(df_anls_all$vrbl_name_unlag)
+
+df_anls_all$vrbl_name_unlag <- factor(df_anls_all$vrbl_name_unlag, levels = c(ti_vars, hnwi_vars, inc_ineq_vars, weal_ineq_vars, cult_spending_vars, ctrl_vars_lngtd))
+
+pdf(paste0(FIG_DIR, "first_reg_res_all.pdf"), width = 8, height = 12)
+ggplot(df_anls_all, aes(x=lag, y=coef)) +
+    geom_quasirandom(aes(color = t_value, shape = factor(sig)), size = 2, height = 0, width = 0.3) +
+    facet_grid(cols = vars(cbn_name), rows = vars(vrbl_name_unlag), scales = "free", switch = "y") +
+    theme(strip.text.y.left = element_text(angle = 0)) +
+    scale_color_gradient2(low = "blue", mid = "grey", high = "red") +
+    scale_shape_manual(values = c(1,4))
+dev.off()
 
 
-df_anls <- filter(coef_df, scramblematch(vrbl_lag, vrbl_name)) %>% 
-    mutate(lag = as.numeric(substring(vrbl_name, nchar(vrbl_lag)+1))) %>%
-    merge(df_reg_anls_cfgs_wide) %>% atb() %>%
-    filter(vrbl_varied == vrbl, mdl_name == "full")
-
-
-hist(df_anls$coef, breaks = 800)
-
-
-
-ggplot(df_anls, aes(x=lag, y=coef, group=interaction(mdl_name, base_lag_spec))) +
-    facet_wrap(~cbn_name) +
-    geom_line(show.legend = F)
-
-unique(df_anls$base_lag_spec)[1]
-
-df_anls %>% filter(base_lag_spec == "14XXXX3X4XX211X22") %>%
-    select(mdl_id, coef, lag, cbn_name) %>%
-    arrange(cbn_name)
-
-## can't believe coefs are really exactly the same...
-
+## ** best fitting models
 
 
 
+
+best_mdls <- gof_df_cbn %>%
+    filter(gof_names == "log_likelihood", cbn_name != "cbn_controls") %>%
+    group_by(cbn_name) %>% 
+    arrange(gof_value) %>%
+    slice_tail(n=8)
+
+best_mdl_coefs <- merge(df_anls_base, best_mdls) %>% atb()
+best_mdl_coefs$lag <- as.numeric(substring(str_extract(best_mdl_coefs$vrbl_name, "_lag(\\d+)"), 5))
+best_mdl_coefs$lag[is.na(best_mdl_coefs$lag)] <- 0
+
+vrbl_levels <- c(ti_vars, hnwi_vars, inc_ineq_vars, weal_ineq_vars, cult_spending_vars, ctrl_vars_lngtd)
+other_var_names <- unique(best_mdl_coefs$vrbl_name_unlag)[unique(best_mdl_coefs$vrbl_name_unlag) %!in% vrbl_levels]
+
+best_mdl_coefs$vrbl_name_unlag <- factor(best_mdl_coefs$vrbl_name_unlag, levels = c(vrbl_levels, other_var_names))
+
+
+ggplot(best_mdl_coefs, aes(x=lag, y=coef, color = t_value)) +
+    geom_quasirandom(aes(shape = factor(sig)), height = 0, width = 0.33, show.legend=F, size = 3) +
+    facet_grid(cols = vars(cbn_name), rows = vars(vrbl_name_unlag), scales="free", switch = "y") +
+    theme(strip.text.y.left = element_text(angle = 0)) + 
+    scale_color_gradient2(low = "blue", mid = "grey", high = "red") +
+    scale_shape_manual(values = c(1,4))
 
