@@ -186,16 +186,19 @@ gen_reg_spec <- function(non_thld_lngd_vars) {
 
     ## select variable, generate random lag
 
-    lngtd_vars <- c(x$hnwi_var,
-                    x$inc_ineq_var,
-                    x$weal_ineq_var,
-                    non_thld_lngtd_vars) %>% atb() %>%
-        select(vrbl = value) %>%
-        group_by(vrbl) %>% 
-        mutate(lag = sample(seq(1,5),1))
+    ## lngtd_vars <- c(x$hnwi_var,
+    ##                 x$inc_ineq_var,
+    ##                 x$weal_ineq_var,
+    ##                 non_thld_lngtd_vars) %>% atb() %>%
+    ##     select(vrbl = value) %>%
+    ##     ## group_by(vrbl) %>% 
+    ##     mutate(lag = sample(seq(1,5),1))
+
+    lngtd_vars <- data.frame(vrbl = c(x$hnwi_var, x$inc_ineq_var,  x$weal_ineq_var,  non_thld_lngtd_vars))
+    lngtd_vars$lag <- sample(seq(1,5), nrow(lngtd_vars), replace = T)
 
     ## lag TI*TMITR interaction with same lag as TMITR
-    lngtd_vars[which(lngtd_vars$vrbl == "ti_tmitr_interact"),]$lag <- filter(lngtd_vars, vrbl == "tmitr_approx_linear20step")$lag
+    lngtd_vars[which(lngtd_vars$vrbl == "ti_tmitr_interact"),]$lag <- lngtd_vars[lngtd_vars$vrbl == "tmitr_approx_linear20step", ]$lag
 
     reg_spec <- list(lngtd_vrbls = lngtd_vars)
 
@@ -253,7 +256,7 @@ gen_cbn_models <- function(cbn_vars, base_vars, ctrl_vars) {
 
     ## all_cbn_models <- c(single_var_models, models)
 
-    
+    ## atm only use full models
     all_cbn_models <- list(full = c(cbn_vars))
     
     return(all_cbn_models)
@@ -547,6 +550,7 @@ gen_spec_cbn_info <- function(reg_spec, base_vars) {
     names(spec_cbn_names) <- spec_cbn_names
 
     
+    
     reg_specs_mod <- lapply(spec_cbn_names, \(i) c(reg_spec,
                                                    list(spec_cbn=spec_cbns[[i]],
                                                         base_vars = base_vars,
@@ -567,27 +571,49 @@ gen_spec_cbn_info <- function(reg_spec, base_vars) {
 
 }
 
+replace_vlue <- function(lngtd_vrbls, vrbl, lag) {
+    #' replace value more effectively in varying the lag length
+    
+    
+
+    lngtd_vrbls[which(lngtd_vrbls$vrbl == vrbl), "lag"] <- lag
+
+    ## make sure interaction always has same lag
+    lngtd_vrbls[which(lngtd_vrbls$vrbl == "ti_tmitr_interact"),]$lag <-
+        lngtd_vrbls[lngtd_vrbls$vrbl == "tmitr_approx_linear20step", ]$lag
+    
+    return(lngtd_vrbls)
+}
+
 
 
 vary_spec <- function(reg_spec){
     #' for a spec, vary each variable along all lags 
+    
+    base_lag_spec <- paste0(gen_lag_id(reg_spec)$value, collapse = "")
 
-    
-    
     varied_specs <-
-        lapply(reg_spec[["lngtd_vrbls"]]$vrbl,
+        lapply(reg_spec[["lngtd_vrbls"]]$vrbl[reg_spec[["lngtd_vrbls"]]$vrbl != "ti_tmitr_interact"],
                \(x)
                lapply(seq(1,5),
                       \(t)
-                      list("lngtd_vrbls" = mutate(reg_spec[["lngtd_vrbls"]],
-                                                  lag = ifelse(vrbl == x, t, lag)),
+                      list(
+                          ## "lngtd_vrbls" = mutate(reg_spec[["lngtd_vrbls"]],
+                          ##                         lag = ifelse(vrbl == x, t, lag)),
+
+                          "lngtd_vrbls" = replace_vlue(reg_spec$lngtd_vrbls, vrbl = x, lag = t),
+
+                           
                            "vrbl_varied" = x,
                            "lag_len" = t,
-                           "base_lag_spec" = paste0(gen_lag_id(reg_spec)$value, collapse = ""))))
+                           "base_lag_spec" = base_lag_spec
+
+                           )))
 
 
     
     varied_specs_long <- Reduce(\(x, y) c(x,y), varied_specs) %>% unique()
+    ## varied_specs_long <- varied_specs
 
     return (varied_specs_long)
 }
@@ -671,33 +697,69 @@ if (REG_SPEC_DIR %!in% existing_dirs){ system(paste0("mkdir ", REG_SPEC_DIR))}
 PID_DIR <- "/home/johannes/pid_dir/"
    
 
+
+
 ## generate basic spec of lag, variable and threshold choices
-NBR_SPECS <- 10
-
-reg_specs <- lapply(seq(1,NBR_SPECS), \(x) gen_reg_spec(non_thld_lngtd_vars)) %>% unique()
+t1 = Sys.time()
+NBR_SPECS <- 1000
+reg_specs <- lapply(seq(1,NBR_SPECS), \(x) gen_reg_spec(non_thld_lngtd_vars)) %>% unique() #
 ## generate variations of basic reg_spec
-
-reg_spec_varyns <- sapply(reg_specs, vary_spec)
-
-## add the combination info 
-reg_spec_cbns <- sapply(reg_spec_varyns, \(x) gen_spec_cbn_info(x, base_vars))
+reg_spec_varyns <- mclapply(reg_specs, vary_spec, mc.cores = 6) %>% flatten()
+## reg_spec_varyns2 <- mclapply(reg_specs, vary_spec, mc.cores = 6) %>% Reduce(\(x,y) c(x,y), .)
+## add the combination info
+reg_spec_cbns <- mclapply(reg_spec_varyns, \(x) gen_spec_cbn_info(x, base_vars), mc.cores = 6) %>% flatten()
+## reg_spec_cbns <- sapply(reg_spec_varyns, \(x) gen_spec_cbn_info(x, base_vars))
+## mclapply is actually slower here because Reduce() is needed, and reducing tens of thousands of lists single-threadedly is slower than using sapply on single core
+## guess I could split reg_spec_varyns manually into sections, each called with sapply, overall with mclapply: then I have just mc.cores number of lists, so Reduce should be quick
+## flatten() from purrr is actually faster lol 
 ## add the model info
+## reg_spec_mdls <- sapply(reg_spec_cbns, gen_spec_mdl_info)
+reg_spec_mdls <- mclapply(reg_spec_cbns, gen_spec_mdl_info, mc.cores = 6) %>% flatten()
+## same issue here: mclapply with Reduce is slow, but with flatten it's faster :)))
+t2 = Sys.time()
+print(t2-t1)
 
-reg_spec_mdls <- sapply(reg_spec_cbns, gen_spec_mdl_info)
+
+## decently fast analysis
+jj <- lapply(reg_spec_mdls, \(x) t(x$lngtd_vrbls[x$lngtd_vrbls$vrbl %in% c("tmitr_approx_linear20step", "ti_tmitr_interact"),])[2,]) %>% Reduce(\(x,y) rbind(x,y), .) %>% atb(.name_repair = ~c("v1", "v2"))
+
+jj <- mclapply(reg_spec_mdls, \(x) t(x$lngtd_vrbls[x$lngtd_vrbls$vrbl %in% c("tmitr_approx_linear20step", "ti_tmitr_interact"),])[2,], mc.cores = 6)
+kk <- do.call(rbind, jj) %>% atb(.name_repair = ~c("v1", "v2"))
+filter(kk, v1 != v2)
+
+
 
 ## run_vrbl_mdl_vars(reg_spec_mdls[[2]])
 ## gen_mdl_id(reg_spec_mdls[[2]])
 
 mclapply(reg_spec_mdls[1:2000],run_vrbl_mdl_vars, mc.cores = 6)
 
+
+
+
 ## ps() %>% filter(name == "R", pid != Sys.getpid()) %>% pull(ps_handle) %>% lapply(ps_kill)
 
+## ** tax incentive interaction debugging
+reg_spec <- reg_spec_mdls[[1]]
 
 
 
-lapply(reg_spec_mdls[1:10],run_vrbl_mdl_vars)
+t1 <- Sys.time()
+x <- lapply(reg_spec_mdls[1:100], \(x) x$lngtd_vrbls)
+            ## \(x) filter(x$lngtd_vrbls, vrbl %in% c("tmitr_approx_linear20step", "ti_tmitr_interact")))
+            ## %>%
+            ## pivot_wider(names_from = vrbl, values_from = lag))
+## %>% rbindlist()
+t2 <- Sys.time()
+print(t2-t1)
+
+filter(x, tmitr_approx_linear20step != ti_tmitr_interact)
+## not always the same 
+
 
 ## ** pid bugfixing
+
+lapply(reg_spec_mdls[1:10],run_vrbl_mdl_vars)
 
 timeout_test <- function() {
     cur_dir <- getwd()
