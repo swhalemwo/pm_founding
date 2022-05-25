@@ -44,10 +44,16 @@ gof_df <- lapply(all_mdl_res, \(x) x[["gof_df"]]) %>% bind_rows() %>% atb()
 
 gof_df_cbn <- merge(gof_df, df_reg_anls_cfgs_wide) %>% atb()
 
+gof_df_cbn$cbn_name <- factor(gof_df_cbn$cbn_name, levels = names(vrbl_cbns))
+
+
+
+pdf(paste0(FIG_DIR, "cbn_log_likelihoods.pdf"), width = 6, height = 3)
 filter(gof_df_cbn, gof_names == "log_likelihood") %>%
-    ggplot(aes(x = gof_value)) +
-    geom_histogram(binwidth = 0.1) +
-    facet_wrap(~cbn_name, ncol = 1, scales = "free")
+    ggplot(aes(x = gof_value, fill = cbn_name)) +
+    geom_histogram(binwidth = 2)
+    ## facet_wrap(~cbn_name, ncol = 1, scales = "fixed")
+dev.off()
 
 ## ok makes sense: cbn_all models have best fit: most variables, least observations
 ## fit gets worse the more variables are removed and the more cases are added
