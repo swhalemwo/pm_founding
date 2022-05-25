@@ -631,28 +631,28 @@ print(t2-t1)
 ## ** running with hopefully better ids
 
 
-REG_RES_DIR <- "/home/johannes/ownCloud/reg_res/v14/"
-REG_RES_FILE_LAGS <- "/home/johannes/ownCloud/reg_res/v14_lags.csv"
-REG_RES_FILE_CFGS <- "/home/johannes/ownCloud/reg_res/v14_cfgs.csv"
-REG_SPEC_DIR <- "/home/johannes/ownCloud/reg_res/v14_specs/"
-MDL_START_FILE <- "/home/johannes/ownCloud/reg_res/v14_start.csv"
-MDL_END_FILE <- "/home/johannes/ownCloud/reg_res/v14_end.csv"
+REG_RES_DIR <- "/home/johannes/ownCloud/reg_res/v15/"
+REG_RES_FILE_LAGS <- "/home/johannes/ownCloud/reg_res/v15_lags.csv"
+REG_RES_FILE_CFGS <- "/home/johannes/ownCloud/reg_res/v15_cfgs.csv"
+REG_SPEC_DIR <- "/home/johannes/ownCloud/reg_res/v15_specs/"
+MDL_START_FILE <- "/home/johannes/ownCloud/reg_res/v15_start.csv"
+MDL_END_FILE <- "/home/johannes/ownCloud/reg_res/v15_end.csv"
 
 
 
 ## generate basic spec of lag, variable and threshold choices
-NBR_SPECS <- 15
+NBR_SPECS <- 1000
 
 reg_specs <- lapply(seq(1,NBR_SPECS), \(x) gen_reg_spec(non_thld_lngtd_vars)) %>% unique()
 ## generate variations of basic reg_spec
-reg_spec_varyns <- lapply(reg_specs, vary_spec)%>% Reduce(\(x,y) c(x,y), .) 
 
+reg_spec_varyns <- sapply(reg_specs, vary_spec)
 
 ## add the combination info 
-reg_spec_cbns <- lapply(reg_spec_varyns, \(x) gen_spec_cbn_info(x, base_vars)) %>% Reduce(\(x,y) c(x,y), .)
+reg_spec_cbns <- sapply(reg_spec_varyns, \(x) gen_spec_cbn_info(x, base_vars))
 ## add the model info
 
-reg_spec_mdls <- lapply(reg_spec_cbns, gen_spec_mdl_info) %>% Reduce(\(x,y) c(x,y), .)
+reg_spec_mdls <- sapply(reg_spec_cbns, gen_spec_mdl_info)
 
 ## run_vrbl_mdl_vars(reg_spec_mdls[[2]])
 ## gen_mdl_id(reg_spec_mdls[[2]])
