@@ -720,14 +720,6 @@ t2 = Sys.time()
 print(t2-t1)
 
 
-## decently fast analysis
-jj <- lapply(reg_spec_mdls, \(x) t(x$lngtd_vrbls[x$lngtd_vrbls$vrbl %in% c("tmitr_approx_linear20step", "ti_tmitr_interact"),])[2,]) %>% Reduce(\(x,y) rbind(x,y), .) %>% atb(.name_repair = ~c("v1", "v2"))
-
-jj <- mclapply(reg_spec_mdls, \(x) t(x$lngtd_vrbls[x$lngtd_vrbls$vrbl %in% c("tmitr_approx_linear20step", "ti_tmitr_interact"),])[2,], mc.cores = 6)
-kk <- do.call(rbind, jj) %>% atb(.name_repair = ~c("v1", "v2"))
-filter(kk, v1 != v2)
-
-
 
 ## run_vrbl_mdl_vars(reg_spec_mdls[[2]])
 ## gen_mdl_id(reg_spec_mdls[[2]])
@@ -735,6 +727,12 @@ filter(kk, v1 != v2)
 mclapply(reg_spec_mdls[1:2000],run_vrbl_mdl_vars, mc.cores = 6)
 
 
+## *** decently fast analysis of tmitr_interaction having same value as main value
+jj <- lapply(reg_spec_mdls, \(x) t(x$lngtd_vrbls[x$lngtd_vrbls$vrbl %in% c("tmitr_approx_linear20step", "ti_tmitr_interact"),])[2,]) %>% Reduce(\(x,y) rbind(x,y), .) %>% atb(.name_repair = ~c("v1", "v2"))
+
+jj <- mclapply(reg_spec_mdls, \(x) t(x$lngtd_vrbls[x$lngtd_vrbls$vrbl %in% c("tmitr_approx_linear20step", "ti_tmitr_interact"),])[2,], mc.cores = 6)
+kk <- do.call(rbind, jj) %>% atb(.name_repair = ~c("v1", "v2"))
+filter(kk, v1 != v2)
 
 
 ## ps() %>% filter(name == "R", pid != Sys.getpid()) %>% pull(ps_handle) %>% lapply(ps_kill)
