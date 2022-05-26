@@ -50,20 +50,17 @@ gof_df_cbn$cbn_name <- factor(gof_df_cbn$cbn_name, levels = names(vrbl_cbns))
 
 
 pdf(paste0(FIG_DIR, "cbn_log_likelihoods.pdf"), width = 6, height = 3)
+
 filter(gof_df_cbn, gof_names == "log_likelihood") %>%
     ggplot(aes(x = gof_value, fill = cbn_name)) +
     geom_histogram(binwidth = 2)
-    ## facet_wrap(~cbn_name, ncol = 1, scales = "fixed")
+## facet_wrap(~cbn_name, ncol = 1, scales = "fixed")
+
 dev.off()
 
 ## ok makes sense: cbn_all models have best fit: most variables, least observations
 ## fit gets worse the more variables are removed and the more cases are added
 
-
-
-vrbl <- "hnwi_nbr_30M"
-vrbl <- "NY.GDP.PCAP.CDk"
-vrbl_lag <- paste0(vrbl, "_lag")
 
 library(stringr)
 
@@ -77,27 +74,31 @@ df_anls_base <- coef_df %>%
 
 ## ** within base-spec changes
 
-df_anls_within <- df_anls_base %>%
+df_anls_within_prep <- df_anls_base %>%
     filter(vrbl_name_unlag != vrbl_name) %>% ## only use the lag variables
     mutate(lag = as.numeric(substring(str_extract(vrbl_name, "_lag(\\d+)"), 5))) %>%
-    filter(vrbl_varied == vrbl_name_unlag, cbn_name != "cbn_controls") %>%
+    filter(vrbl_varied == vrbl_name_unlag | (vrbl_varied == "tmitr_approx_linear20step" & vrbl_name_unlag == "ti_tmitr_interact") , cbn_name != "cbn_controls") %>% ## only use within-base_spec changes, add special case for tmitr
     group_by(vrbl_name_unlag, cbn_name) %>%
     mutate(base_lag_spec_id = as.numeric(factor(base_lag_spec))) %>%
-    filter(base_lag_spec_id <= 20)
-    
-unique(df_anls$vrbl_name_unlag)
+    group_by(vrbl_name_unlag, cbn_name, base_lag_spec_id) %>%
+    mutate(nbr_mdls_cvrgd = len(base_lag_spec_id)) %>% 
+    filter(nbr_mdls_cvrgd == 5)
 
+
+df_anls_within <- df_anls_within_prep %>%
+    group_by(cbn_name, vrbl_name_unlag) %>%
+    filter(base_lag_spec_id %in% sample(unique(base_lag_spec_id), 15))
+
+## unique(df_anls_within$vrbl_name_unlag)
 
 ## order the factors
 df_anls_within$vrbl_name_unlag <- factor(df_anls_within$vrbl_name_unlag, levels = c(ti_vars, hnwi_vars, inc_ineq_vars, weal_ineq_vars, cult_spending_vars, ctrl_vars_lngtd))
-
-
 
 ## shouldn't group by base_lag_spec when selecting
 ## see if some aux vars can be constructed to select on 
 library(ggbeeswarm)
 
-pdf(paste0(FIG_DIR, "first_reg_within.pdf"), width = 8, height = 12)
+pdf(paste0(FIG_DIR, "reg_within_tmitr_fixed.pdf"), width = 8, height = 12)
 ggplot(df_anls_within, aes(x=lag, y=coef, group = base_lag_spec)) +
     geom_line(show.legend = F, alpha = 0.15) +
     geom_quasirandom(aes(color = t_value, shape = factor(sig)), size = 2, height = 0, width = 0.3) + 
@@ -121,7 +122,7 @@ table(df_anls_all$vrbl_name_unlag)
 
 df_anls_all$vrbl_name_unlag <- factor(df_anls_all$vrbl_name_unlag, levels = c(ti_vars, hnwi_vars, inc_ineq_vars, weal_ineq_vars, cult_spending_vars, ctrl_vars_lngtd))
 
-pdf(paste0(FIG_DIR, "first_reg_res_all.pdf"), width = 8, height = 12)
+pdf(paste0(FIG_DIR, "reg_res_all_tmitr_fixed.pdf"), width = 8, height = 12)
 ggplot(df_anls_all, aes(x=lag, y=coef)) +
     geom_quasirandom(aes(color = t_value, shape = factor(sig)), size = 2, height = 0, width = 0.3) +
     facet_grid(cols = vars(cbn_name), rows = vars(vrbl_name_unlag), scales = "free", switch = "y") +
@@ -151,9 +152,9 @@ other_var_names <- unique(best_mdl_coefs$vrbl_name_unlag)[unique(best_mdl_coefs$
 
 best_mdl_coefs$vrbl_name_unlag <- factor(best_mdl_coefs$vrbl_name_unlag, levels = c(vrbl_levels, other_var_names))
 
-pdf(paste0(FIG_DIR, "best_models.pdf"), width = 8, height = 12)
+pdf(paste0(FIG_DIR, "best_models_tmirtr_fixed.pdf"), width = 8, height = 12)
 ggplot(best_mdl_coefs, aes(x=lag, y=coef, color = t_value)) +
-    geom_quasirandom(aes(shape = factor(sig)), height = 0, width = 0.33, show.legend=F, size = 3) +
+    geom_quasirandom(aes(shape = factor(sig)), height = 0, width = 0.33, show.legend=T, size = 3) +
     facet_grid(cols = vars(cbn_name), rows = vars(vrbl_name_unlag), scales="free", switch = "y") +
     theme(strip.text.y.left = element_text(angle = 0)) + 
     scale_color_gradient2(low = "blue", mid = "grey", high = "red") +

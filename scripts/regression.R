@@ -681,7 +681,7 @@ print(t2-t1)
 ## ** running with hopefully better ids
 
 
-batch_version <- "v16"
+batch_version <- "v17"
 REG_MONKEY_DIR <- "/home/johannes/ownCloud/reg_res/"
 REG_RES_DIR <- paste0(REG_MONKEY_DIR,  batch_version, "/")
 REG_RES_FILE_LAGS <- paste0(REG_MONKEY_DIR, batch_version, "_lags.csv")
@@ -724,7 +724,7 @@ print(t2-t1)
 ## run_vrbl_mdl_vars(reg_spec_mdls[[2]])
 ## gen_mdl_id(reg_spec_mdls[[2]])
 
-mclapply(reg_spec_mdls[1:2000],run_vrbl_mdl_vars, mc.cores = 6)
+mclapply(reg_spec_mdls,run_vrbl_mdl_vars, mc.cores = 6)
 
 
 ## *** decently fast analysis of tmitr_interaction having same value as main value

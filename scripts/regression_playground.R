@@ -763,3 +763,60 @@ timeout(stata_inf_loop(), seconds = 2)
 
 ## only run this when not converged: wait for 12 secs
 
+## ** filtering random coefs
+
+df_anls_prep_join <- df_anls_within_prep %>%
+    group_by(cbn_name, vrbl_name_unlag) %>%
+    summarize(base_lag_spec_id = sample(unique(base_lag_spec_id), 5))
+df_anls_within <- merge(df_anls_within_prep, df_anls_prep_join) %>% atb()
+
+
+df_anls_within %>%
+    group_by(cbn_name, vrbl_name_unlag) %>%
+    summarize(cnt = len(unique(base_lag_spec_id))) %>% adf()
+## huh strange, the number of specs is the same in cbn_all and cbn_no_cult_spending_and_mitr
+## fuck it, just use joins
+
+df_anls_prep_join %>%
+    group_by(cbn_name, vrbl_name_unlag) %>%
+
+filter(df_anls_prep_join, vrbl_name_unlag == "hnwi_nbr_30M")
+
+## maybe it's replacement? yeah seems so
+
+
+## seq(len(unique)) can still result in non-unique base lag-specs being picked
+df_anls_within <- df_anls_within_prep %>%
+    group_by(cbn_name, vrbl_name_unlag) %>%
+    ## filter(base_lag_spec_id %in% sample(base_lag_spec_id, 5))
+    ## filter(base_lag_spec_id <= 20)
+    filter(base_lag_spec_id %in% seq(len(unique(base_lag_spec_id))))
+
+
+## try random filtering
+## some models not converged, especially visible in the hnwi_nbr_1B case
+## group by lag: some lags have less points then they should have
+df_anls_within %>%
+    group_by(cbn_name, vrbl_name_unlag, lag) %>%
+    summarize(cnt = len(coef)) %>%
+    ## pull(cnt) %>% table()
+    filter(cnt < 5)
+## here it's sptinc992j, but can be all kinds of variables, also can be none
+## so there's enough data, but selection doesn't work properly 
+
+
+## seeing how many unique base_lag_specs there are: quite enough 
+df_anls_within_prep %>%
+    group_by(cbn_name, vrbl_name_unlag) %>%
+    summarize(cnt = len(unique(base_lag_spec_id))) %>% adf()
+
+
+
+## group by base_lag_spec (line): every line has 5 obs
+df_anls_within %>%
+    group_by(vrbl_name_unlag, cbn_name, base_lag_spec) %>%
+    summarize(cnt = len(coef)) %>%
+    pull(cnt) %>% table()
+
+
+
