@@ -673,6 +673,199 @@ un_df_cur_caution_gdp %>%
     count(iso3c) %>%
     ;
 
-filter(un_df_cur_caution, 
+filter(un_df_cur_caution, )
 
 
+## ** check integration of data sources
+
+
+df_cult <- as_tibble(Reduce(function(x,y) rbind(x,y),
+                            list(
+                                gen_ilo_df(),
+                                combine_un_series(),
+                                get_imf_data())))
+
+df_cult <- gen_cult_spending()
+
+## *** imf table  11 
+
+filter_sdmx_results("recreation") %>%
+    filter(!scramblematch("agricult", label.en), scramblematch("SNA", sdmx_id)) %>% adf()
+
+datasets_already_there <- list.files(OECD_DATA_DIR)
+
+download_oecd_dataset("SNA_TABLE11", "080")
+download_oecd_dataset("SNA_TABLE11_ARCHIVE", "080")
+
+get_oecd_table11 <- function() {
+    #' get the oecd 
+
+    oecd_table11 <- atb(read.csv(paste0(OECD_DATA_DIR, "SNA_TABLE11")))
+    ## table(oecd_table11$SECTOR)
+    ## table(oecd_table11$TRANSACT)
+    ## table(oecd_table11$UNIT)
+    ## table(oecd_table11$POWERCODE)
+
+    df_oecd_fltrd <- filter(oecd_table11, TRANSACT == "TLYCG", SECTOR == "GS13") %>%
+        mutate(value = ObsValue * 10^POWERCODE) %>% 
+        select(iso3c = LOCATION, year = Time,  currency = UNIT, value)
+
+    df_oecd_mrgd <- merge(df_oecd_fltrd,
+                          select(df_wb, iso3c, year, NY.GDP.MKTP.CN), all.x = T) %>% atb() %>%
+        mutate(pct_value = (value/NY.GDP.MKTP.CN)*100,
+               source = "oecd_table11")
+
+    return(select(df_oecd_mrgd, iso3c, year, pct_value, source))
+}
+
+
+## cult_cbn <- merge(df_cult %>% mutate(smorc = 1),
+##                   df_oecd_fltrd %>% mutate(oecd = 1), all = T) %>% atb()
+
+## filter(cult_cbn, is.na(smorc), oecd==1, year >= 1995)
+## ## 71 cys gained, 36 after 1995
+
+
+## *** imf table 11 archive
+
+get_oecd_table11_archive <- function() {
+    #' generate the oecd table 11 archive data 
+    oced_table11_arc <- atb(read.csv(paste0(OECD_DATA_DIR, "SNA_TABLE11_ARCHIVE")))
+
+    oecd_table11_arc_fltrd <- filter(oced_table11_arc, SECTOR == "GS13", TRANSACT == "TLYCG") %>%
+        mutate(value = ObsValue*10^POWERCODE) %>%
+        select(iso3c = LOCATION, year = Time,  currency = UNIT, value)
+
+    ## filter out colombia in not usd 
+    oecd_table11_arc_fltrd <- filter(oecd_table11_arc_fltrd, iso3c != "COL" | (iso3c == "COL" & currency == "USD"))
+
+    ##LOCATION == LOCATION | (LOCATION == "COL" & UNIT == "USD")
+
+
+    oecd_table11_arc_mrgd <- merge(oecd_table11_arc_fltrd,
+                                   select(df_wb, iso3c, year, NY.GDP.MKTP.CN), all.x = T) %>% atb() %>%
+        mutate(pct_value = (value/NY.GDP.MKTP.CN)*100,
+               region = countrycode(iso3c, "iso3c", "un.region.name"),
+               source = "oecd_table11_arc")
+    
+    ## viz_lines(oecd_table11_arc_mrgd, y="pct_value", facets = "region")
+    ## looks somewhat plausible
+
+    return(select(oecd_table11_arc_mrgd, iso3c, year, source, pct_value))
+
+}
+
+
+## cult_cbn <- merge(df_cult %>% mutate(smorc = 1),
+##                   oced_table11_arc_fltrd %>% mutate(oecd = 1), all = T) %>% atb()
+
+## filter(cult_cbn, is.na(smorc), oecd==1, year >= 1995)
+## 28 total, but just 3 after 1995
+
+## *** imf
+
+imf_df <- get_imf_data()
+
+## cult_cbn <- merge(df_cult %>% mutate(smorc = 1),
+##                   filter(imf_df, Item == "IMF_GF08") %>% mutate(imf = 1), all=T) %>% atb()
+                  
+## filter(cult_cbn, is.na(smorc), imf==1, year >= 1995)
+## ## 340 huuuuuuuuuuuuu nice
+
+## *** eurostat
+get_eurostat <- function() {
+    #' generate the eurostat data
+
+    df_eurostat <- atb(read.csv(paste0(PROJECT_DIR, "data/eurostat/gov_10a_exp__custom_2811962_page_linear.csv")))
+
+    df_eurostat$iso3c <- countrycode(df_eurostat$geo, "iso2c", "iso3c", custom_match = c("EL" = "GRC"))
+
+    ## check that eurostat geo columns adheres to iso2c (does so everywhere except greece -> manual exception)
+    ## unique(select(df_eurostat, iso3c, geo)) %>% na.omit() %>%
+    ##     mutate(geo2 = countrycode(iso3c, "iso3c", "iso2c")) %>%
+    ##     filter(geo != geo2)
+        
+    df_euro_fltrd <-df_eurostat %>%
+        mutate(iso3c = countrycode(geo, "iso2c", "iso3c", custom_match = c("EL" = "GRC")),
+               source = "eurostat") %>% na.omit() %>% 
+        select(iso3c, year = TIME_PERIOD, pct_value = OBS_VALUE, source)
+    
+    return(df_euro_fltrd)
+}
+
+## cult_cbn <- merge(df_cult %>% mutate(smorc = 1),
+##                   df_euro_fltrd %>% mutate(euro=1), all = T) %>% atb()
+       
+## filter(cult_cbn, is.na(smorc), euro==1, year >= 1995) %>% adf()
+## has 2020 data, UN apparently doesn't? only for handful of countries
+
+## ** source comparison
+
+df_cult <- gen_cult_spending()
+
+df_cprn <- atb(Reduce(\(x,y) rbind(x,y),
+                      list(
+                          df_cult %>% mutate(source = "un") %>% select(iso3c, pct_value = pct_fx, year, source),
+                          get_oecd_table11(),
+                          get_oecd_table11_archive(),
+                          get_imf_data() %>% filter(Item == "IMF_GF08") %>%
+                          mutate(source = "imf") %>% select(iso3c, year, pct_value = Value, source),
+                          get_eurostat())))
+
+
+
+
+df_cprn_wide <- pivot_wider(na.omit(df_cprn), names_from = source, values_from = pct_value)
+## huh around 350 more obs
+
+
+df_cprn_wide %>% select(all_of(unique(df_cprn$source))) %>% cor(use = "pairwise.complete.obs")
+df_cprn_wide %>% select(all_of(unique(df_cprn$source))) %>% chart.Correlation()
+## wtf only 0.5 correlations between un and rest???
+
+
+## compare OECD (final consumption expenditure) and UN (government final consumption expenditure)
+oecd_p3cg <- filter(oecd_table11, TRANSACT == "P3CG", SECTOR == "GS13") %>%
+    mutate(value = ObsValue * 10^POWERCODE) %>% 
+    select(iso3c = LOCATION, year = Time,  currency = UNIT, value)
+
+df_oecd_p3cg <- merge(oecd_p3cg, 
+                      select(df_wb, iso3c, year, NY.GDP.MKTP.CN), all.x = T) %>% atb() %>%
+    mutate(pct_value = (value/NY.GDP.MKTP.CN)*100,
+           source = "oecd_p3cg") %>%
+    select(iso3c, year, pct_value, source)
+
+df_cprn2 <- rbind(
+    df_cult %>% mutate(source = "un") %>% select(iso3c, pct_value = pct_fx, year, source),
+    df_oecd_p3cg) %>% atb()
+
+df_cprn2_wide <- pivot_wider(df_cprn2, names_from = source, values_from = pct_value)
+cor(df_cprn2_wide$un, df_cprn2_wide$oecd_p3cg, use = "complete.obs")
+cor(df_cprn_wide$un, df_cprn_wide$oecd_table11, use = "complete.obs")
+
+## *** plotting time
+sample_crys <- sample(unique(df_cprn$iso3c), 40)
+
+
+
+df_cprn_vis <- df_cprn_wide %>% na.omit() %>% pivot_longer(cols = unique(df_cprn$source))
+
+p_cult_spend_sources <-  ggplot(df_cprn_vis, aes(x=year, y=value, group=name, color = name, shape = name)) +
+    geom_point(size = 1)+ 
+    geom_line() +
+    facet_wrap(~iso3c, scales = "free")
+                                                        
+pdf(paste0(FIG_DIR, "cult_spending_sources.pdf"), width = 12, height = 9)
+plot(p_cult_spend_sources)
+dev.off()
+    
+df_cprn_vis %>% group_by(name) %>% summarize(mean = mean(value))
+
+
+
+
+ggplot(filter(df_cprn, iso3c %in% all_of(sample_crys)), aes(x=year, y=pct_value, group=source, color = source)) +
+    geom_line() +
+    facet_wrap(~iso3c, scales = "free")
+                                                        
+       
