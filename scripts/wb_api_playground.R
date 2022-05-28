@@ -8,6 +8,10 @@ gdp_vars <- x[which(grepl("gdp", x$indicator, ignore.case = TRUE)),]
 gdp_vars$indicator
 gdp_vars$indicator_id
 
+filter(gdp_vars, scramblematch("NY.GDP.", indicator_id))
+
+filter(gdp_vars, scramblematch("NY.GDP.PCAP.CD", indicator_id))$indicator_desc
+
 filter(gdp_vars, indicator_id == "NY.GDP.MKTP.CD")$indicator_desc
 filter(gdp_vars, indicator_id == "NY.GDP.PCAP.CD")$indicator_desc
 filter(gdp_vars, scramblematch("PPP", indicator_desc))
@@ -272,3 +276,4 @@ vrbl_cnbs <- list(
     controls = c("NY.GDP.PCAP.CDk", "SP.POP.TOTLm"))
 
     
+## * 
