@@ -700,23 +700,38 @@ download_oecd_dataset("SNA_TABLE11_ARCHIVE", "080")
 get_oecd_table11 <- function() {
     #' get the oecd 
 
+    
     oecd_table11 <- atb(read.csv(paste0(OECD_DATA_DIR, "SNA_TABLE11")))
     ## table(oecd_table11$SECTOR)
     ## table(oecd_table11$TRANSACT)
     ## table(oecd_table11$UNIT)
     ## table(oecd_table11$POWERCODE)
 
-    df_oecd_fltrd <- filter(oecd_table11, TRANSACT == "TLYCG", SECTOR == "GS13") %>%
+    df_oecd_fltrd <- filter(oecd_table11,
+                            TRANSACT == "TLYCG", # total gvt expenditure 
+                            SECTOR == "GS13") %>% # general government 
         mutate(value = ObsValue * 10^POWERCODE) %>% 
         select(iso3c = LOCATION, year = Time,  currency = UNIT, value)
 
-    df_oecd_mrgd <- merge(df_oecd_fltrd,
-                          select(df_wb, iso3c, year, NY.GDP.MKTP.CN), all.x = T) %>% atb() %>%
+    df_oecd_mrgd <- merge(df_oecd_fltrd, cur_df, all.x = T) %>% atb() %>%
+        merge(df_wb, all.x = T) %>% atb() %>%
         mutate(pct_value = (value/NY.GDP.MKTP.CN)*100,
+               constant_usd = (value/inyixx999i)/xlcusx999i, # i think this makes sense (Blanchet_2017_conversions)
                source = "oecd_table11")
+               
+    
+    ## df_oecd_mrgd <- merge(df_oecd_fltrd,
+    ##                       select(df_wb, iso3c, year, NY.GDP.MKTP.CN), all.x = T) %>% atb() %>%
+    ##     mutate(pct_value = (value/NY.GDP.MKTP.CN)*100,
+    ##            source = "oecd_table11")
 
-    return(select(df_oecd_mrgd, iso3c, year, pct_value, source))
+    ## return(select(df_oecd_mrgd, iso3c, year, pct_value, source))
+    return(select(df_oecd_mrgd, iso3c, year, constant_usd, pct_value, source))
 }
+
+ggplot(get_oecd_table11(), aes(x=year, y=constant_usd)) +
+    geom_line() +
+    facet_wrap(~iso3c, scales = "free")
 
 
 ## cult_cbn <- merge(df_cult %>% mutate(smorc = 1),
