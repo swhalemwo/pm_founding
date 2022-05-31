@@ -765,7 +765,7 @@ get_oecd_table11_archive <- function() {
     ## viz_lines(oecd_table11_arc_mrgd, y="pct_value", facets = "region")
     ## looks somewhat plausible
 
-g    return(select(oecd_table11_arc_mrgd, iso3c, year, constant_usd, pct_value,  source))
+    return(select(oecd_table11_arc_mrgd, iso3c, year, constant_usd, pct_value,  source))
 
 }
 
