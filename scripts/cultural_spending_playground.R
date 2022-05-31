@@ -776,16 +776,79 @@ get_un_data <- function() {
     #' separate function just for spending 
 
     ##:ess-bp-start::browser@nil:##
-browser(expr=is.null(.ESSBP.[["@39@"]]));##:ess-bp-end:##
+browser(expr=is.null(.ESSBP.[["@5@"]]));##:ess-bp-end:##
     
     
     un_df <- construct_gvt_consumption_expenditure()
+    
+    filter(un_df, iso3c == "JPN") %>% select(year, Series, value = Value) %>%
+        rbind(mutate(japan_mof, Series = 111, value = value*1e9)) %>%
+        ggplot(aes(x=year, y=value, group = Series, color = factor(Series))) +
+        geom_line()
 
     un_df_clpsd <- un_df %>% group_by(iso3c, year) %>%
         summarize(value = mean(Value))
 
-    filter(un_df_clpsd, iso3c == "UKR", year < 2000)
-    filter(cur_df, iso3c == "UKR", year < 2000)
+    un_df2 <- un_df %>% group_by(iso3c, year) %>%
+        mutate(series1k_there = ifelse(1000 %in% Series, T, F))
+    
+    ## where Series 1k is available, use 1k, else mean 
+    un_df_clpsd <- rbind(    
+        filter(un_df2, series1k_there, Series==1000) %>%
+        group_by(iso3c, year) %>%
+        summarize(value = Value),
+        filter(un_df2, !series1k_there) %>%
+        group_by(iso3c, year) %>%
+        summarize(value = mean(Value))
+        )
+    
+
+    ## countries with multiple mismatched series for the years without 1k series
+    ## filter(un_df2, !series1k_there, iso3c %in% mult_series_crys) %>%
+    ##     ggplot(aes(x=year, y=Value, grp = Series, color = factor(Series))) +
+    ##     geom_line() +
+    ##     facet_wrap(~iso3c, scales = "free")
+
+    ## ## countries with multiple mismatched series generally 
+    ## filter(un_df2, iso3c %in% mult_series_crys) %>%
+    ##     ggplot(aes(x=year, y=Value, grp = Series, color = factor(Series))) +
+    ##     geom_line() +
+    ##     facet_wrap(~iso3c, scales = "free")
+
+
+    ## filter(un_df2, !series1k_there) %>%
+    ##     group_by(iso3c) %>%
+    ##     mutate(nbr_series = len(unique(Series))) %>%
+    ##     filter(nbr_series > 1) %>%     
+    ##     ggplot(aes(x=year, y=Value, grp = Series, color = factor(Series))) +
+    ##     geom_line() +
+    ##     facet_wrap(~iso3c, scales = "free")
+
+
+    ## ## all country-years without 1k series
+    ## filter(un_df2, !series1k_there) %>% 
+    ##     ggplot(aes(x=year, y=Value, grp = Series, color = factor(Series))) +
+    ##     geom_line() +
+    ##     facet_wrap(~iso3c, scales = "free")
+
+    
+    
+    ## filter(un_df_clpsd, iso3c == "HRV") %>% pull(value) %>% plot(type = "l")
+
+    ## filter(un_df_clpsd, iso3c == "UKR", year < 2000)
+    ## filter(cur_df, iso3c == "UKR", year < 2000)
+
+    ## filter out whack data for Ukraine pre-1996, and other crappy cases 
+    un_df_clpsd <- un_df_clpsd %>%
+        filter(iso3c != "UKR" | (iso3c == "UKR" & year > 1996),
+               iso3c != "ECU" | (iso3c == "ECU" & year < 1990),
+               iso3c != "GEO")
+               
+
+    ## filter(x, iso3c == "UKR")
+    ## filter(un_df_clpsd, iso3c == "UKR")
+    
+    
 
 
     un_df_cbn <- merge(un_df_clpsd, cur_df, all.x = T) %>% atb() %>%
@@ -798,6 +861,54 @@ browser(expr=is.null(.ESSBP.[["@39@"]]));##:ess-bp-end:##
     return(un_df_cbn) 
 
 }
+
+japan_mof <- list(
+    c(2005, 352.7),
+    c(2004, 352.0),
+    c(2003, 356.3),
+    c(2002, 372.0),
+    c(2001, 383.3),
+    c(2000, 369.0),
+    c(1999, 363.1),
+    c(1998, 357.0),
+    c(1997, 353.1),
+    c(1996, 332.1),
+    c(1995, 308.9),
+    c(1994, 295.2),
+    c(1993, 281.3),
+    c(1992, 261.6),
+    c(1991, 241.9),
+    c(1990, 218.0)) %>% do.call(rbind, .) %>% adf()
+names(japan_mof) <- c("year", "value")
+
+    
+    
+
+
+viz_lines(x, y="pct_value", duration = 1, facets = "iso3c")
+
+whack_crys <- c("BEL", "CHL", "CUW", "DEU", "ECU", "HRV", "HUN", "IND", "IRL", "MAC", "MDA", "MLT", "MWI", "SVK", "SVN", "SWE")
+mult_series_crys <- c("JPN", "GBR", "GRL", "DNK", "MNG", "PAN")
+weird_series_crys <- c("JPN", "GRL", "PAN")
+
+data_japan <- list(
+    get_un_data() %>% filter(iso3c == "JPN"), # just focus on japan anyways 
+    get_oecd_table11() %>% filter(iso3c %in% all_of(weird_series_crys)),
+    get_oecd_table11_archive() %>% filter(iso3c %in% all_of(weird_series_crys)),
+    get_imf_data() %>% filter(iso3c %in% all_of(weird_series_crys)),
+    get_eurostat() %>% filter(iso3c %in% all_of(weird_series_crys))) %>%
+    Reduce(\(x,y) rbind(x,y), .) %>% atb()
+
+
+
+ggplot(data_japan, aes(x=year, y=constant_usd, color = source)) +
+    geom_line()
+
+filter(x, iso3c %in% all_of(whack_crys)) %>% 
+    viz_lines(y="constant_usd", duration = 1, facets = "iso3c")
+
+x <- get_un_data()
+filter(x, pct_value > 10)
 
 ## viz_lines(get_oecd_table11_archive(), y="pct_value", facets = "iso3c", duration = 1)
 
