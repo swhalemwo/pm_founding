@@ -729,53 +729,52 @@ get_oecd_table11 <- function() {
     return(select(df_oecd_mrgd, iso3c, year, constant_usd, pct_value, source))
 }
 
-ggplot(get_oecd_table11(), aes(x=year, y=constant_usd)) +
+ggplot(get_oecd_table11(), aes(x=year, y=pct_value)) +
     geom_line() +
     facet_wrap(~iso3c, scales = "free")
-
-
-## cult_cbn <- merge(df_cult %>% mutate(smorc = 1),
-##                   df_oecd_fltrd %>% mutate(oecd = 1), all = T) %>% atb()
-
-## filter(cult_cbn, is.na(smorc), oecd==1, year >= 1995)
-## ## 71 cys gained, 36 after 1995
 
 
 ## *** imf table 11 archive
 
 get_oecd_table11_archive <- function() {
-    #' generate the oecd table 11 archive data 
+    #' generate the oecd table 11 archive data
+
+    
     oced_table11_arc <- atb(read.csv(paste0(OECD_DATA_DIR, "SNA_TABLE11_ARCHIVE")))
 
     oecd_table11_arc_fltrd <- filter(oced_table11_arc, SECTOR == "GS13", TRANSACT == "TLYCG") %>%
         mutate(value = ObsValue*10^POWERCODE) %>%
         select(iso3c = LOCATION, year = Time,  currency = UNIT, value)
 
-    ## filter out colombia in not usd 
-    oecd_table11_arc_fltrd <- filter(oecd_table11_arc_fltrd, iso3c != "COL" | (iso3c == "COL" & currency == "USD"))
+    ## filter out colombia in not COP: WID seems to assume COP 
+    oecd_table11_arc_fltrd <- filter(oecd_table11_arc_fltrd, iso3c != "COL" | (iso3c == "COL" & currency == "COP"))
 
-    ##LOCATION == LOCATION | (LOCATION == "COL" & UNIT == "USD")
-
-
-    oecd_table11_arc_mrgd <- merge(oecd_table11_arc_fltrd,
-                                   select(df_wb, iso3c, year, NY.GDP.MKTP.CN), all.x = T) %>% atb() %>%
+    oecd_table11_arc_mrgd <- merge(oecd_table11_arc_fltrd, cur_df, all.x = T) %>% atb() %>% 
+        merge(df_wb, all.x = T) %>% atb() %>%
         mutate(pct_value = (value/NY.GDP.MKTP.CN)*100,
-               region = countrycode(iso3c, "iso3c", "un.region.name"),
+               constant_usd = (value/inyixx999i)/xlcusx999i, # i think this makes sense (Blanchet_2017_conversions)
                source = "oecd_table11_arc")
+
+
+    ## oecd_table11_arc_mrgd <- merge(oecd_table11_arc_fltrd,
+    ##                                select(df_wb, iso3c, year, NY.GDP.MKTP.CN), all.x = T) %>% atb() %>%
+    ##     mutate(pct_value = (value/NY.GDP.MKTP.CN)*100,
+    ##            region = countrycode(iso3c, "iso3c", "un.region.name"),
+    ##            source = "oecd_table11_arc")
     
     ## viz_lines(oecd_table11_arc_mrgd, y="pct_value", facets = "region")
     ## looks somewhat plausible
 
-    return(select(oecd_table11_arc_mrgd, iso3c, year, source, pct_value))
+g    return(select(oecd_table11_arc_mrgd, iso3c, year, constant_usd, pct_value,  source))
 
 }
 
+## viz_lines(get_oecd_table11_archive(), y="pct_value", facets = "iso3c", duration = 1)
 
-## cult_cbn <- merge(df_cult %>% mutate(smorc = 1),
-##                   oced_table11_arc_fltrd %>% mutate(oecd = 1), all = T) %>% atb()
 
-## filter(cult_cbn, is.na(smorc), oecd==1, year >= 1995)
-## 28 total, but just 3 after 1995
+## ggplot(get_oecd_table11_archive(), aes(x=year, y=pct_value)) +
+##     geom_line() +
+##     facet_wrap(~iso3c, scales = "free")
 
 ## *** imf
 
