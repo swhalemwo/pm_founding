@@ -320,6 +320,63 @@ combine_un_series <- function() {
 
 ## *** just bulk download
 
+get_imf_data_old <- function() {
+    #' generate the IMF data: percentage of GDP spent on all kinds of culture/religion/recreation related activities
+
+    imf_file <- "GFSCOFOG_04-16-2022 19-03-49-90_timeSeries.csv" ## all 
+    imf_file <- "GFSCOFOG_04-21-2022 10-14-59-63_timeSeries.csv" ## just culture + recreation
+
+    imf_df <- as_tibble(read.csv(paste0(PROJECT_DIR, "data/IMF/", imf_file)))
+
+    ## matching all the columns that don't have a year in them 
+    imf_non_year_cols <- names(imf_df)[!unlist(lapply(names(imf_df), function(x) scramblematch("^X\\d{4}$", x)))]
+
+    imf_df_melt <- as_tibble(reshape2::melt(imf_df, id=imf_non_year_cols))
+    imf_df_melt <- rename(imf_df_melt, year=variable)
+    imf_df_melt$year <- as.numeric(substring(imf_df_melt$year, 2, 5))
+
+    ## names(imf_df_melt)
+
+    ## table(imf_df_melt$year)
+    ## table(imf_df_melt$COFOG.Function.Name)
+    ## table(imf_df_melt$Sector.Name)
+    ## table(imf_df_melt$Unit.Name)
+    ## table(imf_df_melt$Attribute)
+
+    ## unique(imf_df_melt[,c("COFOG.Function.Name", "COFOG.Function.Code")])
+
+    ## think it makes sense to be as broad as possible?
+    ## include as many items as possible, and filter later automatically?
+    ## but then there's no reason not to include other functions?
+    ## maybe there's a difference between
+    ## - proxy: assuming that a variable measures the same concept?
+    ## - imputation: seeing some empirical relationship without theoretical justification?
+    ## idk if that distinction can really be made
+    
+    imf_culture <- filter(imf_df_melt,
+                          ## COFOG.Function.Code == "GF08", 
+                          Sector.Name == "General government",
+                          Unit.Name == "Percent of GDP",
+                          ## Country.Name == "Germany",
+                          year >= 1985,
+                          Attribute == "Value",
+                          value != ""
+                          ) %>%
+        select(iso3c=Country.Name, year, COFOG.Function.Code, value)
+
+    imf_culture$value <- as.numeric(imf_culture$value)
+    imf_culture$iso3c <- countrycode(imf_culture$iso3c, "country.name", "wb")
+
+    ## imf_culture_wide <- pivot_wider(imf_culture, names_from = COFOG.Function.Code, values_from = value)
+
+    return(
+        select(imf_culture, iso3c, year, Item = COFOG.Function.Code, Value = value) %>%
+        mutate(Item = paste0("IMF_", Item))
+        )
+
+
+}
+
 
 get_imf_data <- function() {
     #' generate the IMF data: percentage of GDP spent on all kinds of culture/religion/recreation related activities
@@ -412,7 +469,7 @@ gen_cult_spending <- function() {
                                 list(
                                     gen_ilo_df(),
                                     combine_un_series(),
-                                    get_imf_data())))
+                                    get_imf_data_old())))
 
     
     ## *** completeness checks
