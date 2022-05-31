@@ -358,7 +358,7 @@ get_imf_data <- function() {
            COFOG.Function.Code == "GF08", 
            Sector.Name == "General government",
            ## Unit.Name == "Percent of GDP",
-           Unit.Name == "Domestic currency" | Unit.Name == "Percent of GDP",
+           Unit.Name == "Domestic currency" | Unit.Name == "Percent of GDP", # later pivot_wider both 
            ## Country.Name == "Germany",
            year >= STARTING_YEAR,
            Attribute == "Value",
@@ -369,16 +369,10 @@ get_imf_data <- function() {
     pivot_wider(names_from = Unit.Name, values_from = value)
 
     imf_cult_cbn <- merge(imf_culture, cur_df, all.x = T) %>% atb() %>%
-        mutate(constant_usd = (`Domestic currency`/inyixx999i)/xlcusx999i,
+        mutate(constant_usd = (`Domestic currency`/inyixx999i)/xlcusx999i, # Blanchet_2017_conversions
                source = "imf") %>%
         select(iso3c, year, constant_usd, pct_value = `Percent of GDP`, source)
 
-    ## select(iso3c=
-
-    ##        Country.Name, year, COFOG.Function.Code, value)
-    
-    ## imf_culture$value <- as.numeric(imf_culture$value)
-    ## imf_culture$iso3c <- countrycode(imf_culture$iso3c, "country.name", "wb")
 
     ## imf_culture_wide <- pivot_wider(imf_culture, names_from = COFOG.Function.Code, values_from = value)
 
