@@ -354,27 +354,39 @@ get_imf_data <- function() {
     ## - imputation: seeing some empirical relationship without theoretical justification?
     ## idk if that distinction can really be made
     
-    imf_culture <- filter(imf_df_melt,
-                          ## COFOG.Function.Code == "GF08", 
-                          Sector.Name == "General government",
-                          Unit.Name == "Percent of GDP",
-                          ## Country.Name == "Germany",
-                          year >= 1985,
-                          Attribute == "Value",
-                          value != ""
-                          ) %>%
-        select(iso3c=Country.Name, year, COFOG.Function.Code, value)
+    imf_culture <-  filter(imf_df_melt,
+           COFOG.Function.Code == "GF08", 
+           Sector.Name == "General government",
+           ## Unit.Name == "Percent of GDP",
+           Unit.Name == "Domestic currency" | Unit.Name == "Percent of GDP",
+           ## Country.Name == "Germany",
+           year >= STARTING_YEAR,
+           Attribute == "Value",
+           value != "") %>% 
+    mutate(iso3c = countrycode(Country.Name, "country.name", "wb"),
+           value = as.numeric(value)) %>%
+    select(iso3c, year, Unit.Name, value) %>%
+    pivot_wider(names_from = Unit.Name, values_from = value)
 
-    imf_culture$value <- as.numeric(imf_culture$value)
-    imf_culture$iso3c <- countrycode(imf_culture$iso3c, "country.name", "wb")
+    imf_cult_cbn <- merge(imf_culture, cur_df, all.x = T) %>% atb() %>%
+        mutate(constant_usd = (`Domestic currency`/inyixx999i)/xlcusx999i,
+               source = "imf") %>%
+        select(iso3c, year, constant_usd, pct_value = `Percent of GDP`, source)
+
+    ## select(iso3c=
+
+    ##        Country.Name, year, COFOG.Function.Code, value)
+    
+    ## imf_culture$value <- as.numeric(imf_culture$value)
+    ## imf_culture$iso3c <- countrycode(imf_culture$iso3c, "country.name", "wb")
 
     ## imf_culture_wide <- pivot_wider(imf_culture, names_from = COFOG.Function.Code, values_from = value)
 
-    return(
-        select(imf_culture, iso3c, year, Item = COFOG.Function.Code, Value = value) %>%
-        mutate(Item = paste0("IMF_", Item))
-        )
-
+    ## return(
+    ##     select(imf_culture, iso3c, year, Item = COFOG.Function.Code, Value = value) %>%
+    ##     mutate(Item = paste0("IMF_", Item))
+    ##     )
+    return(imf_cult_cbn)
 
 }
 
