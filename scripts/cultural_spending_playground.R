@@ -716,7 +716,7 @@ get_oecd_table11 <- function() {
     df_oecd_mrgd <- merge(df_oecd_fltrd, cur_df, all.x = T) %>% atb() %>%
         merge(df_wb, all.x = T) %>% atb() %>%
         mutate(pct_value = (value/NY.GDP.MKTP.CN)*100,
-               constant_usd = (value/inyixx999i)/xlcusx999i, # i think this makes sense (Blanchet_2017_conversions)
+               constant_usd = (value/inyixx999i)/xlcusx999i_2021, # hope it makes sense (Blanchet_2017_conversions)
                source = "oecd_table11")
                
     
@@ -752,7 +752,7 @@ get_oecd_table11_archive <- function() {
     oecd_table11_arc_mrgd <- merge(oecd_table11_arc_fltrd, cur_df, all.x = T) %>% atb() %>% 
         merge(df_wb, all.x = T) %>% atb() %>%
         mutate(pct_value = (value/NY.GDP.MKTP.CN)*100,
-               constant_usd = (value/inyixx999i)/xlcusx999i, # i think this makes sense (Blanchet_2017_conversions)
+               constant_usd = (value/inyixx999i)/xlcusx999i_2021, # hope it makes sense (Blanchet_2017_conversions)
                source = "oecd_table11_arc")
 
 
@@ -766,6 +766,36 @@ get_oecd_table11_archive <- function() {
     ## looks somewhat plausible
 
     return(select(oecd_table11_arc_mrgd, iso3c, year, constant_usd, pct_value,  source))
+
+}
+
+## *** un
+
+get_un_data <- function() {
+    #' construct the un cultural spending data
+    #' separate function just for spending 
+
+    ##:ess-bp-start::browser@nil:##
+browser(expr=is.null(.ESSBP.[["@39@"]]));##:ess-bp-end:##
+    
+    
+    un_df <- construct_gvt_consumption_expenditure()
+
+    un_df_clpsd <- un_df %>% group_by(iso3c, year) %>%
+        summarize(value = mean(Value))
+
+    filter(un_df_clpsd, iso3c == "UKR", year < 2000)
+    filter(cur_df, iso3c == "UKR", year < 2000)
+
+
+    un_df_cbn <- merge(un_df_clpsd, cur_df, all.x = T) %>% atb() %>%
+        merge(., df_wb) %>% atb() %>%
+        mutate(constant_usd = (value/inyixx999i)/xlcusx999i_2021,
+               pct_value = (value/NY.GDP.MKTP.CN)*100,
+               source = "un") %>%
+        select(iso3c, year, constant_usd, pct_value, source)
+    
+    return(un_df_cbn) 
 
 }
 
@@ -789,22 +819,43 @@ imf_df <- get_imf_data()
 ## *** eurostat
 get_eurostat <- function() {
     #' generate the eurostat data
+    
+
 
     df_eurostat <- atb(read.csv(paste0(PROJECT_DIR, "data/eurostat/gov_10a_exp__custom_2811962_page_linear.csv")))
 
+    df_eurostat <- atb(read.csv(paste0(PROJECT_DIR, "data/eurostat/new/gov_10a_exp__custom_2827619_linear.csv")))
+
     df_eurostat$iso3c <- countrycode(df_eurostat$geo, "iso2c", "iso3c", custom_match = c("EL" = "GRC"))
+
+    df_euro_fltrd <- df_eurostat %>%
+        mutate(iso3c = countrycode(geo, "iso2c", "iso3c", custom_match = c("EL" = "GRC")),
+               year = TIME_PERIOD) %>%
+        select(iso3c, year, unit, cofog99, value = OBS_VALUE) %>%
+        filter(cofog99 == "GF08", unit == "MIO_NAC" | unit == "PC_GDP") %>%
+        pivot_wider(names_from = unit, values_from = value)
+     
+    
+   
+    ## viz_lines(df_euro_fltrd, y="OBS_VALUE", facets = "iso3c")
+    df_euro_fltrd2 <- merge(df_euro_fltrd, cur_df, all.x = T) %>% atb() %>%
+        mutate(constant_usd = (MIO_NAC*1e6/inyixx999i)/xlcusx999i_2021,
+               source = "eurostat") %>%
+        select(iso3c, year, constant_usd, pct_value = PC_GDP, source)
+               
+    ## viz_lines(df_euro_fltrd2, y="pct_value", duration = 1, facets = "iso3c")
 
     ## check that eurostat geo columns adheres to iso2c (does so everywhere except greece -> manual exception)
     ## unique(select(df_eurostat, iso3c, geo)) %>% na.omit() %>%
     ##     mutate(geo2 = countrycode(iso3c, "iso3c", "iso2c")) %>%
     ##     filter(geo != geo2)
         
-    df_euro_fltrd <-df_eurostat %>%
-        mutate(iso3c = countrycode(geo, "iso2c", "iso3c", custom_match = c("EL" = "GRC")),
-               source = "eurostat") %>% na.omit() %>% 
-        select(iso3c, year = TIME_PERIOD, pct_value = OBS_VALUE, source)
+    ## df_euro_fltrd <-df_eurostat %>%
+    ##     mutate(iso3c = countrycode(geo, "iso2c", "iso3c", custom_match = c("EL" = "GRC")),
+    ##            source = "eurostat") %>% na.omit() %>% 
+    ##     select(iso3c, year = TIME_PERIOD, pct_value = OBS_VALUE, source)
     
-    return(df_euro_fltrd)
+    return(df_euro_fltrd2)
 }
 
 ## cult_cbn <- merge(df_cult %>% mutate(smorc = 1),
@@ -815,27 +866,33 @@ get_eurostat <- function() {
 
 ## ** source comparison
 
-df_cult <- gen_cult_spending()
 
 df_cprn <- atb(Reduce(\(x,y) rbind(x,y),
                       list(
-                          df_cult %>% mutate(source = "un") %>% select(iso3c, pct_value = pct_fx, year, source),
+                          get_un_data(),
                           get_oecd_table11(),
                           get_oecd_table11_archive(),
-                          get_imf_data() %>% filter(Item == "IMF_GF08") %>%
-                          mutate(source = "imf") %>% select(iso3c, year, pct_value = Value, source),
+                          get_imf_data(),
                           get_eurostat())))
 
+df_cprn_long <- df_cprn %>% pivot_longer(cols = c(constant_usd, pct_value))
+
+df_cprn_wide_usd <- filter(df_cprn_long, name == "constant_usd") %>%
+    pivot_wider(names_from = source, values_from = value)
+
+
+df_cprn_wide_pct <- filter(df_cprn_long, name == "pct_value") %>%
+    pivot_wider(names_from = source, values_from = value)
+
+df_cprn_wide_usd %>% select(all_of(unique(df_cprn_long$source))) %>%  chart.Correlation()
+    ## cor(use = "pairwise.complete.obs")
+## %>% ggcorrplot(method = "circle", type = "lower")
+
+df_cprn_wide_pct %>% select(all_of(unique(df_cprn_long$source))) %>% cor(use = "pairwise.complete.obs")
+## %>%  ggcorrplot(method = "circle", type = "lower")
 
 
 
-df_cprn_wide <- pivot_wider(na.omit(df_cprn), names_from = source, values_from = pct_value)
-## huh around 350 more obs
-
-
-df_cprn_wide %>% select(all_of(unique(df_cprn$source))) %>% cor(use = "pairwise.complete.obs")
-df_cprn_wide %>% select(all_of(unique(df_cprn$source))) %>% chart.Correlation()
-## wtf only 0.5 correlations between un and rest???
 
 
 ## compare OECD (final consumption expenditure) and UN (government final consumption expenditure)

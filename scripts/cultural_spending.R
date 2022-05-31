@@ -426,7 +426,7 @@ get_imf_data <- function() {
     pivot_wider(names_from = Unit.Name, values_from = value)
 
     imf_cult_cbn <- merge(imf_culture, cur_df, all.x = T) %>% atb() %>%
-        mutate(constant_usd = (`Domestic currency`/inyixx999i)/xlcusx999i, # Blanchet_2017_conversions
+        mutate(constant_usd = (`Domestic currency`/inyixx999i)/xlcusx999i_2021, # Blanchet_2017_conversions
                source = "imf") %>%
         select(iso3c, year, constant_usd, pct_value = `Percent of GDP`, source)
 
