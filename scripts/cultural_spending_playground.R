@@ -687,7 +687,7 @@ df_cult <- as_tibble(Reduce(function(x,y) rbind(x,y),
 
 df_cult <- gen_cult_spending()
 
-## *** imf table  11 
+## *** oecd table  11 
 
 filter_sdmx_results("recreation") %>%
     filter(!scramblematch("agricult", label.en), scramblematch("SNA", sdmx_id)) %>% adf()
@@ -699,7 +699,6 @@ download_oecd_dataset("SNA_TABLE11_ARCHIVE", "080")
 
 get_oecd_table11 <- function() {
     #' get the oecd 
-
     
     oecd_table11 <- atb(read.csv(paste0(OECD_DATA_DIR, "SNA_TABLE11")))
     ## table(oecd_table11$SECTOR)
@@ -707,18 +706,21 @@ get_oecd_table11 <- function() {
     ## table(oecd_table11$UNIT)
     ## table(oecd_table11$POWERCODE)
 
+
     df_oecd_fltrd <- filter(oecd_table11,
-                            TRANSACT == "TLYCG", # total gvt expenditure 
+                            TRANSACT %in% c("TLYCG", "P3CG"), # total gvt expenditure 
                             SECTOR == "GS13") %>% # general government 
-        mutate(value = ObsValue * 10^POWERCODE) %>% 
-        select(iso3c = LOCATION, year = Time,  currency = UNIT, value)
+        mutate(value = ObsValue * 10^POWERCODE,
+               format = tolower(TRANSACT)) %>% 
+        select(iso3c = LOCATION, year = Time,  currency = UNIT, value, format)
 
     df_oecd_mrgd <- merge(df_oecd_fltrd, cur_df, all.x = T) %>% atb() %>%
         merge(df_wb, all.x = T) %>% atb() %>%
         mutate(pct_value = (value/NY.GDP.MKTP.CN)*100,
                constant_usd = (value/inyixx999i)/xlcusx999i_2021, # hope it makes sense (Blanchet_2017_conversions)
-               source = "oecd_table11")
-               
+               source = "oecd_table11") %>%
+        select(iso3c, year, constant_usd, pct_value, source, format) %>% 
+        pivot_longer(cols = c(constant_usd, pct_value), names_to = "measure")
     
     ## df_oecd_mrgd <- merge(df_oecd_fltrd,
     ##                       select(df_wb, iso3c, year, NY.GDP.MKTP.CN), all.x = T) %>% atb() %>%
@@ -726,7 +728,7 @@ get_oecd_table11 <- function() {
     ##            source = "oecd_table11")
 
     ## return(select(df_oecd_mrgd, iso3c, year, pct_value, source))
-    return(select(df_oecd_mrgd, iso3c, year, constant_usd, pct_value, source))
+    return(select(df_oecd_mrgd, iso3c, year, value, measure, source, format))
 }
 
 ggplot(get_oecd_table11(), aes(x=year, y=pct_value)) +
@@ -734,7 +736,7 @@ ggplot(get_oecd_table11(), aes(x=year, y=pct_value)) +
     facet_wrap(~iso3c, scales = "free")
 
 
-## *** imf table 11 archive
+## *** oecd table 11 archive
 
 get_oecd_table11_archive <- function() {
     #' generate the oecd table 11 archive data
@@ -742,9 +744,11 @@ get_oecd_table11_archive <- function() {
     
     oced_table11_arc <- atb(read.csv(paste0(OECD_DATA_DIR, "SNA_TABLE11_ARCHIVE")))
 
-    oecd_table11_arc_fltrd <- filter(oced_table11_arc, SECTOR == "GS13", TRANSACT == "TLYCG") %>%
-        mutate(value = ObsValue*10^POWERCODE) %>%
-        select(iso3c = LOCATION, year = Time,  currency = UNIT, value)
+    oecd_table11_arc_fltrd <- filter(oced_table11_arc, SECTOR == "GS13",
+                                     TRANSACT %in% c("TLYCG", "P3CG")) %>%
+        mutate(value = ObsValue*10^POWERCODE,
+               format = tolower(TRANSACT)) %>%
+        select(iso3c = LOCATION, year = Time,  currency = UNIT, value, format)
 
     ## filter out colombia in not COP: WID seems to assume COP 
     oecd_table11_arc_fltrd <- filter(oecd_table11_arc_fltrd, iso3c != "COL" | (iso3c == "COL" & currency == "COP"))
@@ -753,8 +757,10 @@ get_oecd_table11_archive <- function() {
         merge(df_wb, all.x = T) %>% atb() %>%
         mutate(pct_value = (value/NY.GDP.MKTP.CN)*100,
                constant_usd = (value/inyixx999i)/xlcusx999i_2021, # hope it makes sense (Blanchet_2017_conversions)
-               source = "oecd_table11_arc")
-
+               source = "oecd_table11_arc") %>%
+        select(iso3c, year, constant_usd, pct_value, source, format)  %>%
+        pivot_longer(cols = c(constant_usd, pct_value), names_to = "measure")
+    
 
     ## oecd_table11_arc_mrgd <- merge(oecd_table11_arc_fltrd,
     ##                                select(df_wb, iso3c, year, NY.GDP.MKTP.CN), all.x = T) %>% atb() %>%
@@ -765,7 +771,7 @@ get_oecd_table11_archive <- function() {
     ## viz_lines(oecd_table11_arc_mrgd, y="pct_value", facets = "region")
     ## looks somewhat plausible
 
-    return(select(oecd_table11_arc_mrgd, iso3c, year, constant_usd, pct_value,  source))
+    return(select(oecd_table11_arc_mrgd, iso3c, year, value, measure, source, format))
 
 }
 
@@ -774,7 +780,7 @@ get_oecd_table11_archive <- function() {
 get_un_data <- function() {
     #' construct the un cultural spending data
     #' separate function just for spending 
-
+    
     
     
     un_df <- construct_gvt_consumption_expenditure()
@@ -791,7 +797,7 @@ get_un_data <- function() {
         group_by(iso3c, year) %>%
         mutate(series1k_there = ifelse(1000 %in% Series, T, F))
                   
-
+    
 
     ## where Series 1k is available, use 1k, else mean 
     un_df_clpsd <- rbind(    
@@ -872,12 +878,21 @@ get_un_data <- function() {
     ## filter(x, iso3c == "UKR")
     ## filter(un_df_clpsd, iso3c == "UKR")
 
+    ## convert SMR lira to euro 1999 fx rate: https://tassidicambio.bancaditalia.it/terzevalute-wf-ui-web/timeSeries
+    un_df_clpsd <- un_df_clpsd %>%
+        mutate(value = ifelse(iso3c == "SMR" & year %in% seq(1997, 1999), value/1936.27, value))
+
+    
     un_df_cbn <- merge(un_df_clpsd, cur_df, all.x = T) %>% atb() %>%
         merge(., df_wb) %>% atb() %>%
         mutate(constant_usd = (value/inyixx999i)/xlcusx999i_2021,
                pct_value = (value/NY.GDP.MKTP.CN)*100,
-               source = "un") %>%
-        select(iso3c, year, constant_usd, pct_value, source)
+               source = "un",
+               format = "p3cg") %>%
+        select(iso3c, year, constant_usd, pct_value, source, format) %>%
+        pivot_longer(cols = c(constant_usd, pct_value), names_to = "measure")
+        
+
     
     return(un_df_cbn) 
 
@@ -885,7 +900,9 @@ get_un_data <- function() {
 
 
 
-    
+
+
+
     
 
 
@@ -955,8 +972,10 @@ get_eurostat <- function() {
     ## viz_lines(df_euro_fltrd, y="OBS_VALUE", facets = "iso3c")
     df_euro_fltrd2 <- merge(df_euro_fltrd, cur_df, all.x = T) %>% atb() %>%
         mutate(constant_usd = (MIO_NAC*1e6/inyixx999i)/xlcusx999i_2021,
-               source = "eurostat") %>%
-        select(iso3c, year, constant_usd, pct_value = PC_GDP, source)
+               source = "eurostat",
+               format = "tlycg") %>%
+        select(iso3c, year, constant_usd, pct_value = PC_GDP, source, format) %>%
+        pivot_longer(cols = c(constant_usd, pct_value), names_to = "measure")
                
     ## viz_lines(df_euro_fltrd2, y="pct_value", duration = 1, facets = "iso3c")
 
