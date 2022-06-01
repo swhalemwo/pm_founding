@@ -809,6 +809,22 @@ get_un_data <- function() {
         summarize(value = mean(Value))
         )
     
+    ## ## check for number of currencies
+    ## un_df_fltrd %>%
+    ##     group_by(iso3c) %>%
+    ##     mutate(nbr_curs = n_distinct(Currency)) %>%
+    ##     filter(nbr_curs > 1) %>% 
+    ##     select(iso3c, year, Series, Value, Currency) %>% adf()
+
+    ## un_df_fltrd %>% filter(iso3c == "TZA") %>%
+    ##     ggplot(aes(x=year, y=Value, group = Series, shape = Currency, color = factor(Series))) +
+    ##     geom_line() +
+    ##     geom_point()
+        
+
+    ## un_df_fltrd %>% filter(iso3c == "TZA") %>% pull(Currency) %>% unique()
+
+
     ## ## countries that at some point have multiple series, and not 1k everywhere
     ## pdf(paste0(FIG_DIR, "un_cult_spending_series_visual_inspection.pdf"), width = 16, height = 10)
     ## un_df2 %>%
@@ -1009,11 +1025,58 @@ df_cprn <- atb(Reduce(\(x,y) rbind(x,y),
                           get_imf_data(),
                           get_eurostat())))
 
-df_cprn_long <- df_cprn %>% pivot_longer(cols = c(constant_usd, pct_value))
 
-df_cprn_wide_usd <- filter(df_cprn_long, name == "constant_usd") %>%
+df_cprn %>% filter(format == "p3cg", measure == "pct_value", iso3c %in% p3cg_mismatch_crys) %>%
+    pivot_wider(names_from = source) %>% na.omit() %>%
+    pivot_longer(cols = c(un, oecd_table11, oecd_table11_arc), names_to = "source") %>% 
+    ggplot(aes(x=year, y=value, group=source, color = source)) +
+    geom_line() +
+    geom_jitter() + 
+    facet_wrap(~iso3c, scales = "free")
+
+p3cg_mismatch_t11a_dis <- c("CHE", "DEU", "ITA", "LVA", "PRT", "SWE")
+p3cg_mismatch_un_dis <- "CHL"
+p3cg_mismatch_t11_dis <- c("EST", "IRL", "JPN", "KOR")
+
+p3cg_mismatch_crys <- c(p3cg_mismatch_t11a_dis, p3cg_mismatch_un_dis, p3cg_mismatch_t11_dis)
+
+p3cg_choices <- list(
+    c("CHE", "oecd_table_11"),
+    c("CHL", "oecd_table_11"),
+    c("DEU", "oecd_table_11"),
+    c("EST", "oecd_table_11"),
+    c("IRL", "oecd_table_11"),
+    c("ITA", "oecd_table_11"), ## t11 is lower, but difference not huge 
+    c("JPN", "oecd_table_11"),
+    c("KOR", "oecd_table_11"),
+    c("LVA", "oecd_table_11"),
+    c("SWE", "oecd_table_11"))
+## actually always use oecd_table 11 -> can automate it
+
+
+## see how large the coverage of each variable combination is 
+impute_choice_df <- merge(    
+    df_cprn %>% filter(format == "p3cg") %>%
+    group_by(iso3c, year) %>%
+    summarize(p3cg = 1),
+    df_cprn %>% filter(format == "tlycg") %>%
+    group_by(iso3c, year) %>%
+    summarize(tlycg = 1), all = T) %>% atb()
+
+
+filter(impute_choice_df, is.na(p3cg), tlycg==1) %>% nrow() ## 351 have no p3cg (those not covered by UN)
+filter(impute_choice_df, is.na(tlycg), p3cg==1) %>% nrow() ## 925 have no tlycg (those only covered by UN)
+filter(impute_choice_df, tlycg==1, p3cg==1) %>% nrow() ## 1223 have both: for training
+
+filter(df_cprn, iso3c %in% c("DEU", "FRA", "ITA", "JPN", "KOR"), measure == "pct_value") %>%
+    ggplot(aes(x=year, y=value, color = interaction(format, source), linetype = format)) +
+    geom_line() +
+    geom_hline(yintercept = 0) +
+    facet_wrap(~iso3c, scales = "free")
+
+
+df_cprn_wide_usd <- filter(df_cprn, measure == "constant_usd") %>%
     pivot_wider(names_from = source, values_from = value)
-
 
 df_cprn_wide_pct <- filter(df_cprn_long, name == "pct_value") %>%
     pivot_wider(names_from = source, values_from = value)
@@ -1022,8 +1085,65 @@ df_cprn_wide_usd %>% select(all_of(unique(df_cprn_long$source))) %>%  chart.Corr
     ## cor(use = "pairwise.complete.obs")
 ## %>% ggcorrplot(method = "circle", type = "lower")
 
-df_cprn_wide_pct %>% select(all_of(unique(df_cprn_long$source))) %>% cor(use = "pairwise.complete.obs")
+df_cprn_wide_pct %>% select(all_of(unique(df_cprn_long$source))) %>% chart.Correlation()
 ## %>%  ggcorrplot(method = "circle", type = "lower")
+
+x <- get_un_data()
+y <- get_imf_data()
+filter(df_cprn_wide_pct,un > 2) %>% adf()
+
+
+df_cprn_long %>% filter(name == "constant_usd", source %in% all_of(c("eurostat", "imf", "un"))) %>%
+    ggplot(aes(x=year, y=value, color = source, group = source)) +
+    geom_line() +
+    facet_wrap(~iso3c, scales = "free")
+
+
+
+## *** look at diffs:
+df_cprn_wide_pct %>%
+    mutate(diffx = un-imf) %>%
+    filter(!is.na(diffx)) %>%
+    select(iso3c, year, un, imf, diffx) %>%
+    pivot_longer(cols = c(un, imf, diffx)) %>%
+    ggplot(aes(x=year, y=value, color = name, group = name)) +
+    geom_line() +
+    facet_wrap(~iso3c, scales = "free")
+## maybe it's just pct calculations, and amounts are actually the same? do after lunch
+
+cpr_usd_minus <- df_cprn_wide_usd %>%
+    mutate(diffx = imf-un) %>%
+    filter(!is.na(diffx)) %>%
+    select(iso3c, year, un, imf, diffx) %>%
+    pivot_longer(cols = c(un, imf, diffx))
+
+
+ggplot(cpr_usd_minus, aes(x=year, y=value, color = name, group = name)) +
+    geom_line() +
+    geom_hline(yintercept = 0) + 
+    facet_wrap(~iso3c, scales = "free") 
+    
+
+
+
+cpr_usd_ratio <- df_cprn_wide_usd %>%
+    select(iso3c, year, un, imf) %>% na.omit() %>%
+    mutate(diffx = un/imf,
+           region = countrycode(iso3c, "iso3c", "un.region.name"))
+
+viz_lines(cpr_usd_ratio, y="diffx", facets = "region", duration = 1, max_lines = 4)
+
+hist(cpr_usd_ratio$diffx, breaks = 40)
+
+
+
+xtsum(cpr_usd, diffx, iso3c)
+## more between difference (0.22) than within (0.14), but that's still kinda similar
+
+
+            
+
+
 
 
 
@@ -1047,6 +1167,92 @@ df_cprn2 <- rbind(
 df_cprn2_wide <- pivot_wider(df_cprn2, names_from = source, values_from = pct_value)
 cor(df_cprn2_wide$un, df_cprn2_wide$oecd_p3cg, use = "complete.obs")
 cor(df_cprn_wide$un, df_cprn_wide$oecd_table11, use = "complete.obs")
+
+## *** compare original values
+## JPN
+
+cur_df_jpn <- filter(cur_df, iso3c == "JPN", year >= 2005)
+df_cprn_jpn <- filter(df_cprn_long, name =="constant_usd", iso3c == "JPN")
+
+data_jpn <- list(
+    c(2005, 1515.0),
+    c(2006, 1498.3),
+    c(2007, 1485.7),
+    c(2008, 1405.3),
+    c(2009, 1361.8),
+    c(2010, 1355.1),
+    c(2011, 1378.2),
+    c(2012, 1360.2),
+    c(2013, 1361.4),
+    c(2014, 1506.2),
+    c(2015, 1568.7),
+    c(2016, 1624.2),
+    c(2017, 1637.0),
+    c(2018, 1683.8),
+    c(2019, 1676.1),
+    c(2020, 1654.9)) %>% do.call(rbind, .) %>% adf()
+names(data_jpn) <- c("year", "value")
+data_jpn$source <- "mof"
+
+
+
+data_jpn <- list(
+    c(2015, 1532.6),
+    c(2014, 1477.3),
+    c(2013, 1343.2),
+    c(2012, 1346.3),
+    c(2011, 1362.7),
+    c(2010, 1346.1),
+    c(2009, 1356.2),
+    c(2008, 1395.3),
+    c(2007, 1475.6),
+    c(2006, 1491.3),
+    c(2005, 1509.6)) %>% do.call(rbind, .) %>% adf()
+names(data_jpn) <- c("year", "value")
+data_jpn$source <- "mof"
+
+df_jpn <- merge(data_jpn, cur_df_jpn)
+
+df_jpn <- df_jpn %>% mutate(usd_constant = ((value*1e9)/inyixx999i)/xlcusx999i_2021,
+                    name = "constant_usd") %>%
+    select(iso3c, year, source, name, value = usd_constant)
+
+
+oecd_table11 <- atb(read.csv(paste0(OECD_DATA_DIR, "SNA_TABLE11")))
+
+
+oecd_cpoents_jpn <- filter(oecd_table11, LOCATION == "JPN", SECTOR == "GS13", ObsValue > 1000000) %>%
+    select(iso3c = LOCATION, year = Time, source = TRANSACT, value = ObsValue)
+
+oecd_cpoents_jpn2 <- merge(oecd_cpoents_jpn, cur_df_jpn) %>%
+    mutate(value = ((value*1e6)/inyixx999i)/xlcusx999i_2021,
+           name = "constant_usd") %>%
+    select(iso3c, year, source, name, value) %>% atb()
+
+Reduce(\(x,y) rbind(x,y), list(df_cprn_jpn, df_jpn, oecd_cpoents_jpn2)) %>%
+    ggplot(aes(x=year, y=value, color = source, shape = source)) +
+    geom_line() +
+    geom_point(size=5)
+
+## un_df3 <- construct_gvt_consumption_expenditure()
+## filter(un_df3, iso3c == "JPN", year >= 2005, Series == 1000)
+
+    
+    ggplot(aes(x=Time, y=ObsValue, group = TRANSACT, color = TRANSACT)) +
+    geom_line()
+
+## *** try figuring out with regression the relation among the components 
+
+oecd_reg <- filter(oecd_table11,  SECTOR == "GS13") %>%
+    select(iso3c = LOCATION, year=Time, value = ObsValue, TRANSACT) %>%
+    pivot_wider(names_from = TRANSACT)
+
+screenreg(lm(TLYCG ~ P3CG, data = oecd_reg))
+
+ + D3CG + D62_D631XXCG + P2_D29D5D8CG + D7CG, data = oecd_reg))
+
+
+
 
 ## *** plotting time
 sample_crys <- sample(unique(df_cprn$iso3c), 40)
