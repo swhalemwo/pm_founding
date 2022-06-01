@@ -235,7 +235,9 @@ construct_gvt_consumption_expenditure <- function() {
         list(from = "Pakistan rupee", to = "Pakistan Rupee"),
         list(from = "zloty", to = "Zloty"),
         list(from = "Russian ruble (re-denom. 1:1000)", to = "Russian Ruble"),
-        list(from = "Swedish krona", to = "Swedish Krona")
+        list(from = "Swedish krona", to = "Swedish Krona"),
+        list(from = "Tanzania shilling", to = "Tanzanian Shilling")
+        
     )
 
     countries_to_yeet <- c("VEN")
