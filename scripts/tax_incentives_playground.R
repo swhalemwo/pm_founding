@@ -1,3 +1,5 @@
+## * tax incentives playground
+
 df_taxinc <- read_in_tax_incentives()
 
 pdf(paste0(FIG_DIR, "tax_incentive_cors.pdf"), width = 21, height = 12)
