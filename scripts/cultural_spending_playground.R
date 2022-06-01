@@ -775,33 +775,58 @@ get_un_data <- function() {
     #' construct the un cultural spending data
     #' separate function just for spending 
 
-    ##:ess-bp-start::browser@nil:##
-browser(expr=is.null(.ESSBP.[["@5@"]]));##:ess-bp-end:##
     
     
     un_df <- construct_gvt_consumption_expenditure()
     
-    filter(un_df, iso3c == "JPN") %>% select(year, Series, value = Value) %>%
-        rbind(mutate(japan_mof, Series = 111, value = value*1e9)) %>%
-        ggplot(aes(x=year, y=value, group = Series, color = factor(Series))) +
-        geom_line()
+    ## old version: just mean 
+    ## un_df_clpsd <- un_df %>% group_by(iso3c, year) %>%
+    ##     summarize(value = mean(Value))
 
-    un_df_clpsd <- un_df %>% group_by(iso3c, year) %>%
-        summarize(value = mean(Value))
 
-    un_df2 <- un_df %>% group_by(iso3c, year) %>%
+    ## exclude a bunch of stuff that makes no sense on visual inspection
+    un_df_fltrd <- un_df %>%
+        filter(iso3c != "JPN" | (iso3c == "JPN" & Series == 1000),
+               iso3c != "ARM" | (iso3c == "ARM" & Series == 1000)) %>%
+        group_by(iso3c, year) %>%
         mutate(series1k_there = ifelse(1000 %in% Series, T, F))
-    
+                  
+
+
     ## where Series 1k is available, use 1k, else mean 
     un_df_clpsd <- rbind(    
-        filter(un_df2, series1k_there, Series==1000) %>%
+        filter(un_df_fltrd, series1k_there, Series==1000) %>%
         group_by(iso3c, year) %>%
         summarize(value = Value),
-        filter(un_df2, !series1k_there) %>%
+        filter(un_df_fltrd, !series1k_there) %>%
         group_by(iso3c, year) %>%
         summarize(value = mean(Value))
         )
     
+    ## ## countries that at some point have multiple series, and not 1k everywhere
+    ## pdf(paste0(FIG_DIR, "un_cult_spending_series_visual_inspection.pdf"), width = 16, height = 10)
+    ## un_df2 %>%
+    ##     group_by(iso3c) %>%
+    ##     mutate(nbr_series = len(unique(Series)),
+    ##            series1k_perfect = all(series1k_there)) %>%
+    ##     filter(nbr_series > 1, !series1k_perfect) %>%
+    ##     ggplot(aes(x=year, y=Value, grp = Series, color = factor(Series))) +
+    ##     geom_line() +
+    ##     facet_wrap(~iso3c, scales = "free")
+    ## dev.off()
+
+    ## un_df_clpsd %>%
+    ##     ## filter(iso3c %in% all_of(mult_series_crys)) %>% 
+    ## ggplot(aes(x=year, y=value)) +
+    ##     geom_line() +
+    ##     facet_wrap(~iso3c, scales = "free")
+           
+    ## data - Japan 
+    ## filter(un_df, iso3c == "JPN") %>% select(year, Series, value = Value) %>%
+    ##     rbind(mutate(japan_mof, Series = 111, value = value*1e9)) %>%
+    ##     ggplot(aes(x=year, y=value, group = Series, color = factor(Series))) +
+    ##     geom_line()
+
 
     ## countries with multiple mismatched series for the years without 1k series
     ## filter(un_df2, !series1k_there, iso3c %in% mult_series_crys) %>%
@@ -844,12 +869,8 @@ browser(expr=is.null(.ESSBP.[["@5@"]]));##:ess-bp-end:##
                iso3c != "ECU" | (iso3c == "ECU" & year < 1990),
                iso3c != "GEO")
                
-
     ## filter(x, iso3c == "UKR")
     ## filter(un_df_clpsd, iso3c == "UKR")
-    
-    
-
 
     un_df_cbn <- merge(un_df_clpsd, cur_df, all.x = T) %>% atb() %>%
         merge(., df_wb) %>% atb() %>%
@@ -862,24 +883,7 @@ browser(expr=is.null(.ESSBP.[["@5@"]]));##:ess-bp-end:##
 
 }
 
-japan_mof <- list(
-    c(2005, 352.7),
-    c(2004, 352.0),
-    c(2003, 356.3),
-    c(2002, 372.0),
-    c(2001, 383.3),
-    c(2000, 369.0),
-    c(1999, 363.1),
-    c(1998, 357.0),
-    c(1997, 353.1),
-    c(1996, 332.1),
-    c(1995, 308.9),
-    c(1994, 295.2),
-    c(1993, 281.3),
-    c(1992, 261.6),
-    c(1991, 241.9),
-    c(1990, 218.0)) %>% do.call(rbind, .) %>% adf()
-names(japan_mof) <- c("year", "value")
+
 
     
     
@@ -1051,3 +1055,23 @@ ggplot(filter(df_cprn, iso3c %in% all_of(sample_crys)), aes(x=year, y=pct_value,
     facet_wrap(~iso3c, scales = "free")
                                                         
        
+## ** data, japan
+
+japan_mof <- list(
+    c(2005, 352.7),
+    c(2004, 352.0),
+    c(2003, 356.3),
+    c(2002, 372.0),
+    c(2001, 383.3),
+    c(2000, 369.0),
+    c(1999, 363.1),
+    c(1998, 357.0),
+    c(1997, 353.1),
+    c(1996, 332.1),
+    c(1995, 308.9),
+    c(1994, 295.2),
+    c(1993, 281.3),
+    c(1992, 261.6),
+    c(1991, 241.9),
+    c(1990, 218.0)) %>% do.call(rbind, .) %>% adf()
+names(japan_mof) <- c("year", "value")
