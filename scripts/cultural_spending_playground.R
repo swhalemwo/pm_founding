@@ -728,7 +728,7 @@ get_oecd_table11 <- function() {
     ##            source = "oecd_table11")
 
     ## return(select(df_oecd_mrgd, iso3c, year, pct_value, source))
-    return(select(df_oecd_mrgd, iso3c, year, value, measure, source, format))
+    return(select(df_oecd_mrgd, iso3c, year, value, measure, source, format) %>% na.omit())
 }
 
 ggplot(get_oecd_table11(), aes(x=year, y=pct_value)) +
@@ -771,7 +771,7 @@ get_oecd_table11_archive <- function() {
     ## viz_lines(oecd_table11_arc_mrgd, y="pct_value", facets = "region")
     ## looks somewhat plausible
 
-    return(select(oecd_table11_arc_mrgd, iso3c, year, value, measure, source, format))
+    return(select(oecd_table11_arc_mrgd, iso3c, year, value, measure, source, format) %>% na.omit())
 
 }
 
@@ -905,19 +905,18 @@ get_un_data <- function() {
                pct_value = (value/NY.GDP.MKTP.CN)*100,
                source = "un",
                format = "p3cg") %>%
-        select(iso3c, year, constant_usd, pct_value, source, format) %>%
+        select(iso3c, year, constant_usd, pct_value, source, format) %>% 
         pivot_longer(cols = c(constant_usd, pct_value), names_to = "measure")
-        
-
+    ## filter_at(un_df_cbn, vars(-constant_usd, pct_value), any_vars(is.na(.)))
     
-    return(un_df_cbn) 
+
+    print("un data NAs")
+    print(filter(un_df_cbn, is.na(value)) %>% pull(iso3c) %>% table())
+    
+    
+    return(na.omit(un_df_cbn)) 
 
 }
-
-
-
-
-
 
     
 
@@ -1016,6 +1015,24 @@ get_eurostat <- function() {
 
 ## ** source comparison
 
+sort_by_priority <- function(dfx, priority_vec, pos) {
+    #' pick all obs that adhere to priority_vec[pos], but only if not also matched by higher priority
+    
+    prty_vlu <- priority_vec[pos]
+    vlus_to_disregard <- priority_vec[0:(pos-1)]
+
+    dfx %>% group_by(iso3c, year) %>%
+        ## first exclude all the higher priorities
+        mutate(matched_by_higher_prorities = ifelse(len(intersect(source, vlus_to_disregard))==0, F, T)) %>%
+        filter(!matched_by_higher_prorities, source == prty_vlu) %>%
+        select(all_of(names(dfx)))
+}
+
+## df_cprn %>% filter(format == "tlycg") %>% 
+##     sort_by_priority(source_priority, 1)
+
+
+
 
 df_cprn <- atb(Reduce(\(x,y) rbind(x,y),
                       list(
@@ -1026,20 +1043,274 @@ df_cprn <- atb(Reduce(\(x,y) rbind(x,y),
                           get_eurostat())))
 
 
-df_cprn %>% filter(format == "p3cg", measure == "pct_value", iso3c %in% p3cg_mismatch_crys) %>%
-    pivot_wider(names_from = source) %>% na.omit() %>%
-    pivot_longer(cols = c(un, oecd_table11, oecd_table11_arc), names_to = "source") %>% 
+
+
+## look at countries with multiple sources -> see if there are disruptions
+## only CHL: drop un series
+df_cprn %>% filter(format == "p3cg", measure == "constant_usd") %>%
+    group_by(iso3c) %>%
+    mutate(nbr_sources = len(unique(source))) %>%
+    filter(nbr_sources > 1) %>%
     ggplot(aes(x=year, y=value, group=source, color = source)) +
     geom_line() +
     geom_jitter() + 
     facet_wrap(~iso3c, scales = "free")
 
-p3cg_mismatch_t11a_dis <- c("CHE", "DEU", "ITA", "LVA", "PRT", "SWE")
-p3cg_mismatch_un_dis <- "CHL"
-p3cg_mismatch_t11_dis <- c("EST", "IRL", "JPN", "KOR")
 
+## *** choose p3cg series 
+## drop CHL un series
+## also pick p3cg series in order of oecd_table11, un, oecd_t11_archive
+
+
+source_priority_vec_p3cg <- c("oecd_table11", "un", "oecd_table11_arc")
+
+df_p3cg <- df_cprn %>% filter(format == "p3cg", iso3c != "CHL" | (iso3c=="CHL" & source != "un"))
+df_p3cg_fltrd <- lapply(seq_along(source_priority_vec_p3cg), \(pos)
+                        sort_by_priority(
+                            dfx = df_p3cg,
+                            priority_vec = source_priority_vec_p3cg,
+                            pos = pos)) %>%
+    Reduce(\(x,y) rbind(x,y), .) %>%
+    select(iso3c, year, source, format, measure, value)
+
+
+## visual check: doesn't seem to work: still multiple values there; later: fixed
+## df_p3cg_fltrd %>% filter(measure == "pct_value") %>% 
+##     ggplot(aes(x=year, y=value, group=source, color = source)) +
+##     geom_line() +
+##     geom_jitter() + 
+##     facet_wrap(~iso3c, scales = "free")
+
+## *** choose tlycg series 
+## df_cprn %>% filter(format == "tlycg", measure == "pct_value", source != "oecd_table11_arc") %>%
+##     group_by(iso3c) %>%
+##     mutate(nbr_sources = len(unique(source))) %>%
+##     filter(nbr_sources > 1) %>% 
+##     ggplot(aes(x=year, y=value, group=source, color = source)) +
+##     geom_line() +
+##     geom_jitter() + 
+##     facet_wrap(~iso3c, scales = "free")
+
+source_priority_vec_tlycg <- c("oecd_table11", "imf", "eurostat", "oecd_table11_arc")
+
+
+df_tlycg_fltrd <- lapply(seq_along(source_priority), \(pos) sort_by_priority(
+                                            dfx = filter(df_cprn, format == "tlycg"),
+                                            priority_vec = source_priority_vec_tlycg,
+                                            pos = pos)) %>%
+    Reduce(\(x,y) rbind(x,y), .)
+
+## ggplot(filter(df_tlycg_cbn, measure == "pct_value"), aes(x=year, y=value, color = source)) +
+##     geom_line() +
+##     geom_point() +
+##     facet_wrap(~iso3c, scales = "free")
+
+    
+
+## df_cprn has 15,076
+## filtered has 15,040 -> lose 36 huh: also lose 12 CYs with iso3c == NA
+
+    
+## *** combine filtered tlycg and p3cg for imputation
+
+inf.omit <- function(vec) {
+    vec[!is.infinite(vec)]
+    }
+
+
+## i think it's not feasible to maintain source: p3cg and tlycg often come from different sources 
+df_cult_cbn <- rbind(df_p3cg_fltrd, df_tlycg_fltrd) %>% atb()
+
+df_cult_impute <- df_cult_cbn %>% 
+    select(iso3c, year, format, measure, value) %>% 
+    pivot_wider(names_from = format)
+
+df_cult_usd <- filter(df_cult_impute, measure == "constant_usd")
+df_cult_pct <- filter(df_cult_impute, measure == "pct_value")
+
+## df_cult_impute %>%
+##     mutate(diff1 = p3cg/tlycg,
+##            diff2 = tlycg/p3cg) %>%
+##     summarize(diff1_median = median(diff1, na.rm = T),
+##               diff2_median = median(diff2, na.rm = T),
+##               diff1_mean = mean(diff1, na.rm = T),
+##               diff2_mean = mean(inf.omit(diff2), na.rm = T))
+
+## *** JointAI imputation
+library(JointAI)
+
+df_cult_pct <- df_cult_pct %>%
+    arrange(iso3c, year) %>% 
+    group_by(iso3c) %>%
+    mutate(p3cg_lag1 = dplyr::lag(p3cg, 1),
+           p3cg_lag2 = dplyr::lag(p3cg, 2),
+           tlycg_lag1 = dplyr::lag(tlycg, 1),
+           tlycg_lag2 = dplyr::lag(tlycg, 2))
+
+jointai_test <- lme_imp(formula = tlycg ~ p3cg + p3cg_lag1 + p3cg_lag2 + (1 | iso3c), data = adf(df_cult_pct),
+                        monitor_params = c(imps = T),
+                        n.iter = 500)
+
+
+plot(jointai_test)
+traceplot(jointai_test)
+summary(jointai_test)
+coef(jointai_test)
+
+names(jointai_test)
+
+
+df_imptd <- get_MIdat(jointai_test, m=30, minspace = 5) %>% atb()
+table(df_imptd$Imputation_)
+
+
+imptd_info <- filter(df_imptd, Imputation_ == 0) %>%
+    mutate(tlycg_imptd = ifelse(is.na(tlycg), T, F)) %>%
+    select(iso3c, year, tlycg_imptd)
+
+imptd_means <- df_imptd %>% group_by(iso3c, year) %>%
+    filter(Imputation_ > 0) %>% 
+    summarize(value = mean(tlycg)) %>%
+    mutate(source = "joint_ai")
+
+imptd_means <- merge(imptd_means, imptd_info) %>% atb()
+
+
+p3cg_to_tlycg_scalar <- df_cult_impute %>% mutate(scaler = tlycg/p3cg) %>%
+    pull(scaler) %>% inf.omit() %>% median(na.rm = T)
+imptd_scalar <- df_cult_pct %>%
+    mutate(tlycg_pred = ifelse(is.na(tlycg), p3cg*p3cg_to_tlycg_scalar, tlycg),
+           tlycg_imptd = ifelse(is.na(tlycg), T, F)) %>%
+    select(iso3c, year, value = tlycg_pred, tlycg_imptd) %>%
+    mutate(source = "scalar_imputation")
+
+p3cg_data <- df_cult_pct %>% select(iso3c, year, value = p3cg) %>%
+    mutate(tlycg_imptd = F, source = "p3cg") %>% na.omit()
+
+Reduce(\(x,y) rbind(x,y), list(imptd_means, imptd_scalar, p3cg_data)) %>% atb() %>% 
+    group_by(iso3c) %>% 
+    mutate(any_imptd = any(tlycg_imptd)) %>%
+    filter(any_imptd) %>% 
+    ggplot(aes(x=year, y=value, color = interaction(source, tlycg_imptd)))  + 
+    geom_line() +
+    geom_point() +
+    facet_wrap(~iso3c, scales = "free")
+
+
+
+df_imptd_cbn <- merge(df_imptd %>% select(iso3c, year, Imputation_, tlycg_imp_vlu = tlycg),
+      df_cult_pct %>% mutate(tlycg_imptd = ifelse(is.na(tlycg), T, F))) %>% atb()
+
+filter(df_imptd_cbn, tlycg_imptd)
+
+summary(df_imptd_cbn$tlycg_imp_vlu)
+## still NAs??? at least not everywhere, but seems like one "batch" didn't produce imputed values
+
+df_imptd_cbn %>%
+    group_by(iso3c) %>% 
+    mutate(any_imptd = any(tlycg_imptd)) %>%
+    filter(any_imptd) %>%
+    ggplot(aes(x=year, y=tlycg_imp_vlu, group = Imputation_, color = tlycg_imptd)) +
+    geom_line() +
+    ## geom_point() +
+    facet_wrap(~iso3c, scales = "free")
+
+
+
+## df_imptd %>% filter(iso3c %in% c("DEU", "USA", "FRA", "ITA", "CHN")) %>%
+##     ggplot(aes(x=year, y=tlycg, color = factor(Imputation_))) +
+##     geom_line() +
+##     geom_jitter() +
+##     facet_wrap(~iso3c, scales = "free")
+
+
+
+## *** mice imputation
+library(mice)
+
+df_cult_usd_wide <- df_cult_usd %>% select(iso3c, year, p3cg, tlycg) %>%
+    filter(year >= 2010) %>% 
+    pivot_wider(values_from = c(p3cg, tlycg), names_from = year)
+
+apply(df_cult_usd_wide, 2, \(x) sum(is.na(x)))
+apply(df_cult_usd_wide, 1, \(x) sum(is.na(x)))
+
+
+mice_test = mice(df_cult_usd_wide, method = "lasso.norm")
+
+## *** virgin scaler imputation 
+
+p3cg_to_tlycg_scalar <- df_cult_impute %>% mutate(scaler = tlycg/p3cg) %>%
+    pull(scaler) %>% inf.omit() %>% median(na.rm = T)
+
+df_cult_usd2 <- df_cult_usd %>%
+    mutate(tlycg_pred = ifelse(is.na(tlycg), p3cg*p3cg_to_tlycg_scalar, tlycg),
+           tlycg_imptd = ifelse(is.na(tlycg), T, F))
+
+
+
+df_cult_usd2 %>% group_by(iso3c) %>%
+    mutate(nbr_sources = len(unique(tlycg_imptd))) %>%
+    filter(nbr_sources > 1) %>%
+    ## filter(tlycg_imptd) %>% 
+    ggplot(aes(x=year, y=tlycg_pred, color = tlycg_imptd)) +
+    geom_point() +
+    facet_wrap(~iso3c, scales = "free")
+
+
+
+## *** virgin manual regression imputation 
+
+glm(p3cg ~ tlycg + factor(iso3c), data = df_cult_usd)
+
+lm_tlycg_usd <- screenreg(lm(tlycg ~ p3cg, filter(df_cult_impute, measure == "constant_usd")))
+lm_p3cg_usd <- lm(p3cg ~ tlycg, filter(df_cult_impute, measure == "constant_usd"))
+
+lm_tlycg_pct <- lm(tlycg ~ p3cg, filter(df_cult_impute, measure == "pct_value"))
+lm_p3cg_pct <- screenreg(lm(p3cg ~ tlycg, filter(df_cult_impute, measure == "pct_value")))
+
+
+df_cult_usd$pred <- predict.lm(lm_p3cg_usd, newdata = df_cult_usd)
+
+df_cult_usd %>% filter(pred < 0)
+
+
+## hmm why only 828?
+## had not dropped source before -> pivot_wider would create additional columns 
+## when source dropped, I get 1189 (previously 1193 in impute choice)
+
+filter(impute_choice_df, tlycg==1, p3cg==1)
+filter(df_cult_impute, measure == "constant_usd")
+filter(df_cult_impute, measure == "pct_value", !is.na(p3cg), !is.na(tlycg))
+filter(df_cult_impute, measure == "pct_value", is.na(p3cg), !is.na(tlycg))
+filter(df_cult_impute, measure == "pct_value", !is.na(p3cg), is.na(tlycg))
+## nrow between pct_value and constant_usd are not the same reeeeeeeeeeeeeeeee
+## is because in get_un_df some pre-1995 CYs have no observation for GDP in current LCU (df_wb), should be ok tho:
+## pct value is just for checking plausibility
+
+
+
+
+## *** manual checks 
+
+
+
+p3cg_mismatch_t11a_dis <- c("CHE", "DEU", "ITA", "LVA", "PRT", "SWE")
+p3cg_mismatch_un_dis <- c("CHL", "NLD", "SVN")
+p3cg_mismatch_t11_dis <- c("EST", "IRL", "JPN", "KOR")
 p3cg_mismatch_crys <- c(p3cg_mismatch_t11a_dis, p3cg_mismatch_un_dis, p3cg_mismatch_t11_dis)
 
+
+## look at countries manually visually identified as mismatching 
+df_cprn %>% filter(format == "p3cg", measure == "pct_value", iso3c %in% p3cg_mismatch_crys) %>%
+    ## pivot_wider(names_from = source) %>% na.omit() %>%
+    ## pivot_longer(cols = c(un, oecd_table11, oecd_table11_arc), names_to = "source") %>% 
+    ggplot(aes(x=year, y=value, group=source, color = source)) +
+    geom_line() +
+    geom_jitter() + 
+    facet_wrap(~iso3c, scales = "free")
+
+## choose which p3cg series to pick in case of disagreement -> oecd_table11 always turns out to  be preferable 
 p3cg_choices <- list(
     c("CHE", "oecd_table_11"),
     c("CHL", "oecd_table_11"),
@@ -1052,6 +1323,14 @@ p3cg_choices <- list(
     c("LVA", "oecd_table_11"),
     c("SWE", "oecd_table_11"))
 ## actually always use oecd_table 11 -> can automate it
+
+## compare with ratio, not that many countries
+df_cprn %>% filter(format == "p3cg", measure == "pct_value") %>%
+    pivot_wider(names_from = source) %>% na.omit() %>%
+    mutate(ratio = oecd_table11/un) %>%
+    filter(ratio < 0.9 | ratio > 1.1) %>%
+    pull(iso3c) %>% table()
+
 
 
 ## see how large the coverage of each variable combination is 
@@ -1300,3 +1579,35 @@ japan_mof <- list(
     c(1991, 241.9),
     c(1990, 218.0)) %>% do.call(rbind, .) %>% adf()
 names(japan_mof) <- c("year", "value")
+
+## ** old way of selecting the most appropriate series, functionalized with `sort by priority`
+
+
+df_p3cg_source_choice <- df_cprn %>% filter(format == "p3cg", iso3c != "CHL" | (iso3c=="CHL" & source != "un")) %>%
+    group_by(iso3c, year) %>% 
+    mutate(oecd_t11_there = ifelse("oecd_table11" %in% source, T, F),
+           un_there = ifelse("un" %in% source, T, F),
+           oecd_t11_arc_there = ifelse("oecd_table11_arc" %in% source, T, F))
+
+
+df_p3cg_cbn <- rbind(Reduce(\(x,y) rbind(x,y),
+             list(
+                 filter(df_p3cg_source_choice, oecd_t11_there, source == "oecd_table11") %>%
+                 select(iso3c, year, source, format, measure, value),
+                 filter(df_p3cg_source_choice, !oecd_t11_there & un_there, source == "un") %>%
+                 select(iso3c, year, source, format, measure, value),
+                 filter(df_p3cg_source_choice, !oecd_t11_there & !un_there & oecd_t11_arc_there,
+                        source == "oecd_table11_arc") %>%
+                 select(iso3c, year, source, format, measure, value)))) %>% atb()
+
+
+df_p3cg_cpr <- merge(df_p3cg_fltrd, df_p3cg_cbn, all.x = T) %>% atb() %>%
+    mutate(diff = value2 - value)
+min(df_p3cg_cpr$diff)
+max(df_p3cg_cpr$diff)
+
+## ## check CY counts, seems to add up 
+## df_p3cg_cbn %>% group_by(iso3c, year) %>%
+##     summarize(x=1)
+## df_p3cg_source_choice %>% group_by(iso3c, year) %>%
+##     summarize(x=1)

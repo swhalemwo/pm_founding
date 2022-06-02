@@ -509,6 +509,7 @@ gen_cult_spending <- function() {
 
     
     un_df_smorc <- filter(df_cult, Item == "UN_SMOrc Recreation, culture and religion") %>% na.omit()
+    ## un_df_smorc <- filter(df_cult, Item == "UN_caution Recreation, culture and religion") %>% na.omit()
     
     un_df_smorc_cur <- as_tibble(merge(un_df_smorc, cur_df))
 
