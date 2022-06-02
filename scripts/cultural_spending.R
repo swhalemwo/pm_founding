@@ -68,6 +68,20 @@ gen_cur_df <- function() {
                              select(iso3c, xlcusx999i_2021, xlcusp999i_2021)) %>%
         as_tibble()
 
+    ## add meme countries
+    ## Faroe Islands (uses same as DNK)
+
+    fro_cpi <- read_excel(paste0(PROJECT_DIR, "data/fro_cpi/IP02050_PRIS_ARSMID_20220602-091544.xlsx"), skip = 2)[seq(82),]
+    names(fro_cpi) <- c("year", "value")
+    
+    fro_cpi$inyixx999i_fro <- fro_cpi$value/filter(fro_cpi, year==2021)$value
+    fro_cpi$iso3c <- "FRO"
+
+    cur_df <- merge(cur_df, fro_cpi, all.x = T) %>% atb() %>% 
+        mutate(inyixx999i = ifelse(iso3c == "FRO", inyixx999i_fro, inyixx999i)) %>%
+        select(all_of(names(cur_df)))
+
+
     return(cur_df)
 }
 
@@ -434,6 +448,7 @@ get_imf_data <- function() {
         select(iso3c, year, constant_usd, pct_value = `Percent of GDP`, source, format) %>%
         pivot_longer(cols = c(constant_usd, pct_value), names_to = "measure")
 
+    print(filter(imf_cult_cbn, is.na(value)) %>% pull(iso3c) %>% table())
 
     ## imf_culture_wide <- pivot_wider(imf_culture, names_from = COFOG.Function.Code, values_from = value)
 
@@ -441,7 +456,7 @@ get_imf_data <- function() {
     ##     select(imf_culture, iso3c, year, Item = COFOG.Function.Code, Value = value) %>%
     ##     mutate(Item = paste0("IMF_", Item))
     ##     )
-    return(imf_cult_cbn)
+    return(na.omit(imf_cult_cbn))
 
 }
 
