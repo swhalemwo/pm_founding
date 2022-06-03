@@ -500,7 +500,16 @@ gen_cult_spending <- function() {
     ##     as_tibble()
 
     ## cult_cpltns_res[order(cult_cpltns_res$nobs, decreasing = T),] %>%
-    ##     select(varx, nobs, ratio_opngs_cvrd, nbr_of_crys_geq3)
+    ##     select(varx, nobs, ratio_opngs_cvrd, nbr_of_crys_geq3) %>% adf()
+
+    ## un_df <- combine_un_series()
+
+    ## un_t1 <- filter(un_df, Item == "UN_SMOrc Recreation, culture and religion") %>% select(iso3c, year) %>%
+    ##     mutate(x1 = 1) %>% unique()
+    ## un_t2 <- filter(un_df, Item != "UN_SMOrc Recreation, culture and religion") %>% select(iso3c, year) %>%
+    ##     mutate(x2 = 1) %>% unique()
+    ## un_tc <- merge(un_t1, un_t2, all = T) %>% atb()
+    ## filter(un_tc, is.na(x1), !is.na(x2))
 
 
     ## *** use UN_SMOrc Recreation, culture and religion (best coverage), add currencies
