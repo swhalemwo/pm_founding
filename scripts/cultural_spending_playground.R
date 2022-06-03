@@ -1032,46 +1032,54 @@ sort_by_priority <- function(dfx, priority_vec, pos) {
 ##     sort_by_priority(source_priority, 1)
 
 
+gen_cult_spending_source_df <- function() {
 
+    df_cprn <- atb(Reduce(\(x,y) rbind(x,y),
+                          list(
+                              get_un_data(),
+                              get_oecd_table11(),
+                              get_oecd_table11_archive(),
+                              get_imf_data(),
+                              get_eurostat())))
 
-df_cprn <- atb(Reduce(\(x,y) rbind(x,y),
-                      list(
-                          get_un_data(),
-                          get_oecd_table11(),
-                          get_oecd_table11_archive(),
-                          get_imf_data(),
-                          get_eurostat())))
-
+    
+    return(df_cprn)
+}
 
 
 
 ## look at countries with multiple sources -> see if there are disruptions
 ## only CHL: drop un series
-df_cprn %>% filter(format == "p3cg", measure == "constant_usd") %>%
-    group_by(iso3c) %>%
-    mutate(nbr_sources = len(unique(source))) %>%
-    filter(nbr_sources > 1) %>%
-    ggplot(aes(x=year, y=value, group=source, color = source)) +
-    geom_line() +
-    geom_jitter() + 
-    facet_wrap(~iso3c, scales = "free")
+## df_cprn %>% filter(format == "p3cg", measure == "constant_usd") %>%
+##     group_by(iso3c) %>%
+##     mutate(nbr_sources = len(unique(source))) %>%
+##     filter(nbr_sources > 1) %>%
+##     ggplot(aes(x=year, y=value, group=source, color = source)) +
+##     geom_line() +
+##     geom_jitter() + 
+##     facet_wrap(~iso3c, scales = "free")
 
 
 ## *** choose p3cg series 
 ## drop CHL un series
 ## also pick p3cg series in order of oecd_table11, un, oecd_t11_archive
 
+choose_p3cg_series <- function(df_cprn) {
+    #' select the p3cg data for each CY based on source_priority_vec_p3cg
 
-source_priority_vec_p3cg <- c("oecd_table11", "un", "oecd_table11_arc")
+    source_priority_vec_p3cg <- c("oecd_table11", "un", "oecd_table11_arc")
 
-df_p3cg <- df_cprn %>% filter(format == "p3cg", iso3c != "CHL" | (iso3c=="CHL" & source != "un"))
-df_p3cg_fltrd <- lapply(seq_along(source_priority_vec_p3cg), \(pos)
-                        sort_by_priority(
-                            dfx = df_p3cg,
-                            priority_vec = source_priority_vec_p3cg,
-                            pos = pos)) %>%
-    Reduce(\(x,y) rbind(x,y), .) %>%
-    select(iso3c, year, source, format, measure, value)
+    df_p3cg <- df_cprn %>% filter(format == "p3cg", iso3c != "CHL" | (iso3c=="CHL" & source != "un"))
+    df_p3cg_fltrd <- lapply(seq_along(source_priority_vec_p3cg), \(pos)
+                            sort_by_priority(
+                                dfx = df_p3cg,
+                                priority_vec = source_priority_vec_p3cg,
+                                pos = pos)) %>%
+        Reduce(\(x,y) rbind(x,y), .) %>%
+        select(iso3c, year, source, format, measure, value)
+
+    return(df_p3cg_fltrd)
+}
 
 
 ## visual check: doesn't seem to work: still multiple values there; later: fixed
@@ -1091,14 +1099,20 @@ df_p3cg_fltrd <- lapply(seq_along(source_priority_vec_p3cg), \(pos)
 ##     geom_jitter() + 
 ##     facet_wrap(~iso3c, scales = "free")
 
-source_priority_vec_tlycg <- c("oecd_table11", "imf", "eurostat", "oecd_table11_arc")
+choose_tlycg_series <- function(df_cprn) {
+    #' select the tlycg data for each CY based on source_priority_vec_tlycg
+
+    source_priority_vec_tlycg <- c("oecd_table11", "imf", "eurostat", "oecd_table11_arc")
 
 
-df_tlycg_fltrd <- lapply(seq_along(source_priority), \(pos) sort_by_priority(
-                                            dfx = filter(df_cprn, format == "tlycg"),
-                                            priority_vec = source_priority_vec_tlycg,
-                                            pos = pos)) %>%
-    Reduce(\(x,y) rbind(x,y), .)
+    df_tlycg_fltrd <- lapply(seq_along(source_priority), \(pos) sort_by_priority(
+                                                                    dfx = filter(df_cprn, format == "tlycg"),
+                                                                    priority_vec = source_priority_vec_tlycg,
+                                                                    pos = pos)) %>%
+        Reduce(\(x,y) rbind(x,y), .)
+
+    return(df_tlycg_fltrd)
+    }
 
 ## ggplot(filter(df_tlycg_cbn, measure == "pct_value"), aes(x=year, y=value, color = source)) +
 ##     geom_line() +
@@ -1238,7 +1252,104 @@ apply(df_cult_usd_wide, 1, \(x) sum(is.na(x)))
 
 mice_test = mice(df_cult_usd_wide, method = "lasso.norm")
 
+## *** scaler imputation 2
+
+
+select_proper_tlycg_series <- function(df_cult_cbn) {
+    #' impute tlycg where necessary, pick the highest-quality series for each CY
+
+    ## get the countries with overlapping series -> mean for all 
+    df_cult_sclr <- df_cult_cbn %>% group_by(iso3c, year) %>%
+        mutate(nbr_formats_cy = len(unique(format))) %>%
+        group_by(iso3c) %>%
+        mutate(nbr_formats_c = len(unique(format)), ## just one series -> use general scaler
+               nbr_formats_cy_max = max(nbr_formats_cy)) %>% ## to filter countries that never have overlap
+        select(iso3c, year, format, measure, value, nbr_formats_cy, nbr_formats_c, nbr_formats_cy_max) %>% 
+        pivot_wider(names_from = format, values_from = value) %>%
+        mutate(scaler = tlycg/p3cg)
+
+
+    ## generate median scalar for everybody 
+    med_scaler_vlu <- df_cult_sclr %>% pull(scaler) %>% na.omit() %>% inf.omit() %>% median()
+
+    ## get countries where series overlap at least at some points to calculate country-specific scalars
+    crys_ovlp <- filter(df_cult_sclr, nbr_formats_c == 2, nbr_formats_cy_max == 2)
+    crys_ovlp_scaler <- crys_ovlp %>%
+        group_by(iso3c) %>%
+        summarize(scaler_cry = median(inf.omit(scaler), na.rm = T)) %>% na.omit()
+
+    
+    ## add the country-level scalar of those countries that have them 
+    df_cult_sclr_cbn <- merge(df_cult_sclr, crys_ovlp_scaler, all.x = T) %>% atb()
+
+    ## compute the different tlycg values 
+    df_cult_sclr_cbn2 <- df_cult_sclr_cbn %>%
+        filter(measure == "constant_usd") %>% 
+        select(iso3c, year, p3cg, tlycg, scaler_cry) %>%
+        mutate(scaler_med = med_scaler_vlu,
+               tlycg_ovlp = p3cg * scaler_cry,
+               tlycg_avg = p3cg * scaler_med)
+
+    ## pivot into longer format for sort by_priority, also yeet NAs for that
+    df_cult_sclr_cbn3 <- df_cult_sclr_cbn2 %>%
+        select(iso3c, year, tlycg, tlycg_ovlp, tlycg_avg) %>% 
+        pivot_longer(cols = c(tlycg, tlycg_ovlp, tlycg_avg), names_to = "source") %>%
+        na.omit()
+
+    ## actually sort by priority
+    tlycg_priority_vec <- c("tlycg", "tlycg_ovlp", "tlycg_avg")
+    df_tlycg_fnl <- lapply(seq_along(tlycg_priority_vec), \(pos) sort_by_priority(dfx = df_cult_sclr_cbn3,
+                                                                                  priority_vec = tlycg_priority_vec,
+                                                                                  pos = pos)) %>%
+        Reduce(\(x,y) rbind(x,y), .)
+
+    return(df_tlycg_fnl)
+}
+
+
+
+## df_tlycg_fnl %>%
+##     ## filter(iso3c %in% c("RUS", "SMR")) %>% 
+##     ggplot(aes(x=year, y=value)) +
+##     geom_line() +
+##     geom_point(aes(color = source)) +
+##     facet_wrap(~iso3c, scales = "free")
+
+
+
+
+## each cy just has one, but overall series has multiple -> yeet them lol
+## or rather, impute tlycg with general scaler_med
+## crys_interrupt <- filter(df_cult_sclr, nbr_formats_c == 2, nbr_formats_cy == 1, nbr_formats_cy_max == 1)
+
+## crys_interrupt %>%
+##     filter(measure == "constant_usd") %>%
+##     pivot_longer(cols = c(p3cg, tlycg), names_to = "format") %>%
+##     ggplot(aes(x=year, y=value, group = format, color = format)) +
+##     geom_line() +
+##     geom_jitter() +
+##     facet_wrap(~iso3c, scales = "free")
+
+
+
+
+
+
 ## *** virgin scaler imputation 
+
+
+
+df_cult_impute_scaler <- df_cult_impute %>% mutate(scaler = tlycg/p3cg) %>% 
+    filter(scaler < 10 & scaler > -10)
+
+df_cult_impute_scaler %>% 
+    ggplot(aes(x=scaler, fill=measure)) +
+    geom_histogram() +
+    facet_wrap(~measure, ncol = 1)
+    
+filter(df_cult_impute_scaler) %>% pull(scaler) %>% mean()
+
+
 
 p3cg_to_tlycg_scalar <- df_cult_impute %>% mutate(scaler = tlycg/p3cg) %>%
     pull(scaler) %>% inf.omit() %>% median(na.rm = T)
