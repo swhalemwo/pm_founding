@@ -119,10 +119,198 @@ get_df_reg <- function(df_anls) { #
     names(hnwi_cnts) <- gsub("pct_cutoff", "hnwi_nbr", hnwi_names)
     df_reg <- as_tibble(cbind(df_reg, hnwi_cnts))
 
+    
     ## generate interaction
     df_reg$ti_tmitr_interact <- df_reg$sum_core*df_reg$tmitr_approx_linear20step
 
-
+    df_reg$SP.POP.TOTL <- df_reg$SP.POP.TOTL/1
 
     return(df_reg)
+
+    
 }
+
+check_if_var_is_longitudinal <- function(dfx, vx) {
+    
+    #' check weather a variable has 0 within-variation -> not longitudinal
+
+    sd_within <- xtsum(dfx, get(vx), iso3c)$sd[3]
+    return(sd_within != 0)
+}
+
+
+## check_if_var_is_longitudinal(df_reg, "clctr_cnt_all")
+## check_if_var_is_longitudinal(df_reg, "cnt_art_2010")
+
+
+
+
+## ** plug holes in df
+
+impute_variable_linearly <- function(dfx, varx, max_gap_size=MAX_GAP_SIZE) {
+    #' fill in gaps with linear imputation as long as they're not larger than max_gap_size
+    
+
+    dfx_imptd <- panel_fill(dfx, .flag = "flag", .i = iso3c, .t=year)
+
+    na_filled_name <- paste0(varx, "_na_filled")
+    vx <- varx
+
+
+
+    dfx_imptd_approx <- dfx_imptd %>%
+        mutate(!!varx := ifelse(!flag, get(varx), NA)) %>% 
+        group_by(iso3c) %>% 
+        mutate(!!varx := na.approx(get(varx), maxgap = max_gap_size, rule = 2))
+    
+    return(dfx_imptd_approx)
+
+}
+
+get_linear_imputation_vars_to_check <- function(df_regx, lngtd_vars) {
+
+    #' extract the variables where linear imputation results in different coverage
+
+    names(lngtd_vars) <- lngtd_vars
+    gap_check <- lapply(lngtd_vars, \(x) na.omit(select(df_regx, iso3c, year, all_of(x))) %>%
+                                         impute_variable_linearly(.,x) %>%
+                                         na.omit())
+
+    gap_check_cnts <- lapply(gap_check, nrow)
+    gap_check_orgnl <- lapply(lngtd_vars, \(x) nrow(na.omit(select(df_regx, iso3c, year, all_of(x)))))
+
+
+
+    gap_check_df <- list.cbind(list(gap_check_cnts, gap_check_orgnl)) %>% adf()
+    rownames(gap_check_df) <- lngtd_vars
+    gap_check_df <- gap_check_df %>% atb() %>% unnest(cols = c(V1, V2))
+    gap_check_df$variable <- lngtd_vars
+
+    gap_check_df <- gap_check_df %>% 
+        mutate(diff = V1 - V2)
+    
+    filter(gap_check_df, diff > 0) %>% pull(variable)
+    
+}
+
+
+imputation_checker <- function(vrbl_to_check) {
+
+    print(paste0("vrbl_to_check: ", vrbl_to_check))
+
+    dfx <- df_reg %>% select(iso3c, year, all_of(vrbl_to_check)) %>% na.omit()%>%
+        impute_variable_linearly(varx = vrbl_to_check) %>% na.omit() %>%
+        group_by(iso3c) %>% 
+        mutate(nbr_flags = n_distinct(flag)) %>% 
+        filter(nbr_flags > 1)
+        
+    plt <- dfx %>% 
+        ggplot(aes(x=year, y=get(vrbl_to_check))) +
+        geom_line() +
+        geom_point(aes(color = flag)) +
+        facet_wrap(~iso3c, scales = "free") +
+        labs(y=vrbl_to_check)
+
+    print(plt)
+
+    readline(prompt = "press enter to continue")
+
+}
+
+## imputation_checker(vrbl_to_check)
+
+check_lin_imptd_vars <- function(df_regx, lngtd_vars) {
+    #' wrapper function for visually checking whether the linearly imputed variables make sense
+    
+    vars_to_check <- get_linear_imputation_vars_to_check(df_regx, lngtd_vars)
+
+    lapply(vars_to_check, imputation_checker)
+}
+    
+
+
+## x <- gen_cult_spending_imptd()
+## ## nrow(x)
+## y <- impute_variable_linearly(dfx = x, varx = "smorc_dollar_fxm")
+
+## y %>%
+##     group_by(iso3c) %>% 
+##     mutate(nbr_flags = n_distinct(flag)) %>% 
+##     filter(nbr_flags > 1) %>% 
+##     ggplot(aes(x=year, y=smorc_dollar_fxm)) +
+##     geom_line() +
+##     geom_point(aes(color = flag)) +
+##     facet_wrap(~iso3c, scales = "free")
+    
+
+
+
+MANUAL_IMPUTATION_CHECK <- F
+
+check_imputed_values <- function(df_reg) {
+    
+    ## check all df vars that are not "base vars"
+    ## also exclude tmitr because has only 1 obs for some countries, and I'm never gonna use that purely anyways
+    lin_imptd_vars <- (setdiff(names(df_reg), c("iso3c", "year", "name", "country", "tmitr")))
+
+    ## narrow down to longitudinal variables
+    lngtd_flag <- sapply(lin_imptd_vars, \(x) check_if_var_is_longitudinal(df_reg, x))
+    imputation_vars_to_check <- lin_imptd_vars[lngtd_flag]
+    
+    ## narrow down to variables that change in coverage when values are imputed
+    imputation_vars_to_check2 <- get_linear_imputation_vars_to_check(df_reg, imputation_vars_to_check)
+
+    if (MANUAL_IMPUTATION_CHECK){
+        check_lin_imptd_vars(df_reg, imputation_vars_to_check2)
+    }
+    return(imputation_vars_to_check2)
+}
+
+impute_df_reg_vrbls <- function(df_reg) { 
+    ## impute the variables that are suitable and replace the original values
+    
+
+    ## get the variables which need imputing 
+    vrbls_to_impute <- check_imputed_values(df_reg)
+
+    ## generate the imputed data
+    lin_imptd_data <- lapply(vrbls_to_impute, \(x)
+                             impute_variable_linearly(na.omit(select(df_reg, iso3c, year, all_of(x))), x) %>%
+                             select(-flag))
+
+    df_reg_imptd <- Reduce(\(x, y) merge(x, y, all = T), lin_imptd_data) %>% atb()
+
+    
+    ## replace the data for the variables that are getting imputed
+    vars_to_replace <- setdiff(names(df_reg_imptd), c("iso3c", "year"))
+    df_reg_imptd_cbn <- merge(df_reg %>% select(-all_of(vars_to_replace)),
+                              df_reg_imptd, all = T) %>% atb()
+
+    return(df_reg_imptd_cbn)
+}
+
+
+
+## impt_test <- merge(select(df_reg_pre_impt, iso3c, year, smorc_dollar_fxm),
+##                    select(df_reg, iso3c, year, smorc_dollar_fxm_imptd = smorc_dollar_fxm)) %>% atb()
+
+## is.na(impt_test$smorc_dollar_fxm) %>% table()
+## is.na(impt_test$smorc_dollar_fxm_imptd) %>% table()
+
+## impt_test$diff <- apply(impt_test, 1, \(x) !identical(x[["smorc_dollar_fxm"]], x[["smorc_dollar_fxm_imptd"]]))
+    
+## filter(impt_test, diff) %>% adf()
+
+## impt_test %>% 
+##     group_by(iso3c) %>%
+##     mutate(nbr_diffs = sum(diff)) %>%
+##     filter(nbr_diffs > 0) %>% 
+##     pivot_longer(cols = c(smorc_dollar_fxm, smorc_dollar_fxm_imptd)) %>%
+##     ggplot(aes(x=year, y=value)) +
+##     geom_line() +
+##     geom_jitter(aes(color = name, shape = name)) +
+##     facet_wrap(~iso3c, scales = "free")
+    
+
+
+

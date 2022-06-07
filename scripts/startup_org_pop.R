@@ -27,6 +27,11 @@ library(factoextra)
 library(tidyr)
 library(pglm)
 library(R.utils)
+library(pmdplyr)
+library(rlist)
+
+
+
 
 ds <- docstring
 
@@ -59,7 +64,7 @@ PROC_DATA_DIR <- paste0(PROJECT_DIR, "data/processed/")
 STARTING_YEAR <- 1985
 ENDING_YEAR <- 2020
 
-
+MAX_GAP_SIZE = 4
 
 
 con <- DBI::dbConnect(RClickhouse::clickhouse(), host="localhost", db = "org_pop")

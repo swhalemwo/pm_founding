@@ -31,7 +31,9 @@ df_wb <- get_WB_data(c("NY.GDP.PCAP.CD", "SP.POP.TOTL", "NY.GDP.MKTP.CN"))
 cur_df <- gen_cur_df()
 df_anls <- create_anls_df(df_wb, df_open)
 
-df_reg <- get_df_reg(df_anls)
+df_reg_pre_impt <- get_df_reg(df_anls)
+df_reg <- impute_df_reg_vrbls(df_reg_pre_impt)
+
 
 ## write.table(select(df_reg, -matches("name")), paste0(PROJECT_DIR, "data/processed/df_reg.csv"))
 
