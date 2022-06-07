@@ -289,3 +289,42 @@ scale_wo_attr <- function(x) {
     attributes(scld) <- NULL
     return(scld)
 }
+
+## ** plug holes in df
+library(pmdplyr)
+
+
+MAX_GAP_SIZE = 4
+
+impute_variable_linearly <- function(dfx, varx, max_gap_size=MAX_GAP_SIZE) {
+    #' fill in gaps with linear imputation as long as they're not larger than max_gap_size
+
+
+    dfx_imptd <- panel_fill(dfx, .flag = "flag", .i = iso3c, .t=year)
+
+    na_filled_name <- paste0(varx, "_na_filled")
+    vx <- varx
+
+    dfx_imptd_approx <- dfx_imptd %>%
+        mutate(!!varx := ifelse(!flag, get(varx), NA)) %>% 
+        group_by(iso3c) %>% 
+        mutate(!!varx := na.approx(get(varx), maxgap = max_gap_size, rule = 2))
+    
+    return(dfx_imptd_approx)
+
+}
+
+
+## x <- gen_cult_spending_imptd()
+## nrow(x)
+## y <- impute_variable(dfx = x, varx = "smorc_dollar_fxm")
+
+## y %>%
+##     group_by(iso3c) %>% 
+##     mutate(nbr_flags = n_distinct(flag)) %>% 
+##     filter(nbr_flags > 1) %>% 
+##     ggplot(aes(x=year, y=smorc_dollar_fxm)) +
+##     geom_line() +
+##     geom_point(aes(color = flag)) +
+##     facet_wrap(~iso3c, scales = "free")
+    
