@@ -572,10 +572,454 @@ gen_cult_spending <- function() {
 ## UN_SMOrc Recreation, culture and religion is doing a lot of the heavy lifting 
 
 
+## ** second version with imputing tlycgs
+
+## *** oecd 
+
+get_oecd_table11 <- function() {
+    #' get the oecd 
+    
+    oecd_table11 <- atb(read.csv(paste0(OECD_DATA_DIR, "SNA_TABLE11")))
+    ## table(oecd_table11$SECTOR)
+    ## table(oecd_table11$TRANSACT)
+    ## table(oecd_table11$UNIT)
+    ## table(oecd_table11$POWERCODE)
 
 
+    df_oecd_fltrd <- filter(oecd_table11,
+                            TRANSACT %in% c("TLYCG", "P3CG"), # total gvt expenditure 
+                            SECTOR == "GS13") %>% # general government 
+        mutate(value = ObsValue * 10^POWERCODE,
+               format = tolower(TRANSACT)) %>% 
+        select(iso3c = LOCATION, year = Time,  currency = UNIT, value, format)
+
+    df_oecd_mrgd <- merge(df_oecd_fltrd, cur_df, all.x = T) %>% atb() %>%
+        merge(df_wb, all.x = T) %>% atb() %>%
+        mutate(pct_value = (value/NY.GDP.MKTP.CN)*100,
+               constant_usd = (value/inyixx999i)/xlcusx999i_2021, # hope it makes sense (Blanchet_2017_conversions)
+               source = "oecd_table11") %>%
+        select(iso3c, year, constant_usd, pct_value, source, format) %>% 
+        pivot_longer(cols = c(constant_usd, pct_value), names_to = "measure")
+    
+    ## df_oecd_mrgd <- merge(df_oecd_fltrd,
+    ##                       select(df_wb, iso3c, year, NY.GDP.MKTP.CN), all.x = T) %>% atb() %>%
+    ##     mutate(pct_value = (value/NY.GDP.MKTP.CN)*100,
+    ##            source = "oecd_table11")
+
+    ## return(select(df_oecd_mrgd, iso3c, year, pct_value, source))
+    return(select(df_oecd_mrgd, iso3c, year, value, measure, source, format) %>% na.omit())
+}
+
+get_oecd_table11_archive <- function() {
+    #' generate the oecd table 11 archive data
+
+    
+    oced_table11_arc <- atb(read.csv(paste0(OECD_DATA_DIR, "SNA_TABLE11_ARCHIVE")))
+
+    oecd_table11_arc_fltrd <- filter(oced_table11_arc, SECTOR == "GS13",
+                                     TRANSACT %in% c("TLYCG", "P3CG")) %>%
+        mutate(value = ObsValue*10^POWERCODE,
+               format = tolower(TRANSACT)) %>%
+        select(iso3c = LOCATION, year = Time,  currency = UNIT, value, format)
+
+    ## filter out colombia in not COP: WID seems to assume COP 
+    oecd_table11_arc_fltrd <- filter(oecd_table11_arc_fltrd, iso3c != "COL" | (iso3c == "COL" & currency == "COP"))
+
+    oecd_table11_arc_mrgd <- merge(oecd_table11_arc_fltrd, cur_df, all.x = T) %>% atb() %>% 
+        merge(df_wb, all.x = T) %>% atb() %>%
+        mutate(pct_value = (value/NY.GDP.MKTP.CN)*100,
+               constant_usd = (value/inyixx999i)/xlcusx999i_2021, # hope it makes sense (Blanchet_2017_conversions)
+               source = "oecd_table11_arc") %>%
+        select(iso3c, year, constant_usd, pct_value, source, format)  %>%
+        pivot_longer(cols = c(constant_usd, pct_value), names_to = "measure")
+    
+
+    ## oecd_table11_arc_mrgd <- merge(oecd_table11_arc_fltrd,
+    ##                                select(df_wb, iso3c, year, NY.GDP.MKTP.CN), all.x = T) %>% atb() %>%
+    ##     mutate(pct_value = (value/NY.GDP.MKTP.CN)*100,
+    ##            region = countrycode(iso3c, "iso3c", "un.region.name"),
+    ##            source = "oecd_table11_arc")
+    
+    ## viz_lines(oecd_table11_arc_mrgd, y="pct_value", facets = "region")
+    ## looks somewhat plausible
+
+    return(select(oecd_table11_arc_mrgd, iso3c, year, value, measure, source, format) %>% na.omit())
+
+}
+
+## *** un
+
+get_un_data <- function() {
+    #' construct the un cultural spending data
+    #' separate function just for spending 
+    
+    
+    
+    un_df <- construct_gvt_consumption_expenditure()
+    
+    ## old version: just mean 
+    ## un_df_clpsd <- un_df %>% group_by(iso3c, year) %>%
+    ##     summarize(value = mean(Value))
+
+
+    ## exclude a bunch of stuff that makes no sense on visual inspection
+    un_df_fltrd <- un_df %>%
+        filter(iso3c != "JPN" | (iso3c == "JPN" & Series == 1000),
+               iso3c != "ARM" | (iso3c == "ARM" & Series == 1000)) %>%
+        group_by(iso3c, year) %>%
+        mutate(series1k_there = ifelse(1000 %in% Series, T, F))
+                  
+    
+
+    ## where Series 1k is available, use 1k, else mean 
+    un_df_clpsd <- rbind(    
+        filter(un_df_fltrd, series1k_there, Series==1000) %>%
+        group_by(iso3c, year) %>%
+        summarize(value = Value),
+        filter(un_df_fltrd, !series1k_there) %>%
+        group_by(iso3c, year) %>%
+        summarize(value = mean(Value))
+        )
+    
+    ## ## check for number of currencies
+    ## un_df_fltrd %>%
+    ##     group_by(iso3c) %>%
+    ##     mutate(nbr_curs = n_distinct(Currency)) %>%
+    ##     filter(nbr_curs > 1) %>% 
+    ##     select(iso3c, year, Series, Value, Currency) %>% adf()
+
+    ## un_df_fltrd %>% filter(iso3c == "TZA") %>%
+    ##     ggplot(aes(x=year, y=Value, group = Series, shape = Currency, color = factor(Series))) +
+    ##     geom_line() +
+    ##     geom_point()
+        
+
+    ## un_df_fltrd %>% filter(iso3c == "TZA") %>% pull(Currency) %>% unique()
+
+
+    ## ## countries that at some point have multiple series, and not 1k everywhere
+    ## pdf(paste0(FIG_DIR, "un_cult_spending_series_visual_inspection.pdf"), width = 16, height = 10)
+    ## un_df2 %>%
+    ##     group_by(iso3c) %>%
+    ##     mutate(nbr_series = len(unique(Series)),
+    ##            series1k_perfect = all(series1k_there)) %>%
+    ##     filter(nbr_series > 1, !series1k_perfect) %>%
+    ##     ggplot(aes(x=year, y=Value, grp = Series, color = factor(Series))) +
+    ##     geom_line() +
+    ##     facet_wrap(~iso3c, scales = "free")
+    ## dev.off()
+
+    ## un_df_clpsd %>%
+    ##     ## filter(iso3c %in% all_of(mult_series_crys)) %>% 
+    ## ggplot(aes(x=year, y=value)) +
+    ##     geom_line() +
+    ##     facet_wrap(~iso3c, scales = "free")
+           
+    ## data - Japan 
+    ## filter(un_df, iso3c == "JPN") %>% select(year, Series, value = Value) %>%
+    ##     rbind(mutate(japan_mof, Series = 111, value = value*1e9)) %>%
+    ##     ggplot(aes(x=year, y=value, group = Series, color = factor(Series))) +
+    ##     geom_line()
+
+
+    ## countries with multiple mismatched series for the years without 1k series
+    ## filter(un_df2, !series1k_there, iso3c %in% mult_series_crys) %>%
+    ##     ggplot(aes(x=year, y=Value, grp = Series, color = factor(Series))) +
+    ##     geom_line() +
+    ##     facet_wrap(~iso3c, scales = "free")
+
+    ## ## countries with multiple mismatched series generally 
+    ## filter(un_df2, iso3c %in% mult_series_crys) %>%
+    ##     ggplot(aes(x=year, y=Value, grp = Series, color = factor(Series))) +
+    ##     geom_line() +
+    ##     facet_wrap(~iso3c, scales = "free")
+
+
+    ## filter(un_df2, !series1k_there) %>%
+    ##     group_by(iso3c) %>%
+    ##     mutate(nbr_series = len(unique(Series))) %>%
+    ##     filter(nbr_series > 1) %>%     
+    ##     ggplot(aes(x=year, y=Value, grp = Series, color = factor(Series))) +
+    ##     geom_line() +
+    ##     facet_wrap(~iso3c, scales = "free")
+
+
+    ## ## all country-years without 1k series
+    ## filter(un_df2, !series1k_there) %>% 
+    ##     ggplot(aes(x=year, y=Value, grp = Series, color = factor(Series))) +
+    ##     geom_line() +
+    ##     facet_wrap(~iso3c, scales = "free")
+
+    
+    
+    ## filter(un_df_clpsd, iso3c == "HRV") %>% pull(value) %>% plot(type = "l")
+
+    ## filter(un_df_clpsd, iso3c == "UKR", year < 2000)
+    ## filter(cur_df, iso3c == "UKR", year < 2000)
+
+    ## filter out whack data for Ukraine pre-1996, and other crappy cases 
+    un_df_clpsd <- un_df_clpsd %>%
+        filter(iso3c != "UKR" | (iso3c == "UKR" & year > 1996),
+               iso3c != "ECU" | (iso3c == "ECU" & year < 1990),
+               iso3c != "GEO")
+               
+    ## filter(x, iso3c == "UKR")
+    ## filter(un_df_clpsd, iso3c == "UKR")
+
+    ## convert SMR lira to euro 1999 fx rate: https://tassidicambio.bancaditalia.it/terzevalute-wf-ui-web/timeSeries
+    un_df_clpsd <- un_df_clpsd %>%
+        mutate(value = ifelse(iso3c == "SMR" & year %in% seq(1997, 1999), value/1936.27, value))
+
+    
+    un_df_cbn <- merge(un_df_clpsd, cur_df, all.x = T) %>% atb() %>%
+        merge(., df_wb) %>% atb() %>%
+        mutate(constant_usd = (value/inyixx999i)/xlcusx999i_2021,
+               pct_value = (value/NY.GDP.MKTP.CN)*100,
+               source = "un",
+               format = "p3cg") %>%
+        select(iso3c, year, constant_usd, pct_value, source, format) %>% 
+        pivot_longer(cols = c(constant_usd, pct_value), names_to = "measure")
+    ## filter_at(un_df_cbn, vars(-constant_usd, pct_value), any_vars(is.na(.)))
+    
+
+    print("un data NAs")
+    print(filter(un_df_cbn, is.na(value)) %>% pull(iso3c) %>% table())
+    
+    
+    return(na.omit(un_df_cbn)) 
+
+}
+
+
+## *** eurostat    
+
+## *** eurostat
+get_eurostat <- function() {
+    #' generate the eurostat data
+    
+    ## df_eurostat <- atb(read.csv(paste0(PROJECT_DIR, "data/eurostat/gov_10a_exp__custom_2811962_page_linear.csv")))
+
+    df_eurostat <- atb(read.csv(paste0(PROJECT_DIR, "data/eurostat/new/gov_10a_exp__custom_2827619_linear.csv")))
+
+    df_eurostat$iso3c <- countrycode(df_eurostat$geo, "iso2c", "iso3c", custom_match = c("EL" = "GRC"))
+
+    df_euro_fltrd <- df_eurostat %>%
+        mutate(iso3c = countrycode(geo, "iso2c", "iso3c", custom_match = c("EL" = "GRC")),
+               year = TIME_PERIOD) %>%
+        select(iso3c, year, unit, cofog99, value = OBS_VALUE) %>%
+        filter(cofog99 == "GF08", unit == "MIO_NAC" | unit == "PC_GDP") %>%
+        pivot_wider(names_from = unit, values_from = value)
+     
+    
+   
+    ## viz_lines(df_euro_fltrd, y="OBS_VALUE", facets = "iso3c")
+    df_euro_fltrd2 <- merge(df_euro_fltrd, cur_df, all.x = T) %>% atb() %>%
+        mutate(constant_usd = (MIO_NAC*1e6/inyixx999i)/xlcusx999i_2021,
+               source = "eurostat",
+               format = "tlycg") %>%
+        select(iso3c, year, constant_usd, pct_value = PC_GDP, source, format) %>%
+        pivot_longer(cols = c(constant_usd, pct_value), names_to = "measure")
+               
+    ## viz_lines(df_euro_fltrd2, y="pct_value", duration = 1, facets = "iso3c")
+
+    ## check that eurostat geo columns adheres to iso2c (does so everywhere except greece -> manual exception)
+    ## unique(select(df_eurostat, iso3c, geo)) %>% na.omit() %>%
+    ##     mutate(geo2 = countrycode(iso3c, "iso3c", "iso2c")) %>%
+    ##     filter(geo != geo2)
+        
+    ## df_euro_fltrd <-df_eurostat %>%
+    ##     mutate(iso3c = countrycode(geo, "iso2c", "iso3c", custom_match = c("EL" = "GRC")),
+    ##            source = "eurostat") %>% na.omit() %>% 
+    ##     select(iso3c, year = TIME_PERIOD, pct_value = OBS_VALUE, source)
+    
+    return(df_euro_fltrd2)
+}
+
+sort_by_priority <- function(dfx, priority_vec, pos) {
+    #' pick all obs that adhere to priority_vec[pos], but only if not also matched by higher priority
+    
+    prty_vlu <- priority_vec[pos]
+    vlus_to_disregard <- priority_vec[0:(pos-1)]
+
+    dfx %>% group_by(iso3c, year) %>%
+        ## first exclude all the higher priorities
+        mutate(matched_by_higher_prorities = ifelse(len(intersect(source, vlus_to_disregard))==0, F, T)) %>%
+        filter(!matched_by_higher_prorities, source == prty_vlu) %>%
+        select(all_of(names(dfx)))
+}
+
+## df_cprn %>% filter(format == "tlycg") %>% 
+##     sort_by_priority(source_priority, 1)
+
+
+gen_cult_spending_source_df <- function() {
+
+    df_cprn <- atb(Reduce(\(x,y) rbind(x,y),
+                          list(
+                              get_un_data(),
+                              get_oecd_table11(),
+                              get_oecd_table11_archive(),
+                              get_imf_data(),
+                              get_eurostat())))
+
+    
+    return(df_cprn)
+}
+
+
+
+## look at countries with multiple sources -> see if there are disruptions
+## only CHL: drop un series
+## df_cprn %>% filter(format == "p3cg", measure == "constant_usd") %>%
+##     group_by(iso3c) %>%
+##     mutate(nbr_sources = len(unique(source))) %>%
+##     filter(nbr_sources > 1) %>%
+##     ggplot(aes(x=year, y=value, group=source, color = source)) +
+##     geom_line() +
+##     geom_jitter() + 
+##     facet_wrap(~iso3c, scales = "free")
+
+
+## *** choose p3cg series 
+## drop CHL un series
+## also pick p3cg series in order of oecd_table11, un, oecd_t11_archive
+
+choose_p3cg_series <- function(df_cprn) {
+    #' select the p3cg data for each CY based on source_priority_vec_p3cg
+
+    source_priority_vec_p3cg <- c("oecd_table11", "un", "oecd_table11_arc")
+
+    df_p3cg <- df_cprn %>% filter(format == "p3cg", iso3c != "CHL" | (iso3c=="CHL" & source != "un"))
+    df_p3cg_fltrd <- lapply(seq_along(source_priority_vec_p3cg), \(pos)
+                            sort_by_priority(
+                                dfx = df_p3cg,
+                                priority_vec = source_priority_vec_p3cg,
+                                pos = pos)) %>%
+        Reduce(\(x,y) rbind(x,y), .) %>%
+        select(iso3c, year, source, format, measure, value)
+
+    return(df_p3cg_fltrd)
+}
+
+
+## visual check: doesn't seem to work: still multiple values there; later: fixed
+## df_p3cg_fltrd %>% filter(measure == "pct_value") %>% 
+##     ggplot(aes(x=year, y=value, group=source, color = source)) +
+##     geom_line() +
+##     geom_jitter() + 
+##     facet_wrap(~iso3c, scales = "free")
+
+## *** choose tlycg series 
+## df_cprn %>% filter(format == "tlycg", measure == "pct_value", source != "oecd_table11_arc") %>%
+##     group_by(iso3c) %>%
+##     mutate(nbr_sources = len(unique(source))) %>%
+##     filter(nbr_sources > 1) %>% 
+##     ggplot(aes(x=year, y=value, group=source, color = source)) +
+##     geom_line() +
+##     geom_jitter() + 
+##     facet_wrap(~iso3c, scales = "free")
+
+choose_tlycg_series <- function(df_cprn) {
+    #' select the tlycg data for each CY based on source_priority_vec_tlycg
+
+    source_priority_vec_tlycg <- c("oecd_table11", "imf", "eurostat", "oecd_table11_arc")
+
+
+    df_tlycg_fltrd <- lapply(seq_along(source_priority_vec_tlycg), \(pos) sort_by_priority(
+                                                                    dfx = filter(df_cprn, format == "tlycg"),
+                                                                    priority_vec = source_priority_vec_tlycg,
+                                                                    pos = pos)) %>%
+        Reduce(\(x,y) rbind(x,y), .)
+
+    return(df_tlycg_fltrd)
+    }
+
+## ggplot(filter(df_tlycg_cbn, measure == "pct_value"), aes(x=year, y=value, color = source)) +
+##     geom_line() +
+##     geom_point() +
+##     facet_wrap(~iso3c, scales = "free")
 
     
 
+## df_cprn has 15,076
+## filtered has 15,040 -> lose 36 huh: also lose 12 CYs with iso3c == NA
+
+    
+## *** combine filtered tlycg and p3cg for imputation
+
+inf.omit <- function(vec) {
+    vec[!is.infinite(vec)]
+    }
 
 
+select_proper_tlycg_series <- function(df_cult_cbn) {
+    #' impute tlycg where necessary, pick the highest-quality series for each CY
+
+    ## get the countries with overlapping series -> mean for all 
+    df_cult_sclr <- df_cult_cbn %>% group_by(iso3c, year) %>%
+        mutate(nbr_formats_cy = len(unique(format))) %>%
+        group_by(iso3c) %>%
+        mutate(nbr_formats_c = len(unique(format)), ## just one series -> use general scaler
+               nbr_formats_cy_max = max(nbr_formats_cy)) %>% ## to filter countries that never have overlap
+        select(iso3c, year, format, measure, value, nbr_formats_cy, nbr_formats_c, nbr_formats_cy_max) %>% 
+        pivot_wider(names_from = format, values_from = value) %>%
+        mutate(scaler = tlycg/p3cg)
+
+
+    ## generate median scalar for everybody 
+    med_scaler_vlu <- df_cult_sclr %>% pull(scaler) %>% na.omit() %>% inf.omit() %>% median()
+
+    ## get countries where series overlap at least at some points to calculate country-specific scalars
+    crys_ovlp <- filter(df_cult_sclr, nbr_formats_c == 2, nbr_formats_cy_max == 2)
+    crys_ovlp_scaler <- crys_ovlp %>%
+        group_by(iso3c) %>%
+        summarize(scaler_cry = median(inf.omit(scaler), na.rm = T)) %>% na.omit()
+
+    
+    ## add the country-level scalar of those countries that have them 
+    df_cult_sclr_cbn <- merge(df_cult_sclr, crys_ovlp_scaler, all.x = T) %>% atb()
+
+    ## compute the different tlycg values 
+    df_cult_sclr_cbn2 <- df_cult_sclr_cbn %>%
+        filter(measure == "constant_usd") %>% 
+        select(iso3c, year, p3cg, tlycg, scaler_cry) %>%
+        mutate(scaler_med = med_scaler_vlu,
+               tlycg_ovlp = p3cg * scaler_cry,
+               tlycg_avg = p3cg * scaler_med)
+
+    ## pivot into longer format for sort by_priority, also yeet NAs for that
+    df_cult_sclr_cbn3 <- df_cult_sclr_cbn2 %>%
+        select(iso3c, year, tlycg, tlycg_ovlp, tlycg_avg) %>% 
+        pivot_longer(cols = c(tlycg, tlycg_ovlp, tlycg_avg), names_to = "source") %>%
+        na.omit()
+
+    ## actually sort by priority
+    tlycg_priority_vec <- c("tlycg", "tlycg_ovlp", "tlycg_avg")
+    df_tlycg_fnl <- lapply(seq_along(tlycg_priority_vec), \(pos)
+                           sort_by_priority(dfx = df_cult_sclr_cbn3,
+                                            priority_vec = tlycg_priority_vec,
+                                            pos = pos)) %>%
+        Reduce(\(x,y) rbind(x,y), .)
+
+    return(df_tlycg_fnl)
+}
+
+gen_cult_spending_imptd <- function() {
+    #' wrapper function for combining and imputing different tlycg/p3cg series
+
+    df_cprn <- gen_cult_spending_source_df()
+    df_p3cg_fltrd <- choose_p3cg_series(df_cprn)
+    df_tlycg_fltrd <- choose_tlycg_series(df_cprn)
+    
+
+    ## i think it's not feasible to maintain source: p3cg and tlycg often come from different sources 
+    df_cult_cbn <- rbind(df_p3cg_fltrd, df_tlycg_fltrd) %>% atb()
+
+
+    df_tlycg_fnl <- select_proper_tlycg_series(df_cult_cbn)
+
+    df_tlycg_fnl %>%
+        mutate(smorc_dollar_fxm = value/1e6) %>%
+        select(iso3c, year, smorc_dollar_fxm)
+    
+}

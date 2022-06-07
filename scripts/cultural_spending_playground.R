@@ -1105,7 +1105,7 @@ choose_tlycg_series <- function(df_cprn) {
     source_priority_vec_tlycg <- c("oecd_table11", "imf", "eurostat", "oecd_table11_arc")
 
 
-    df_tlycg_fltrd <- lapply(seq_along(source_priority), \(pos) sort_by_priority(
+    df_tlycg_fltrd <- lapply(seq_along(source_priority_vec_tlycg), \(pos) sort_by_priority(
                                                                     dfx = filter(df_cprn, format == "tlycg"),
                                                                     priority_vec = source_priority_vec_tlycg,
                                                                     pos = pos)) %>%
@@ -1132,8 +1132,25 @@ inf.omit <- function(vec) {
     }
 
 
-## i think it's not feasible to maintain source: p3cg and tlycg often come from different sources 
-df_cult_cbn <- rbind(df_p3cg_fltrd, df_tlycg_fltrd) %>% atb()
+get_cult_spending_fnl <- function() {
+    #' wrapper function for combining and imputing different tlycg/p3cg series
+
+    df_cprn <- gen_cult_spending_source_df()
+    df_p3cg_fltrd <- choose_p3cg_series(df_cprn)
+    df_tlycg_fltrd <- choose_tlycg_series(df_cprn)
+    
+
+    ## i think it's not feasible to maintain source: p3cg and tlycg often come from different sources 
+    df_cult_cbn <- rbind(df_p3cg_fltrd, df_tlycg_fltrd) %>% atb()
+
+
+    df_tlycg_fnl <- select_proper_tlycg_series(df_cult_cbn)
+
+    df_tlycg_fnl %>%
+        mutate(smorc_dollar_fxm = value/1e6) %>%
+        select(iso3c, year, smorc_dollar_fxm)
+    
+}
 
 df_cult_impute <- df_cult_cbn %>% 
     select(iso3c, year, format, measure, value) %>% 
@@ -1298,9 +1315,10 @@ select_proper_tlycg_series <- function(df_cult_cbn) {
 
     ## actually sort by priority
     tlycg_priority_vec <- c("tlycg", "tlycg_ovlp", "tlycg_avg")
-    df_tlycg_fnl <- lapply(seq_along(tlycg_priority_vec), \(pos) sort_by_priority(dfx = df_cult_sclr_cbn3,
-                                                                                  priority_vec = tlycg_priority_vec,
-                                                                                  pos = pos)) %>%
+    df_tlycg_fnl <- lapply(seq_along(tlycg_priority_vec), \(pos)
+                           sort_by_priority(dfx = df_cult_sclr_cbn3,
+                                            priority_vec = tlycg_priority_vec,
+                                            pos = pos)) %>%
         Reduce(\(x,y) rbind(x,y), .)
 
     return(df_tlycg_fnl)

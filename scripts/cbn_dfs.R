@@ -77,7 +77,8 @@ get_df_reg <- function(df_anls) { #
     
 
     ## cultural spending
-    df_cult <- gen_cult_spending()
+    ## df_cult <- gen_cult_spending()
+    df_cult <- gen_cult_spending_imptd()
     
     
     ## need to fill NAs of MOW with 0s
