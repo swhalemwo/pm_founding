@@ -840,8 +840,13 @@ sort_by_priority <- function(dfx, priority_vec, pos) {
     
     prty_vlu <- priority_vec[pos]
     vlus_to_disregard <- priority_vec[0:(pos-1)]
+    
+    grouping_vars <- intersect(c("iso3c", "year"), names(dfx))
 
-    dfx %>% group_by(iso3c, year) %>%
+    ## print(grouping_vars)
+    ## dfx %>% group_by(iso3c, year) %>%
+    dfx %>% group_by_at(grouping_vars) %>%
+    ## dfx %>% group_by(iso3c) %>%
         ## first exclude all the higher priorities
         mutate(matched_by_higher_prorities = ifelse(len(intersect(source, vlus_to_disregard))==0, F, T)) %>%
         filter(!matched_by_higher_prorities, source == prty_vlu) %>%
@@ -867,6 +872,7 @@ gen_cult_spending_source_df <- function() {
 }
 
 
+## df_cprn <- gen_cult_spending_source_df()
 
 ## look at countries with multiple sources -> see if there are disruptions
 ## only CHL: drop un series
@@ -890,6 +896,7 @@ choose_p3cg_series <- function(df_cprn) {
     source_priority_vec_p3cg <- c("oecd_table11", "un", "oecd_table11_arc")
 
     df_p3cg <- df_cprn %>% filter(format == "p3cg", iso3c != "CHL" | (iso3c=="CHL" & source != "un"))
+
     df_p3cg_fltrd <- lapply(seq_along(source_priority_vec_p3cg), \(pos)
                             sort_by_priority(
                                 dfx = df_p3cg,
