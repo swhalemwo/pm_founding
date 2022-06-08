@@ -678,6 +678,10 @@ gen_cbn_maps <- function(cbn_dfs) {
                                        sort_by_priority(source_df_lines, source_priority_vec, pos)) %>%
         list.rbind()
 
+    ggplot(source_df_lines_priority) +
+        geom_raster(aes(x = year, y=iso3c, fill = source, color = black))
+    
+
     
 
 
