@@ -253,11 +253,11 @@ print(var_xtbl, file = paste0(TABLE_DIR, "var_desc.tex"), include.rownames = T, 
 
 ## * coverage visualizations
 
-rel_lngtd_vars <- c("tmitr_approx_linear_2020step",
+rel_lngtd_vars <- c("tmitr_approx_linear20step",
                     "hnwi_nbr_30M",
                     "gptinc992j",
                     "ghweal992j",
-                    "smorc_dollar_fx",
+                    "smorc_dollar_fxm",
                     "NY.GDP.PCAP.CDk",
                     "SP.POP.TOTLm")
 
@@ -272,8 +272,22 @@ cpltns_vrbl_plot <- df_reg %>% select(c("iso3c", "year", rel_lngtd_vars)) %>%
     geom_line(size = 1.5) +
     scale_color_manual(values = colors_manual3)
 
-plt_to_pdf <- function(plt, width, height) {
-    fig_name <- deparse(substitute(plt))
+plt_to_pdf <- function(plt, width, height, fig_name) {
+    if (missing(fig_name)) { 
+        fig_name <- deparse(substitute(plt))
+    }
+
+    
+    
+    pdf(paste0(FIG_DIR, fig_name, ".pdf"), width = width, height = height)
+    plot(plt)
+    dev.off()
+}
+
+plt_to_pdf2 <- function(plt, width, height) {
+    
+    
+    
     
     pdf(paste0(FIG_DIR, fig_name, ".pdf"), width = width, height = height)
     plot(plt)
@@ -283,3 +297,125 @@ plt_to_pdf <- function(plt, width, height) {
 plt_to_pdf(cpltns_vrbl_plot, width = 8, height = 4)
 
 
+
+
+
+library(sf)
+library(rnaturalearth)
+library(rnaturalearthdata)
+
+gen_cbn_plots <- function(cbn_dfs, df_reg) {
+    #' generate plots that describe the variable coverage 
+      
+    source_df <- lapply(names(cbn_dfs), \(x) cbn_dfs[[x]] %>% select(iso3c, year) %>%
+                                             group_by(iso3c) %>% summarize(cnt = len(year), source = x) %>%
+                                             mutate(source = factor(source, levels = names(cbn_dfs)))) %>%
+        Reduce(\(x,y) rbind(x,y), .)
+
+    world <- ne_countries(scale = "small", returnclass = "sf") %>% atb() %>%
+        select(iso3c = iso_a3, geometry)
+
+    ## stacked plot: country only in color of most valuable 
+
+    source_priority_vec <- names(cbn_dfs)
+
+    source_priority_df <- lapply(seq_along(source_priority_vec), \(pos)
+                                 sort_by_priority(source_df, source_priority_vec, pos)) %>%
+        list.rbind()
+
+    world_w_data <- merge(world, source_priority_df, all.x = T) %>% atb()
+    plt_world_stacked <- ggplot(world_w_data) +
+        geom_sf(aes(geometry = geometry, fill = source)) +
+        coord_sf(ylim = c(-55, 83))
+    
+    plt_world_stacked_res <- list(plt = plt_world_stacked, width = 10, height = 3, name = "world_plot_stacked")
+
+    ## faceted world
+    ## not sure that works: differences are hard to spot between all cbns that aren't cbn_all
+    world_w_data_facet <- lapply(names(cbn_dfs), \(x) merge(world,
+                                      filter(source_df, source == x), all.x = T) %>%
+                                      ## mutate(source = ifelse(is.na(source), paste0(x, "na") ,source)) %>%
+                                      mutate(source_facet = x) %>% 
+                                atb()) %>%
+        list.rbind() %>%
+        mutate(source_facet = factor(source_facet, levels = names(cbn_dfs)))
+    
+    filter(world_w_data_facet, source == "cbn_all")
+
+    merge(world,     
+          filter(source_df, source == "cbn_all"), all.x = T) %>% atb()
+
+    plt_world_facet <- ggplot(world_w_data_facet) +
+        geom_sf(aes(geometry = geometry, fill= source, alpha = cnt)) +
+        coord_sf(ylim = c(-55, 83)) + 
+        facet_wrap(~source_facet, ncol = 1)
+
+    plt_world_facet_res <- list(plt = plt_world_facet, width = 8, height = 8, name = "world_plot_faceted")
+
+
+    ## line/raster plot
+    source_df_lines <- lapply(names(cbn_dfs), \(x,y) cbn_dfs[[x]] %>% select(iso3c, year) %>%
+                                 mutate(source = factor(x, levels = names(cbn_dfs)))) %>%
+        Reduce(\(x,y) rbind(x,y), .)
+
+    
+    source_df_lines_priority <- lapply(seq_along(source_priority_vec), \(pos)
+                                       sort_by_priority(source_df_lines, source_priority_vec, pos)) %>%
+        list.rbind()
+
+    ## sort the countries by the inclusion in the most complete combination
+    source_df_lines_priority <- source_df_lines_priority %>%
+        mutate(iso3c = factor(iso3c, levels = source_priority_df$iso3c)) %>%
+        merge(select(source_priority_df, iso3c, facet_source = source)) %>% atb()
+    
+    ## try with splitting the tile plot into smaller chunks, but stop due to limited benefit (also complexity)
+    ## source_df_lines_priority$iso3c <- as.character(source_df_lines_priority$iso3c)
+    ## max_block_size <- source_priority_df %>% group_by(source) %>% summarize(cnt = len(iso3c)) %>% pull(cnt) %>% max()
+    ## source_df_lines_priority %>% pivot_wider(names_from = facet_source, values_from = source) %>%
+    ##     pivot_longer(cols = source_priority_vec, names_to = "facet_source", values_to = "source") %>%
+    ##     group_by(facet_source, year) %>% 
+    ##     arrange(source, iso3c, year) %>% 
+    ##     slice(1 : max_block_size)
+        
+    tile_plt <-  ggplot(source_df_lines_priority) +
+        geom_tile(aes(x = year, y=iso3c, fill = source), color = "black")
+            ## facet_wrap(~facet_source, nrow = 1, scales = "free")
+
+    tile_plt_res <- list(plt = tile_plt, width = 10, height = 25, name = "country_tile_plot")
+
+
+    line_plt <- source_df_lines %>% group_by(source, year) %>%
+        summarize(cnt = len(iso3c)) %>%
+        ggplot(aes(x=year, y=cnt, color = source)) +
+        geom_line()
+    line_plt_res <- list(plt = line_plt, width=6, height = 3, name = "cbn_cnt_line_plot")
+
+
+    ## original variable plot, used for manually constructing the 
+    rel_lngtd_vars <- c("tmitr_approx_linear20step",
+                        "hnwi_nbr_30M",
+                        "gptinc992j",
+                        "ghweal992j",
+                        "smorc_dollar_fxm",
+                        "NY.GDP.PCAP.CDk",
+                        "SP.POP.TOTLm")
+
+
+    cpltns_vrbl_plot <- df_reg %>% select(c("iso3c", "year", rel_lngtd_vars)) %>%
+        pivot_longer(cols=rel_lngtd_vars) %>%
+        na.omit() %>%
+        group_by(year, name) %>%
+        summarize(nbr_crys = len(iso3c)) %>%
+        ggplot(aes(x=year, y=nbr_crys, color = name, group=name)) +
+        geom_line(size = 1.5) +
+        scale_color_manual(values = colors_manual3)
+    
+    cpltns_vrbl_plot_res <- list(plt = cpltns_vrbl_plot, width = 6, height = 4, name = "cpltns_vrbl_plot")
+
+    return(list(plt_world_facet_res, plt_world_stacked_res, tile_plt_res, line_plt_res, cpltns_vrbl_plot_res))
+}
+
+
+
+cbn_plots <- gen_cbn_plots(cbn_dfs, df_reg)
+lapply(cbn_plots, \(x) plt_to_pdf(x$plt, width = x$width, height=x$height, fig_name = paste0(x$name, "_v1")))
