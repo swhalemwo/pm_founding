@@ -28,6 +28,24 @@ xttab msp
 xttrans msp
 
 
+
+/* ** lag selection */
+webuse grunfeld, clear
+list in 1/5
+
+xtunitroot llc invest, lags(bic 4)
+
+clear
+import delimited /home/johannes/Dropbox/phd/papers/org_pop/data/processed/df_scl.csv
+
+xtset iso3c_num year
+
+xtunitroot llc hnwi_nbr_30m, lags(bic 4) /* requires strongly balanced data */
+xtunitroot breitung hnwi_nbr_30m, lags(4) /* requires strongly balanced data */
+xtunitroot fisher nbr_opened, dfuller lags(1) /* runs, no idea what it means tho */
+
+/* ** my data */
+
 /* automated */
 
 clear
@@ -35,7 +53,10 @@ import delimited /home/johannes/Dropbox/phd/papers/org_pop/data/processed/df_scl
 
 xtset iso3c_num year
 
-xtnbreg nbr_opened hnwi_nbr_30m gptinc992j ghweal992j tmitr_approx_linear_2020step ti_tmitr_interact smorc_dollar_fxm nygdppcapcdk sppoptotlm clctr_cnt_cpaer sum_core cnt_contemp_1995, re
+xtnbreg nbr_opened hnwi_nbr_30m gptinc992j ghweal992j tmitr_approx_linear20step ti_tmitr_interact smorc_dollar_fxm nygdppcapcdk sppoptotlm clctr_cnt_cpaer sum_core cnt_contemp_1995, re
+
+
+xtunitroot hnwi_nbr_30m gptinc992j, lags(bic 4)
 
 
 estat vce, corr
