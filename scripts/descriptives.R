@@ -211,11 +211,11 @@ df_reg$smorc_dollar_fx <- df_reg$smorc_dollar_fx/1e6
 
 rel_vars <- c("nbr_opened" = "Number of Private Museums opened",
               "sum_core" = "Tax incentives",
-              "tmitr_approx_linear_2020step" = "Marginal Income Tax Rate (%)",
-              "hnwi_30M" = "# HNWIs with net worth >= 30M",
+              "tmitr_approx_linear20step" = "Marginal Income Tax Rate (%)",
+              "hnwi_nbr_30M" = "# HNWIs with net worth >= 30M",
               "gptinc992j" = "Gini of pre-tax income",
               "ghweal992j"= "Gini of net wealth",
-              "smorc_dollar_fx" = "Gvt cultural spending (millions)",
+              "smorc_dollar_fxm" = "Gvt cultural spending (millions)",
               "NY.GDP.PCAP.CDk" = "GDP per capita (thousands)",
               "SP.POP.TOTLm" = "Population (millions)",
               "cnt_contemp_1985" = "# Museums of contemporary art in 1985",
@@ -408,7 +408,9 @@ gen_cbn_plots <- function(cbn_dfs, df_reg) {
         summarize(nbr_crys = len(iso3c)) %>%
         ggplot(aes(x=year, y=nbr_crys, color = name, group=name)) +
         geom_line(size = 1.5) +
-        scale_color_manual(values = colors_manual3)
+        scale_color_manual(values = colors_manual3, labels = rel_vars)
+
+        
     
     cpltns_vrbl_plot_res <- list(plt = cpltns_vrbl_plot, width = 6, height = 4, name = "cpltns_vrbl_plot")
 
