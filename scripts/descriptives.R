@@ -211,15 +211,28 @@ df_reg$smorc_dollar_fx <- df_reg$smorc_dollar_fx/1e6
 
 rel_vars <- c("nbr_opened" = "Number of Private Museums opened",
               "sum_core" = "Tax incentives",
+              "ti_tmitr_interact" = "Marginal Income Tax Rate * Tax Incentives",
               "tmitr_approx_linear20step" = "Marginal Income Tax Rate (%)",
+              "hnwi_nbr_1M" = "# HNWIs with net worth >= 1M",
+              "hnwi_nbr_5M" = "# HNWIs with net worth >= 5M",
               "hnwi_nbr_30M" = "# HNWIs with net worth >= 30M",
+              "hnwi_nbr_200M" = "# HNWIs with net worth >= 200M",
+              "hnwi_nbr_1B" = "# HNWIs with net worth >= 1B",
+              "sptinc992j_p90p100" = "Income share of top 10%",
+              "sptinc992j_p99p100" = "Income share of top 1%",
               "gptinc992j" = "Gini of pre-tax income",
               "ghweal992j"= "Gini of net wealth",
+              "shweal992j_p90p100" = "Wealth share of top 10%",
+              "shweal992j_p99p100" = "Wealth share of top 1%",
               "smorc_dollar_fxm" = "Gvt cultural spending (millions)",
               "NY.GDP.PCAP.CDk" = "GDP per capita (thousands)",
               "SP.POP.TOTLm" = "Population (millions)",
               "cnt_contemp_1985" = "# Museums of contemporary art in 1985",
-              "clctr_cnt_cpaer" = "# Collectors in Artnews collector list"
+              "clctr_cnt_cpaer" = "# Collectors in Artnews collector list",
+              "ln_s" = "ln(s)",
+              "cons" = "cons",
+              "ln_r" = "ln(r)",
+              "cnt_contemp_1995" = "# of modern/contemp. art museums in 1995"
               )
 
 

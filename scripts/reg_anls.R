@@ -31,12 +31,10 @@ df_reg_anls_cfgs_wide <- df_reg_anls_cfgs %>% select(variable, value, mdl_id, la
 
     
 
-
-
 ## read_reg_res(df_reg_anls_cfgs$mdl_id[[1]])
 
 
-
+## list of all the model results 
 all_mdl_res <- lapply(unique(filter(df_reg_anls_cfgs, cvrgd == 1)$mdl_id), read_reg_res)
 
 coef_df <- lapply(all_mdl_res, \(x) atb(x[["coef_df"]])) %>% bind_rows()
@@ -73,11 +71,15 @@ df_anls_base <- coef_df %>%
 
 
 ## ** within base-spec changes
+time_invrnt_coefs <- c("sum_core", "cnt_contemp_1995")
+
 
 df_anls_within_prep <- df_anls_base %>%
     filter(vrbl_name_unlag != vrbl_name) %>% ## only use the lag variables
     mutate(lag = as.numeric(substring(str_extract(vrbl_name, "_lag(\\d+)"), 5))) %>%
-    filter(vrbl_varied == vrbl_name_unlag | (vrbl_varied == "tmitr_approx_linear20step" & vrbl_name_unlag == "ti_tmitr_interact") , cbn_name != "cbn_controls") %>% ## only use within-base_spec changes, add special case for tmitr
+    filter(vrbl_varied == vrbl_name_unlag |
+           (vrbl_varied == "tmitr_approx_linear20step" & vrbl_name_unlag == "ti_tmitr_interact") 
+           ,cbn_name != "cbn_controls") %>% ## only use within-base_spec changes, add special case for tmitr
     group_by(vrbl_name_unlag, cbn_name) %>%
     mutate(base_lag_spec_id = as.numeric(factor(base_lag_spec))) %>%
     group_by(vrbl_name_unlag, cbn_name, base_lag_spec_id) %>%
@@ -98,11 +100,15 @@ df_anls_within$vrbl_name_unlag <- factor(df_anls_within$vrbl_name_unlag, levels 
 ## see if some aux vars can be constructed to select on 
 library(ggbeeswarm)
 
-pdf(paste0(FIG_DIR, "reg_within_tmitr_fixed.pdf"), width = 8, height = 12)
+
+pdf(paste0(FIG_DIR, "reg_within_tmitr_fixed.pdf"), width = 10, height = 12)
 ggplot(df_anls_within, aes(x=lag, y=coef, group = base_lag_spec)) +
     geom_line(show.legend = F, alpha = 0.15) +
     geom_quasirandom(aes(color = t_value, shape = factor(sig)), size = 2, height = 0, width = 0.3) + 
-    facet_grid(cols = vars(cbn_name), rows = vars(vrbl_name_unlag), scales = "free", switch = "y") +
+    ## facet_grid(cols = vars(cbn_name), rows = vars(vrbl_name_unlag), scales = "free", switch = "y") +
+    facet_grid(vrbl_name_unlag ~ cbn_name, scales = "free", switch = "y", 
+               labeller = labeller(vrbl_name_unlag = rel_vars)) +
+               ## labeller = facet_labeller) +
     theme(strip.text.y.left = element_text(angle = 0)) +
     scale_color_gradient2(low = "blue", mid = "grey", high = "red") +
     scale_shape_manual(values = c(1,4))
@@ -155,7 +161,7 @@ best_mdl_coefs$vrbl_name_unlag <- factor(best_mdl_coefs$vrbl_name_unlag, levels 
 pdf(paste0(FIG_DIR, "best_models_tmirtr_fixed.pdf"), width = 8, height = 12)
 ggplot(best_mdl_coefs, aes(x=lag, y=coef, color = t_value)) +
     geom_quasirandom(aes(shape = factor(sig)), height = 0, width = 0.33, show.legend=T, size = 3) +
-    facet_grid(cols = vars(cbn_name), rows = vars(vrbl_name_unlag), scales="free", switch = "y") +
+    facet_grid(vrbl_name_unlag~cbn_name, scales="free", switch = "y", labeller = labeller(vrbl_name_unlag = rel_vars)) +
     theme(strip.text.y.left = element_text(angle = 0)) + 
     scale_color_gradient2(low = "blue", mid = "grey", high = "red") +
     scale_shape_manual(values = c(1,4))
