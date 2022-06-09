@@ -119,16 +119,27 @@ pdf(paste0(FIG_DIR, "reg_within_tmitr_fixed.pdf"), width = 10, height = 12)
 ggplot(df_anls_within, aes(x=lag, y=coef, group = base_lag_spec)) +
     geom_line(show.legend = F, alpha = 0.15) +
     geom_quasirandom(aes(color = t_value, shape = factor(sig)), size = 2, height = 0, width = 0.3) + 
-    ## facet_grid(cols = vars(cbn_name), rows = vars(vrbl_name_unlag), scales = "free", switch = "y") +
     facet_grid(vrbl_name_unlag ~ cbn_name, scales = "free", switch = "y", 
                labeller = labeller(vrbl_name_unlag = rel_vars)) +
-               ## labeller = facet_labeller) +
     theme(strip.text.y.left = element_text(angle = 0)) +
     scale_color_gradient2(low = "blue", mid = "grey", high = "red") +
     scale_shape_manual(values = c(1,4))
 
 dev.off()
         
+## df_anls_within_ribbon
+
+## df_anls_within %>% group_by(cbn_name, vrbl_name_unlag, lag) %>%
+##     summarize(coef_mean = mean(coef), sd = sd(coef),
+##               t_value_mean = mean(t_value)) %>%
+##     mutate(coef_min = coef_mean - 1.96*sd, coef_max = coef_mean + 1.96*sd) %>%
+##     ggplot(aes(x = lag, y=coef_mean)) +
+##     geom_line(aes(color = t_value_mean)) +
+##     geom_ribbon(aes(ymin = coef_min, ymax = coef_max), alpha = 0.3) + 
+##     facet_grid(vrbl_name_unlag ~ cbn_name, scales = "free", switch = "y") +
+##     scale_color_gradient2(low = "blue", mid = "grey", high = "red") 
+        
+
 
 ## ** coefs from all models
 
