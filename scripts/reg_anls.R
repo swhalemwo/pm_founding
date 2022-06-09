@@ -71,7 +71,7 @@ df_anls_base <- coef_df %>%
 
 
 ## ** within base-spec changes
-time_invrnt_coefs <- c("sum_core", "cnt_contemp_1995")
+
 
 
 df_anls_within_prep <- df_anls_base %>%
@@ -87,14 +87,27 @@ df_anls_within_prep <- df_anls_base %>%
     filter(nbr_mdls_cvrgd == 5)
 
 
-df_anls_within <- df_anls_within_prep %>%
+df_anls_within_prep2 <- df_anls_within_prep %>%
     group_by(cbn_name, vrbl_name_unlag) %>%
     filter(base_lag_spec_id %in% sample(unique(base_lag_spec_id), 15))
 
 ## unique(df_anls_within$vrbl_name_unlag)
 
+df_anls_time_invariant <- df_anls_base %>%
+    filter(vrbl_name %in% crscn_vars) %>%
+    group_by(cbn_name, vrbl_name) %>%
+    slice_sample(n=5) %>%
+    mutate(base_lag_spec_id = 1,
+           lag = 1,
+           nbr_mdls_cvrgd = 1)
+
+
+df_anls_within <- rbind(df_anls_within_prep2, df_anls_time_invariant)
+
 ## order the factors
-df_anls_within$vrbl_name_unlag <- factor(df_anls_within$vrbl_name_unlag, levels = c(ti_vars, hnwi_vars, inc_ineq_vars, weal_ineq_vars, cult_spending_vars, ctrl_vars_lngtd))
+df_anls_within$vrbl_name_unlag <- factor(df_anls_within$vrbl_name_unlag,
+                                         levels = c(ti_vars, hnwi_vars, inc_ineq_vars, weal_ineq_vars,
+                                                    cult_spending_vars, ctrl_vars_lngtd, crscn_vars))
 
 ## shouldn't group by base_lag_spec when selecting
 ## see if some aux vars can be constructed to select on 
@@ -102,6 +115,7 @@ library(ggbeeswarm)
 
 
 pdf(paste0(FIG_DIR, "reg_within_tmitr_fixed.pdf"), width = 10, height = 12)
+
 ggplot(df_anls_within, aes(x=lag, y=coef, group = base_lag_spec)) +
     geom_line(show.legend = F, alpha = 0.15) +
     geom_quasirandom(aes(color = t_value, shape = factor(sig)), size = 2, height = 0, width = 0.3) + 
@@ -112,6 +126,7 @@ ggplot(df_anls_within, aes(x=lag, y=coef, group = base_lag_spec)) +
     theme(strip.text.y.left = element_text(angle = 0)) +
     scale_color_gradient2(low = "blue", mid = "grey", high = "red") +
     scale_shape_manual(values = c(1,4))
+
 dev.off()
         
 
@@ -159,10 +174,12 @@ other_var_names <- unique(best_mdl_coefs$vrbl_name_unlag)[unique(best_mdl_coefs$
 best_mdl_coefs$vrbl_name_unlag <- factor(best_mdl_coefs$vrbl_name_unlag, levels = c(vrbl_levels, other_var_names))
 
 pdf(paste0(FIG_DIR, "best_models_tmirtr_fixed.pdf"), width = 8, height = 12)
+
 ggplot(best_mdl_coefs, aes(x=lag, y=coef, color = t_value)) +
     geom_quasirandom(aes(shape = factor(sig)), height = 0, width = 0.33, show.legend=T, size = 3) +
     facet_grid(vrbl_name_unlag~cbn_name, scales="free", switch = "y", labeller = labeller(vrbl_name_unlag = rel_vars)) +
     theme(strip.text.y.left = element_text(angle = 0)) + 
     scale_color_gradient2(low = "blue", mid = "grey", high = "red") +
     scale_shape_manual(values = c(1,4))
+
 dev.off()
