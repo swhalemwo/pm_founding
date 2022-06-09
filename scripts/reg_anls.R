@@ -166,8 +166,7 @@ dev.off()
 
 ## ** best fitting models
 
-
-
+## *** models themselves 
 
 best_mdls <- gof_df_cbn %>%
     filter(gof_names == "log_likelihood", cbn_name != "cbn_controls") %>%
@@ -195,8 +194,170 @@ ggplot(best_mdl_coefs, aes(x=lag, y=coef, color = t_value)) +
 
 dev.off()
 
+## *** LL lines
 
-## ** bewteen-within coef variation
+## can just merge
+## maybe don't even need: can use best_mdl_coefs?
+## nah doesn't have all the lag information anymore 
+
+
+mdl_fit_df <- merge(df_anls_within,
+                   filter(gof_df_cbn, gof_names == "log_likelihood")) %>% 
+    group_by(cbn_name, vrbl_name_unlag, base_lag_spec) %>%
+    mutate(gof_value = gof_value - min(gof_value)) %>%
+    group_by(cbn_name, vrbl_name_unlag, lag) %>%
+    summarize(gof_value = mean(gof_value), base_lag_spec = 1)
+
+
+mdl_fit_df %>% 
+    ggplot(aes(x=lag, y=gof_value, group = base_lag_spec)) +
+    geom_line(show.legend = F) + 
+    geom_point() + 
+    facet_grid(vrbl_name_unlag ~ cbn_name, scales = "free", switch = "y", 
+               labeller = labeller(vrbl_name_unlag = rel_vars)) +
+    theme(strip.text.y.left = element_text(angle = 0))
+
+
+## *** two-axes plot
+
+    
+    
+
+
+
+## combine data to be plotted 
+two_axis_df <- rbind(
+    best_mdl_coefs %>% select(cbn_name, vrbl_name_unlag, lag, vlu = coef, base_lag_spec) %>%
+    mutate(source = "best_coefs"),
+    mdl_fit_df %>% select(cbn_name, vrbl_name_unlag, lag, vlu = gof_value, base_lag_spec) %>%
+    mutate(source = "ll_lines")) %>% atb()
+
+
+## get the scales for the best_coef plots
+## actually get them from within_anls plot
+ll_scale <- df_anls_within %>%
+    filter(cbn_name == "cbn_all", vrbl_name_unlag == "sptinc992j_p90p100") %>%
+    summarize(min_vlu = min(coef), max_vlu = max(coef), range = max_vlu - min_vlu,
+              source = "best_coefs") %>%
+    select(cbn_name, vrbl_name_unlag, source, min_vlu, max_vlu, range)
+
+coef_scale <- filter(two_axis_df, cbn_name == "cbn_all", vrbl_name_unlag == "sptinc992j_p90p100") %>%
+    group_by(source, cbn_name, vrbl_name_unlag) %>%
+    summarize(min_vlu = min(vlu), max_vlu = max(vlu), range = max_vlu - min_vlu) %>%
+    filter(source == "ll_lines")
+
+
+test_scale <- rbind(ll_scale, coef_scale)
+
+## need to scale the same variables consistently -> calculate them outside of dplyr
+scaler <- filter(test_scale, source == "ll_lines")$range/filter(test_scale, source == "best_coefs")$range
+
+## now scaling best_coefs to ll_lines 
+## the range of best_coefs should now be the range of ll_lines
+
+test_scale2 <- test_scale %>%
+    mutate(min_vlu = ifelse(source == "best_coefs", min_vlu * scaler, min_vlu),
+           max_vlu = ifelse(source == "best_coefs", max_vlu * scaler, max_vlu))
+## ranges (not the value, but the actual range between min and max values) are the same now
+
+
+offset_vlu <- filter(test_scale2, source == "ll_lines")$max_vlu - filter(test_scale2, source == "best_coefs")$max_vlu 
+
+## don't need to readjust values in test_scale, now I have scaler and offset value -> can adjust actual values
+## should tho to check errors
+test_scale3 <- test_scale2 %>%
+    mutate(min_vlu = ifelse(source == "best_coefs", min_vlu + offset_vlu, min_vlu),
+           max_vlu = ifelse(source == "best_coefs", max_vlu + offset_vlu, max_vlu))
+           
+## hmm seems to work, could ofc be that largest value is not the best fitting one?
+## could also be due to negative numbers?
+## maybe complete line is more helpful? 
+
+
+filter(two_axis_df, cbn_name == "cbn_all", vrbl_name_unlag == "sptinc992j_p90p100") %>% 
+    mutate(vlu = ifelse(source == "best_coefs", offset_vlu + (vlu * scaler), vlu)) %>% 
+    ggplot(aes(x=lag, y=vlu, color = source)) +
+    geom_point() +
+    scale_y_continuous(name = "ll_lines", sec.axis = sec_axis(~ (.- offset_vlu) /scaler , name = "best_coefs"))
+    
+## doesn't align completely, but could be correct:
+## my overall min from ll_scale is -0.525, but my lowest best_coef is only -0.38
+## -0.38 * scaler + offset_vlu = 0.43, which looks correct
+## -0.525 * scaler + offset_vlu = 0 -> also correct
+## -> so points get scaled correctly, but second axis still wrong
+## maybe the sign change?
+## doesn't seem like it, but y=ax+b -> x=(y-b)/a
+
+## can make line out of LL if i really want: just pass differently filtered data to geom_point and geom_line
+
+gen_ll_best_coef_plot <- function(vrbl_name_unlag, cbn_name) {
+    #' generate individual plot with information on fit (LL) and coef values at best fits
+    #' needs as globals: df_anls_within, two_axis_df
+    
+    
+
+    ll_scale <- df_anls_within %>%
+        filter(cbn_name == !!cbn_name, vrbl_name_unlag == !!vrbl_name_unlag) %>%
+        summarize(min_vlu = min(coef), max_vlu = max(coef), range = max_vlu - min_vlu,
+                  source = "best_coefs") %>%
+        select(cbn_name, vrbl_name_unlag, source, min_vlu, max_vlu, range)
+
+    ## get the scale information of the best_coefs, actually use full coefs for illustration/maybe adding coef line
+    coef_scale <- filter(two_axis_df, cbn_name == !!cbn_name, vrbl_name_unlag == !!vrbl_name_unlag) %>%
+        group_by(source, cbn_name, vrbl_name_unlag) %>%
+        summarize(min_vlu = min(vlu), max_vlu = max(vlu), range = max_vlu - min_vlu) %>%
+        filter(source == "ll_lines")
+
+    ## combine scaling information 
+    scale_df1 <- rbind(ll_scale, coef_scale)
+
+    ## generate scaler to stretch best_coef range to ll_lines range
+    scaler <- filter(scale_df1, source == "ll_lines")$range/filter(scale_df1, source == "best_coefs")$range
+
+    ## adjust ranges, needed to generate offset
+    scale_df2 <- scale_df1 %>%
+        mutate(min_vlu = ifelse(source == "best_coefs", min_vlu * scaler, min_vlu),
+               max_vlu = ifelse(source == "best_coefs", max_vlu * scaler, max_vlu))
+
+    ## generate offset
+    offset_vlu <- filter(scale_df2, source == "ll_lines")$max_vlu - filter(scale_df2, source == "best_coefs")$max_vlu 
+
+    filter(two_axis_df, cbn_name == !!cbn_name, vrbl_name_unlag == !!vrbl_name_unlag) %>% 
+        mutate(vlu = ifelse(source == "best_coefs", offset_vlu + (vlu * scaler), vlu)) %>% 
+        ggplot(aes(x=lag, y=vlu, color = source)) +
+        geom_point(show.legend = F) +
+        scale_y_continuous(name = "", sec.axis = sec_axis(~ (.- offset_vlu) /scaler , name = "")) +
+        labs(x="", y="")
+
+}
+
+
+facets_to_plot <- df_anls_within %>% select(cbn_name, vrbl_name_unlag) %>% unique() %>% arrange(cbn_name, vrbl_name_unlag)
+
+ll_coef_plots <- apply(facets_to_plot[1:6,], 1, \(x) gen_ll_best_coef_plot(x[["vrbl_name_unlag"]], x[["cbn_name"]]))
+
+plot_grid(plotlist = ll_coef_plots[1:6], ncol = 1)
+
+grid.arrange(ll_coef_plots)
+
+grid.arrange(grobs = ll_coef_plots)
+
+
+
+library(cowplot)
+library(patchwork)
+
+(ll_coef_plots[[1]] + ll_coef_plots[[2]]) / (ll_coef_plots[[3]] + ll_coef_plots[[4]])
+
+wrap_plots(ll_coef_plots) +
+    plot_layout(ncol = 2, widths = c(0,2))
+
+lapply(ll_coef_plots, ggplotGrob) %>% rbind() %>% grid.draw()
+
+
+gen_ll_best_coef_plot("shweal992j_p90p100", "cbn_all")
+
+## ** between-within coef variation
 
 get_between_within_sds <- function(vlu_vec, id_vec) {
     #' generate the between and within variation for value vector given id vector 
@@ -219,7 +380,7 @@ variation_anls <- variation_anls_prep %>% pivot_longer(cols = c(sd_within, sd_be
     mutate(cbn_name = factor(cbn_name, levels = rev(names(cbn_dfs))))
 
 
-pdf(paste0(FIG_DIR, "coef_variation_anls.pdf"), width = 9, height = 8)
+pdf(paste0(FIG_DIR, "coef_variation_anls.pdf"), width = 8, height = 9)
 variation_anls %>% 
     ggplot(aes(x=value, y=cbn_name , group = name, color = name)) +
     geom_path() +
