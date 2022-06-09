@@ -96,7 +96,7 @@ df_anls_within_prep2 <- df_anls_within_prep %>%
 df_anls_time_invariant <- df_anls_base %>%
     filter(vrbl_name %in% crscn_vars) %>%
     group_by(cbn_name, vrbl_name) %>%
-    slice_sample(n=5) %>%
+    slice_sample(n=15) %>%
     mutate(base_lag_spec_id = 1,
            lag = 1,
            nbr_mdls_cvrgd = 1)
@@ -194,3 +194,47 @@ ggplot(best_mdl_coefs, aes(x=lag, y=coef, color = t_value)) +
     scale_shape_manual(values = c(1,4))
 
 dev.off()
+
+
+## ** bewteen-within coef variation
+
+get_between_within_sds <- function(vlu_vec, id_vec) {
+    #' generate the between and within variation for value vector given id vector 
+    
+    dfx = data_frame(vlu = vlu_vec,  id = id_vec)
+    xtsum_res <- xtsum(dfx, vlu, id)
+
+    sd_within <- xtsum_res$sd[3]
+    sd_between <- xtsum_res$sd[2]
+
+    return(data_frame(sd_within = sd_within, sd_between = sd_between))
+}
+
+
+variation_anls_prep <- df_anls_within %>% group_by(cbn_name, vrbl_name_unlag) %>%
+    do(get_between_within_sds(.$coef, .$base_lag_spec))
+
+    
+variation_anls <- variation_anls_prep %>% pivot_longer(cols = c(sd_within, sd_between)) %>%
+    mutate(cbn_name = factor(cbn_name, levels = rev(names(cbn_dfs))))
+
+
+pdf(paste0(FIG_DIR, "coef_variation_anls.pdf"), width = 9, height = 8)
+variation_anls %>% 
+    ggplot(aes(x=value, y=cbn_name , group = name, color = name)) +
+    geom_path() +
+    geom_point() + 
+    facet_wrap(~vrbl_name_unlag, switch = "y", ncol = 1, scales = "free_y",
+               labeller = labeller(vrbl_name_unlag = rel_vars)) +
+    theme(strip.text.y.left = element_text(angle = 0))
+dev.off()    
+
+
+    
+
+
+
+    
+
+
+
