@@ -115,7 +115,6 @@ library(ggbeeswarm)
 
 
 pdf(paste0(FIG_DIR, "reg_within_tmitr_fixed.pdf"), width = 10, height = 12)
-
 ggplot(df_anls_within, aes(x=lag, y=coef, group = base_lag_spec)) +
     geom_line(show.legend = F, alpha = 0.15) +
     geom_quasirandom(aes(color = t_value, shape = factor(sig)), size = 2, height = 0, width = 0.3) + 
@@ -124,7 +123,6 @@ ggplot(df_anls_within, aes(x=lag, y=coef, group = base_lag_spec)) +
     theme(strip.text.y.left = element_text(angle = 0)) +
     scale_color_gradient2(low = "blue", mid = "grey", high = "red") +
     scale_shape_manual(values = c(1,4))
-
 dev.off()
         
 ## df_anls_within_ribbon
@@ -183,15 +181,15 @@ other_var_names <- unique(best_mdl_coefs$vrbl_name_unlag)[unique(best_mdl_coefs$
 
 best_mdl_coefs$vrbl_name_unlag <- factor(best_mdl_coefs$vrbl_name_unlag, levels = c(vrbl_levels, other_var_names))
 
-pdf(paste0(FIG_DIR, "best_models_tmirtr_fixed.pdf"), width = 8, height = 12)
+best_mdl_coefs <- filter(best_mdl_coefs, vrbl_name_unlag %!in% c("ln_s", "cons", "ln_r"))
 
+pdf(paste0(FIG_DIR, "best_models_tmirtr_fixed.pdf"), width = 8, height = 12)
 ggplot(best_mdl_coefs, aes(x=lag, y=coef, color = t_value)) +
     geom_quasirandom(aes(shape = factor(sig)), height = 0, width = 0.33, show.legend=T, size = 3) +
     facet_grid(vrbl_name_unlag~cbn_name, scales="free", switch = "y", labeller = labeller(vrbl_name_unlag = rel_vars)) +
     theme(strip.text.y.left = element_text(angle = 0)) + 
     scale_color_gradient2(low = "blue", mid = "grey", high = "red") +
     scale_shape_manual(values = c(1,4))
-
 dev.off()
 
 ## *** LL lines
@@ -209,6 +207,7 @@ mdl_fit_df <- merge(df_anls_within,
     summarize(gof_value = mean(gof_value), base_lag_spec = 1)
 
 
+pdf(paste0(FIG_DIR, "mdl_fit_plot.pdf"), height=10, width = 8)
 mdl_fit_df %>% 
     ggplot(aes(x=lag, y=gof_value, group = base_lag_spec)) +
     geom_line(show.legend = F) + 
@@ -216,7 +215,7 @@ mdl_fit_df %>%
     facet_grid(vrbl_name_unlag ~ cbn_name, scales = "free", switch = "y", 
                labeller = labeller(vrbl_name_unlag = rel_vars)) +
     theme(strip.text.y.left = element_text(angle = 0))
-
+dev.off()
 
 ## *** two-axes plot
 

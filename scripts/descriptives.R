@@ -421,7 +421,8 @@ gen_cbn_plots <- function(cbn_dfs, df_reg) {
         summarize(nbr_crys = len(iso3c)) %>%
         ggplot(aes(x=year, y=nbr_crys, color = name, group=name)) +
         geom_line(size = 1.5) +
-        scale_color_manual(values = colors_manual3, labels = rel_vars)
+        scale_color_manual(values = colors_manual3, labels = rel_vars) +
+        scale_linetype_manual(labels = rel_vars)
 
         
     

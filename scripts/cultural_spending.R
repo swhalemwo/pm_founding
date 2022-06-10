@@ -961,7 +961,7 @@ inf.omit <- function(vec) {
 
 select_proper_tlycg_series <- function(df_cult_cbn) {
     #' impute tlycg where necessary, pick the highest-quality series for each CY
-
+    
     ## get the countries with overlapping series -> mean for all 
     df_cult_sclr <- df_cult_cbn %>% group_by(iso3c, year) %>%
         mutate(nbr_formats_cy = len(unique(format))) %>%
@@ -975,6 +975,8 @@ select_proper_tlycg_series <- function(df_cult_cbn) {
 
     ## generate median scalar for everybody 
     med_scaler_vlu <- df_cult_sclr %>% pull(scaler) %>% na.omit() %>% inf.omit() %>% median()
+    ## print(med_scaler_vlu)
+
 
     ## get countries where series overlap at least at some points to calculate country-specific scalars
     crys_ovlp <- filter(df_cult_sclr, nbr_formats_c == 2, nbr_formats_cy_max == 2)
