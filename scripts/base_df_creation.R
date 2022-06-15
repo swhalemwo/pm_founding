@@ -1,6 +1,7 @@
 ## * base df creation
 
-create_excel_df <- function(db_file) {
+create_excel_df <- function(db_file, only_pms=T) {
+    
     #' read the excel sheet into R
 
     ## df <- read_excel("/home/johannes/Dropbox/phd/papers/org_pop/data/Private museum database.xlsx")
@@ -11,13 +12,13 @@ create_excel_df <- function(db_file) {
     df <- read_excel(paste0(PMDB_DIR, db_file))
     
     ## removing header stuff 
-    nrows <- nrow(df)-1
+    nrows <- nrow(df)
     df <- df[2:nrows,]
 
 
     df$country <- df$"Country where museum is located"
 
-    df$name <- df$Museumname
+    df$name <- df[1] # reeeee-name because column names get changed
     df$year_opened_str <- df$"Opening year"
     df$year_closed <- df$"Closing year / year it changed structure"
     df$museum_status <- df$`Museum status`
@@ -38,8 +39,13 @@ create_excel_df <- function(db_file) {
     df$year_opened_int <- as.integer(lapply(df$year_opened_str, function(x)(substring(x, 0,4))))
     ## as.data.frame(filter(df, is.na(year_opened_int))[,c("year_opened_str", "year_opened_int")])
 
-    df_only_pms <- filter(df, museum_status %in% c("private museum", "no longer a private museum", "closed"))
-
+    ## make ugly conditional filtering
+    if (only_pms) {
+        df_only_pms <- filter(df, museum_status %in% c("private museum", "no longer a private museum", "closed"))
+        
+    } else {
+        df_only_pms <- df
+    }
 
 
     return(df_only_pms)

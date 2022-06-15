@@ -23,6 +23,7 @@ PMDB_FILE <- "Private museum database2.xlsx"
 PMDB_FILE <- "Private museum database3.xlsx"
 PMDB_FILE <- "Private museum database4.xlsx"
 PMDB_FILE <- "Private museum database5.xlsx"
+PMDB_FILE <- "Private museum database6.xlsx"
 
 
 df_excl <- create_excel_df(PMDB_FILE)
@@ -34,6 +35,21 @@ df_anls <- create_anls_df(df_wb, df_open)
 df_reg_pre_impt <- get_df_reg(df_anls)
 df_reg <- impute_df_reg_vrbls(df_reg_pre_impt)
 
+
+## ** luise 
+
+df_excl %>% select(founder_name_pmdb = "Founder name") %>%
+    unique() %>% na.omit() %>% 
+    mutate(collector_name_artnews = "",
+           notes = "") %>% 
+    write.table(
+        file = paste0(PROJECT_DIR, "scripts/artnews_cleaning/pm_founder_names.csv"),
+        row.names = F, sep = ";")
+
+all_clctrs %>% select(collector_name_artnews = clctr_name) %>% unique() %>%
+    write.table(file = paste0(PROJECT_DIR, "scripts/artnews_cleaning/artnews_collector_names.csv"),
+                row.names = F, sep = ";")
+    
 
 ## write.table(select(df_reg, -matches("name")), paste0(PROJECT_DIR, "data/processed/df_reg.csv"))
 
