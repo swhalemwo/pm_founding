@@ -24,8 +24,10 @@ PMDB_FILE <- "Private museum database3.xlsx"
 PMDB_FILE <- "Private museum database4.xlsx"
 PMDB_FILE <- "Private museum database5.xlsx"
 PMDB_FILE <- "Private museum database6.xlsx"
+PMDB_FILE <- "Private museum database7.xlsx"
 
 
+## df_excl <- create_excel_df(PMDB_FILE, only_pms = F)
 df_excl <- create_excel_df(PMDB_FILE)
 df_open <- aggregate_openings(df_excl)
 df_wb <- get_WB_data(c("NY.GDP.PCAP.CD", "SP.POP.TOTL", "NY.GDP.MKTP.CN"))
@@ -36,27 +38,91 @@ df_reg_pre_impt <- get_df_reg(df_anls)
 df_reg <- impute_df_reg_vrbls(df_reg_pre_impt)
 
 
-## ** luise 
 
-df_excl %>% select(founder_name_pmdb = "Founder name") %>%
-    unique() %>% na.omit() %>% 
-    mutate(collector_name_artnews = "",
-           notes = "") %>% 
-    write.table(
-        file = paste0(PROJECT_DIR, "scripts/artnews_cleaning/pm_founder_names.csv"),
-        row.names = F, sep = ";")
-
-all_clctrs %>% select(collector_name_artnews = clctr_name) %>% unique() %>%
-    write.table(file = paste0(PROJECT_DIR, "scripts/artnews_cleaning/artnews_collector_names.csv"),
-                row.names = F, sep = ";")
-    
-
-## write.table(select(df_reg, -matches("name")), paste0(PROJECT_DIR, "data/processed/df_reg.csv"))
 
 get_all_descriptives()
 
-## *** another shitty analysis
+## ** luise 
 
+## all_clctrs exists only in `readin_artnews_all` -> has to be run when debugging that function
+
+pmdb_luise <- df_excl %>% select(founder_name_pmdb = "Founder name") %>%
+    unique() %>% na.omit()
+
+
+clctrs_luise <- all_clctrs %>% select(collector_name_artnews = clctr_name) %>% unique() %>%
+    mutate(source = "artnews")
+
+
+## %>% 
+##     mutate(collector_name_artnews = "",
+##            notes = "")
+
+
+## check overlap automatically
+
+
+pmdb_luise_aut_match <- merge(pmdb_luise, clctrs_luise, by.x = "founder_name_pmdb",
+                              by.y = "collector_name_artnews", all.x = T) %>%
+    atb() %>%
+    mutate(collector_name_artnews = ifelse(is.na(source), "", founder_name_pmdb),
+           notes = "") %>%
+    select(-source)
+
+pmdb_luise_aut_match %>% write.table(
+        file = paste0(PROJECT_DIR, "scripts/artnews_cleaning/pm_founder_names.csv"),
+        row.names = F, sep = ";")
+
+
+
+clctrs_luise %>% select(collector_name_artnews) %>% 
+    write.table(file = paste0(PROJECT_DIR, "scripts/artnews_cleaning/artnews_collector_names.csv"),
+                row.names = F, sep = ";")
+
+
+
+    
+
+
+
+## *** bvd
+library(haven)
+df_bvd <- read_sas("/home/johannes/Downloads/test4.sas7bdat")
+
+pass <- "{SAS002}E2DE3C1F47177E042B981B5917E72D0A1C60B13029F5E6E6"
+my_username <- "johannesae"
+
+
+res <- dbSendQuery(wrds,"select date,dji from DJONES.DJDAILY (obs=10)")
+data <- fetch(res, n = -1)
+
+
+
+
+## *** bvd api
+library(RPostgres)
+
+wrds <- dbConnect(Postgres(),
+                  host='wrds-pgdata.wharton.upenn.edu',
+                  port=9737,
+                  dbname='wrds',
+                  sslmode='require',
+                  user = "johannesae")
+
+testquery <- "SELECT bvdid, first_name, middle_name, last_name, full_name 
+FROM bvd.ob_dmc_current_only_l"
+
+
+testdata <- dbGetQuery(wrds, testquery) %>% atb()
+
+
+
+
+
+
+## ** another shitty analysis
+
+## write.table(select(df_reg, -matches("name")), paste0(PROJECT_DIR, "data/processed/df_reg.csv"))
 df_reg1 <- df_reg[,c("iso3c", "nbr_opened", "SP.POP.TOTLm", "NY.GDP.PCAP.CDk", "pct_fx", "ghweal992j")] %>% na.omit()
 
 x_within <- pglm(nbr_opened ~ SP.POP.TOTLm + NY.GDP.PCAP.CDk + pct_fx + ghweal992j, data = df_reg1, family = negbin, model = "within", index = "iso3c", method = "bfgs", effect = "individual")
