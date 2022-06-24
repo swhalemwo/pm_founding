@@ -631,12 +631,18 @@ crscn_vars <- c("sum_core", "cnt_contemp_1995")
 hnwi_vars <- sapply(hnwi_cutoff_vlus, \(x) paste0("hnwi_nbr_", sanitize_number(x)))
 inc_ineq_vars <- c("sptinc992j_p90p100", "sptinc992j_p99p100", "gptinc992j")
 weal_ineq_vars <- c("shweal992j_p90p100", "shweal992j_p99p100", "ghweal992j")
-non_thld_lngtd_vars <- c("tmitr_approx_linear20step", "ti_tmitr_interact", "smorc_dollar_fxm", "NY.GDP.PCAP.CDk", "SP.POP.TOTLm", "clctr_cnt_cpaer")
+density_vars <- c("nbr_opened_cum", "nbr_opened_cum_sqrd")
+
+
+
+## non_thld_lngtd_vars <- c("tmitr_approx_linear20step", "ti_tmitr_interact", "smorc_dollar_fxm", "NY.GDP.PCAP.CDk", "SP.POP.TOTLm", "clctr_cnt_cpaer")
 
 ctrl_vars <- c("NY.GDP.PCAP.CDk", "SP.POP.TOTLm", "clctr_cnt_cpaer", "cnt_contemp_1995")
 ctrl_vars_lngtd <- ctrl_vars[ctrl_vars %!in% crscn_vars]
 ti_vars <- c("tmitr_approx_linear20step", "ti_tmitr_interact")
 cult_spending_vars <- c("smorc_dollar_fxm")
+
+non_thld_lngtd_vars <- c(ti_vars, cult_spending_vars, ctrl_vars_lngtd, density_vars)
 
 lngtd_vars <- c(hnwi_vars, inc_ineq_vars, weal_ineq_vars, non_thld_lngtd_vars)
 
@@ -682,7 +688,7 @@ print(t2-t1)
 ## ** running with hopefully better ids
 
 
-batch_version <- "v17"
+batch_version <- "v18"
 REG_MONKEY_DIR <- "/home/johannes/ownCloud/reg_res/"
 REG_RES_DIR <- paste0(REG_MONKEY_DIR,  batch_version, "/")
 REG_RES_FILE_LAGS <- paste0(REG_MONKEY_DIR, batch_version, "_lags.csv")
@@ -699,10 +705,10 @@ PID_DIR <- "/home/johannes/pid_dir/"
    
 
 
-
+library(purrr)
 ## generate basic spec of lag, variable and threshold choices
 t1 = Sys.time()
-NBR_SPECS <- 1000
+NBR_SPECS <- 10
 reg_specs <- lapply(seq(1,NBR_SPECS), \(x) gen_reg_spec(non_thld_lngtd_vars)) %>% unique() #
 ## generate variations of basic reg_spec
 reg_spec_varyns <- mclapply(reg_specs, vary_spec, mc.cores = 6) %>% flatten()

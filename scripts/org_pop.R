@@ -131,7 +131,7 @@ screenreg(list(res_poiglm_re, res_crsc2), custom.coef.map = varnames, digits = 3
 ## very similar, but some differences: ginis, cnt_contemp_2000, sum_core
 
 
-## *** remaining variables construction, not directly related to structure, have to be functionalized somewhere
+## ** remaining variables construction, not directly related to structure, have to be functionalized somewhere
 
 
 
