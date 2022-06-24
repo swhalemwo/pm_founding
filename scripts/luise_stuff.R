@@ -1,6 +1,8 @@
-## ** luise 
+## * luise 
 
 ## all_clctrs exists only in `readin_artnews_all` -> has to be run when debugging that function
+
+## ** artnews to check 
 
 pmdb_luise <- df_excl %>% select(founder_name_pmdb = "Founder name") %>%
     unique() %>% na.omit()
@@ -41,16 +43,7 @@ clctrs_luise %>% select(collector_name_artnews) %>%
 
 
 
-## *** bvd
-library(haven)
-df_bvd <- read_sas("/home/johannes/Downloads/test4.sas7bdat")
-
-pass <- "{SAS002}E2DE3C1F47177E042B981B5917E72D0A1C60B13029F5E6E6"
-my_username <- "johannesae"
-
-
-res <- dbSendQuery(wrds,"select date,dji from DJONES.DJDAILY (obs=10)")
-data <- fetch(res, n = -1)
+## ** bvd
 
 
 
@@ -66,8 +59,44 @@ wrds <- dbConnect(Postgres(),
                   user = "johannesae")
 
 testquery <- "SELECT bvdid, first_name, middle_name, last_name, full_name 
-FROM bvd.ob_dmc_current_only_l"
+FROM bvd.ob_dmc_current_only_l limit 100"
 
 
 testdata <- dbGetQuery(wrds, testquery) %>% atb()
 
+dbGetQuery(wrds, "describe bvd.ob_dmc_current_only_l")
+
+dbGetQuery(wrds, "select distinct libname from dictionary.libnames")
+
+
+## dbGetQuery(wrds, "list tables")
+## dbGetQuery(wrds, "show tables;")
+
+## this works 
+dbGetQuery(wrds, "SELECT table_name FROM information_schema.tables")
+
+
+
+## dbListTables(wrds) ## only 14
+## dbListObjects(wrds) ## 876 weird things
+## dbListFields(wrds, "bvd.ob_dmc_current_only_l") ## table not found
+## dbListResults(
+
+
+dbGetQuery(wrds, "select distinct bvdid from bvd.ob_dmc_current_only_l limit 10")
+
+dbGetQuery(wrds, "select * from bvd.ob_industry_classifications_l limit 10")
+
+
+
+## * scrap
+## *** manual 
+library(haven)
+df_bvd <- read_sas("/home/johannes/Downloads/test4.sas7bdat")
+
+pass <- "{SAS002}E2DE3C1F47177E042B981B5917E72D0A1C60B13029F5E6E6"
+my_username <- "johannesae"
+
+
+res <- dbSendQuery(wrds,"select date,dji from DJONES.DJDAILY (obs=10)")
+data <- fetch(res, n = -1)
