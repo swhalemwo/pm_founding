@@ -643,9 +643,7 @@ ti_vars <- c("tmitr_approx_linear20step", "ti_tmitr_interact")
 cult_spending_vars <- c("smorc_dollar_fxm")
 
 non_thld_lngtd_vars <- c(ti_vars, cult_spending_vars, ctrl_vars_lngtd, density_vars)
-
 lngtd_vars <- c(hnwi_vars, inc_ineq_vars, weal_ineq_vars, non_thld_lngtd_vars)
-
 all_rel_vars <- unique(c(hnwi_vars, inc_ineq_vars, weal_ineq_vars, non_thld_lngtd_vars, crscn_vars))
 
 
@@ -654,36 +652,6 @@ vrbl_cbns <- gen_cbns(all_rel_vars)
 cbn_dfs <- gen_cbn_dfs(lngtd_vars, crscn_vars, vrbl_cbns)
 
 vrbl_thld_choices <- gen_vrbl_thld_choices(hnwi_vars, inc_ineq_vars, weal_ineq_vars)
-
-## ** first sloppy version 
-
-REG_RES_DIR <- "/home/johannes/ownCloud/reg_res/v5/"
-REG_RES_FILE <- "/home/johannes/ownCloud/reg_res/v5.csv"
-
-
-
-## generate 100 specs
-reg_specs <- lapply(seq(1,600), \(x) gen_reg_spec(non_thld_lngtd_vars)) %>% unique()
-
-## for each of the 100, generate the spec variations -> 3.7k total 
-all_spec_variations <- lapply(reg_specs, \(x) vary_spec(x))
-
-## flatten the 3.7k 
-all_specs_flat <- Reduce(\(x, y) c(x,y), all_spec_variations) %>% unique()
-
-
-## t1 = Sys.time()
-## lapply(all_specs_flat, \(x) run_spec(x, base_vars))
-## t2 = Sys.time()
-
-
-## gets stuck after ~70 models, which isn't even a complete spec per thread..
-t1 = Sys.time()
-mclapply(all_specs_flat, \(x) run_spec(x, base_vars), mc.cores = 6)
-t2 = Sys.time()
-
-print(t2-t1)
-
 
 ## ** running with hopefully better ids
 
@@ -700,7 +668,6 @@ MDL_END_FILE <- paste0(REG_MONKEY_DIR, batch_version, "_end.csv")
 existing_dirs <- paste0(normalizePath(list.dirs(REG_MONKEY_DIR, recursive = F)), "/")
 if (REG_RES_DIR %!in% existing_dirs){ system(paste0("mkdir ", REG_RES_DIR))}
 if (REG_SPEC_DIR %!in% existing_dirs){ system(paste0("mkdir ", REG_SPEC_DIR))}
-
 PID_DIR <- "/home/johannes/pid_dir/"
    
 
@@ -807,3 +774,73 @@ run_vrbl_mdl_vars(test_mdl2, verbose = T)
 ## runs after also removing additional hnwi_lags
 ## runs with 1 and 2 additional hnwi_lags, breaks down when adding third additional lag
 ## -> seems my hunch was completely correct
+
+## ** clustering
+
+get_df_clust <- function() {
+    #' generate the dataframe used for clustering 
+    df_clust_prep <- df_reg %>%
+        filter(year > 1995) %>% 
+        select(iso3c, year, NY.GDP.PCAP.CDk, sptinc992j_p99p100, shweal992j_p99p100, sum_core, cnt_contemp_1995,
+               hnwi_nbr_30M, SP.POP.TOTLm) %>%
+        mutate(cnt_contemp_1995 = cnt_contemp_1995/SP.POP.TOTLm,
+               hnwi_nbr_30M = hnwi_nbr_30M/SP.POP.TOTLm) %>%
+        select(-SP.POP.TOTLm) %>% 
+        na.omit()
+
+
+    df_clust <- df_clust_prep %>%
+        pivot_wider(id_cols = iso3c, names_from = year, values_from = setdiff(names(df_clust_prep), base_vars)) %>%
+        na.omit() ## ugly
+
+    return(df_clust)
+}
+
+
+
+dists <- dist(df_clust)
+
+run_cluster <- function(dists, method) {
+
+    clusts <- hclust(dists, method = method)
+    ## plot(clusts)
+    table(cutree(clusts, k=8))
+}
+
+
+clust_methods <- c("ward.D", "ward.D2", "single", "complete", "average", "mcquitty", "median", "centroid")
+
+lapply(clust_methods, \(x) run_cluster(dists, x))
+
+
+## * scrap 
+## ** first sloppy version 
+
+REG_RES_DIR <- "/home/johannes/ownCloud/reg_res/v5/"
+REG_RES_FILE <- "/home/johannes/ownCloud/reg_res/v5.csv"
+
+
+
+## generate 100 specs
+reg_specs <- lapply(seq(1,600), \(x) gen_reg_spec(non_thld_lngtd_vars)) %>% unique()
+
+## for each of the 100, generate the spec variations -> 3.7k total 
+all_spec_variations <- lapply(reg_specs, \(x) vary_spec(x))
+
+## flatten the 3.7k 
+all_specs_flat <- Reduce(\(x, y) c(x,y), all_spec_variations) %>% unique()
+
+
+## t1 = Sys.time()
+## lapply(all_specs_flat, \(x) run_spec(x, base_vars))
+## t2 = Sys.time()
+
+
+## gets stuck after ~70 models, which isn't even a complete spec per thread..
+t1 = Sys.time()
+mclapply(all_specs_flat, \(x) run_spec(x, base_vars), mc.cores = 6)
+t2 = Sys.time()
+
+print(t2-t1)
+
+
