@@ -232,7 +232,9 @@ rel_vars <- c("nbr_opened" = "Number of Private Museums opened",
               "ln_s" = "ln(s)",
               "cons" = "cons",
               "ln_r" = "ln(r)",
-              "cnt_contemp_1995" = "# of modern/contemp. art museums in 1995"
+              "cnt_contemp_1995" = "# of modern/contemp. art museums in 1995",
+              "nbr_opened_cum" = "cumulative openings",
+              "nbr_opened_cum_sqrd" = "cumulative openings squared"
               )
 
 

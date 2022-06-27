@@ -106,7 +106,7 @@ df_anls_within <- rbind(df_anls_within_prep2, df_anls_time_invariant)
 
 ## order the factors
 df_anls_within$vrbl_name_unlag <- factor(df_anls_within$vrbl_name_unlag,
-                                         levels = c(ti_vars, hnwi_vars, inc_ineq_vars, weal_ineq_vars,
+                                         levels = c(ti_vars, density_vars, hnwi_vars, inc_ineq_vars, weal_ineq_vars,
                                                     cult_spending_vars, ctrl_vars_lngtd, crscn_vars))
 
 ## shouldn't group by base_lag_spec when selecting
@@ -123,6 +123,7 @@ ggplot(df_anls_within, aes(x=lag, y=coef, group = base_lag_spec)) +
     theme(strip.text.y.left = element_text(angle = 0)) +
     scale_color_gradient2(low = "blue", mid = "grey", high = "red") +
     scale_shape_manual(values = c(1,4))
+
 dev.off()
         
 ## df_anls_within_ribbon
@@ -146,19 +147,23 @@ df_anls_all <- df_anls_base %>%
     mutate(lag = as.numeric(substring(str_extract(vrbl_name, "_lag(\\d+)"), 5))) %>%
     filter(cbn_name != "cbn_controls") %>%
     group_by(vrbl_name_unlag, cbn_name, lag) %>%
-    slice_sample(n=10)
+    slice_sample(n=NBR_MDLS)
 
 table(df_anls_all$vrbl_name_unlag)
 
-df_anls_all$vrbl_name_unlag <- factor(df_anls_all$vrbl_name_unlag, levels = c(ti_vars, hnwi_vars, inc_ineq_vars, weal_ineq_vars, cult_spending_vars, ctrl_vars_lngtd))
+df_anls_all$vrbl_name_unlag <- factor(df_anls_all$vrbl_name_unlag,
+                                      levels = c(ti_vars, density_vars, hnwi_vars, inc_ineq_vars, weal_ineq_vars,
+                                                 cult_spending_vars, ctrl_vars_lngtd))
 
 pdf(paste0(FIG_DIR, "reg_res_all_tmitr_fixed.pdf"), width = 8, height = 12)
+
 ggplot(df_anls_all, aes(x=lag, y=coef)) +
     geom_quasirandom(aes(color = t_value, shape = factor(sig)), size = 2, height = 0, width = 0.3) +
     facet_grid(cols = vars(cbn_name), rows = vars(vrbl_name_unlag), scales = "free", switch = "y") +
     theme(strip.text.y.left = element_text(angle = 0)) +
     scale_color_gradient2(low = "blue", mid = "grey", high = "red") +
     scale_shape_manual(values = c(1,4))
+
 dev.off()
 
 
@@ -176,21 +181,83 @@ best_mdl_coefs <- merge(df_anls_base, best_mdls) %>% atb()
 best_mdl_coefs$lag <- as.numeric(substring(str_extract(best_mdl_coefs$vrbl_name, "_lag(\\d+)"), 5))
 best_mdl_coefs$lag[is.na(best_mdl_coefs$lag)] <- 0
 
-vrbl_levels <- c(ti_vars, hnwi_vars, inc_ineq_vars, weal_ineq_vars, cult_spending_vars, ctrl_vars_lngtd)
-other_var_names <- unique(best_mdl_coefs$vrbl_name_unlag)[unique(best_mdl_coefs$vrbl_name_unlag) %!in% vrbl_levels]
+vrbl_levels <- c("sum_core", ti_vars, density_vars, hnwi_vars, inc_ineq_vars,
+                 weal_ineq_vars, cult_spending_vars, ctrl_vars_lngtd)
+
+other_var_names <- c(unique(best_mdl_coefs$vrbl_name_unlag)[unique(best_mdl_coefs$vrbl_name_unlag) %!in% vrbl_levels])
 
 best_mdl_coefs$vrbl_name_unlag <- factor(best_mdl_coefs$vrbl_name_unlag, levels = c(vrbl_levels, other_var_names))
 
 best_mdl_coefs <- filter(best_mdl_coefs, vrbl_name_unlag %!in% c("ln_s", "cons", "ln_r"))
 
 pdf(paste0(FIG_DIR, "best_models_tmirtr_fixed.pdf"), width = 8, height = 12)
-ggplot(best_mdl_coefs, aes(x=lag, y=coef, color = t_value)) +
+
+ggplot(best_mdl_coefs, aes(x=lag, y=exp(coef), color = t_value)) +
     geom_quasirandom(aes(shape = factor(sig)), height = 0, width = 0.33, show.legend=T, size = 3) +
     facet_grid(vrbl_name_unlag~cbn_name, scales="free", switch = "y", labeller = labeller(vrbl_name_unlag = rel_vars)) +
     theme(strip.text.y.left = element_text(angle = 0)) + 
     scale_color_gradient2(low = "blue", mid = "grey", high = "red") +
     scale_shape_manual(values = c(1,4))
+
 dev.off()
+
+## *** condensed
+
+generate_plot_models <- function(cbn_namex) {
+
+    mdl_summary <- best_mdl_coefs %>% group_by(vrbl_name_unlag) %>%
+        filter(cbn_name == cbn_namex) %>% 
+        summarize(coef = mean(coef), lag_mean = mean(lag), lag_sd = sd(lag), p_value = mean(pvalues),
+                  t_value = mean(t_value), se = mean(se))
+    ## reg_res <- lm(mpg ~ cyl + disp, mtcars)
+    ## plotreg(reg_res)
+
+    texreg_mdl <- createTexreg(coef.names = as.character(mdl_summary$vrbl_name_unlag),
+                      coef = mdl_summary$coef,
+                      se = mdl_summary$se,
+                      pvalues = mdl_summary$p_value)
+
+    return(texreg_mdl)
+}
+
+x <- lapply(names(cbn_dfs)[1:3], generate_plot_models)
+
+y <- plotreg(x, type = "facet")
+
+## *** manual plotreg
+
+mdl_summary <- best_mdl_coefs %>% group_by(vrbl_name_unlag, cbn_name) %>%
+        summarize(coef = mean(coef), lag_mean = mean(lag), lag_sd = sd(lag), p_value = mean(pvalues),
+                  t_value = mean(t_value), se = mean(se), min = coef - 1.96*se, max = coef + 1.96*se,
+                  sig = ifelse(abs(t_value) > 1.96, 1,0))
+
+mdl_summary$vrbl_name_unlag <- factor(mdl_summary$vrbl_name_unlag,
+                                      levels = rev(levels(mdl_summary$vrbl_name_unlag)))
+
+pdf(paste0(FIG_DIR, "best_models_condensed"), width = 8, height = 6)
+ggplot(mdl_summary, aes(color = factor(sig), y = vrbl_name_unlag)) +
+    geom_point(aes(x = coef, shape = factor(sig)), size = 2.5, alpha = 0.95, show.legend = F) +
+    geom_errorbarh(aes(xmin = min, xmax = max, , height= 0.1), alpha = 0.6, show.legend = F) + 
+    facet_wrap(~cbn_name) +
+    geom_vline(xintercept =0, linetype = "dashed") +
+    scale_shape_manual(values = c(15,16)) +
+    ## scale_shape_manual(values = c(0,1)) +
+    ## scale_shape_manual(values = c(21,12)) +
+    scale_color_manual(values = c("#1C5BA6", "#BD0017")) +
+    scale_y_discrete(labels = rel_vars) +
+    coord_cartesian(xlim=c(-1, 1)) +
+    labs(x="coefficient size", y="coefficient")
+dev.off()
+    
+
+labeller = labeller(vrbl_name_unlag = rel_vars))
+
+
+
+
+
+createTexreg(coef.names = mdl_summary$vrbl_name_unlag, coef = 
+
 
 ## *** LL lines
 
