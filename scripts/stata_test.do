@@ -76,6 +76,21 @@ svmat stata_return
 
 save myauto
 
+/* ** interaction test */
+
+xtnbreg nbr_opened hnwi_nbr_30m gptinc992j ghweal992j smorc_dollar_fxm nygdppcapcdk sppoptotlm clctr_cnt_cpaer  cnt_contemp_1995 sum_core tmitr_approx_linear20step ti_tmitr_interact, re
+
+xtnbreg nbr_opened hnwi_nbr_30m gptinc992j ghweal992j smorc_dollar_fxm nygdppcapcdk sppoptotlm clctr_cnt_cpaer cnt_contemp_1995 c.sum_core##c.tmitr_approx_linear20step, re
+
+gen interact2 = tmitr_approx_linear20step*sum_core
+egen interact2_std = std(interact2)
+
+
+xtnbreg nbr_opened hnwi_nbr_30m gptinc992j ghweal992j smorc_dollar_fxm nygdppcapcdk sppoptotlm clctr_cnt_cpaer cnt_contemp_1995 sum_core tmitr_approx_linear20step interact2_std, re
+
+
+
+
 
 
 /* ** actually use my df */

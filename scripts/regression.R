@@ -313,6 +313,34 @@ gen_cbn_dfs <- function(lngtd_vars, crscn_vars, vrbl_cnbs) {
     cbn_dfs <- lapply(cbn_dfs, \(x) mutate(x, across(all_of(setdiff(names(x), base_vars)), scale_wo_attr)) %>%
                                     mutate(iso3c_num = as.numeric(factor(iso3c))))
 
+    ## sd(cbn_dfs$cbn_all$ti_tmitr_interact_lag1)
+    ## mean(cbn_dfs$cbn_all$ti_tmitr_interact_lag1)
+    ## sd(cbn_dfs$cbn_all$tmitr_approx_linear20step_lag1)
+    ## mean(cbn_dfs$cbn_all$tmitr_approx_linear20step_lag1)
+
+
+    ## re-calculate the interaction of tax incentives and top marginal income tax rates:
+    ## effectively makes it bigger, so coefs should be smaller
+
+    ## first calculate interaction values
+
+    ti_tmitr_interactions <- lapply(cbn_dfs, \(x)
+           lapply(seq(1,5), \(lagx)
+                  x %>% 
+                  mutate(!!paste0("ti_tmitr_interact_lag", lagx) :=
+                             get(paste0("tmitr_approx_linear20step_lag", lagx)) * sum_core) %>% 
+                  select(!!paste0("ti_tmitr_interact_lag", lagx))) %>%
+           Reduce(\(x,y) cbind(x,y), .) %>% atb())
+           
+    ## then replace old and with new interaction values
+
+    cbn_dfs_names <- names(cbn_dfs)
+    names(cbn_dfs_names) <- cbn_dfs_names
+
+    cbn_dfs <- lapply(cbn_dfs_names, \(x) 
+           cbind(cbn_dfs[[x]] %>% select(-all_of(names(ti_tmitr_interactions[[x]]))),
+                 ti_tmitr_interactions[[x]]) %>% atb())
+
 
 
     ## add iso3c_num to make stata happy 
@@ -656,7 +684,7 @@ vrbl_thld_choices <- gen_vrbl_thld_choices(hnwi_vars, inc_ineq_vars, weal_ineq_v
 ## ** running with hopefully better ids
 
 
-batch_version <- "v18"
+batch_version <- "v19"
 REG_MONKEY_DIR <- "/home/johannes/ownCloud/reg_res/"
 REG_RES_DIR <- paste0(REG_MONKEY_DIR,  batch_version, "/")
 REG_RES_FILE_LAGS <- paste0(REG_MONKEY_DIR, batch_version, "_lags.csv")
@@ -671,11 +699,10 @@ if (REG_SPEC_DIR %!in% existing_dirs){ system(paste0("mkdir ", REG_SPEC_DIR))}
 PID_DIR <- "/home/johannes/pid_dir/"
    
 
-
 library(purrr)
 ## generate basic spec of lag, variable and threshold choices
 t1 = Sys.time()
-NBR_SPECS <- 10
+NBR_SPECS <- 30
 reg_specs <- lapply(seq(1,NBR_SPECS), \(x) gen_reg_spec(non_thld_lngtd_vars)) %>% unique() #
 ## generate variations of basic reg_spec
 reg_spec_varyns <- mclapply(reg_specs, vary_spec, mc.cores = 6) %>% flatten()
