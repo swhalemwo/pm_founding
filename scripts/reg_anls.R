@@ -87,11 +87,19 @@ df_anls_within_prep <- df_anls_base %>%
     filter(nbr_mdls_cvrgd == 5)
 
 
+NBR_MDLS <- 5
+
 df_anls_within_prep2 <- df_anls_within_prep %>%
     group_by(cbn_name, vrbl_name_unlag) %>%
-    filter(base_lag_spec_id %in% sample(unique(base_lag_spec_id), 15))
+    filter(base_lag_spec_id %in% sample(unique(base_lag_spec_id), NBR_MDLS))
+
+
+## LAZILY just copying 
+df_anls_within_prep2 <- df_anls_within_prep
 
 ## unique(df_anls_within$vrbl_name_unlag)
+
+## just rbind the time-invariant values there 
 
 df_anls_time_invariant <- df_anls_base %>%
     filter(vrbl_name %in% crscn_vars) %>%
@@ -115,6 +123,7 @@ library(ggbeeswarm)
 
 
 pdf(paste0(FIG_DIR, "reg_within_tmitr_fixed.pdf"), width = 10, height = 12)
+
 ggplot(df_anls_within, aes(x=lag, y=coef, group = base_lag_spec)) +
     geom_line(show.legend = F, alpha = 0.15) +
     geom_quasirandom(aes(color = t_value, shape = factor(sig)), size = 2, height = 0, width = 0.3) + 
