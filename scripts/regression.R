@@ -665,226 +665,162 @@ vary_spec <- function(reg_spec, vvs){
 
 
 
+gen_vrbl_vectors <- function() {
+    #' generate the variable vectors (group of variables): use only one large global (?) object
 
-## make sure select isn't masked
-select <- dplyr::select
-lag <- dplyr::lag
-timeout <- fscaret::timeout
-
-base_vars <- c("iso3c", "year")
-crscn_vars <- c("sum_core", "cnt_contemp_1995")
-hnwi_vars <- sapply(hnwi_cutoff_vlus, \(x) paste0("hnwi_nbr_", sanitize_number(x)))
-inc_ineq_vars <- c("sptinc992j_p90p100", "sptinc992j_p99p100", "gptinc992j")
-weal_ineq_vars <- c("shweal992j_p90p100", "shweal992j_p99p100", "ghweal992j")
-density_vars <- c("nbr_opened_cum", "nbr_opened_cum_sqrd")
+    base_vars <- c("iso3c", "year")
+    crscn_vars <- c("sum_core", "cnt_contemp_1995")
+    hnwi_vars <- sapply(hnwi_cutoff_vlus, \(x) paste0("hnwi_nbr_", sanitize_number(x)))
+    inc_ineq_vars <- c("sptinc992j_p90p100", "sptinc992j_p99p100", "gptinc992j")
+    weal_ineq_vars <- c("shweal992j_p90p100", "shweal992j_p99p100", "ghweal992j")
+    density_vars <- c("nbr_opened_cum", "nbr_opened_cum_sqrd")
 
 
 
-## non_thld_lngtd_vars <- c("tmitr_approx_linear20step", "ti_tmitr_interact", "smorc_dollar_fxm", "NY.GDP.PCAP.CDk", "SP.POP.TOTLm", "clctr_cnt_cpaer")
+    ## non_thld_lngtd_vars <- c("tmitr_approx_linear20step", "ti_tmitr_interact", "smorc_dollar_fxm", "NY.GDP.PCAP.CDk", "SP.POP.TOTLm", "clctr_cnt_cpaer")
 
-ctrl_vars <- c("NY.GDP.PCAP.CDk", "SP.POP.TOTLm", "clctr_cnt_cpaer", "cnt_contemp_1995")
-ctrl_vars_lngtd <- ctrl_vars[ctrl_vars %!in% crscn_vars]
-ti_vars <- c("tmitr_approx_linear20step", "ti_tmitr_interact")
-cult_spending_vars <- c("smorc_dollar_fxm")
+    ctrl_vars <- c("NY.GDP.PCAP.CDk", "SP.POP.TOTLm", "clctr_cnt_cpaer", "cnt_contemp_1995")
+    ctrl_vars_lngtd <- ctrl_vars[ctrl_vars %!in% crscn_vars]
+    ti_vars <- c("tmitr_approx_linear20step", "ti_tmitr_interact")
+    cult_spending_vars <- c("smorc_dollar_fxm")
 
-non_thld_lngtd_vars <- c(ti_vars, cult_spending_vars, ctrl_vars_lngtd, density_vars)
-lngtd_vars <- c(hnwi_vars, inc_ineq_vars, weal_ineq_vars, non_thld_lngtd_vars)
-all_rel_vars <- unique(c(hnwi_vars, inc_ineq_vars, weal_ineq_vars, non_thld_lngtd_vars, crscn_vars))
+    non_thld_lngtd_vars <- c(ti_vars, cult_spending_vars, ctrl_vars_lngtd, density_vars)
+    lngtd_vars <- c(hnwi_vars, inc_ineq_vars, weal_ineq_vars, non_thld_lngtd_vars)
+    all_rel_vars <- unique(c(hnwi_vars, inc_ineq_vars, weal_ineq_vars, non_thld_lngtd_vars, crscn_vars))
+
+    return(list(
+        base_vars = base_vars,
+        crscn_vars = crscn_vars,
+        hnwi_vars = hnwi_vars,
+        inc_ineq_vars = inc_ineq_vars,
+        weal_ineq_vars = weal_ineq_vars,
+        density_vars = density_vars,
+        ctrl_vars = ctrl_vars,
+        ctrl_vars_lngtd = ctrl_vars_lngtd,
+        ti_vars = ti_vars,
+        cult_spending_vars = cult_spending_vars,
+
+        non_thld_lngtd_vars = non_thld_lngtd_vars,
+        lngtd_vars = lngtd_vars,
+        all_rel_vars = all_rel_vars)
+        )
+}
 
 
-vrbl_cbns <- gen_cbns(all_rel_vars)
+setup_regression_folders_and_files <- function(batch_version) {
+    #' setup folders and files for running regressions
 
-cbn_dfs <- gen_cbn_dfs(lngtd_vars, crscn_vars, vrbl_cbns)
+    ## batch_version <- "v20"
+    REG_MONKEY_DIR <- "/home/johannes/ownCloud/reg_res/"
+    BATCH_DIR <- paste0(REG_MONKEY_DIR, batch_version, "/")
 
-vrbl_thld_choices <- gen_vrbl_thld_choices(hnwi_vars, inc_ineq_vars, weal_ineq_vars)
+    REG_RES_DIR <- paste0(BATCH_DIR, "reg_res/")
+    REG_RES_FILE_LAGS <- paste0(BATCH_DIR, batch_version, "_lags.csv")
+    REG_RES_FILE_CFGS <- paste0(BATCH_DIR, batch_version, "_cfgs.csv")
+    REG_SPEC_DIR <- paste0(BATCH_DIR, "specs/")
+    MDL_START_FILE <- paste0(BATCH_DIR, batch_version, "_start.csv")
+    MDL_END_FILE <- paste0(BATCH_DIR, batch_version, "_end.csv")
+    ## generate existing dirs: have to normalizePath (remove //), and paste additional "/" at the end reeee
+    existing_batch_dirs <- paste0(normalizePath(list.dirs(REG_MONKEY_DIR, recursive = F)), "/")
+    
+    if (BATCH_DIR %!in% existing_batch_dirs) { system(paste0("mkdir ", BATCH_DIR))}
+    existing_dirs <- paste0(normalizePath(list.dirs(BATCH_DIR, recursive = F)), "/")
+
+    if (REG_RES_DIR %!in% existing_dirs){ system(paste0("mkdir ", REG_RES_DIR))}
+    if (REG_SPEC_DIR %!in% existing_dirs){ system(paste0("mkdir ", REG_SPEC_DIR))}
+    PID_DIR <- "/home/johannes/pid_dir/"
+
+    return(list(
+        batch_version = batch_version,
+        BATCH_DIR = BATCH_DIR,
+        REG_MONKEY_DIR = REG_MONKEY_DIR,
+        REG_RES_DIR = REG_RES_DIR,
+        REG_RES_FILE_LAGS = REG_RES_FILE_LAGS,
+        REG_RES_FILE_CFGS = REG_RES_FILE_CFGS,
+        REG_SPEC_DIR = REG_SPEC_DIR,
+        MDL_START_FILE = MDL_START_FILE,
+        MDL_END_FILE = MDL_END_FILE,
+        PID_DIR = PID_DIR
+    )
+    )
+}
+
+gen_batch_reg_specs <- function(NBR_SPECS, vvs) {
+    #' generate the regression specs for a batch 
+
+    
+    
+    ## generate basic spec of lag, variable and threshold choices
+    t1 = Sys.time()
+    ## NBR_SPECS <- 750
+    reg_specs <- lapply(seq(1,NBR_SPECS), \(x) gen_reg_spec(vvs$non_thld_lngtd_vars)) %>% unique() #
+    ## generate variations of basic reg_spec
+    reg_spec_varyns <- mclapply(reg_specs, \(x) vary_spec(x, vvs), mc.cores = 6) %>% flatten()
+    ## reg_spec_varyns2 <- mclapply(reg_specs, vary_spec, mc.cores = 6) %>% Reduce(\(x,y) c(x,y), .)
+    ## add the combination info
+    reg_spec_cbns <- mclapply(reg_spec_varyns, \(x) gen_spec_cbn_info(x, vvs), mc.cores = 6) %>% flatten()
+
+    ## reg_spec_cbns <- lapply(reg_spec_varyns, \(x) gen_spec_cbn_info(x, vvs$base_vars)) %>% flatten()
+    ## reg_spec_cbns <- sapply(reg_spec_varyns, \(x) gen_spec_cbn_info(x, base_vars))
+    ## mclapply is actually slower here because Reduce() is needed, and reducing tens of thousands of lists single-threadedly is slower than using sapply on single core
+    ## guess I could split reg_spec_varyns manually into sections, each called with sapply, overall with mclapply: then I have just mc.cores number of lists, so Reduce should be quick
+    ## flatten() from purrr is actually faster lol 
+    ## add the model info
+    ## reg_spec_mdls <- sapply(reg_spec_cbns, gen_spec_mdl_info)
+    reg_spec_mdls <- mclapply(reg_spec_cbns, gen_spec_mdl_info, mc.cores = 6) %>% flatten()
+    ## same issue here: mclapply with Reduce is slow, but with flatten it's faster :)))
+    t2 = Sys.time()
+    print(t2-t1)
+
+    return(reg_spec_mdls)
+
+}
+
+
+vvs <- gen_vrbl_vectors()
+vrbl_cbns <- gen_cbns(vvs$all_rel_vars, vvs$base_vars)
+cbn_dfs <- gen_cbn_dfs(vvs$lngtd_vars, vvs$crscn, vrbl_cbns, vvs$base_vars)
+vrbl_thld_choices <- gen_vrbl_thld_choices(vvs$hnwi_vars, vvs$inc_ineq_vars, vvs$weal_ineq_vars)
 
 ## ** running with hopefully better ids
 
 
-batch_version <- "v19"
-REG_MONKEY_DIR <- "/home/johannes/ownCloud/reg_res/"
-REG_RES_DIR <- paste0(REG_MONKEY_DIR,  batch_version, "/")
-REG_RES_FILE_LAGS <- paste0(REG_MONKEY_DIR, batch_version, "_lags.csv")
-REG_RES_FILE_CFGS <- paste0(REG_MONKEY_DIR, batch_version, "_cfgs.csv")
-REG_SPEC_DIR <- paste0(REG_MONKEY_DIR, batch_version, "_specs/")
-MDL_START_FILE <- paste0(REG_MONKEY_DIR, batch_version, "_start.csv")
-MDL_END_FILE <- paste0(REG_MONKEY_DIR, batch_version, "_end.csv")
-## generate existing dirs: have to normalizePath (remove //), and paste additional "/" at the end reeee
-existing_dirs <- paste0(normalizePath(list.dirs(REG_MONKEY_DIR, recursive = F)), "/")
-if (REG_RES_DIR %!in% existing_dirs){ system(paste0("mkdir ", REG_RES_DIR))}
-if (REG_SPEC_DIR %!in% existing_dirs){ system(paste0("mkdir ", REG_SPEC_DIR))}
-PID_DIR <- "/home/johannes/pid_dir/"
-   
+fldr_info <- setup_regression_folders_and_files("v22")
 
-library(purrr)
-## generate basic spec of lag, variable and threshold choices
-t1 = Sys.time()
-NBR_SPECS <- 30
-reg_specs <- lapply(seq(1,NBR_SPECS), \(x) gen_reg_spec(non_thld_lngtd_vars)) %>% unique() #
-## generate variations of basic reg_spec
-reg_spec_varyns <- mclapply(reg_specs, vary_spec, mc.cores = 6) %>% flatten()
-## reg_spec_varyns2 <- mclapply(reg_specs, vary_spec, mc.cores = 6) %>% Reduce(\(x,y) c(x,y), .)
-## add the combination info
-reg_spec_cbns <- mclapply(reg_spec_varyns, \(x) gen_spec_cbn_info(x, base_vars), mc.cores = 6) %>% flatten()
-## reg_spec_cbns <- sapply(reg_spec_varyns, \(x) gen_spec_cbn_info(x, base_vars))
-## mclapply is actually slower here because Reduce() is needed, and reducing tens of thousands of lists single-threadedly is slower than using sapply on single core
-## guess I could split reg_spec_varyns manually into sections, each called with sapply, overall with mclapply: then I have just mc.cores number of lists, so Reduce should be quick
-## flatten() from purrr is actually faster lol 
-## add the model info
-## reg_spec_mdls <- sapply(reg_spec_cbns, gen_spec_mdl_info)
-reg_spec_mdls <- mclapply(reg_spec_cbns, gen_spec_mdl_info, mc.cores = 6) %>% flatten()
-## same issue here: mclapply with Reduce is slow, but with flatten it's faster :)))
-t2 = Sys.time()
-print(t2-t1)
+NBR_SPECS = 1
+reg_spec_mdls <- gen_batch_reg_specs(NBR_SPECS, vvs)
+
 
 
 
 ## run_vrbl_mdl_vars(reg_spec_mdls[[2]])
 ## gen_mdl_id(reg_spec_mdls[[2]])
 
-mclapply(reg_spec_mdls,run_vrbl_mdl_vars, mc.cores = 6)
+mclapply(reg_spec_mdls, \(x) run_vrbl_mdl_vars(x, vvs, fldr_info), mc.cores = 6) #
 
+run_vrbl_mdl_vars(reg_spec_mdls[[1]], vvs, fldr_info)
 
-## *** decently fast analysis of tmitr_interaction having same value as main value
-jj <- lapply(reg_spec_mdls, \(x) t(x$lngtd_vrbls[x$lngtd_vrbls$vrbl %in% c("tmitr_approx_linear20step", "ti_tmitr_interact"),])[2,]) %>% Reduce(\(x,y) rbind(x,y), .) %>% atb(.name_repair = ~c("v1", "v2"))
-
-jj <- mclapply(reg_spec_mdls, \(x) t(x$lngtd_vrbls[x$lngtd_vrbls$vrbl %in% c("tmitr_approx_linear20step", "ti_tmitr_interact"),])[2,], mc.cores = 6)
-kk <- do.call(rbind, jj) %>% atb(.name_repair = ~c("v1", "v2"))
-filter(kk, v1 != v2)
-
-
-## ps() %>% filter(name == "R", pid != Sys.getpid()) %>% pull(ps_handle) %>% lapply(ps_kill)
-
-## ** tax incentive interaction debugging
-reg_spec <- reg_spec_mdls[[1]]
-
-
-
-t1 <- Sys.time()
-x <- lapply(reg_spec_mdls[1:100], \(x) x$lngtd_vrbls)
-            ## \(x) filter(x$lngtd_vrbls, vrbl %in% c("tmitr_approx_linear20step", "ti_tmitr_interact")))
-            ## %>%
-            ## pivot_wider(names_from = vrbl, values_from = lag))
-## %>% rbindlist()
-t2 <- Sys.time()
-print(t2-t1)
-
-filter(x, tmitr_approx_linear20step != ti_tmitr_interact)
-## not always the same 
-
-
-## ** pid bugfixing
-
-lapply(reg_spec_mdls[1:10],run_vrbl_mdl_vars)
-
-timeout_test <- function() {
-    cur_dir <- getwd()
-    pid <- Sys.getpid()
-    new_dir = paste0(PROJECT_DIR, "pid_dir/", pid)
-
-    system(paste0("mkdir ", new_dir))
-    setwd(new_dir)
-    
-
-    x <- 1+1
-    print(x)
-
-    setwd(cur_dir)
-    
-}
-
-timeout(timeout_test(), seconds = 2)
-
-
-## ** multi_lag_testing
-
-test_mdl1 <- reg_spec_mdls[[1]]
-
-test_mdl1$mdl_vars <- c(test_mdl1$mdl_vars, "sptinc992j_p99p100_lag2", "sptinc992j_p99p100_lag3", "sptinc992j_p99p100_lag4", "sptinc992j_p99p100_lag5", "smorc_dollar_fxm_lag1", "smorc_dollar_fxm_lag3", "smorc_dollar_fxm_lag4", "smorc_dollar_fxm_lag5")
-
-run_vrbl_mdl_vars(test_mdl1, verbose = T)
-## huh that works pretty well.... maybe all my work was for nothing?
-## maybe should have been more 
-
-test_mdl2 <- reg_spec_mdls[[3]]
-test_mdl2$mdl_vars <- c(test_mdl2$mdl_vars, "sptinc992j_p99p100_lag2", "sptinc992j_p99p100_lag3", "sptinc992j_p99p100_lag4", "sptinc992j_p99p100_lag5", "hnwi_nbr_1B_lag2", "hnwi_nbr_1B_lag3", "hnwi_nbr_1B_lag4")
-run_vrbl_mdl_vars(test_mdl2, verbose = T)
-
-## full model doesn't run
-## also not when removing clctr_cnt_cpaer_lags
-## also not when also removing additional population lags
-## also not when removing additional GDP lags
-## also not when removing additional shweal lags
-## runs after also removing additional hnwi_lags
-## runs with 1 and 2 additional hnwi_lags, breaks down when adding third additional lag
-## -> seems my hunch was completely correct
-
-## ** clustering
-
-get_df_clust <- function() {
-    #' generate the dataframe used for clustering 
-    df_clust_prep <- df_reg %>%
-        filter(year > 1995) %>% 
-        select(iso3c, year, NY.GDP.PCAP.CDk, sptinc992j_p99p100, shweal992j_p99p100, sum_core, cnt_contemp_1995,
-               hnwi_nbr_30M, SP.POP.TOTLm) %>%
-        mutate(cnt_contemp_1995 = cnt_contemp_1995/SP.POP.TOTLm,
-               hnwi_nbr_30M = hnwi_nbr_30M/SP.POP.TOTLm) %>%
-        select(-SP.POP.TOTLm) %>% 
-        na.omit()
-
-
-    df_clust <- df_clust_prep %>%
-        pivot_wider(id_cols = iso3c, names_from = year, values_from = setdiff(names(df_clust_prep), base_vars)) %>%
-        na.omit() ## ugly
-
-    return(df_clust)
-}
-
-
-
-dists <- dist(df_clust)
-
-run_cluster <- function(dists, method) {
-
-    clusts <- hclust(dists, method = method)
-    ## plot(clusts)
-    table(cutree(clusts, k=8))
-}
-
-
-clust_methods <- c("ward.D", "ward.D2", "single", "complete", "average", "mcquitty", "median", "centroid")
-
-lapply(clust_methods, \(x) run_cluster(dists, x))
-
-
-## * scrap 
-## ** first sloppy version 
-
-REG_RES_DIR <- "/home/johannes/ownCloud/reg_res/v5/"
-REG_RES_FILE <- "/home/johannes/ownCloud/reg_res/v5.csv"
-
-
-
-## generate 100 specs
-reg_specs <- lapply(seq(1,600), \(x) gen_reg_spec(non_thld_lngtd_vars)) %>% unique()
-
-## for each of the 100, generate the spec variations -> 3.7k total 
-all_spec_variations <- lapply(reg_specs, \(x) vary_spec(x))
-
-## flatten the 3.7k 
-all_specs_flat <- Reduce(\(x, y) c(x,y), all_spec_variations) %>% unique()
-
-
-## t1 = Sys.time()
-## lapply(all_specs_flat, \(x) run_spec(x, base_vars))
-## t2 = Sys.time()
-
-
-## gets stuck after ~70 models, which isn't even a complete spec per thread..
 t1 = Sys.time()
-mclapply(all_specs_flat, \(x) run_spec(x, base_vars), mc.cores = 6)
+mdl_ids <- mclapply(reg_spec_mdls, \(x) gen_mdl_id(x)$df_idx$mdl_id[1], mc.cores = 6)
 t2 = Sys.time()
-
 print(t2-t1)
+
+names(reg_spec_mdls) <- mdl_ids
+
+
+mdl_ids_tbl <- tibble(mdl_id = unlist(mdl_ids)) 
+mdl_ids_tbl$x <- 1
+
+mdls_to_check_ids <- merge(mdl_ids_tbl,
+      df_reg_anls_cfgs_wide %>% select(mdl_id) %>% mutate(y=2),
+      all.x = T) %>% atb() %>%
+    filter(is.na(y)) %>% pull(mdl_id)
+
+mdls_to_check_locs <- which(mdl_ids %in% mdls_to_check_ids)
+
+## reg_spec_mdls[mdls_to_check_specs]
+mclapply(reg_spec_mdls[mdls_to_check_locs], run_vrbl_mdl_vars, mc.cores = 6) 
+
+
 
 

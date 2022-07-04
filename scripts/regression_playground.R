@@ -820,3 +820,146 @@ df_anls_within %>%
 
 
 
+## ** decently fast analysis of tmitr_interaction having same value as main value
+jj <- lapply(reg_spec_mdls, \(x) t(x$lngtd_vrbls[x$lngtd_vrbls$vrbl %in% c("tmitr_approx_linear20step", "ti_tmitr_interact"),])[2,]) %>% Reduce(\(x,y) rbind(x,y), .) %>% atb(.name_repair = ~c("v1", "v2"))
+
+jj <- mclapply(reg_spec_mdls, \(x) t(x$lngtd_vrbls[x$lngtd_vrbls$vrbl %in% c("tmitr_approx_linear20step", "ti_tmitr_interact"),])[2,], mc.cores = 6)
+kk <- do.call(rbind, jj) %>% atb(.name_repair = ~c("v1", "v2"))
+filter(kk, v1 != v2)
+
+
+## ps() %>% filter(name == "R", pid != Sys.getpid()) %>% pull(ps_handle) %>% lapply(ps_kill)
+
+## ** tax incentive interaction debugging
+reg_spec <- reg_spec_mdls[[1]]
+
+
+
+t1 <- Sys.time()
+x <- lapply(reg_spec_mdls[1:100], \(x) x$lngtd_vrbls)
+            ## \(x) filter(x$lngtd_vrbls, vrbl %in% c("tmitr_approx_linear20step", "ti_tmitr_interact")))
+            ## %>%
+            ## pivot_wider(names_from = vrbl, values_from = lag))
+## %>% rbindlist()
+t2 <- Sys.time()
+print(t2-t1)
+
+filter(x, tmitr_approx_linear20step != ti_tmitr_interact)
+## not always the same 
+
+
+## ** pid bugfixing
+
+lapply(reg_spec_mdls[1:10],run_vrbl_mdl_vars)
+
+timeout_test <- function() {
+    cur_dir <- getwd()
+    pid <- Sys.getpid()
+    new_dir = paste0(PROJECT_DIR, "pid_dir/", pid)
+
+    system(paste0("mkdir ", new_dir))
+    setwd(new_dir)
+    
+
+    x <- 1+1
+    print(x)
+
+    setwd(cur_dir)
+    
+}
+
+timeout(timeout_test(), seconds = 2)
+
+
+## ** multi_lag_testing
+
+test_mdl1 <- reg_spec_mdls[[1]]
+
+test_mdl1$mdl_vars <- c(test_mdl1$mdl_vars, "sptinc992j_p99p100_lag2", "sptinc992j_p99p100_lag3", "sptinc992j_p99p100_lag4", "sptinc992j_p99p100_lag5", "smorc_dollar_fxm_lag1", "smorc_dollar_fxm_lag3", "smorc_dollar_fxm_lag4", "smorc_dollar_fxm_lag5")
+
+run_vrbl_mdl_vars(test_mdl1, verbose = T)
+## huh that works pretty well.... maybe all my work was for nothing?
+## maybe should have been more 
+
+test_mdl2 <- reg_spec_mdls[[3]]
+test_mdl2$mdl_vars <- c(test_mdl2$mdl_vars, "sptinc992j_p99p100_lag2", "sptinc992j_p99p100_lag3", "sptinc992j_p99p100_lag4", "sptinc992j_p99p100_lag5", "hnwi_nbr_1B_lag2", "hnwi_nbr_1B_lag3", "hnwi_nbr_1B_lag4")
+run_vrbl_mdl_vars(test_mdl2, verbose = T)
+
+## full model doesn't run
+## also not when removing clctr_cnt_cpaer_lags
+## also not when also removing additional population lags
+## also not when removing additional GDP lags
+## also not when removing additional shweal lags
+## runs after also removing additional hnwi_lags
+## runs with 1 and 2 additional hnwi_lags, breaks down when adding third additional lag
+## -> seems my hunch was completely correct
+
+## ** clustering
+
+get_df_clust <- function() {
+    #' generate the dataframe used for clustering 
+    df_clust_prep <- df_reg %>%
+        filter(year > 1995) %>% 
+        select(iso3c, year, NY.GDP.PCAP.CDk, sptinc992j_p99p100, shweal992j_p99p100, sum_core, cnt_contemp_1995,
+               hnwi_nbr_30M, SP.POP.TOTLm) %>%
+        mutate(cnt_contemp_1995 = cnt_contemp_1995/SP.POP.TOTLm,
+               hnwi_nbr_30M = hnwi_nbr_30M/SP.POP.TOTLm) %>%
+        select(-SP.POP.TOTLm) %>% 
+        na.omit()
+
+
+    df_clust <- df_clust_prep %>%
+        pivot_wider(id_cols = iso3c, names_from = year, values_from = setdiff(names(df_clust_prep), base_vars)) %>%
+        na.omit() ## ugly
+
+    return(df_clust)
+}
+
+
+
+dists <- dist(df_clust)
+
+run_cluster <- function(dists, method) {
+
+    clusts <- hclust(dists, method = method)
+    ## plot(clusts)
+    table(cutree(clusts, k=8))
+}
+
+
+clust_methods <- c("ward.D", "ward.D2", "single", "complete", "average", "mcquitty", "median", "centroid")
+
+lapply(clust_methods, \(x) run_cluster(dists, x))
+
+
+## * scrap 
+## ** first sloppy version 
+
+REG_RES_DIR <- "/home/johannes/ownCloud/reg_res/v5/"
+REG_RES_FILE <- "/home/johannes/ownCloud/reg_res/v5.csv"
+
+
+
+## generate 100 specs
+reg_specs <- lapply(seq(1,600), \(x) gen_reg_spec(non_thld_lngtd_vars)) %>% unique()
+
+## for each of the 100, generate the spec variations -> 3.7k total 
+all_spec_variations <- lapply(reg_specs, \(x) vary_spec(x))
+
+## flatten the 3.7k 
+all_specs_flat <- Reduce(\(x, y) c(x,y), all_spec_variations) %>% unique()
+
+
+## t1 = Sys.time()
+## lapply(all_specs_flat, \(x) run_spec(x, base_vars))
+## t2 = Sys.time()
+
+
+## gets stuck after ~70 models, which isn't even a complete spec per thread..
+t1 = Sys.time()
+mclapply(all_specs_flat, \(x) run_spec(x, base_vars), mc.cores = 6)
+t2 = Sys.time()
+
+print(t2-t1)
+
+
