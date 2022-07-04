@@ -26,10 +26,10 @@ df_reg_anls_cfgs <- read.csv(paste0(REG_RES_FILE_CFGS), sep = " ", header = F,
                              col.names = c("variable", "value", "cfg_id", "lag_spec", "mdl_id", "cvrgd")) %>%
     atb()
 
-df_reg_anls_cfgs_wide <- df_reg_anls_cfgs %>% select(variable, value, mdl_id, lag_spec) %>%
+df_reg_anls_cfgs_wide <- df_reg_anls_cfgs %>% select(variable, value, mdl_id, lag_spec, cvrgd) %>% unique() %>% 
     pivot_wider(id_cols = c(mdl_id, lag_spec), names_from = variable, values_from = value)
 
-    
+
 
 ## read_reg_res(df_reg_anls_cfgs$mdl_id[[1]])
 
@@ -48,12 +48,10 @@ gof_df_cbn$cbn_name <- factor(gof_df_cbn$cbn_name, levels = names(vrbl_cbns))
 
 
 pdf(paste0(FIG_DIR, "cbn_log_likelihoods.pdf"), width = 6, height = 3)
-
 filter(gof_df_cbn, gof_names == "log_likelihood") %>%
     ggplot(aes(x = gof_value, fill = cbn_name)) +
     geom_histogram(binwidth = 2)
 ## facet_wrap(~cbn_name, ncol = 1, scales = "fixed")
-
 dev.off()
 
 ## ok makes sense: cbn_all models have best fit: most variables, least observations
@@ -87,7 +85,7 @@ df_anls_within_prep <- df_anls_base %>%
     filter(nbr_mdls_cvrgd == 5)
 
 
-NBR_MDLS <- 5
+NBR_MDLS <- 10
 
 df_anls_within_prep2 <- df_anls_within_prep %>%
     group_by(cbn_name, vrbl_name_unlag) %>%
@@ -95,7 +93,7 @@ df_anls_within_prep2 <- df_anls_within_prep %>%
 
 
 ## LAZILY just copying 
-df_anls_within_prep2 <- df_anls_within_prep
+## df_anls_within_prep2 <- df_anls_within_prep
 
 ## unique(df_anls_within$vrbl_name_unlag)
 
@@ -123,7 +121,6 @@ library(ggbeeswarm)
 
 
 pdf(paste0(FIG_DIR, "reg_within_tmitr_fixed.pdf"), width = 10, height = 12)
-
 ggplot(df_anls_within, aes(x=lag, y=coef, group = base_lag_spec)) +
     geom_line(show.legend = F, alpha = 0.15) +
     geom_quasirandom(aes(color = t_value, shape = factor(sig)), size = 2, height = 0, width = 0.3) + 
@@ -132,7 +129,6 @@ ggplot(df_anls_within, aes(x=lag, y=coef, group = base_lag_spec)) +
     theme(strip.text.y.left = element_text(angle = 0)) +
     scale_color_gradient2(low = "blue", mid = "grey", high = "red") +
     scale_shape_manual(values = c(1,4))
-
 dev.off()
         
 ## df_anls_within_ribbon
@@ -165,14 +161,12 @@ df_anls_all$vrbl_name_unlag <- factor(df_anls_all$vrbl_name_unlag,
                                                  cult_spending_vars, ctrl_vars_lngtd))
 
 pdf(paste0(FIG_DIR, "reg_res_all_tmitr_fixed.pdf"), width = 8, height = 12)
-
 ggplot(df_anls_all, aes(x=lag, y=coef)) +
     geom_quasirandom(aes(color = t_value, shape = factor(sig)), size = 2, height = 0, width = 0.3) +
     facet_grid(cols = vars(cbn_name), rows = vars(vrbl_name_unlag), scales = "free", switch = "y") +
     theme(strip.text.y.left = element_text(angle = 0)) +
     scale_color_gradient2(low = "blue", mid = "grey", high = "red") +
     scale_shape_manual(values = c(1,4))
-
 dev.off()
 
 
