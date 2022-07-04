@@ -29,6 +29,13 @@ library(RStata)
 
 options(RStata.StataPath = "/usr/local/stata14/stata")
 options(RStata.StataVersion = 14)
+library(ps)
+## make sure all kinds of basic functions aren't masked
+select <- dplyr::select
+lag <- dplyr::lag
+timeout <- fscaret::timeout
+library(purrr)
+
 
 cleanup_old_r_procs <- function() {
     #' kill old R procs, not used so far
@@ -138,10 +145,10 @@ parse_stata_res <- function(stata_res, stata_output_vars, gof_names){
 
 
 
-save_parsed_res <- function(res_list, idx) {
+save_parsed_res <- function(res_list, idx, fldr_info) {
     #' save the parsed stata res to id
 
-    saveRDS(res_list, file = paste0(REG_RES_DIR, idx))
+    saveRDS(res_list, file = paste0(fldr_info$REG_RES_DIR, idx))
     ## readRDS(file = paste0(PROJECT_DIR, "data/processed/res_list"))
 
 }
@@ -177,7 +184,7 @@ gen_vrbl_thld_choices <- function(hnwi_vars, inc_ineq_vars, weal_ineq_vars) {
 
 
 
-gen_reg_spec <- function(non_thld_lngd_vars) {
+gen_reg_spec <- function(non_thld_lngtd_vars) {
     
     #' generate the regression specification: basically just choice of some variables/thresholds and lag lengths
 
@@ -225,7 +232,7 @@ gen_reg_spec <- function(non_thld_lngd_vars) {
 ##     return(df_reg_lags[all_var_names])
 ## }
 
-gen_cbns <- function(rel_vars) {
+gen_cbns <- function(rel_vars, base_vars) {
     #' generate the combinations
     #' should be own function to allow the combination generation when generating the dfs (broad) and within specification
 
@@ -265,7 +272,7 @@ gen_cbn_models <- function(cbn_vars, base_vars, ctrl_vars) {
 
 
     
-gen_cbn_dfs <- function(lngtd_vars, crscn_vars, vrbl_cnbs) {
+gen_cbn_dfs <- function(lngtd_vars, crscn_vars, vrbl_cnbs, base_vars) {
     #' generate the dfs that correspond to variable combinations
     #' checks whether a country-year has coverage for all the lags for all the variables required by combination
     #' needs lngtd_vars and crscn_vars to set which to variables need to be named as lag
@@ -353,10 +360,12 @@ gen_cbn_dfs <- function(lngtd_vars, crscn_vars, vrbl_cnbs) {
     return(cbn_dfs)
 }
 
-gen_lag_id <- function(reg_spec) {
+gen_lag_id <- function(reg_spec, vvs) {
     #' generate the variable choice lag part of the id
+    #' see which longitudinal variables are included with which lag,
+    #' include variables which aren't included with "X" in id 
     
-    df_idx <- merge(tibble(vrbl = lngtd_vars), 
+    df_idx <- merge(tibble(vrbl = vvs$lngtd_vars), 
           reg_spec$lngtd_vrbls, all.x = T) %>%
         mutate(lag_str = as.character(lag)) %>%
         mutate(lag_str = ifelse(is.na(lag_str), "X", lag_str)) %>%
@@ -368,7 +377,7 @@ gen_lag_id <- function(reg_spec) {
 
 
 
-gen_mdl_id <- function(reg_spec) {
+gen_mdl_id <- function(reg_spec, vvs) {
     #' generate unique id for each model
 
     ## get id: need information which variable is there (X if not there), also of lag of each variable that is there
@@ -379,7 +388,7 @@ gen_mdl_id <- function(reg_spec) {
     ##     mutate(lag_str = as.character(lag)) %>%
     ##     mutate(lag_str = ifelse(is.na(lag_str), "X", lag_str)) %>%
     ##     select(variable=vrbl, value = lag_str)
-    df_idx <- gen_lag_id(reg_spec)
+    df_idx <- gen_lag_id(reg_spec, vvs)
 
 
     vrbl_lag_id <- paste0(df_idx$value, collapse = "")
@@ -410,7 +419,7 @@ gen_mdl_id <- function(reg_spec) {
 }
         
 
-timeout_stata <- function(iv_vars, stata_output_vars, gof_names, dfx, file_id, verbose) {
+timeout_stata <- function(iv_vars, stata_output_vars, gof_names, dfx, file_id, fldr_info, verbose) {
     #' run stata command, time it out if taking too long
     
     
@@ -419,9 +428,9 @@ timeout_stata <- function(iv_vars, stata_output_vars, gof_names, dfx, file_id, v
     cur_wd <- getwd()
     
     pid <- Sys.getpid()
-    new_dir <- paste0(PID_DIR, pid)
+    new_dir <- paste0(fldr_info$PID_DIR, pid)
     
-    present_dirs <- list.dirs(paste0(PID_DIR), recursive = F)
+    present_dirs <- list.dirs(paste0(fldr_info$PID_DIR), recursive = F)
     
     if (new_dir %!in% present_dirs) {
     
@@ -443,7 +452,7 @@ timeout_stata <- function(iv_vars, stata_output_vars, gof_names, dfx, file_id, v
 
     stata_res_parsed <- parse_stata_res(stata_res_raw, stata_output_vars, gof_names)
 
-    save_parsed_res(stata_res_parsed, idx = file_id)
+    save_parsed_res(stata_res_parsed, idx = file_id, fldr_info)
     
     return(list(
         result = T,
@@ -458,14 +467,13 @@ timeout_stata <- function(iv_vars, stata_output_vars, gof_names, dfx, file_id, v
 
     
 ## run_vrbl_mdl_vars <- function(mdl_vars, df_cbn, cbn_name, mdl_name, reg_specx) {
-run_vrbl_mdl_vars <- function(reg_spec, verbose = F) {
+run_vrbl_mdl_vars <- function(reg_spec, vvs, fldr_info, verbose = F) {
     #' run one regression given the model vars
-    
     
     df_cbn <- cbn_dfs[[reg_spec$cbn_name]]
 
 
-    id_res <- gen_mdl_id(reg_spec)
+    id_res <- gen_mdl_id(reg_spec, vvs)
 
     df_idx <- id_res$df_idx
     other_cfgs <- id_res$other_cfgs
@@ -473,12 +481,12 @@ run_vrbl_mdl_vars <- function(reg_spec, verbose = F) {
     file_id <- df_idx$mdl_id[1]
 
     ## saving reg spec information to debug later 
-    saveRDS(reg_spec, file = paste0(REG_SPEC_DIR, file_id))
+    saveRDS(reg_spec, file = paste0(fldr_info$REG_SPEC_DIR, file_id))
     ## write model id to start_file to see which models don't converge
-    write.table(file_id, MDL_START_FILE, append = T, col.names = F, row.names = F)
+    write.table(file_id, fldr_info$MDL_START_FILE, append = T, col.names = F, row.names = F)
 
 
-    iv_vars <- reg_spec$mdl_vars[reg_spec$mdl_vars %!in% base_vars]
+    iv_vars <- reg_spec$mdl_vars[reg_spec$mdl_vars %!in% vvs$base_vars]
 
     ## print("---")
 
@@ -487,21 +495,29 @@ run_vrbl_mdl_vars <- function(reg_spec, verbose = F) {
     stata_output_vars <- c(iv_vars, c("cons", "ln_r", "ln_s"))
     gof_names <- c("N", "log_likelihood", "N_g", "Chi2", "p", "df")
 
-    dfx <- select(df_cbn, all_of(c(base_vars, "iso3c_num", "nbr_opened",iv_vars)))
+    
+
+    dfx <- select(df_cbn, all_of(c(vvs$base_vars, "iso3c_num", "nbr_opened",iv_vars)))
 
     ## Sys.sleep(runif(1)/10)
     
     ## use trycatch with fscaret to terminate stata command if it doesn't converge
-    converged <- suppressWarnings(tryCatch({
-        fscaret::timeout(timeout_stata(iv_vars, stata_output_vars, gof_names, dfx, file_id, verbose = verbose),
-                         seconds = 5)},
-        error=function(e) {list(result = NULL, pid = Sys.getpid())}))
-                             
+    ## NEED PID DIR HERE
+    converged <- suppressWarnings(
+        tryCatch({
+            fscaret::timeout(timeout_stata(iv_vars, stata_output_vars, gof_names, dfx, file_id,
+                                           fldr_info, verbose = verbose),
+                             seconds = 5)},
+            error=function(e) {list(result = NULL, pid = Sys.getpid())}
+            )
+    )
+    
+                                 
     ## converged <- withTimeout(timeout_stata(iv_vars, stata_output_vars, gof_names, dfx, file_id, verbose = verbose),
     ##                          timeout = 1)
 
     ## converged <- T
-    proc_dir <- paste0(PID_DIR, converged$pid)
+    proc_dir <- paste0(fldr_info$PID_DIR, converged$pid)
     
     rmdir_cmd <- paste0("rm -r ", proc_dir)
     system(rmdir_cmd)
@@ -521,17 +537,17 @@ run_vrbl_mdl_vars <- function(reg_spec, verbose = F) {
     }
 
     ## save id to df_id to keep track
-    write.table(df_idx, file = REG_RES_FILE_LAGS, append = T, col.names = F, row.names = F)
-    write.table(other_cfgs, file = REG_RES_FILE_CFGS, append = T, col.names = F, row.names = F)
+    write.table(df_idx, file = fldr_info$REG_RES_FILE_LAGS, append = T, col.names = F, row.names = F)
+    write.table(other_cfgs, file = fldr_info$REG_RES_FILE_CFGS, append = T, col.names = F, row.names = F)
 
     ## write model id to end file to debug convergence failure
-    write.table(file_id, MDL_END_FILE, append = T, col.names = F, row.names = F)
+    write.table(file_id, fldr_info$MDL_END_FILE, append = T, col.names = F, row.names = F)
     
 }
 
 ## run_cbn <- function(cbn_vars, base_vars, ctrl_vars, cbn_name, reg_spec) {
 gen_spec_mdl_info <- function(reg_spec) {
-    #' run a combination
+    #' generate the model specifications (currently just has full models)
     
     
     ## print(paste0("run cbn ", which(names(vrbl_cbns) == reg_spec$cbn_name)))
@@ -559,20 +575,20 @@ gen_spec_mdl_info <- function(reg_spec) {
 
     
 
-gen_spec_cbn_info <- function(reg_spec, base_vars) {
-    #' run a specification
-
+gen_spec_cbn_info <- function(reg_spec, vvs) {
+    #' vary a reg-spec across variable combinations -> exclude variables not belonging to a particular combination
+    
     
 
     spec_vars <- apply(reg_spec$lngtd_vrbls, 1, \(x) paste0(x[["vrbl"]], "_lag", x[["lag"]]))
 
-    rel_vars_spec <- c(base_vars, crscn_vars, spec_vars)
+    rel_vars_spec <- c(vvs$base_vars, vvs$crscn_vars, spec_vars)
 
-    spec_cbns <- gen_cbns(rel_vars_spec)
+    spec_cbns <- gen_cbns(rel_vars_spec, vvs$base_vars)
 
     
     ## generate specification-specific control vars
-    ctrl_vars <- setdiff(spec_cbns$cbn_controls, base_vars)
+    ctrl_vars <- setdiff(spec_cbns$cbn_controls, vvs$base_vars)
 
     spec_cbn_names <- names(spec_cbns)
     names(spec_cbn_names) <- spec_cbn_names
@@ -581,11 +597,11 @@ gen_spec_cbn_info <- function(reg_spec, base_vars) {
     
     reg_specs_mod <- lapply(spec_cbn_names, \(i) c(reg_spec,
                                                    list(spec_cbn=spec_cbns[[i]],
-                                                        base_vars = base_vars,
+                                                        base_vars = vvs$base_vars,
                                                         ctrl_vars = ctrl_vars,
                                                         cbn_name = i)))
 
-                                                      
+    
     ## lapply(spec_cbn_names, \(x) run_cbn(spec_cbns[[x]], base_vars, ctrl_vars, x, reg_spec))
     ## for (i in spec_cbn_names) {
 
@@ -615,10 +631,11 @@ replace_vlue <- function(lngtd_vrbls, vrbl, lag) {
 
 
 
-vary_spec <- function(reg_spec){
+vary_spec <- function(reg_spec, vvs){
     #' for a spec, vary each variable along all lags 
     
-    base_lag_spec <- paste0(gen_lag_id(reg_spec)$value, collapse = "")
+    
+    base_lag_spec <- paste0(gen_lag_id(reg_spec, vvs)$value, collapse = "")
 
     varied_specs <-
         lapply(reg_spec[["lngtd_vrbls"]]$vrbl[reg_spec[["lngtd_vrbls"]]$vrbl != "ti_tmitr_interact"],
