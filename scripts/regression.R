@@ -491,14 +491,18 @@ run_vrbl_mdl_vars <- function(reg_spec, vvs, fldr_info, verbose = F) {
     
     df_cbn <- cbn_dfs[[reg_spec$cbn_name]]
 
+    ## id_res <- gen_mdl_id(reg_spec, vvs)
 
-    id_res <- gen_mdl_id(reg_spec, vvs)
-
-    df_idx <- id_res$df_idx
-    other_cfgs <- id_res$other_cfgs
-    mdl_id <- id_res$mdl_id
+    ## df_idx <- id_res$df_idx
+    ## other_cfgs <- id_res$other_cfgs
+    ## mdl_id <- id_res$mdl_id
           
-    file_id <- df_idx$mdl_id[1]
+    ## file_id <- df_idx$mdl_id[1]
+
+    df_idx <- reg_spec$df_idx
+    other_cfgs <- reg_spec$other_cfgs
+    file_id <- reg_spec$mdl_id
+
 
     ## saving reg spec information to debug later 
     saveRDS(reg_spec, file = paste0(fldr_info$REG_SPEC_DIR, file_id))
@@ -829,9 +833,14 @@ vrbl_thld_choices <- gen_vrbl_thld_choices(vvs$hnwi_vars, vvs$inc_ineq_vars, vvs
 
 fldr_info <- setup_regression_folders_and_files("v22")
 
+## generating 20k models costs around 5 secs
+
 NBR_SPECS = 1
 reg_spec_mdls <- gen_batch_reg_specs(NBR_SPECS, vvs)
 names(reg_spec_mdls) <- lapply(reg_spec_mdls, \(x) x$mdl_id)
+
+## check how unique the model cfgs are 
+table(table(names(reg_spec_mdls)))
 
 
 ## run_vrbl_mdl_vars(reg_spec_mdls[[2]])
@@ -839,14 +848,10 @@ names(reg_spec_mdls) <- lapply(reg_spec_mdls, \(x) x$mdl_id)
 
 cvrgns <- mclapply(reg_spec_mdls[1:30], \(x) run_vrbl_mdl_vars(x, vvs, fldr_info), mc.cores = 6) %>% unlist()
 
-run_vrbl_mdl_vars(reg_spec_mdls[[1]], vvs, fldr_info)
+## run_vrbl_mdl_vars(reg_spec_mdls[[1]], vvs, fldr_info)
 
-t1 = Sys.time()
-mdl_ids <- mclapply(reg_spec_mdls, \(x) gen_mdl_id(x)$df_idx$mdl_id[1], mc.cores = 6)
-t2 = Sys.time()
-print(t2-t1)
 
-names(reg_spec_mdls) <- mdl_ids
+
 
 
 mdl_ids_tbl <- tibble(mdl_id = unlist(mdl_ids)) 
