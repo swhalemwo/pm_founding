@@ -562,6 +562,8 @@ run_vrbl_mdl_vars <- function(reg_spec, vvs, fldr_info, verbose = F) {
 
     ## write model id to end file to debug convergence failure
     write.table(file_id, fldr_info$MDL_END_FILE, append = T, col.names = F, row.names = F)
+
+    converged$result
     
 }
 
@@ -620,7 +622,7 @@ gen_spec_cbn_info <- function(reg_spec, vvs) {
     ctrl_vars <- setdiff(spec_cbns$cbn_controls, vvs$base_vars)
 
     spec_cbn_names <- names(spec_cbns)
-    names(spec_cbn_names) <- spec_cbn_names
+    ## names(spec_cbn_names) <- spec_cbn_names
 
     
     
