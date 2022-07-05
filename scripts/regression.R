@@ -823,25 +823,30 @@ gen_batch_reg_specs <- function(NBR_SPECS, vvs) {
 ##     reg_spec <- readRDS(paste0(fldr_info$REG_SPEC_DIR, mdl_id))
 ## }
 
+
+
+#' overall regression wrapping 
+
+reg_settings <- list(nbr_specs = 1,
+                     batch_nbr = "v23")
+
+
 vvs <- gen_vrbl_vectors()
 vrbl_cbns <- gen_cbns(vvs$all_rel_vars, vvs$base_vars)
 cbn_dfs <- gen_cbn_dfs(vvs$lngtd_vars, vvs$crscn, vrbl_cbns, vvs$base_vars)
 vrbl_thld_choices <- gen_vrbl_thld_choices(vvs$hnwi_vars, vvs$inc_ineq_vars, vvs$weal_ineq_vars)
 
-## ** running with hopefully better ids
 
-
-fldr_info <- setup_regression_folders_and_files("v22")
+fldr_info <- setup_regression_folders_and_files(reg_settings$batch_nbr)
 
 ## generating 20k models costs around 5 secs
 
-NBR_SPECS = 1
-reg_spec_mdls <- gen_batch_reg_specs(NBR_SPECS, vvs)
+
+reg_spec_mdls <- gen_batch_reg_specs(reg_settings$nbr_specs, vvs)
 names(reg_spec_mdls) <- lapply(reg_spec_mdls, \(x) x$mdl_id)
 
 ## check how unique the model cfgs are 
 table(table(names(reg_spec_mdls)))
-
 
 ## run_vrbl_mdl_vars(reg_spec_mdls[[2]])
 ## gen_mdl_id(reg_spec_mdls[[2]])
@@ -849,23 +854,26 @@ table(table(names(reg_spec_mdls)))
 cvrgns <- mclapply(reg_spec_mdls[1:30], \(x) run_vrbl_mdl_vars(x, vvs, fldr_info), mc.cores = 6) %>% unlist()
 
 ## run_vrbl_mdl_vars(reg_spec_mdls[[1]], vvs, fldr_info)
+NULL
 
 
 
 
 
-mdl_ids_tbl <- tibble(mdl_id = unlist(mdl_ids)) 
-mdl_ids_tbl$x <- 1
+## * debugging, re-running
 
-mdls_to_check_ids <- merge(mdl_ids_tbl,
-      df_reg_anls_cfgs_wide %>% select(mdl_id) %>% mutate(y=2),
-      all.x = T) %>% atb() %>%
-    filter(is.na(y)) %>% pull(mdl_id)
+## mdl_ids_tbl <- tibble(mdl_id = unlist(mdl_ids)) 
+## mdl_ids_tbl$x <- 1
 
-mdls_to_check_locs <- which(mdl_ids %in% mdls_to_check_ids)
+## mdls_to_check_ids <- merge(mdl_ids_tbl,
+##       df_reg_anls_cfgs_wide %>% select(mdl_id) %>% mutate(y=2),
+##       all.x = T) %>% atb() %>%
+##     filter(is.na(y)) %>% pull(mdl_id)
 
-## reg_spec_mdls[mdls_to_check_specs]
-mclapply(reg_spec_mdls[mdls_to_check_locs], run_vrbl_mdl_vars, mc.cores = 6) 
+## mdls_to_check_locs <- which(mdl_ids %in% mdls_to_check_ids)
+
+## ## reg_spec_mdls[mdls_to_check_specs]
+## mclapply(reg_spec_mdls[mdls_to_check_locs], run_vrbl_mdl_vars, mc.cores = 6) 
 
 
 
