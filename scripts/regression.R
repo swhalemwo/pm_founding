@@ -828,7 +828,7 @@ gen_batch_reg_specs <- function(NBR_SPECS, vvs) {
 #' overall regression wrapping 
 
 reg_settings <- list(nbr_specs = 1,
-                     batch_nbr = "v23")
+                     batch_nbr = "v20")
 
 
 vvs <- gen_vrbl_vectors()

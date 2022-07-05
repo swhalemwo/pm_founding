@@ -1,9 +1,11 @@
 ## * header
 
-read_reg_res <- function(idx) {
+library(stringr)
+
+read_reg_res <- function(idx, fldr_info) {
     #' read back model results with some id    
 
-    reg_res <- readRDS(paste0(REG_RES_DIR, idx))
+    reg_res <- readRDS(paste0(fldr_info$REG_RES_DIR, idx))
 
     coef_df <- reg_res$coef_df
     coef_df$mdl_id <- idx
@@ -17,73 +19,129 @@ read_reg_res <- function(idx) {
     
 }
 
+construct_within_change_df <- function(coef_df,  df_reg_anls_cfgs_wide) {
+       
+    df_anls_base <- coef_df %>%
+        mutate(vrbl_name_unlag = gsub("_lag[1-5]", "", vrbl_name)) %>%
+        merge(df_reg_anls_cfgs_wide) %>% atb() %>%
+        mutate(t_value = coef/se, 
+               sig = ifelse(pvalues < 0.05, 1, 0))
 
-df_reg_anls_lags <- read.csv(paste0(REG_RES_FILE_LAGS), sep = " ", header = F,
-                             col.names = c("variable", "value", "lag_spec", "cfg_id", "mdl_id", "cvrgd")) %>%
-    atb()
+    return(df_anls_base)
 
-df_reg_anls_cfgs <- read.csv(paste0(REG_RES_FILE_CFGS), sep = " ", header = F,
-                             col.names = c("variable", "value", "cfg_id", "lag_spec", "mdl_id", "cvrgd")) %>%
-    atb()
+}
 
-df_reg_anls_cfgs_wide <- df_reg_anls_cfgs %>% select(variable, value, mdl_id, lag_spec, cvrgd) %>% unique() %>% 
-    pivot_wider(id_cols = c(mdl_id, lag_spec), names_from = variable, values_from = value)
+read_reg_res_files <- function(fldr_info) {
+    #' reads the basic regression result files in
+    
 
+    ## df_reg_anls_lags <- read.csv(paste0(fldr_info$REG_RES_FILE_LAGS), sep = " ", header = F,
+    ##                              col.names = c("variable", "value", "lag_spec", "cfg_id", "mdl_id", "cvrgd")) %>%
+    ##     atb()
 
+    df_reg_anls_cfgs <- read.csv(paste0(fldr_info$REG_RES_FILE_CFGS), sep = " ", header = F,
+                                 col.names = c("variable", "value", "cfg_id", "lag_spec", "mdl_id", "cvrgd")) %>%
+        atb()
 
-## read_reg_res(df_reg_anls_cfgs$mdl_id[[1]])
-
-
-## list of all the model results 
-all_mdl_res <- lapply(unique(filter(df_reg_anls_cfgs, cvrgd == 1)$mdl_id), read_reg_res)
-
-coef_df <- lapply(all_mdl_res, \(x) atb(x[["coef_df"]])) %>% bind_rows()
-gof_df <- lapply(all_mdl_res, \(x) x[["gof_df"]]) %>% bind_rows() %>% atb()
-
-## add the model details as variables 
-gof_df_cbn <- merge(gof_df, df_reg_anls_cfgs_wide) %>% atb()
-
-gof_df_cbn$cbn_name <- factor(gof_df_cbn$cbn_name, levels = names(vrbl_cbns))
-
+    df_reg_anls_cfgs_wide <- df_reg_anls_cfgs %>% select(variable, value, mdl_id, lag_spec, cvrgd) %>% unique() %>% 
+        pivot_wider(id_cols = c(mdl_id, lag_spec), names_from = variable, values_from = value)
 
 
-pdf(paste0(FIG_DIR, "cbn_log_likelihoods.pdf"), width = 6, height = 3)
-filter(gof_df_cbn, gof_names == "log_likelihood") %>%
-    ggplot(aes(x = gof_value, fill = cbn_name)) +
-    geom_histogram(binwidth = 2)
-## facet_wrap(~cbn_name, ncol = 1, scales = "fixed")
-dev.off()
-
-## ok makes sense: cbn_all models have best fit: most variables, least observations
-## fit gets worse the more variables are removed and the more cases are added
+    ## read_reg_res(df_reg_anls_cfgs$mdl_id[[1]])
 
 
-library(stringr)
+    ## list of all the model results 
+    all_mdl_res <- mclapply(unique(filter(df_reg_anls_cfgs, cvrgd == 1)$mdl_id), \(x)
+                            read_reg_res(x, fldr_info), mc.cores = 6)
 
-## construct the within-change df 
-df_anls_base <- coef_df %>%
-    mutate(vrbl_name_unlag = gsub("_lag[1-5]", "", vrbl_name)) %>%
-    merge(df_reg_anls_cfgs_wide) %>% atb() %>%
-    mutate(t_value = coef/se, 
-           sig = ifelse(pvalues < 0.05, 1, 0))
+    coef_df <- mclapply(all_mdl_res, \(x) atb(x[["coef_df"]]), mc.cores = 6) %>% bind_rows()
+    gof_df <- mclapply(all_mdl_res, \(x) x[["gof_df"]], mc.cores = 6) %>% bind_rows() %>% atb()
+
+    ## add the model details as variables 
+    gof_df_cbn <- merge(gof_df, df_reg_anls_cfgs_wide) %>% atb()
+
+    gof_df_cbn$cbn_name <- factor(gof_df_cbn$cbn_name, levels = names(vrbl_cbns))
+
+
+    ## construct the within-change df
+    df_anls_base <- construct_within_change_df(coef_df,  df_reg_anls_cfgs_wide)
+
+    return(list(
+        df_reg_anls_cfgs_wide = df_reg_anls_cfgs_wide,
+        coef_df = coef_df,
+        gof_df_cbn = gof_df_cbn,
+        df_anls_base = df_anls_base
+        ))
+
+}
+
+plot_reg_res <- function(plt, fldr_info) {
+    #' general way to plot regression result, also add batch number
+    
+    plt_name <- deparse(substitute(plt)) %>% strsplit("$", fixed = T) %>% unlist() %>% tail(1)
+
+    plt_cfg <- reg_res$plt_cfgs[[plt_name]]
+    
+    pdf(paste0(FIG_DIR, fldr_info$batch_version, "_", plt_cfg$filename),
+        width = plt_cfg$width, height = plt_cfg$height)
+    plot(plt)
+    dev.off()
+}
+
+gen_plt_cbn_log_likelihoods <- function(gof_df_cbn) {
+    #' generate plot of likelihoods
+
+    ## ok makes sense: cbn_all models have best fit: most variables, least observations
+    ## fit gets worse the more variables are removed and the more cases are added
+
+   
+    gof_df_cbn %>% 
+        filter(gof_names == "log_likelihood") %>%
+        ggplot(aes(x = gof_value, fill = cbn_name)) +
+        geom_histogram(binwidth = 1)
+
+}
+
+
+
+reg_anls_base <- read_reg_res_files(fldr_info)
+
+reg_res <- list()
+reg_res$plts <- list()
+
+
+reg_res$plts$cbn_log_likelihoods <- gen_plt_cbn_log_likelihoods(reg_anls_base$gof_df_cbn)
+
+reg_res$plt_cfgs <- list()
+reg_res$plt_cfgs$cbn_log_likelihoods <- list(filename = "cbn_log_likelihoods.pdf", width = 6, height = 3)
+
+
+## plot_reg_res(reg_res$plts$cbn_log_likelihoods, fldr_info)
+   
+
+
+
+
+
 
 
 ## ** within base-spec changes
 
 
+construct_df_anls_within_prep <- function(df_anls_base) {
+    df_anls_within_prep <- df_anls_base %>%
+        filter(vrbl_name_unlag != vrbl_name) %>% ## only use the lag variables
+        mutate(lag = as.numeric(substring(str_extract(vrbl_name, "_lag(\\d+)"), 5))) %>%
+        filter(vrbl_varied == vrbl_name_unlag |
+               (vrbl_varied == "tmitr_approx_linear20step" & vrbl_name_unlag == "ti_tmitr_interact") 
+              ,cbn_name != "cbn_controls") %>% ## only use within-base_spec changes, add special case for tmitr
+        group_by(vrbl_name_unlag, cbn_name) %>%
+        mutate(base_lag_spec_id = as.numeric(factor(base_lag_spec))) %>%
+        group_by(vrbl_name_unlag, cbn_name, base_lag_spec_id) %>%
+        mutate(nbr_mdls_cvrgd = len(base_lag_spec_id)) %>% 
+        filter(nbr_mdls_cvrgd == 5)
 
-df_anls_within_prep <- df_anls_base %>%
-    filter(vrbl_name_unlag != vrbl_name) %>% ## only use the lag variables
-    mutate(lag = as.numeric(substring(str_extract(vrbl_name, "_lag(\\d+)"), 5))) %>%
-    filter(vrbl_varied == vrbl_name_unlag |
-           (vrbl_varied == "tmitr_approx_linear20step" & vrbl_name_unlag == "ti_tmitr_interact") 
-           ,cbn_name != "cbn_controls") %>% ## only use within-base_spec changes, add special case for tmitr
-    group_by(vrbl_name_unlag, cbn_name) %>%
-    mutate(base_lag_spec_id = as.numeric(factor(base_lag_spec))) %>%
-    group_by(vrbl_name_unlag, cbn_name, base_lag_spec_id) %>%
-    mutate(nbr_mdls_cvrgd = len(base_lag_spec_id)) %>% 
-    filter(nbr_mdls_cvrgd == 5)
-
+}
 
 NBR_MDLS <- 10
 
