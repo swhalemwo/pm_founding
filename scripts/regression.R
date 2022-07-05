@@ -365,11 +365,24 @@ gen_lag_id <- function(reg_spec, vvs) {
     #' see which longitudinal variables are included with which lag,
     #' include variables which aren't included with "X" in id 
     
-    df_idx <- merge(tibble(vrbl = vvs$lngtd_vars), 
-          reg_spec$lngtd_vrbls, all.x = T) %>%
-        mutate(lag_str = as.character(lag)) %>%
-        mutate(lag_str = ifelse(is.na(lag_str), "X", lag_str)) %>%
-        select(variable=vrbl, value = lag_str)
+    ## df_idx <- merge(vvs$lngtd_vars_tbbl, 
+    ##                 reg_spec$lngtd_vrbls, all.x = T)
+    df_idx <- vvs$lngtd_vars_df
+    df_idx$lag <- "X"
+    
+    cols_to_match <- vvs$lngtd_vars_df$lngtd_vars %in% reg_spec$lngtd_vrbls$vrbl
+    
+    df_idx$lag[cols_to_match] <- as.character(reg_spec$lngtd_vrbls$lag)
+        
+
+    names(df_idx) <- c("variable", "value")
+    ## df_idx$lag_str = as.character(df_idx$lag)
+    ## df_idx$value[is.na(df_idx$value)] <- "X"
+    
+
+        ## mutate(lag_str = as.character(lag)) %>%
+        ## mutate(lag_str = ifelse(is.na(lag_str), "X", lag_str)) %>%
+        ## select(variable=vrbl, value = lag_str)
 
     return(df_idx)
 }
@@ -382,12 +395,7 @@ gen_mdl_id <- function(reg_spec, vvs) {
 
     ## get id: need information which variable is there (X if not there), also of lag of each variable that is there
     
-
-    ## df_idx <- merge(tibble(vrbl = lngtd_vars), 
-    ##       reg_spec$lngtd_vrbls, all.x = T) %>%
-    ##     mutate(lag_str = as.character(lag)) %>%
-    ##     mutate(lag_str = ifelse(is.na(lag_str), "X", lag_str)) %>%
-    ##     select(variable=vrbl, value = lag_str)
+    
     df_idx <- gen_lag_id(reg_spec, vvs)
 
 
@@ -397,8 +405,9 @@ gen_mdl_id <- function(reg_spec, vvs) {
     other_cfgs <- data.frame(rbind(c("cbn_name", reg_spec$cbn_name),
                                    c("mdl_name", reg_spec$mdl_name),      
                                    c("vrbl_varied", reg_spec$vrbl_varied),
-                                   c("base_lag_spec", reg_spec$base_lag_spec))) %>%
-        select(variable = X1, value = X2)
+                                   c("base_lag_spec", reg_spec$base_lag_spec)))
+    names(other_cfgs) <- c("variable", "value")
+        ## select(variable = X1, value = X2)
 
     cfg_id <- paste0(other_cfgs$value, collapse = '--')
 
@@ -415,8 +424,18 @@ gen_mdl_id <- function(reg_spec, vvs) {
     other_cfgs$mdl_id <- mdl_id
     
     return(list(df_idx = atb(df_idx),
-                other_cfgs = atb(other_cfgs)))
+                other_cfgs = atb(other_cfgs),
+                mdl_id = mdl_id))
 }
+
+## t1 = Sys.time()
+## ## x <- lapply(seq(200), \(x) gen_lag_id(reg_spec_mdls[[1]], vvs))
+## ## x <- mclapply(reg_spec_mdls, \(x) gen_lag_id(x, vvs))
+## x <- mclapply(reg_spec_mdls, \(x) gen_mdl_id(x, vvs), mc.cores = 6)
+## t2 = Sys.time()
+## print(t2-t1)
+
+## gen_mdl_id(reg_spec_mdls[[1]], vvs)
         
 
 timeout_stata <- function(iv_vars, stata_output_vars, gof_names, dfx, file_id, fldr_info, verbose) {
@@ -477,6 +496,7 @@ run_vrbl_mdl_vars <- function(reg_spec, vvs, fldr_info, verbose = F) {
 
     df_idx <- id_res$df_idx
     other_cfgs <- id_res$other_cfgs
+    mdl_id <- id_res$mdl_id
           
     file_id <- df_idx$mdl_id[1]
 
@@ -572,6 +592,15 @@ gen_spec_mdl_info <- function(reg_spec) {
 
 }
 
+gen_spec_id_info <- function(reg_spec, vvs) {
+    #' add the id information to a reg_spec
+
+    id_stuff <- gen_mdl_id(reg_spec, vvs)
+
+    reg_spec_with_id <- c(reg_spec, id_stuff)
+
+    return(reg_spec_with_id)
+}
 
     
 
@@ -702,7 +731,9 @@ gen_vrbl_vectors <- function() {
 
         non_thld_lngtd_vars = non_thld_lngtd_vars,
         lngtd_vars = lngtd_vars,
-        all_rel_vars = all_rel_vars)
+        lngtd_vars_df = data.frame(lngtd_vars),
+        all_rel_vars = all_rel_vars
+        )
         )
 }
 
@@ -769,13 +800,22 @@ gen_batch_reg_specs <- function(NBR_SPECS, vvs) {
     ## reg_spec_mdls <- sapply(reg_spec_cbns, gen_spec_mdl_info)
     reg_spec_mdls <- mclapply(reg_spec_cbns, gen_spec_mdl_info, mc.cores = 6) %>% flatten()
     ## same issue here: mclapply with Reduce is slow, but with flatten it's faster :)))
+
+    ## also add ids everywhere
+    reg_spec_mdls_with_ids <- mclapply(reg_spec_mdls, \(x) gen_spec_id_info(x, vvs), mc.cores = 6)
+    
     t2 = Sys.time()
     print(t2-t1)
 
-    return(reg_spec_mdls)
+    return(reg_spec_mdls_with_ids)
 
 }
 
+
+## get_reg_spec_from_id <- function(mdl_id, fldr_info) {
+    
+##     reg_spec <- readRDS(paste0(fldr_info$REG_SPEC_DIR, mdl_id))
+## }
 
 vvs <- gen_vrbl_vectors()
 vrbl_cbns <- gen_cbns(vvs$all_rel_vars, vvs$base_vars)
@@ -789,14 +829,13 @@ fldr_info <- setup_regression_folders_and_files("v22")
 
 NBR_SPECS = 1
 reg_spec_mdls <- gen_batch_reg_specs(NBR_SPECS, vvs)
-
-
+names(reg_spec_mdls) <- lapply(reg_spec_mdls, \(x) x$mdl_id)
 
 
 ## run_vrbl_mdl_vars(reg_spec_mdls[[2]])
 ## gen_mdl_id(reg_spec_mdls[[2]])
 
-mclapply(reg_spec_mdls, \(x) run_vrbl_mdl_vars(x, vvs, fldr_info), mc.cores = 6) #
+cvrgns <- mclapply(reg_spec_mdls[1:30], \(x) run_vrbl_mdl_vars(x, vvs, fldr_info), mc.cores = 6) %>% unlist()
 
 run_vrbl_mdl_vars(reg_spec_mdls[[1]], vvs, fldr_info)
 
