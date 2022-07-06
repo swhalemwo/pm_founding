@@ -263,18 +263,6 @@ proc_reg_res_objs <- function(reg_anls_base, vvs) {
 
 
 
-plot_reg_res <- function(plt, fldr_info) {
-    #' general way to plot regression result to file, also adding batch number
-    
-    plt_name <- deparse(substitute(plt)) %>% strsplit("$", fixed = T) %>% unlist() %>% tail(1)
-
-    plt_cfg <- reg_res$plt_cfgs[[plt_name]]
-    
-    pdf(paste0(FIG_DIR, fldr_info$batch_version, "_", plt_cfg$filename),
-        width = plt_cfg$width, height = plt_cfg$height)
-    plot(plt)
-    dev.off()
-}
 
 gen_plt_cbn_log_likelihoods <- function(gof_df_cbn) {
     #' generate plot of likelihoods
@@ -386,24 +374,44 @@ gen_plt_cfgs <- function() {
 
 }
 
+plot_reg_res <- function(plt_name, fldr_info) {
+    #' general way to plot regression result to file, also adding batch number
+    
+    plt <- reg_res$plts[[plt_name]]
+    ## plt_name <- deparse(substitute(plt)) %>% strsplit("$", fixed = T) %>% unlist() %>% tail(1)
 
-gen_reg_res
+    plt_cfg <- reg_res$plt_cfgs[[plt_name]]
 
+    plt_filename <- paste0(FIG_DIR, fldr_info$batch_version, "_", plt_cfg$filename)
+    
+    pdf(plt_filename,  width = plt_cfg$width, height = plt_cfg$height)
+    plot(plt)
+    dev.off()
+    
+}
+
+
+
+
+## read in stuff, construct objects 
 reg_anls_base <- read_reg_res_files(fldr_info)
 reg_res_objs <- proc_reg_res_objs(reg_anls_base, vvs)
 
+
 reg_res <- list()
-reg_res$plts <- list()
 
+## generate plots, construct configs
 reg_res$plts <- gen_reg_res_plts(reg_res_objs, vvs)
-
 reg_res$plt_cfgs <- gen_plt_cfgs()
 
+## render all plots to file
+lapply(names(reg_res$plts), \(x) plot_reg_res(x, fldr_info))
 
 
 
 
 ## plot_reg_res(reg_res$plts$cbn_log_likelihoods, fldr_info)
+## plot_reg_res(reg_res$plts$best_models_condensed, fldr_info)
    
 
 
