@@ -1,6 +1,7 @@
 ## * header
 
 library(stringr)
+library(ggbeeswarm)
 
 read_reg_res <- function(idx, fldr_info) {
     #' read back model results with some id    
@@ -19,17 +20,6 @@ read_reg_res <- function(idx, fldr_info) {
     
 }
 
-construct_within_change_df <- function(coef_df,  df_reg_anls_cfgs_wide) {
-       
-    df_anls_base <- coef_df %>%
-        mutate(vrbl_name_unlag = gsub("_lag[1-5]", "", vrbl_name)) %>%
-        merge(df_reg_anls_cfgs_wide) %>% atb() %>%
-        mutate(t_value = coef/se, 
-               sig = ifelse(pvalues < 0.05, 1, 0))
-
-    return(df_anls_base)
-
-}
 
 read_reg_res_files <- function(fldr_info) {
     #' reads the basic regression result files in
@@ -64,19 +54,217 @@ read_reg_res_files <- function(fldr_info) {
 
 
     ## construct the within-change df
-    df_anls_base <- construct_within_change_df(coef_df,  df_reg_anls_cfgs_wide)
+
 
     return(list(
         df_reg_anls_cfgs_wide = df_reg_anls_cfgs_wide,
         coef_df = coef_df,
-        gof_df_cbn = gof_df_cbn,
-        df_anls_base = df_anls_base
+        gof_df_cbn = gof_df_cbn
         ))
 
 }
 
+add_coef_sig <- function(coef_df,  df_reg_anls_cfgs_wide) {
+    #' add significance to coefs
+
+    df_anls_base <- coef_df %>%
+        mutate(vrbl_name_unlag = gsub("_lag[1-5]", "", vrbl_name)) %>%
+        merge(df_reg_anls_cfgs_wide) %>% atb() %>%
+        mutate(t_value = coef/se, 
+               sig = ifelse(pvalues < 0.05, 1, 0))
+
+    return(df_anls_base)
+
+}
+
+
+construct_df_anls_within_prep <- function(df_anls_base) {
+    #' construct the within-base-spec changes:
+    #' only get the coefs of variables where the variable is varied (within base-spec changes)
+    #' only get coefs where all 5 variations converged
+    
+    df_anls_within_prep <- df_anls_base %>%
+        filter(vrbl_name_unlag != vrbl_name) %>% ## only use the lag variables
+        mutate(lag = as.numeric(substring(str_extract(vrbl_name, "_lag(\\d+)"), 5))) %>%
+        filter(vrbl_varied == vrbl_name_unlag |
+               (vrbl_varied == "tmitr_approx_linear20step" & vrbl_name_unlag == "ti_tmitr_interact") 
+              ,cbn_name != "cbn_controls") %>% ## only use within-base_spec changes, add special case for tmitr
+        group_by(vrbl_name_unlag, cbn_name) %>%
+        mutate(base_lag_spec_id = as.numeric(factor(base_lag_spec))) %>%
+        group_by(vrbl_name_unlag, cbn_name, base_lag_spec_id) %>%
+        mutate(nbr_mdls_cvrgd = len(base_lag_spec_id)) %>% 
+        filter(nbr_mdls_cvrgd == 5)
+
+    return(df_anls_within_prep)
+
+}
+
+
+
+
+construct_time_invariant_coefs <- function(df_anls_base, vvs) {
+    #' grab some coefs of cross-sectional variables, to be rbinded with the longitudinal coefs
+    
+    df_anls_time_invariant <- df_anls_base %>%
+        filter(vrbl_name %in% vvs$crscn_vars) %>%
+        group_by(cbn_name, vrbl_name) %>%
+        slice_sample(n=15) %>%
+        mutate(base_lag_spec_id = 1,
+               lag = 1,
+               nbr_mdls_cvrgd = 1)
+
+    return(df_anls_time_invariant)
+}
+
+construct_df_anls_within <- function(df_anls_base, vvs, NBR_MDLS) {
+    #' construct the dataset of the within lag-spec changes
+
+    df_anls_within_prep <- construct_df_anls_within_prep(df_anls_base)
+
+
+    ## filter out a number of models per lag (and cbn)
+    df_anls_within_prep2 <- df_anls_within_prep %>%
+        group_by(cbn_name, vrbl_name_unlag) %>%
+        filter(base_lag_spec_id %in% sample(unique(base_lag_spec_id), NBR_MDLS))
+
+    
+    df_anls_time_invariant <- construct_time_invariant_coefs(df_anls_base, vvs)
+
+    df_anls_within <- rbind(df_anls_within_prep2, df_anls_time_invariant)
+
+    ## order the factors: use the vvs$vrbl_lbls order
+    df_anls_within$vrbl_name_unlag <- factor(df_anls_within$vrbl_name_unlag,
+                                             levels = names(vvs$vrbl_lbls)[names(vvs$vrbl_lbls) %in%
+                                                                           unique(df_anls_within$vrbl_name_unlag)])
+    ## c(vvs$ti_vars, vvs$density_vars, vvs$hnwi_vars,
+    ##   vvs$inc_ineq_vars, vvs$weal_ineq_vars,
+    ##   vvs$cult_spending_vars, vvs$ctrl_vars_lngtd,
+    ##   vvs$crscn_vars))
+
+
+    return(df_anls_within)
+}
+
+
+
+construct_df_anls_all <- function(df_anls_base, vvs, NBR_MDLS) {
+    #' pick coefs from all models 
+
+    df_anls_all <- df_anls_base %>%
+        filter(vrbl_name_unlag != vrbl_name) %>% ## only use lagged variables
+        mutate(lag = as.numeric(substring(str_extract(vrbl_name, "_lag(\\d+)"), 5))) %>%
+        filter(cbn_name != "cbn_controls") %>%
+        group_by(vrbl_name_unlag, cbn_name, lag) %>%
+        slice_sample(n=NBR_MDLS)
+
+## table(df_anls_all$vrbl_name_unlag)
+
+    df_anls_all$vrbl_name_unlag <- factor(df_anls_all$vrbl_name_unlag,
+                                          levels = c(names(vvs$vrbl_lbls)[names(vvs$vrbl_lbls) %in%
+                                                                          df_anls_all$vrbl_name_unlag]))
+
+    return(df_anls_all)
+}
+
+construct_df_best_mdls <- function(df_anls_base, gof_df_cbn) {
+    #' construct the data of the best fitting models per combination
+    
+
+    ## filter out HNWI 1B for now 
+    df_anls_base_no1B <- df_anls_base %>% group_by(mdl_id) %>%
+        filter("hnwi_nbr_1B" %!in% vrbl_name_unlag)
+
+    ## select best model per combination
+    best_mdls <- gof_df_cbn %>%
+        filter(gof_names == "log_likelihood", cbn_name != "cbn_controls",
+               mdl_id %in% unique(df_anls_base_no1B$mdl_id)) %>%
+        group_by(cbn_name) %>% 
+        arrange(gof_value) %>%
+        slice_tail(n=1)
+    
+
+    best_mdl_coefs <- merge(df_anls_base, best_mdls) %>% atb()
+    
+    best_mdl_coefs$lag <- as.numeric(substring(str_extract(best_mdl_coefs$vrbl_name, "_lag(\\d+)"), 5))
+    best_mdl_coefs$lag[is.na(best_mdl_coefs$lag)] <- 0
+    
+    ## vrbl_levels <- c("sum_core", vvs$ti_vars, vvs$density_vars, vvs$hnwi_vars, vvs$inc_ineq_vars,
+    ##                  vvs$weal_ineq_vars, vvs$cult_spending_vars, vvs$ctrl_vars_lngtd)
+    
+    ## other_var_names <- c(unique(best_mdl_coefs$vrbl_name_unlag)[unique(best_mdl_coefs$vrbl_name_unlag) %!in% vrbl_levels])
+    ## levels = c(vrbl_levels, other_var_names))
+    
+    ## reordering the variables
+    best_mdl_coefs$vrbl_name_unlag <- factor(best_mdl_coefs$vrbl_name_unlag,
+                                             levels = names(vvs$vrbl_lbls)[names(vvs$vrbl_lbls) %in%
+                                                                           unique(best_mdl_coefs$vrbl_name_unlag)])
+    
+    ## filter out stuff I don't need
+    best_mdl_coefs <- filter(best_mdl_coefs, vrbl_name_unlag %!in% c("ln_s", "cons", "ln_r"))
+
+    return(best_mdl_coefs)
+}
+
+
+construct_best_mdls_summary <- function(df_best_mdls) {
+    #' summary variables for best models 
+    
+    mdl_summary <- df_best_mdls %>% group_by(vrbl_name_unlag, cbn_name) %>%
+        summarize(coef = mean(coef), lag_mean = mean(lag), lag_sd = sd(lag), p_value = mean(pvalues),
+                  t_value = mean(t_value), se = mean(se), min = coef - 1.96*se, max = coef + 1.96*se,
+                  sig = ifelse(abs(t_value) > 1.96, 1,0))
+
+    ## have to reverse order to make points look good 
+    mdl_summary$vrbl_name_unlag <- factor(mdl_summary$vrbl_name_unlag,
+                                          levels = rev(levels(mdl_summary$vrbl_name_unlag)))
+
+    return(mdl_summary)
+}
+
+
+proc_reg_res_objs <- function(reg_anls_base, vvs) {
+    #' further processing of the regression res objects, no reading-in here
+
+    
+    coef_df <- reg_anls_base$coef_df
+    df_reg_anls_cfgs_wide <- reg_anls_base$df_reg_anls_cfgs_wide
+    gof_df_cbn <- reg_anls_base$gof_df_cbn
+
+    ## merging significance to all coefs (maybe can be 
+    df_anls_base <- add_coef_sig(coef_df, df_reg_anls_cfgs_wide)
+
+    ## number of models to pick for the analyses
+    NBR_MDLS <- 10
+    
+    
+    df_anls_within <- construct_df_anls_within(df_anls_base, vvs, NBR_MDLS)
+    df_anls_all <- construct_df_anls_all(df_anls_base, vvs, NBR_MDLS)
+
+    df_best_mdls <- construct_df_best_mdls(df_anls_base, gof_df_cbn)
+    mdl_summary <- construct_best_mdls_summary(df_best_mdls)
+
+
+    return(
+        list(
+            gof_df_cbn = gof_df_cbn,
+            df_anls_base = df_anls_base,
+            df_anls_within = df_anls_within,
+            df_anls_all = df_anls_all,
+            df_best_mdls = df_best_mdls,
+            mdl_summary = mdl_summary
+        )
+    )
+    
+}
+
+## gen_plt_mdl_summary(mdl_summary, vvs)
+
+## proc_reg_res_objs(reg_anls_base, vvs)
+
+
+
 plot_reg_res <- function(plt, fldr_info) {
-    #' general way to plot regression result, also add batch number
+    #' general way to plot regression result to file, also adding batch number
     
     plt_name <- deparse(substitute(plt)) %>% strsplit("$", fixed = T) %>% unlist() %>% tail(1)
 
@@ -102,18 +290,117 @@ gen_plt_cbn_log_likelihoods <- function(gof_df_cbn) {
 
 }
 
+gen_plt_reg_res_within <- function(df_anls_within, vvs) {
 
+    ggplot(df_anls_within, aes(x=lag, y=coef, group = base_lag_spec)) +
+        geom_line(show.legend = F, alpha = 0.15) +
+        geom_quasirandom(aes(color = t_value, shape = factor(sig)), size = 2, height = 0, width = 0.3) + 
+        facet_grid(vrbl_name_unlag ~ cbn_name, scales = "free", switch = "y", 
+                   labeller = labeller(vrbl_name_unlag = vvs$vrbl_lbls)) +
+        theme(strip.text.y.left = element_text(angle = 0)) +
+        scale_color_gradient2(low = "blue", mid = "grey", high = "red") +
+        scale_shape_manual(values = c(1,4))
+    
+}
+
+gen_plt_reg_res_all <- function(df_anls_all, vvs) {
+    #' plot coefs from all models 
+
+
+    ggplot(df_anls_all, aes(x=lag, y=coef)) +
+        geom_quasirandom(aes(color = t_value, shape = factor(sig)), size = 2, height = 0, width = 0.3) +
+        facet_grid(cols = vars(cbn_name), rows = vars(vrbl_name_unlag), scales = "free", switch = "y",
+                   labeller = labeller(vrbl_name_unlag = vvs$vrbl_lbls)) +
+        theme(strip.text.y.left = element_text(angle = 0)) +
+        scale_color_gradient2(low = "blue", mid = "grey", high = "red") +
+        scale_shape_manual(values = c(1,4))
+}
+
+gen_plt_best_mdls_wlag <- function(df_best_mdls, vvs) {
+    #' generate plot of coefs of beste models with lag
+
+    ggplot(df_best_mdls, aes(x=lag, y=exp(coef), color = t_value)) +
+        geom_quasirandom(aes(shape = factor(sig)), height = 0, width = 0.33, show.legend=T, size = 3) +
+        facet_grid(vrbl_name_unlag~cbn_name, scales="free", switch = "y",
+                   labeller = labeller(vrbl_name_unlag = vvs$vrbl_lbls)) +
+        theme(strip.text.y.left = element_text(angle = 0)) + 
+        scale_color_gradient2(low = "blue", mid = "grey", high = "red") +
+        scale_shape_manual(values = c(1,4))
+
+}
+
+gen_plt_mdl_summary <- function(mdl_summary, vvs) {
+    #' generate the summary plot of the best models 
+    
+    ggplot(mdl_summary, aes(color = factor(sig), y = vrbl_name_unlag)) +
+        geom_point(aes(x = coef, shape = factor(sig)), size = 2.5, alpha = 0.95, show.legend = F) +
+        geom_errorbarh(aes(xmin = min, xmax = max, , height= 0.1), alpha = 0.6, show.legend = F) + 
+        facet_wrap(~cbn_name) +
+        geom_vline(xintercept =0, linetype = "dashed") +
+        scale_shape_manual(values = c(15,16)) +
+        ## scale_shape_manual(values = c(0,1)) +
+        ## scale_shape_manual(values = c(21,12)) +
+        scale_color_manual(values = c("#1C5BA6", "#BD0017")) +
+        scale_y_discrete(labels = vvs$vrbl_lbls) +
+        ## coord_cartesian(xlim=c(-1, 1)) +
+        labs(x="coefficient size, 95% CI", y="coefficient")
+
+}
+
+gen_reg_res_plts <- function(reg_res_objs, vvs) {
+    #' generate all the plots
+    
+
+    gof_df_cbn <- reg_res_objs$gof_df_cbn
+    df_anls_within <- reg_res_objs$df_anls_within
+    df_best_mdls <- reg_res_objs$df_best_mdls
+    mdl_summary <- reg_res_objs$mdl_summary
+    
+    return(
+        list(
+            cbn_log_likelihoods = gen_plt_cbn_log_likelihoods(gof_df_cbn),
+            reg_res_within = gen_plt_reg_res_within(df_anls_within, vvs),
+            reg_res_all = gen_plt_reg_res_all(df_anls_within, vvs),
+            best_models_wlag = gen_plt_best_mdls_wlag(df_best_mdls, vvs),
+            best_models_condensed = gen_plt_mdl_summary(mdl_summary, vvs)
+        )
+    )
+}
+
+
+## reg_res$plts$cbn_log_likelihoods <- gen_plt_cbn_log_likelihoods(reg_anls_base$gof_df_cbn)
+
+
+gen_plt_cfgs <- function() {
+    #' generate the plot configs (manually specified)
+    
+    return(
+        list(
+        cbn_log_likelihoods = list(filename = "cbn_log_likelihoods.pdf", width = 6, height = 3),
+        reg_res_within = list(filename = "reg_res_within.pdf", width = 10, height = 12),
+        reg_res_all = list(filename = "reg_res_all.pdf", width = 8, height = 12),
+        best_models_wlag = list(filename = "best_models_wlag.pdf", width = 8, height = 12),
+        best_models_condensed = list(filename = "best_models_condensed.pdf", width = 7, height = 4)
+        )
+    )
+
+}
+
+
+gen_reg_res
 
 reg_anls_base <- read_reg_res_files(fldr_info)
+reg_res_objs <- proc_reg_res_objs(reg_anls_base, vvs)
 
 reg_res <- list()
 reg_res$plts <- list()
 
+reg_res$plts <- gen_reg_res_plts(reg_res_objs, vvs)
 
-reg_res$plts$cbn_log_likelihoods <- gen_plt_cbn_log_likelihoods(reg_anls_base$gof_df_cbn)
+reg_res$plt_cfgs <- gen_plt_cfgs()
 
-reg_res$plt_cfgs <- list()
-reg_res$plt_cfgs$cbn_log_likelihoods <- list(filename = "cbn_log_likelihoods.pdf", width = 6, height = 3)
+
+
 
 
 ## plot_reg_res(reg_res$plts$cbn_log_likelihoods, fldr_info)
@@ -123,31 +410,9 @@ reg_res$plt_cfgs$cbn_log_likelihoods <- list(filename = "cbn_log_likelihoods.pdf
 
 
 
-
-
 ## ** within base-spec changes
 
 
-construct_df_anls_within_prep <- function(df_anls_base) {
-    df_anls_within_prep <- df_anls_base %>%
-        filter(vrbl_name_unlag != vrbl_name) %>% ## only use the lag variables
-        mutate(lag = as.numeric(substring(str_extract(vrbl_name, "_lag(\\d+)"), 5))) %>%
-        filter(vrbl_varied == vrbl_name_unlag |
-               (vrbl_varied == "tmitr_approx_linear20step" & vrbl_name_unlag == "ti_tmitr_interact") 
-              ,cbn_name != "cbn_controls") %>% ## only use within-base_spec changes, add special case for tmitr
-        group_by(vrbl_name_unlag, cbn_name) %>%
-        mutate(base_lag_spec_id = as.numeric(factor(base_lag_spec))) %>%
-        group_by(vrbl_name_unlag, cbn_name, base_lag_spec_id) %>%
-        mutate(nbr_mdls_cvrgd = len(base_lag_spec_id)) %>% 
-        filter(nbr_mdls_cvrgd == 5)
-
-}
-
-NBR_MDLS <- 10
-
-df_anls_within_prep2 <- df_anls_within_prep %>%
-    group_by(cbn_name, vrbl_name_unlag) %>%
-    filter(base_lag_spec_id %in% sample(unique(base_lag_spec_id), NBR_MDLS))
 
 
 ## LAZILY just copying 
@@ -157,37 +422,15 @@ df_anls_within_prep2 <- df_anls_within_prep %>%
 
 ## just rbind the time-invariant values there 
 
-df_anls_time_invariant <- df_anls_base %>%
-    filter(vrbl_name %in% crscn_vars) %>%
-    group_by(cbn_name, vrbl_name) %>%
-    slice_sample(n=15) %>%
-    mutate(base_lag_spec_id = 1,
-           lag = 1,
-           nbr_mdls_cvrgd = 1)
 
 
-df_anls_within <- rbind(df_anls_within_prep2, df_anls_time_invariant)
 
-## order the factors
-df_anls_within$vrbl_name_unlag <- factor(df_anls_within$vrbl_name_unlag,
-                                         levels = c(ti_vars, density_vars, hnwi_vars, inc_ineq_vars, weal_ineq_vars,
-                                                    cult_spending_vars, ctrl_vars_lngtd, crscn_vars))
 
 ## shouldn't group by base_lag_spec when selecting
 ## see if some aux vars can be constructed to select on 
-library(ggbeeswarm)
 
 
-pdf(paste0(FIG_DIR, "reg_within_tmitr_fixed.pdf"), width = 10, height = 12)
-ggplot(df_anls_within, aes(x=lag, y=coef, group = base_lag_spec)) +
-    geom_line(show.legend = F, alpha = 0.15) +
-    geom_quasirandom(aes(color = t_value, shape = factor(sig)), size = 2, height = 0, width = 0.3) + 
-    facet_grid(vrbl_name_unlag ~ cbn_name, scales = "free", switch = "y", 
-               labeller = labeller(vrbl_name_unlag = rel_vars)) +
-    theme(strip.text.y.left = element_text(angle = 0)) +
-    scale_color_gradient2(low = "blue", mid = "grey", high = "red") +
-    scale_shape_manual(values = c(1,4))
-dev.off()
+
         
 ## df_anls_within_ribbon
 
@@ -205,27 +448,16 @@ dev.off()
 
 ## ** coefs from all models
 
-df_anls_all <- df_anls_base %>%
-    filter(vrbl_name_unlag != vrbl_name) %>% ## only use lagged variables
-    mutate(lag = as.numeric(substring(str_extract(vrbl_name, "_lag(\\d+)"), 5))) %>%
-    filter(cbn_name != "cbn_controls") %>%
-    group_by(vrbl_name_unlag, cbn_name, lag) %>%
-    slice_sample(n=NBR_MDLS)
 
-table(df_anls_all$vrbl_name_unlag)
+    ## c(ti_vars, density_vars, hnwi_vars, inc_ineq_vars, weal_ineq_vars,
+    ##   cult_spending_vars, ctrl_vars_lngtd))
 
-df_anls_all$vrbl_name_unlag <- factor(df_anls_all$vrbl_name_unlag,
-                                      levels = c(ti_vars, density_vars, hnwi_vars, inc_ineq_vars, weal_ineq_vars,
-                                                 cult_spending_vars, ctrl_vars_lngtd))
 
-pdf(paste0(FIG_DIR, "reg_res_all_tmitr_fixed.pdf"), width = 8, height = 12)
-ggplot(df_anls_all, aes(x=lag, y=coef)) +
-    geom_quasirandom(aes(color = t_value, shape = factor(sig)), size = 2, height = 0, width = 0.3) +
-    facet_grid(cols = vars(cbn_name), rows = vars(vrbl_name_unlag), scales = "free", switch = "y") +
-    theme(strip.text.y.left = element_text(angle = 0)) +
-    scale_color_gradient2(low = "blue", mid = "grey", high = "red") +
-    scale_shape_manual(values = c(1,4))
-dev.off()
+
+
+
+    
+
 
 
 ## ** best fitting models
@@ -233,47 +465,15 @@ dev.off()
 ## *** models themselves 
 
 
-df_anls_base_no1B <- df_anls_base %>% group_by(mdl_id) %>%
-    filter("hnwi_nbr_1B" %!in% vrbl_name_unlag)
 
 
 
-best_mdls <- gof_df_cbn %>%
-    filter(gof_names == "log_likelihood", cbn_name != "cbn_controls",
-           mdl_id %in% unique(df_anls_base_no1B$mdl_id)) %>%
-    group_by(cbn_name) %>% 
-    arrange(gof_value) %>%
-    slice_tail(n=1)
-    
 
-
-## best_mdls <- gof_df_cbn %>%
-##     filter(gof_names == "log_likelihood", cbn_name != "cbn_controls") %>%
-##     group_by(cbn_name) %>% 
-##     arrange(gof_value) %>%
-##     slice_tail(n=1)
-
-best_mdl_coefs <- merge(df_anls_base, best_mdls) %>% atb()  %>% filter(vrbl_name_unlag != "hnwi_nbr_1B")
-best_mdl_coefs$lag <- as.numeric(substring(str_extract(best_mdl_coefs$vrbl_name, "_lag(\\d+)"), 5))
-best_mdl_coefs$lag[is.na(best_mdl_coefs$lag)] <- 0
-vrbl_levels <- c("sum_core", ti_vars, density_vars, hnwi_vars, inc_ineq_vars,
-                 weal_ineq_vars, cult_spending_vars, ctrl_vars_lngtd)
-other_var_names <- c(unique(best_mdl_coefs$vrbl_name_unlag)[unique(best_mdl_coefs$vrbl_name_unlag) %!in% vrbl_levels])
-best_mdl_coefs$vrbl_name_unlag <- factor(best_mdl_coefs$vrbl_name_unlag, levels = c(vrbl_levels, other_var_names))
-best_mdl_coefs <- filter(best_mdl_coefs, vrbl_name_unlag %!in% c("ln_s", "cons", "ln_r"))
-
-pdf(paste0(FIG_DIR, "best_models_tmirtr_fixed.pdf"), width = 8, height = 12)
-ggplot(best_mdl_coefs, aes(x=lag, y=exp(coef), color = t_value)) +
-    geom_quasirandom(aes(shape = factor(sig)), height = 0, width = 0.33, show.legend=T, size = 3) +
-    facet_grid(vrbl_name_unlag~cbn_name, scales="free", switch = "y", labeller = labeller(vrbl_name_unlag = rel_vars)) +
-    theme(strip.text.y.left = element_text(angle = 0)) + 
-    scale_color_gradient2(low = "blue", mid = "grey", high = "red") +
-    scale_shape_manual(values = c(1,4))
-dev.off()
 
 ## *** condensed
 
 generate_plot_models <- function(cbn_namex) {
+    #' generate texreg models of best models?
 
     mdl_summary <- best_mdl_coefs %>% group_by(vrbl_name_unlag) %>%
         filter(cbn_name == cbn_namex) %>% 
@@ -296,32 +496,11 @@ y <- plotreg(x, type = "facet")
 
 ## *** manual plotreg
 
-mdl_summary <- best_mdl_coefs %>% group_by(vrbl_name_unlag, cbn_name) %>%
-    summarize(coef = mean(coef), lag_mean = mean(lag), lag_sd = sd(lag), p_value = mean(pvalues),
-              t_value = mean(t_value), se = mean(se), min = coef - 1.96*se, max = coef + 1.96*se,
-              sig = ifelse(abs(t_value) > 1.96, 1,0))
-mdl_summary$vrbl_name_unlag <- factor(mdl_summary$vrbl_name_unlag,
-                                      levels = rev(levels(mdl_summary$vrbl_name_unlag)))
 
-pdf(paste0(FIG_DIR, "best_models_condensed.pdf"), width = 7, height = 4)
-ggplot(mdl_summary, aes(color = factor(sig), y = vrbl_name_unlag)) +
-    geom_point(aes(x = coef, shape = factor(sig)), size = 2.5, alpha = 0.95, show.legend = F) +
-    geom_errorbarh(aes(xmin = min, xmax = max, , height= 0.1), alpha = 0.6, show.legend = F) + 
-    facet_wrap(~cbn_name) +
-    geom_vline(xintercept =0, linetype = "dashed") +
-    scale_shape_manual(values = c(15,16)) +
-    ## scale_shape_manual(values = c(0,1)) +
-    ## scale_shape_manual(values = c(21,12)) +
-    scale_color_manual(values = c("#1C5BA6", "#BD0017")) +
-    scale_y_discrete(labels = rel_vars) +
-    ## coord_cartesian(xlim=c(-1, 1)) +
-    labs(x="coefficient size, 95% CI", y="coefficient")
-dev.off()
+
+
+
     
-
-labeller = labeller(vrbl_name_unlag = rel_vars))
-
-
 
 
 
@@ -430,7 +609,6 @@ gen_ll_best_coef_plot <- function(vrbl_name_unlag, cbn_name) {
     #' needs as globals: df_anls_within, two_axis_df
     
     
-
     ll_scale <- df_anls_within %>%
         filter(cbn_name == !!cbn_name, vrbl_name_unlag == !!vrbl_name_unlag) %>%
         summarize(min_vlu = min(coef), max_vlu = max(coef), range = max_vlu - min_vlu,
@@ -523,7 +701,7 @@ variation_anls %>%
     facet_wrap(~vrbl_name_unlag, switch = "y", ncol = 1, scales = "free_y",
                labeller = labeller(vrbl_name_unlag = rel_vars)) +
     theme(strip.text.y.left = element_text(angle = 0))
-dev.off()    
+dev.off()
 
 
     
