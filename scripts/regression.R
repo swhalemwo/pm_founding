@@ -703,6 +703,8 @@ vary_spec <- function(reg_spec, vvs){
 gen_vrbl_vectors <- function() {
     #' generate the variable vectors (group of variables): use only one large global (?) object
 
+    
+
     base_vars <- c("iso3c", "year")
     crscn_vars <- c("sum_core", "cnt_contemp_1995")
     hnwi_vars <- sapply(hnwi_cutoff_vlus, \(x) paste0("hnwi_nbr_", sanitize_number(x)))
@@ -723,6 +725,38 @@ gen_vrbl_vectors <- function() {
     lngtd_vars <- c(hnwi_vars, inc_ineq_vars, weal_ineq_vars, non_thld_lngtd_vars)
     all_rel_vars <- unique(c(hnwi_vars, inc_ineq_vars, weal_ineq_vars, non_thld_lngtd_vars, crscn_vars))
 
+    vrbl_lbls <- c("nbr_opened" = "Number of Private Museums opened",
+                   "sum_core" = "Tax incentives",
+                   "ti_tmitr_interact" = "Marginal Income Tax Rate * Tax Incentives",
+                   "tmitr_approx_linear20step" = "Marginal Income Tax Rate (%)",
+                   "hnwi_nbr_1M" = "# HNWIs with net worth >= 1M",
+                   "hnwi_nbr_5M" = "# HNWIs with net worth >= 5M",
+                   "hnwi_nbr_30M" = "# HNWIs with net worth >= 30M",
+                   "hnwi_nbr_200M" = "# HNWIs with net worth >= 200M",
+                   "hnwi_nbr_1B" = "# HNWIs with net worth >= 1B",
+                   "sptinc992j_p90p100" = "Income share of top 10%",
+                   "sptinc992j_p99p100" = "Income share of top 1%",
+                   "gptinc992j" = "Gini of pre-tax income",
+                   "ghweal992j"= "Gini of net wealth",
+                   "shweal992j_p90p100" = "Wealth share of top 10%",
+                   "shweal992j_p99p100" = "Wealth share of top 1%",
+                   "smorc_dollar_fxm" = "Gvt cultural spending (millions)",
+                   "NY.GDP.PCAP.CDk" = "GDP per capita (thousands)",
+                   "SP.POP.TOTLm" = "Population (millions)",
+                   "cnt_contemp_1985" = "# Museums of contemporary art in 1985",
+                   "cnt_contemp_1995" = "# of modern/contemp. art museums in 1995",
+                   "clctr_cnt_cpaer" = "# Collectors in Artnews collector list",
+                   "nbr_opened_cum" = "cumulative openings (legitimacy)",
+                   "nbr_opened_cum_sqrd" = "cumulative openings squared (competition)",
+                   "ln_s" = "ln(s)",
+                   "cons" = "cons",
+                   "ln_r" = "ln(r)"
+                   )
+
+    if (!all(all_rel_vars %in% names(vrbl_lbls))) {
+        stop("not all relevant variables have a variable label")
+    }
+
     return(list(
         base_vars = base_vars,
         crscn_vars = crscn_vars,
@@ -738,9 +772,10 @@ gen_vrbl_vectors <- function() {
         non_thld_lngtd_vars = non_thld_lngtd_vars,
         lngtd_vars = lngtd_vars,
         lngtd_vars_df = data.frame(lngtd_vars),
-        all_rel_vars = all_rel_vars
-        )
-        )
+        all_rel_vars = all_rel_vars,
+        vrbl_lbls = vrbl_lbls
+    )
+    )
 }
 
 
