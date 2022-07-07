@@ -1009,4 +1009,117 @@ NULL
 
 
 
+## * step-wise optimizer
 
+NBR_SPECS <- 18
+vrbl_thld_choices_optmz <- slice_sample(vrbl_thld_choices, n=6)
+
+
+reg_settings_optmz <- list(
+    nbr_specs = 18,
+    batch_nbr = "v24",
+    vary_vrbl_lag = F,
+    cbns_to_include = c("cbn_all"),
+    mdls_to_include = c("full")
+)
+
+
+fldr_info_optmz <- setup_regression_folders_and_files(reg_settings_optmz$batch_nbr)
+
+reg_spec_mdls_optmz <- gen_batch_reg_specs(reg_settings_optmz, vvs, vrbl_thld_choices_optmz)
+
+## reg_spec <- reg_spec_mdls_optmz[[1]]
+
+## restore_base_lag_spec <- 
+modfy_optmz_cfg <- function(reg_spec, base_lag_spec_orig, loop_nbr) {
+    #' restore the base_lag_spec in a reg_spec
+
+    ## reg_spec$other_cfgs <- reg_spec$other_cfgs %>%
+    ##     mutate(value = ifelse(variable == "base_lag_spec", base_lag_spec_orig, value))
+
+    reg_spec$cfg$base_lag_spec <- base_lag_spec_orig
+
+    reg_spec$cfg$loop_nbr <- loop_nbr
+
+    return(reg_spec)
+}
+
+
+optmz_vrbl_lag <- function(reg_spec, vrblx, loop_nbr, fldr_info) {
+    #' optimize the lag of one variable 
+    
+
+    ##  generate models, need exception for ti_tmitr_interact
+    base_lag_spec_orig <- reg_spec$base_lag_spec
+
+    ## only pick the lngtd_vrbls, and vary vrblx
+    reg_specs_vrblx_varied <- lapply(seq(1,5), \(x)
+                                    reg_spec$lngtd_vrbls %>% 
+                                    mutate(lag = ifelse(vrbl==vrblx, x, lag)) %>%
+                                    list(lngtd_vrbls = .))
+
+    ## reconstruct the full reg_spec again 
+    reg_specs_full_again <- vary_batch_reg_spec(reg_specs_vrblx_varied, reg_settings_optmz, vvs)
+    
+    ## modify base_lag_spec back 
+    reg_specs_full_again2 <- lapply(reg_specs_full_again, \(x) modfy_optmz_cfg(x, base_lag_spec_orig, loop_nbr))
+
+    ## add ids
+    reg_specs_w_ids <- idfy_reg_specs(reg_specs_full_again2, vvs)
+
+
+    ## run_vrbl_mdl_vars(reg_specs_full_again2[[1]], vvs, fldr_info, return_objs = "log_likelihood")
+    ## names(reg_specs_full_again2) <- as.character(seq(1,5))
+
+    lag_lls <- sapply(reg_specs_w_ids, \(x)
+                      run_vrbl_mdl_vars(x, vvs, fldr_info, return_objs = "log_likelihood"))
+
+    ## seems to be robust against non-convergence
+    ## lag_lls[[1]] <- NA
+
+    best_lag <- which.max(lag_lls)
+
+    ## assign best_lag value back to reg_spec 
+    reg_spec$lngtd_vrbls <- reg_spec$lngtd_vrbls %>%
+        mutate(lag = ifelse(vrbl == vrblx, best_lag, lag))
+           
+           
+    return(reg_spec)
+    
+
+}
+
+
+
+## optmz_vrbl_lag(reg_spec_mdls_optmz[[2]], "nbr_opened_cum", loop_nbr = 1, fldr_info_optmz)
+
+
+optmz_reg_spec_once <- function(reg_spec, loop_nbr, fldr_info) {
+    #' one round of optimization
+
+    for (v in sample(reg_spec$lngtd_vrbls$vrbl)) {
+
+        reg_spec <- optmz_vrbl_lag(reg_spec, v, loop_nbr, fldr_info)
+
+    }
+    
+    return(reg_spec)
+}
+
+## optmz_reg_spec_once(reg_spec_mdls_optmz[[2]], 1, fldr_info_optmz)
+
+
+optmz_reg_spec <- function(reg_spec, nbr_loops, fldr_info) {
+    #' optimize a regression specification by randomly choosing a variable and then picking the best lag
+
+    for (l in seq(1, nbr_loops)) {
+
+        reg_spec <- optmz_reg_spec_once(reg_spec, loop_nbr = l, fldr_info)
+        
+    }
+    return (reg_spec)
+}
+
+optmz_reg_spec(reg_spec_mdls_optmz[[1]], nbr_loops = 3, fldr_info_optmz)
+    
+mclapply(reg_spec_mdls_optmz, \(x) optmz_reg_spec(x, nbr_loops = 4, fldr_info_optmz), mc.cores = 6)
