@@ -184,7 +184,7 @@ gen_vrbl_thld_choices <- function(hnwi_vars, inc_ineq_vars, weal_ineq_vars) {
 
 
 
-gen_reg_spec <- function(non_thld_lngtd_vars) {
+gen_reg_spec <- function(non_thld_lngtd_vars, vrbl_thld_choices) {
     
     #' generate the regression specification: basically just choice of some variables/thresholds and lag lengths
 
@@ -402,12 +402,15 @@ gen_mdl_id <- function(reg_spec, vvs) {
     vrbl_lag_id <- paste0(df_idx$value, collapse = "")
 
 
-    other_cfgs <- data.frame(rbind(c("cbn_name", reg_spec$cbn_name),
-                                   c("mdl_name", reg_spec$mdl_name),      
-                                   c("vrbl_varied", reg_spec$vrbl_varied),
-                                   c("base_lag_spec", reg_spec$base_lag_spec)))
-    names(other_cfgs) <- c("variable", "value")
-        ## select(variable = X1, value = X2)
+    ## other_cfgs <- data.frame(rbind(c("cbn_name", reg_spec$cbn_name),
+    ##                                c("mdl_name", reg_spec$mdl_name),      
+    ##                                c("vrbl_varied", reg_spec$vrbl_varied),
+    ##                                c("base_lag_spec", reg_spec$base_lag_spec)))
+
+    other_cfgs <- data.frame(variable = names(reg_spec$cfg), value = unname(unlist(reg_spec$cfg)))
+    
+    ## names(other_cfgs) <- c("variable", "value")
+    ## select(variable = X1, value = X2)
 
     cfg_id <- paste0(other_cfgs$value, collapse = '--')
 
@@ -475,7 +478,8 @@ timeout_stata <- function(iv_vars, stata_output_vars, gof_names, dfx, file_id, f
     
     return(list(
         result = T,
-        pid = pid))
+        pid = pid,
+        log_likelihood = stata_res_parsed$gof_df[which(stata_res_parsed$gof_df$gof_names == "log_likelihood"),]$gof_value))
     ## return("asdf")
 }
 
@@ -486,10 +490,11 @@ timeout_stata <- function(iv_vars, stata_output_vars, gof_names, dfx, file_id, f
 
     
 ## run_vrbl_mdl_vars <- function(mdl_vars, df_cbn, cbn_name, mdl_name, reg_specx) {
-run_vrbl_mdl_vars <- function(reg_spec, vvs, fldr_info, verbose = F) {
+run_vrbl_mdl_vars <- function(reg_spec, vvs, fldr_info, return_objs = c("result"), verbose = F) {
     #' run one regression given the model vars
     
-    df_cbn <- cbn_dfs[[reg_spec$cbn_name]]
+    
+    df_cbn <- cbn_dfs[[reg_spec$cfg$cbn_name]]
 
     ## id_res <- gen_mdl_id(reg_spec, vvs)
 
@@ -532,14 +537,15 @@ run_vrbl_mdl_vars <- function(reg_spec, vvs, fldr_info, verbose = F) {
             fscaret::timeout(timeout_stata(iv_vars, stata_output_vars, gof_names, dfx, file_id,
                                            fldr_info, verbose = verbose),
                              seconds = 5)},
-            error=function(e) {list(result = NULL, pid = Sys.getpid())}
+            error=function(e) {list(result = NULL, pid = Sys.getpid(), log_likelihood = NA)}
             )
     )
-    
-                                 
-    ## converged <- withTimeout(timeout_stata(iv_vars, stata_output_vars, gof_names, dfx, file_id, verbose = verbose),
-    ##                          timeout = 1)
 
+    ## keep pure version here since fscaret makes debuggin impossible
+    ## converged <- timeout_stata(iv_vars, stata_output_vars, gof_names, dfx, file_id,
+    ##                                        fldr_info, verbose = verbose)
+
+                                 
     ## converged <- T
     proc_dir <- paste0(fldr_info$PID_DIR, converged$pid)
     
@@ -567,11 +573,24 @@ run_vrbl_mdl_vars <- function(reg_spec, vvs, fldr_info, verbose = F) {
     ## write model id to end file to debug convergence failure
     write.table(file_id, fldr_info$MDL_END_FILE, append = T, col.names = F, row.names = F)
 
-    converged$result
+    return(converged[return_objs])
     
 }
 
 ## run_cbn <- function(cbn_vars, base_vars, ctrl_vars, cbn_name, reg_spec) {
+
+proc_mdl_info_addgn <- function(reg_spec, mdl_name, mdl_vars) {
+    #' add the model information to the new cfg sublist 
+
+    reg_spec$cfg <- c(reg_spec$cfg,
+                      list(mdl_name = mdl_name))
+
+    reg_spec$mdl_vars <- mdl_vars
+    return(reg_spec)
+}
+    
+
+
 gen_spec_mdl_info <- function(reg_spec) {
     #' generate the model specifications (currently just has full models)
     
@@ -588,9 +607,13 @@ gen_spec_mdl_info <- function(reg_spec) {
      
     ## lapply(names(cbn_models), \(x) run_vrbl_mdl_vars(cbn_models[[x]], df_cbn, cbn_name, mdl_name = x, reg_spec))
 
-    specs_mod <- lapply(names(cbn_models), \(x) c(reg_spec,
-                                                  list(mdl_name = x, mdl_vars = cbn_models[[x]])))
-    
+    ## specs_mod <- lapply(names(cbn_models), \(x) c(reg_spec,
+    ##                                               list(mdl_name = x, mdl_vars = cbn_models[[x]])))
+ 
+    specs_mod <- lapply(names(cbn_models), \(x)
+                        proc_mdl_info_addgn(reg_spec, mdl_name = x, mdl_vars = cbn_models[[x]]))
+ 
+   
     ## %>%
     ## rbindlist() %>% atb()
     
@@ -609,8 +632,23 @@ gen_spec_id_info <- function(reg_spec, vvs) {
 }
 
     
+proc_cbn_info_addgn <- function(reg_spec, spec_cbn, base_vars, ctrl_vars, cbn_name, vvs) {
+    #' modify the reg_spec cbn_info, adding cbn_name to the cfg sub_list
+    #' since not possible to assign in lambdas
+    
+    reg_spec$cfg <- c(reg_spec$cfg,
+                      list(cbn_name = cbn_name))
 
-gen_spec_cbn_info <- function(reg_spec, vvs) {
+    reg_spec$base_vars <- vvs$base_vars
+    reg_spec$spec_cbn <- spec_cbn
+    reg_spec$ctrl_vars <- ctrl_vars
+
+    return(reg_spec)
+}
+  
+
+
+gen_spec_cbn_info <- function(reg_spec, cbns_to_include, vvs) {
     #' vary a reg-spec across variable combinations -> exclude variables not belonging to a particular combination
     
     
@@ -625,18 +663,23 @@ gen_spec_cbn_info <- function(reg_spec, vvs) {
     ## generate specification-specific control vars
     ctrl_vars <- setdiff(spec_cbns$cbn_controls, vvs$base_vars)
 
-    spec_cbn_names <- names(spec_cbns)
+    ## spec_cbn_names <- names(spec_cbns)
     ## names(spec_cbn_names) <- spec_cbn_names
 
     
-    
-    reg_specs_mod <- lapply(spec_cbn_names, \(i) c(reg_spec,
-                                                   list(spec_cbn=spec_cbns[[i]],
-                                                        base_vars = vvs$base_vars,
-                                                        ctrl_vars = ctrl_vars,
-                                                        cbn_name = i)))
 
-    
+
+    ## ## only generate the models for cbns_to_include
+    ## reg_specs_mod <- lapply(cbns_to_include, \(i) c(reg_spec,
+    ##                                                list(spec_cbn=spec_cbns[[i]],
+    ##                                                     base_vars = vvs$base_vars,
+    ##                                                     ctrl_vars = ctrl_vars,
+    ##                                                     cbn_name = i)))
+
+    reg_specs_mod <- lapply(cbns_to_include, \(i)
+                            proc_cbn_info_addgn(reg_spec, spec_cbns[[i]], base_vars, ctrl_vars, cbn_name = i, vvs))
+
+   
     ## lapply(spec_cbn_names, \(x) run_cbn(spec_cbns[[x]], base_vars, ctrl_vars, x, reg_spec))
     ## for (i in spec_cbn_names) {
 
@@ -666,33 +709,40 @@ replace_vlue <- function(lngtd_vrbls, vrbl, lag) {
 
 
 
-vary_spec <- function(reg_spec, vvs){
+vary_spec <- function(reg_spec, vvs, vary_vrbl_lag){
     #' for a spec, vary each variable along all lags 
     
     
     base_lag_spec <- paste0(gen_lag_id(reg_spec, vvs)$value, collapse = "")
 
-    varied_specs <-
-        lapply(reg_spec[["lngtd_vrbls"]]$vrbl[reg_spec[["lngtd_vrbls"]]$vrbl != "ti_tmitr_interact"],
-               \(x)
-               lapply(seq(1,5),
-                      \(t)
-                      list(
-                          ## "lngtd_vrbls" = mutate(reg_spec[["lngtd_vrbls"]],
-                          ##                         lag = ifelse(vrbl == x, t, lag)),
+    ## if I want to vary the variable lags, do it here
+    if (vary_vrbl_lag) {
+        ## don't vary the ti_tmitr interaction 
+        varied_specs <-
+            lapply(reg_spec[["lngtd_vrbls"]]$vrbl[reg_spec[["lngtd_vrbls"]]$vrbl != "ti_tmitr_interact"], \(x)
+                   lapply(seq(1,5), \(t)
+                          list(
+                              ## "lngtd_vrbls" = mutate(reg_spec[["lngtd_vrbls"]],
+                              ##                         lag = ifelse(vrbl == x, t, lag)),
+                              "lngtd_vrbls" = replace_vlue(reg_spec$lngtd_vrbls, vrbl = x, lag = t),
+                              "lag_len" = t,
+                              "cfg" = list("vrbl_varied" = x,
+                                           "base_lag_spec" = base_lag_spec
+                                           )
+                          )
+                          )
+                   )
 
-                          "lngtd_vrbls" = replace_vlue(reg_spec$lngtd_vrbls, vrbl = x, lag = t),
+        varied_specs_long <- Reduce(\(x, y) c(x,y), varied_specs) %>% unique()
+        ## if i don't want to vary variable lag, still add base_lag_spec
+    } else {
+        
+        varied_specs_long <- list(c(reg_spec,
+                               list("base_lag_spec" = base_lag_spec)
+                               ))
+    }
 
-                           
-                           "vrbl_varied" = x,
-                           "lag_len" = t,
-                           "base_lag_spec" = base_lag_spec
 
-                           )))
-
-
-    
-    varied_specs_long <- Reduce(\(x, y) c(x,y), varied_specs) %>% unique()
     ## varied_specs_long <- varied_specs
 
     return (varied_specs_long)
@@ -817,59 +867,104 @@ setup_regression_folders_and_files <- function(batch_version) {
     )
 }
 
-gen_batch_reg_specs <- function(NBR_SPECS, vvs) {
+gen_batch_reg_specs <- function(reg_settings, vvs, vrbl_thld_choices) {
     #' generate the regression specs for a batch 
 
+    
     
     
     ## generate basic spec of lag, variable and threshold choices
     t1 = Sys.time()
     ## NBR_SPECS <- 750
-    reg_specs <- lapply(seq(1,NBR_SPECS), \(x) gen_reg_spec(vvs$non_thld_lngtd_vars)) %>% unique() #
+    reg_specs <- lapply(seq(1,reg_settings$nbr_specs), \(x)
+                        gen_reg_spec(vvs$non_thld_lngtd_vars, vrbl_thld_choices)) %>%
+        unique() #
+    
+
+    reg_spec_mdls <- vary_batch_reg_spec(reg_specs, reg_settings, vvs)
+
+    reg_spec_mdls_with_ids <- idfy_reg_specs(reg_spec_mdls, vvs)
+    
+    t2 = Sys.time()
+    print(t2-t1)
+
+
+    return(reg_spec_mdls_with_ids)
+}
+
+
+
+
+vary_batch_reg_spec <- function(reg_specs, reg_settings, vvs) {
+    #' generate variations (lags, combinations, models) of list of reg_specs, also add ID
+
+    
+
     ## generate variations of basic reg_spec
-    reg_spec_varyns <- mclapply(reg_specs, \(x) vary_spec(x, vvs), mc.cores = 6) %>% flatten()
+    reg_spec_varyns <- mclapply(reg_specs, \(x)
+                                vary_spec(x, vvs, reg_settings$vary_vrbl_lag), mc.cores = 6) %>% flatten()
+
+
+    
     ## reg_spec_varyns2 <- mclapply(reg_specs, vary_spec, mc.cores = 6) %>% Reduce(\(x,y) c(x,y), .)
     ## add the combination info
-    reg_spec_cbns <- mclapply(reg_spec_varyns, \(x) gen_spec_cbn_info(x, vvs), mc.cores = 6) %>% flatten()
+    reg_spec_cbns <- mclapply(reg_spec_varyns, \(x)
+                              gen_spec_cbn_info(x, reg_settings$cbns_to_include, vvs),
+                              mc.cores = 6) %>%
+        flatten()
 
     ## reg_spec_cbns <- lapply(reg_spec_varyns, \(x) gen_spec_cbn_info(x, vvs$base_vars)) %>% flatten()
     ## reg_spec_cbns <- sapply(reg_spec_varyns, \(x) gen_spec_cbn_info(x, base_vars))
     ## mclapply is actually slower here because Reduce() is needed, and reducing tens of thousands of lists single-threadedly is slower than using sapply on single core
     ## guess I could split reg_spec_varyns manually into sections, each called with sapply, overall with mclapply: then I have just mc.cores number of lists, so Reduce should be quick
     ## flatten() from purrr is actually faster lol 
+
     ## add the model info
     ## reg_spec_mdls <- sapply(reg_spec_cbns, gen_spec_mdl_info)
     reg_spec_mdls <- mclapply(reg_spec_cbns, gen_spec_mdl_info, mc.cores = 6) %>% flatten()
     ## same issue here: mclapply with Reduce is slow, but with flatten it's faster :)))
 
-    ## also add ids everywhere
+    return(reg_spec_mdls)
+
+}
+    
+idfy_reg_specs <- function(reg_spec_mdls, vvs){
+    #' add ids to reg_specs 
+    
     reg_spec_mdls_with_ids <- mclapply(reg_spec_mdls, \(x) gen_spec_id_info(x, vvs), mc.cores = 6)
     
-    t2 = Sys.time()
-    print(t2-t1)
+    gen_spec_id_info(reg_spec_mdls[[1]], vvs)
+
 
     return(reg_spec_mdls_with_ids)
 
 }
 
 
-## get_reg_spec_from_id <- function(mdl_id, fldr_info) {
+
+get_reg_spec_from_id <- function(mdl_id, fldr_info) {
     
-##     reg_spec <- readRDS(paste0(fldr_info$REG_SPEC_DIR, mdl_id))
-## }
+    reg_spec <- readRDS(paste0(fldr_info$REG_SPEC_DIR, mdl_id))
+}
 
 
 
 #' overall regression wrapping 
 
-reg_settings <- list(nbr_specs = 1,
-                     batch_nbr = "v20")
-
+## ** end of functions
 
 vvs <- gen_vrbl_vectors()
 vrbl_cbns <- gen_cbns(vvs$all_rel_vars, vvs$base_vars)
 cbn_dfs <- gen_cbn_dfs(vvs$lngtd_vars, vvs$crscn, vrbl_cbns, vvs$base_vars)
 vrbl_thld_choices <- gen_vrbl_thld_choices(vvs$hnwi_vars, vvs$inc_ineq_vars, vvs$weal_ineq_vars)
+
+reg_settings <- list(
+    nbr_specs = 1,
+    batch_nbr = "v20",
+    vary_vrbl_lag = T,
+    cbns_to_include = names(cbn_dfs),
+    mdls_to_include = c("full")
+)
 
 
 fldr_info <- setup_regression_folders_and_files(reg_settings$batch_nbr)
@@ -877,7 +972,7 @@ fldr_info <- setup_regression_folders_and_files(reg_settings$batch_nbr)
 ## generating 20k models costs around 5 secs
 
 
-reg_spec_mdls <- gen_batch_reg_specs(reg_settings$nbr_specs, vvs)
+reg_spec_mdls <- gen_batch_reg_specs(reg_settings, vvs, vrbl_thld_choices)
 names(reg_spec_mdls) <- lapply(reg_spec_mdls, \(x) x$mdl_id)
 
 ## check how unique the model cfgs are 
@@ -886,7 +981,9 @@ table(table(names(reg_spec_mdls)))
 ## run_vrbl_mdl_vars(reg_spec_mdls[[2]])
 ## gen_mdl_id(reg_spec_mdls[[2]])
 
-cvrgns <- mclapply(reg_spec_mdls[1:30], \(x) run_vrbl_mdl_vars(x, vvs, fldr_info), mc.cores = 6) %>% unlist()
+cvrgns <- mclapply(reg_spec_mdls[1:12], \(x) run_vrbl_mdl_vars(x, vvs, fldr_info, c("log_likelihood")), mc.cores = 6) %>% unlist()
+
+lapply(reg_spec_mdls[1:30], \(x) run_vrbl_mdl_vars(x, vvs, fldr_info, c("converged"))) %>% unlist()
 
 ## run_vrbl_mdl_vars(reg_spec_mdls[[1]], vvs, fldr_info)
 NULL
