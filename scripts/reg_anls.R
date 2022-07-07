@@ -1,4 +1,5 @@
 ## * header
+## ** functions 
 
 library(stringr)
 library(ggbeeswarm)
@@ -408,12 +409,34 @@ reg_res$plt_cfgs <- gen_plt_cfgs()
 lapply(names(reg_res$plts), \(x) plot_reg_res(x, fldr_info))
 
 
-
-
 ## plot_reg_res(reg_res$plts$cbn_log_likelihoods, fldr_info)
 ## plot_reg_res(reg_res$plts$best_models_condensed, fldr_info)
    
+## ** step-wise optimization starts here 
 
+
+reg_anls_base_optmz <- read_reg_res_files(fldr_info_optmz)
+
+## unique(reg_anls_base$df_reg_anls_cfgs_wide$base_lag_spec)
+filter(reg_anls_base_optmz$gof_df_cbn, gof_names == "log_likelihood") %>%
+    group_by(loop_nbr, base_lag_spec) %>%
+    slice_max(gof_value)  %>% 
+    slice_tail(n=1) %>%
+    ggplot(aes(x=loop_nbr, y=gof_value, group = base_lag_spec)) +
+    geom_line()
+
+
+
+## comparison 
+## filter(reg_anls_base$gof_df_cbn, gof_names == "log_likelihood") %>% pull(gof_value) %>% max()
+## filter(reg_anls_base_optmz$gof_df_cbn, gof_names == "log_likelihood") %>% pull(gof_value) %>% max()
+
+
+
+
+## doesn't run: vrbl_varied: is not provided, means that within-changes don't make sense
+## hopefully can stitch together other funcs tho 
+## reg_res_objs <- proc_reg_res_objs(reg_anls_base, vvs)
 
 
 
