@@ -1040,6 +1040,7 @@ modfy_optmz_cfg <- function(reg_spec, base_lag_spec_orig, loop_nbr) {
     reg_spec$cfg$base_lag_spec <- base_lag_spec_orig
 
     reg_spec$cfg$loop_nbr <- loop_nbr
+    reg_spec$cfg$vrbl_optmzd
 
     return(reg_spec)
 }

@@ -417,15 +417,36 @@ lapply(names(reg_res$plts), \(x) plot_reg_res(x, fldr_info))
 
 reg_anls_base_optmz <- read_reg_res_files(fldr_info_optmz)
 
-## unique(reg_anls_base$df_reg_anls_cfgs_wide$base_lag_spec)
+## best result per base_spec after each loop of optimization
 filter(reg_anls_base_optmz$gof_df_cbn, gof_names == "log_likelihood") %>%
     group_by(loop_nbr, base_lag_spec) %>%
-    slice_max(gof_value)  %>% 
-    slice_tail(n=1) %>%
+    slice_max(gof_value) %>% 
     ggplot(aes(x=loop_nbr, y=gof_value, group = base_lag_spec)) +
     geom_line()
 
 
+## progress after each variable 
+filter(reg_anls_base_optmz$gof_df_cbn, gof_names == "log_likelihood") %>% 
+    select(gof_value, base_lag_spec, loop_nbr) %>%
+    mutate(step_base = 1, loop_nbr = as.numeric(loop_nbr)) %>%
+    group_by(base_lag_spec) %>% 
+    arrange(gof_value) %>%
+    mutate(step = ave(step_base, FUN = cumsum)) %>% 
+    ggplot(aes(x=step, y=gof_value, group = base_lag_spec)) +
+    geom_line() +
+
+
+
+
+filter(reg_anls_base_optmz$gof_df_cbn, base_lag_spec == "1XXXX2XXXX322445233") %>% pull(loop_nbr) %>% table()
+
+
+
+          
+reg_anls_base_optmz$gof_df_cbn$base_lag_spec %>% unique()
+
+
+"1XXXX2XXXX322445233"
 
 ## comparison 
 ## filter(reg_anls_base$gof_df_cbn, gof_names == "log_likelihood") %>% pull(gof_value) %>% max()
