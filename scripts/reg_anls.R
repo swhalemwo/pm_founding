@@ -425,28 +425,37 @@ filter(reg_anls_base_optmz$gof_df_cbn, gof_names == "log_likelihood") %>%
     geom_line()
 
 
-## progress after each variable 
+
+
+## progress after each variable
+## variables are randomly chosen, so step is different for each base_lag_spec
 filter(reg_anls_base_optmz$gof_df_cbn, gof_names == "log_likelihood") %>% 
-    select(gof_value, base_lag_spec, loop_nbr) %>%
-    mutate(step_base = 1, loop_nbr = as.numeric(loop_nbr)) %>%
+    select(gof_value, base_lag_spec, loop_nbr, vrbl_optmzd) %>%
+    mutate(step_base = 1, loop_nbr = as.numeric(loop_nbr),
+           vrbl_choice = gsub("[1-5]", "0", base_lag_spec)) %>%
+    group_by(vrbl_choice, base_lag_spec, loop_nbr, vrbl_optmzd) %>%
+    slice_max(gof_value) %>% 
     group_by(base_lag_spec) %>% 
     arrange(gof_value) %>%
     mutate(step = ave(step_base, FUN = cumsum)) %>% 
-    ggplot(aes(x=step, y=gof_value, group = base_lag_spec)) +
-    geom_line() +
+    ggplot(aes(x=step, y=gof_value, group = base_lag_spec, color = vrbl_choice)) +
+    geom_line()
+
+
+## see if different starting coefs of same vrbl_choice lead to same results
+filter(reg_anls_base_optmz$gof_df_cbn, gof_names == "log_likelihood") %>% 
+    select(mdl_id, gof_value, base_lag_spec, loop_nbr, vrbl_optmzd) %>%
+    mutate(step_base = 1, loop_nbr = as.numeric(loop_nbr),
+           vrbl_choice = gsub("[1-5]", "0", base_lag_spec)) %>%
+    group_by(vrbl_choice, base_lag_spec) %>%
+    slice_max(gof_value, n=1) %>% 
+    slice_sample(n=1)
 
 
 
-
-filter(reg_anls_base_optmz$gof_df_cbn, base_lag_spec == "1XXXX2XXXX322445233") %>% pull(loop_nbr) %>% table()
-
+## reg_anls_base_optmz$gof_df_cbn$base_lag_spec %>% unique()
 
 
-          
-reg_anls_base_optmz$gof_df_cbn$base_lag_spec %>% unique()
-
-
-"1XXXX2XXXX322445233"
 
 ## comparison 
 ## filter(reg_anls_base$gof_df_cbn, gof_names == "log_likelihood") %>% pull(gof_value) %>% max()

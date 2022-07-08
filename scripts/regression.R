@@ -1017,7 +1017,7 @@ NULL
 ## reg_spec <- reg_spec_mdls_optmz[[1]]
 
 ## restore_base_lag_spec <- 
-modfy_optmz_cfg <- function(reg_spec, base_lag_spec_orig, loop_nbr) {
+modfy_optmz_cfg <- function(reg_spec, base_lag_spec_orig, loop_nbr, vrblx) {
     #' restore the base_lag_spec in a reg_spec
 
     ## reg_spec$other_cfgs <- reg_spec$other_cfgs %>%
@@ -1026,7 +1026,7 @@ modfy_optmz_cfg <- function(reg_spec, base_lag_spec_orig, loop_nbr) {
     reg_spec$cfg$base_lag_spec <- base_lag_spec_orig
 
     reg_spec$cfg$loop_nbr <- loop_nbr
-    reg_spec$cfg$vrbl_optmzd
+    reg_spec$cfg$vrbl_optmzd <- vrblx
 
     return(reg_spec)
 }
@@ -1049,7 +1049,8 @@ optmz_vrbl_lag <- function(reg_spec, vrblx, loop_nbr, fldr_info) {
     reg_specs_full_again <- vary_batch_reg_spec(reg_specs_vrblx_varied, reg_settings_optmz, vvs)
     
     ## modify base_lag_spec back 
-    reg_specs_full_again2 <- lapply(reg_specs_full_again, \(x) modfy_optmz_cfg(x, base_lag_spec_orig, loop_nbr))
+    reg_specs_full_again2 <- lapply(reg_specs_full_again, \(x)
+                                    modfy_optmz_cfg(x, base_lag_spec_orig, loop_nbr, vrblx))
 
     ## add ids
     reg_specs_w_ids <- idfy_reg_specs(reg_specs_full_again2, vvs)
