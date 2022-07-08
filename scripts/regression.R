@@ -1085,8 +1085,21 @@ optmz_reg_spec_once <- function(reg_spec, loop_nbr, fldr_info) {
     #' one round of optimization
 
     for (v in sample(reg_spec$lngtd_vrbls$vrbl)) {
+        
+        cur_lag_id <- gen_lag_id(reg_spec, vvs) %>% pull(value) %>% paste0(collapse = "")
 
-        reg_spec <- optmz_vrbl_lag(reg_spec, v, loop_nbr, fldr_info)
+        ## if variable hasn't run yet with current lag spec, run it now 
+        if (cur_lag_id %!in% reg_spec$run_lag_specs[[v]]) {
+
+            reg_spec <- optmz_vrbl_lag(reg_spec, v, loop_nbr, fldr_info)
+            reg_spec$run_lag_specs[[v]] <- c(reg_spec$run_lag_specs[[v]], cur_lag_id)
+            reg_spec$nbr_skipped_in_row <- 0
+
+        } else {
+            cat(paste0("skip lag id: ", cur_lag_id))
+            reg_spec$nbr_skipped_in_row <- reg_spec$nbr_skipped_in_row + 1
+        }
+        
 
     }
     
@@ -1098,11 +1111,26 @@ optmz_reg_spec_once <- function(reg_spec, loop_nbr, fldr_info) {
 
 optmz_reg_spec <- function(reg_spec, nbr_loops, fldr_info) {
     #' optimize a regression specification by randomly choosing a variable and then picking the best lag
+    
+    
+    ## add lists of lag_specs already run for each variable 
+    
+    reg_spec_vrbls <- reg_spec$lngtd_vrbls$vrbl
+    names(reg_spec_vrbls) <- reg_spec_vrbls
+    reg_spec$run_lag_specs <- lapply(reg_spec_vrbls, \(x) c())
 
-    for (l in seq(1, nbr_loops)) {
+    ## add counter of how many regs have been skipped 
+    reg_spec$nbr_skipped_in_row <- 0
+
+    l <- 0
+    ## for (l in seq(1, nbr_loops)) {
+    while (T) {
 
         reg_spec <- optmz_reg_spec_once(reg_spec, loop_nbr = l, fldr_info)
-        
+
+        if (reg_spec$nbr_skipped_in_row > 2*nrow(reg_spec$lngtd_vrbls)) {break}
+        l <- l+1
+
     }
     return (reg_spec)
 }
@@ -1110,11 +1138,12 @@ optmz_reg_spec <- function(reg_spec, nbr_loops, fldr_info) {
 ## ** running 
 
 vrbl_thld_choices_optmz <- slice_sample(vrbl_thld_choices, n=3)
+reg_spec_mdls_optmz <- gen_batch_reg_specs(reg_settings_optmz, vvs, vrbl_thld_choices_optmz)
 
 
 reg_settings_optmz <- list(
     nbr_specs = 6,
-    batch_nbr = "v25",
+    batch_nbr = "v27",
     vary_vrbl_lag = F,
     cbns_to_include = c("cbn_all"),
     mdls_to_include = c("full")
@@ -1122,9 +1151,6 @@ reg_settings_optmz <- list(
 
 
 fldr_info_optmz <- setup_regression_folders_and_files(reg_settings_optmz$batch_nbr)
-
-reg_spec_mdls_optmz <- gen_batch_reg_specs(reg_settings_optmz, vvs, vrbl_thld_choices_optmz)
-
-## optmz_reg_spec(reg_spec_mdls_optmz[[1]], nbr_loops = 3, fldr_info_optmz)
-    
 mclapply(reg_spec_mdls_optmz, \(x) optmz_reg_spec(x, nbr_loops = 4, fldr_info_optmz), mc.cores = 6)
+
+optmz_reg_spec(reg_spec_mdls_optmz[[1]], nbr_loops = 3, fldr_info_optmz)
