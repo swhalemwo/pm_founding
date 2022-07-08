@@ -1011,22 +1011,8 @@ NULL
 
 ## * step-wise optimizer
 
-NBR_SPECS <- 18
-vrbl_thld_choices_optmz <- slice_sample(vrbl_thld_choices, n=6)
+## ** functions 
 
-
-reg_settings_optmz <- list(
-    nbr_specs = 18,
-    batch_nbr = "v24",
-    vary_vrbl_lag = F,
-    cbns_to_include = c("cbn_all"),
-    mdls_to_include = c("full")
-)
-
-
-fldr_info_optmz <- setup_regression_folders_and_files(reg_settings_optmz$batch_nbr)
-
-reg_spec_mdls_optmz <- gen_batch_reg_specs(reg_settings_optmz, vvs, vrbl_thld_choices_optmz)
 
 ## reg_spec <- reg_spec_mdls_optmz[[1]]
 
@@ -1121,6 +1107,24 @@ optmz_reg_spec <- function(reg_spec, nbr_loops, fldr_info) {
     return (reg_spec)
 }
 
-optmz_reg_spec(reg_spec_mdls_optmz[[1]], nbr_loops = 3, fldr_info_optmz)
+## ** running 
+
+vrbl_thld_choices_optmz <- slice_sample(vrbl_thld_choices, n=3)
+
+
+reg_settings_optmz <- list(
+    nbr_specs = 6,
+    batch_nbr = "v25",
+    vary_vrbl_lag = F,
+    cbns_to_include = c("cbn_all"),
+    mdls_to_include = c("full")
+)
+
+
+fldr_info_optmz <- setup_regression_folders_and_files(reg_settings_optmz$batch_nbr)
+
+reg_spec_mdls_optmz <- gen_batch_reg_specs(reg_settings_optmz, vvs, vrbl_thld_choices_optmz)
+
+## optmz_reg_spec(reg_spec_mdls_optmz[[1]], nbr_loops = 3, fldr_info_optmz)
     
 mclapply(reg_spec_mdls_optmz, \(x) optmz_reg_spec(x, nbr_loops = 4, fldr_info_optmz), mc.cores = 6)
