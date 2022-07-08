@@ -517,13 +517,16 @@ best_mdls_optmzd_coefs <- best_mdls_optmzd_coefs %>%
            just_one = 1) ## when using xstac=base_lag_spec
 
 
-
+## most straightforward way to see if different variable choices lead to different coefs/lags
+## coefs/lags are pretty much the same, but handful of marginally significant coefs :/
 plot_stacker(best_mdls_optmzd_coefs, ystack = "base_lag_spec", xstack = "cbn_name",
              shape_clm = "vrbl_choice", color_clm = "lag")
 
+## even more effective way to show that reg_specs with same variable choice converge to same results
 plot_stacker(best_mdls_optmzd_coefs, ystack = "vrbl_choice_factor", xstack = "vrbl_choice",
              shape_clm = "vrbl_choice", color_clm = "lag")
 
+## similar to first coef visualization (one model per column), but seems like the height of geom_errorbarh doesn't play well together with facet_grid
 plot_stacker(best_mdls_optmzd_coefs, ystack = "just_one", xstack = "base_lag_spec",
              shape_clm = "vrbl_choice", color_clm = "lag")
 
