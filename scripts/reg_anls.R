@@ -443,7 +443,7 @@ filter(reg_anls_base_optmz$gof_df_cbn, gof_names == "log_likelihood") %>%
 
 
 ## see if different starting coefs of same vrbl_choice lead to same results
-filter(reg_anls_base_optmz$gof_df_cbn, gof_names == "log_likelihood") %>% 
+best_mdls_optmzd <- filter(reg_anls_base_optmz$gof_df_cbn, gof_names == "log_likelihood") %>% 
     select(mdl_id, gof_value, base_lag_spec, loop_nbr, vrbl_optmzd) %>%
     mutate(step_base = 1, loop_nbr = as.numeric(loop_nbr),
            vrbl_choice = gsub("[1-5]", "0", base_lag_spec)) %>%
@@ -453,13 +453,76 @@ filter(reg_anls_base_optmz$gof_df_cbn, gof_names == "log_likelihood") %>%
 
 
 
+
+
 ## reg_anls_base_optmz$gof_df_cbn$base_lag_spec %>% unique()
 
 
+plot_stacker <- function(dfx, ystack, xstack, shape_clm = NULL, color_clm="lag") {
+    #' stack coef results vertically
+    #' assumes: lag (points get colored by), coef, min, max, sig, vrbl_name_unlag
 
-## comparison 
-## filter(reg_anls_base$gof_df_cbn, gof_names == "log_likelihood") %>% pull(gof_value) %>% max()
-## filter(reg_anls_base_optmz$gof_df_cbn, gof_names == "log_likelihood") %>% pull(gof_value) %>% max()
+    ## base_aes <- aes(y=!!sym(ystack))
+
+    ## programmatically edit the aes: 
+    ## modify color and shape based on function input
+    
+    point_aes <- aes(x=coef)
+
+    if (!is.null(shape_clm)) {
+        point_aes <- c(point_aes, aes(shape = !!sym(shape_clm)))
+        class(point_aes) <- "uneval"
+    }
+
+    if (!is.null(color_clm)) {
+        point_aes <- c(point_aes, aes(color = !!sym(color_clm)))
+        class(point_aes) <- "uneval"
+    }
+    
+    ## actual plotting 
+    ggplot(dfx, aes(y=get(ystack))) + 
+        geom_errorbarh(aes(xmin = min, xmax = max, height= 0.2, linetype = factor(sig), size = factor(sig)),
+                       alpha = 0.8, show.legend = F)  +
+        geom_point(point_aes, size = 2.5,  show.legend = T) +
+        facet_grid(vrbl_name_unlag~get(xstack), switch = "y",
+                   labeller = labeller(vrbl_name_unlag = vvs$vrbl_lbls)) +
+        theme(strip.text.y.left = element_text(angle = 0),
+              axis.text.y = element_blank(),
+              axis.ticks.y = element_blank()) + 
+        geom_vline(xintercept = 0, linetype = "dashed") +
+        scale_linetype_manual(values = c(2, 1)) + # setting errorbar linetype
+        scale_size_manual(values=c(0.4, 0.7)) ## setting errorbar size 
+    
+}
+
+df_anls_base_optmzd <- add_coef_sig(reg_anls_base_optmz$coef_df, reg_anls_base_optmz$df_reg_anls_cfgs_wide)
+## construct_df_best_mdls(reg_anls_base_optmz, reg_anls_base_optmz$gof_df_cbn)
+
+best_mdls_optmzd_coefs <- merge(df_anls_base_optmzd, best_mdls_optmzd) %>% atb() %>%
+    mutate(min = coef - 1.96*se, max = coef + 1.96*se,
+           lag = as.numeric(substring(str_extract(vrbl_name, "_lag(\\d+)"), 5)),
+           lag = ifelse(is.na(lag), 1, lag)) %>%
+        filter(vrbl_name_unlag %!in% c("ln_s", "cons", "ln_r"))
+    
+
+## condense the ystack to be able to save vertical space when expanding the xstack
+best_mdls_optmzd_coefs <- best_mdls_optmzd_coefs %>%
+    group_by(cbn_name, vrbl_name_unlag, vrbl_choice) %>%
+    mutate(vrbl_choice_factor = row_number(), ## when using xstack=vrbl_choice
+           just_one = 1) ## when using xstac=base_lag_spec
+
+
+
+plot_stacker(best_mdls_optmzd_coefs, ystack = "base_lag_spec", xstack = "cbn_name",
+             shape_clm = "vrbl_choice", color_clm = "lag")
+
+plot_stacker(best_mdls_optmzd_coefs, ystack = "vrbl_choice_factor", xstack = "vrbl_choice",
+             shape_clm = "vrbl_choice", color_clm = "lag")
+
+plot_stacker(best_mdls_optmzd_coefs, ystack = "just_one", xstack = "base_lag_spec",
+             shape_clm = "vrbl_choice", color_clm = "lag")
+
+
 
 
 
