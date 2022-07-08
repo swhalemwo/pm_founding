@@ -426,6 +426,11 @@ filter(reg_anls_base_optmz$gof_df_cbn, gof_names == "log_likelihood") %>%
 
 
 
+## comparison 
+## filter(reg_anls_base$gof_df_cbn, gof_names == "log_likelihood") %>% pull(gof_value) %>% max()
+## filter(reg_anls_base_optmz$gof_df_cbn, gof_names == "log_likelihood") %>% pull(gof_value) %>% max()
+
+
 
 ## progress after each variable
 ## variables are randomly chosen, so step is different for each base_lag_spec
@@ -578,18 +583,7 @@ plot_stacker(best_mdls_optmzd_coefs, ystack = "just_one", xstack = "base_lag_spe
 
 
 
-
-
-    
-
-
-
 ## ** best fitting models
-
-## *** models themselves 
-
-
-
 
 
 
