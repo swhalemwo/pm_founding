@@ -767,7 +767,7 @@ gen_vrbl_vectors <- function() {
 
     base_vars <- c("iso3c", "year")
     ## crscn_vars <- c("sum_core", "cnt_contemp_1995")
-    crscn_vars <- c("Ind.tax.incentives", "NPO.tax.exemption", "cnt_contemp_1995")
+    crscn_vars <- c("Ind.tax.incentives", "NPO.tax.exemption", "cnt_contemp_1995", "cnt_contemp_1995_squared")
     hnwi_vars <- sapply(hnwi_cutoff_vlus, \(x) paste0("hnwi_nbr_", sanitize_number(x)))
     inc_ineq_vars <- c("sptinc992j_p90p100", "sptinc992j_p99p100", "gptinc992j")
     weal_ineq_vars <- c("shweal992j_p90p100", "shweal992j_p99p100", "ghweal992j")
@@ -777,7 +777,8 @@ gen_vrbl_vectors <- function() {
 
     ## non_thld_lngtd_vars <- c("tmitr_approx_linear20step", "ti_tmitr_interact", "smorc_dollar_fxm", "NY.GDP.PCAP.CDk", "SP.POP.TOTLm", "clctr_cnt_cpaer")
 
-    ctrl_vars <- c("NY.GDP.PCAP.CDk", "SP.POP.TOTLm", "clctr_cnt_cpaer", "cnt_contemp_1995")
+    ctrl_vars <- c("NY.GDP.PCAP.CDk", "SP.POP.TOTLm", "clctr_cnt_cpaer", "cnt_contemp_1995",
+                   "cnt_contemp_1995_squared")
     ctrl_vars_lngtd <- ctrl_vars[ctrl_vars %!in% crscn_vars]
     ti_vars <- c("tmitr_approx_linear20step", "ti_tmitr_interact")
     cult_spending_vars <- c("smorc_dollar_fxm")
@@ -808,6 +809,7 @@ gen_vrbl_vectors <- function() {
                    "SP.POP.TOTLm" = "Population (millions)",
                    "cnt_contemp_1985" = "# Museums of contemporary art in 1985",
                    "cnt_contemp_1995" = "# of modern/contemp. art museums in 1995",
+                   "cnt_contemp_1995_squared" = "# of contemp. art museums (1995) (sqrd)",
                    "clctr_cnt_cpaer" = "# Collectors in Artnews collector list",
                    "nbr_opened_cum" = "cumulative openings (legitimacy)",
                    "nbr_opened_cum_sqrd" = "cumulative openings squared (competition)",
@@ -1167,8 +1169,8 @@ reg_spec_mdls_optmz <- gen_batch_reg_specs(reg_settings_optmz, vvs, vrbl_thld_ch
 
 
 reg_settings_optmz <- list(
-    nbr_specs = 6,
-    batch_nbr = "v31",
+    nbr_specs = 3,
+    batch_nbr = "v32",
     vary_vrbl_lag = F,
     cbns_to_include = c("cbn_all"),
     mdls_to_include = c("full")

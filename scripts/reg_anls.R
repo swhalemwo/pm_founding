@@ -457,6 +457,7 @@ plot_stacker <- function(dfx, ystack, xstack, shape_clm = NULL, color_clm="lag")
     
 }
 
+## *** optimized functions end here 
 
 reg_anls_base_optmz <- read_reg_res_files(fldr_info_optmz)
 
@@ -559,9 +560,11 @@ filter(df_anls_base_optmzd, vrbl_name_unlag %in% c("ti_tmitr_interact", "tmitr_a
     group_by(base_lag_spec) %>%
     summarize(distinct_lags = n_distinct(lag))
 
-
-
-
+## squared test
+## dfx <- tibble(a = rnorm(1000), b=rnorm(1000))
+## t1 <- lm(a ~ b, dfx)
+## t2 <- lm(a ~ b + I(b^2), dfx)
+## screenreg(list(t1, t2))
 
 
 

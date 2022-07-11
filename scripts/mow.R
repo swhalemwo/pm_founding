@@ -23,8 +23,10 @@ mow_tag_year_cnt <- function(mow_df, year, setx, sets) {
 
     mow_agg <- as_tibble(aggregate(cnt ~ iso3c, mow_df_fltrd2, sum))
 
+    col_name <- paste0('cnt_', setx, "_", year)
+    names(mow_agg)[2] <- col_name
 
-    names(mow_agg)[2] <- paste0('cnt_', setx, "_", year)
+    mow_agg[paste0(col_name, "_squared")] <- mow_agg[col_name]^2
 
     return(mow_agg)
     
