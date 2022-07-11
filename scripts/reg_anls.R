@@ -543,8 +543,8 @@ filter(df_anls_base_optmzd, vrbl_name_unlag %in% c("ti_tmitr_interact", "tmitr_a
     select(mdl_id, vrbl_name_unlag, lag, base_lag_spec) %>%
     pivot_wider(names_from = vrbl_name_unlag, values_from = lag) %>%
     mutate(lag_same = ti_tmitr_interact == tmitr_approx_linear20step) %>%
-    head(100) %>% adf()
-    ## pull(lag_same) %>% table()
+    ## head(100) %>% adf()
+    pull(lag_same) %>% table()
     ## arrange(base_lag_spec) %>% 
     ## filter(!lag_same) %>% adf()
 
