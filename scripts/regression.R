@@ -781,7 +781,7 @@ gen_vrbl_vectors <- function() {
                    "cnt_contemp_1995_squared")
     ctrl_vars_lngtd <- ctrl_vars[ctrl_vars %!in% crscn_vars]
     ti_vars <- c("tmitr_approx_linear20step", "ti_tmitr_interact")
-    cult_spending_vars <- c("smorc_dollar_fxm")
+    cult_spending_vars <- c("smorc_dollar_fxm", "smorc_dollar_fxm_sqrd")
 
     non_thld_lngtd_vars <- c(ti_vars, cult_spending_vars, ctrl_vars_lngtd, density_vars)
     lngtd_vars <- c(hnwi_vars, inc_ineq_vars, weal_ineq_vars, non_thld_lngtd_vars)
@@ -805,6 +805,7 @@ gen_vrbl_vectors <- function() {
                    "shweal992j_p90p100" = "Wealth share of top 10%",
                    "shweal992j_p99p100" = "Wealth share of top 1%",
                    "smorc_dollar_fxm" = "Gvt cultural spending (millions)",
+                   "smorc_dollar_fxm_sqrd" = "Gvt cultural spending (millions, sqrd)",
                    "NY.GDP.PCAP.CDk" = "GDP per capita (thousands)",
                    "SP.POP.TOTLm" = "Population (millions)",
                    "cnt_contemp_1985" = "# Museums of contemporary art in 1985",

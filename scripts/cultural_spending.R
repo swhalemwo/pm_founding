@@ -1028,7 +1028,8 @@ gen_cult_spending_imptd <- function() {
     df_tlycg_fnl <- select_proper_tlycg_series(df_cult_cbn)
 
     df_tlycg_fnl %>%
-        mutate(smorc_dollar_fxm = value/1e6) %>%
-        select(iso3c, year, smorc_dollar_fxm)
+        mutate(smorc_dollar_fxm = value/1e6,
+               smorc_dollar_fxm_sqrd = smorc_dollar_fxm^2) %>%
+        select(iso3c, year, smorc_dollar_fxm, smorc_dollar_fxm_sqrd)
     
 }
