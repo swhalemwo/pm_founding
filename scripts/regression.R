@@ -1112,7 +1112,7 @@ optmz_reg_spec_once <- function(reg_spec, loop_nbr, fldr_info) {
             reg_spec$nbr_skipped_in_row <- 0
 
         } else {
-            cat(paste0("skip lag id: ", cur_lag_id))
+            ## cat(paste0("skip lag id: ", cur_lag_id))
             reg_spec$nbr_skipped_in_row <- reg_spec$nbr_skipped_in_row + 1
         }
         
@@ -1158,8 +1158,8 @@ reg_spec_mdls_optmz <- gen_batch_reg_specs(reg_settings_optmz, vvs, vrbl_thld_ch
 
 
 reg_settings_optmz <- list(
-    nbr_specs = 6,
-    batch_nbr = "v29",
+    nbr_specs = 12,
+    batch_nbr = "v30",
     vary_vrbl_lag = F,
     cbns_to_include = c("cbn_all"),
     mdls_to_include = c("full")
