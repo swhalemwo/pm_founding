@@ -416,6 +416,47 @@ lapply(names(reg_res$plts), \(x) plot_reg_res(x, fldr_info))
    
 ## ** step-wise optimization starts here 
 
+plot_stacker <- function(dfx, ystack, xstack, shape_clm = NULL, color_clm="lag") {
+    #' stack coef results vertically
+    #' assumes: lag (points get colored by), coef, min, max, sig, vrbl_name_unlag
+
+    ## base_aes <- aes(y=!!sym(ystack))
+
+    ## programmatically edit the aes: 
+    ## modify color and shape based on function input
+    
+    point_aes <- aes(x=coef)
+
+    if (!is.null(shape_clm)) {
+        point_aes <- c(point_aes, aes(shape = !!sym(shape_clm)))
+        class(point_aes) <- "uneval"
+    }
+
+    if (!is.null(color_clm)) {
+        point_aes <- c(point_aes, aes(color = !!sym(color_clm)))
+        class(point_aes) <- "uneval"
+    }
+    
+    dfx$vrbl_name_unlag <- factor(dfx$vrbl_name_unlag, levels = names(vvs$vrbl_lbls))
+
+    ## actual plotting 
+    ggplot(dfx, aes(y=get(ystack))) + 
+        geom_errorbarh(aes(xmin = min, xmax = max, height= 0.2, linetype = factor(sig), size = factor(sig)),
+                       alpha = 0.8, show.legend = F)  +
+        geom_point(point_aes, size = 2.5,  show.legend = T) +
+        facet_grid(vrbl_name_unlag ~ get(xstack), switch = "y",
+                   labeller = labeller(vrbl_name_unlag = rev(vvs$vrbl_lbls))) +
+        theme(strip.text.y.left = element_text(angle = 0),
+              axis.text.y = element_blank(),
+              axis.ticks.y = element_blank()) + 
+        geom_vline(xintercept = 0, linetype = "dashed") +
+        scale_linetype_manual(values = c(2, 1)) + # setting errorbar linetype
+        scale_size_manual(values=c(0.4, 0.7)) + ## setting errorbar size
+        theme(panel.spacing.y = unit(0.3, "lines"))
+    
+    
+}
+
 
 reg_anls_base_optmz <- read_reg_res_files(fldr_info_optmz)
 
@@ -465,46 +506,6 @@ best_mdls_optmzd <- filter(reg_anls_base_optmz$gof_df_cbn, gof_names == "log_lik
 ## reg_anls_base_optmz$gof_df_cbn$base_lag_spec %>% unique()
 
 
-plot_stacker <- function(dfx, ystack, xstack, shape_clm = NULL, color_clm="lag") {
-    #' stack coef results vertically
-    #' assumes: lag (points get colored by), coef, min, max, sig, vrbl_name_unlag
-
-    ## base_aes <- aes(y=!!sym(ystack))
-
-    ## programmatically edit the aes: 
-    ## modify color and shape based on function input
-    
-    point_aes <- aes(x=coef)
-
-    if (!is.null(shape_clm)) {
-        point_aes <- c(point_aes, aes(shape = !!sym(shape_clm)))
-        class(point_aes) <- "uneval"
-    }
-
-    if (!is.null(color_clm)) {
-        point_aes <- c(point_aes, aes(color = !!sym(color_clm)))
-        class(point_aes) <- "uneval"
-    }
-    
-    dfx$vrbl_name_unlag <- factor(dfx$vrbl_name_unlag, levels = names(vvs$vrbl_lbls))
-
-    ## actual plotting 
-    ggplot(dfx, aes(y=get(ystack))) + 
-        geom_errorbarh(aes(xmin = min, xmax = max, height= 0.2, linetype = factor(sig), size = factor(sig)),
-                       alpha = 0.8, show.legend = F)  +
-        geom_point(point_aes, size = 2.5,  show.legend = T) +
-        facet_grid(vrbl_name_unlag ~ get(xstack), switch = "y",
-                   labeller = labeller(vrbl_name_unlag = rev(vvs$vrbl_lbls))) +
-        theme(strip.text.y.left = element_text(angle = 0),
-              axis.text.y = element_blank(),
-              axis.ticks.y = element_blank()) + 
-        geom_vline(xintercept = 0, linetype = "dashed") +
-        scale_linetype_manual(values = c(2, 1)) + # setting errorbar linetype
-        scale_size_manual(values=c(0.4, 0.7)) + ## setting errorbar size
-        theme(panel.spacing.y = unit(0.3, "lines"))
-    
-    
-}
 
 df_anls_base_optmzd <- add_coef_sig(reg_anls_base_optmz$coef_df, reg_anls_base_optmz$df_reg_anls_cfgs_wide)
 ## construct_df_best_mdls(reg_anls_base_optmz, reg_anls_base_optmz$gof_df_cbn)
