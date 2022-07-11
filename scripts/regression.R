@@ -1167,8 +1167,8 @@ reg_spec_mdls_optmz <- gen_batch_reg_specs(reg_settings_optmz, vvs, vrbl_thld_ch
 
 
 reg_settings_optmz <- list(
-    nbr_specs = 12,
-    batch_nbr = "v30",
+    nbr_specs = 6,
+    batch_nbr = "v31",
     vary_vrbl_lag = F,
     cbns_to_include = c("cbn_all"),
     mdls_to_include = c("full")

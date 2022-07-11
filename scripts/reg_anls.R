@@ -394,7 +394,7 @@ plot_reg_res <- function(plt_name, fldr_info) {
 }
 
 
-
+## ** main analysis
 
 ## read in stuff, construct objects 
 reg_anls_base <- read_reg_res_files(fldr_info)
@@ -486,13 +486,15 @@ plot_stacker <- function(dfx, ystack, xstack, shape_clm = NULL, color_clm="lag")
         class(point_aes) <- "uneval"
     }
     
+    dfx$vrbl_name_unlag <- factor(dfx$vrbl_name_unlag, levels = names(vvs$vrbl_lbls))
+
     ## actual plotting 
     ggplot(dfx, aes(y=get(ystack))) + 
         geom_errorbarh(aes(xmin = min, xmax = max, height= 0.2, linetype = factor(sig), size = factor(sig)),
                        alpha = 0.8, show.legend = F)  +
         geom_point(point_aes, size = 2.5,  show.legend = T) +
-        facet_grid(vrbl_name_unlag~get(xstack), switch = "y",
-                   labeller = labeller(vrbl_name_unlag = vvs$vrbl_lbls)) +
+        facet_grid(vrbl_name_unlag ~ get(xstack), switch = "y",
+                   labeller = labeller(vrbl_name_unlag = rev(vvs$vrbl_lbls))) +
         theme(strip.text.y.left = element_text(angle = 0),
               axis.text.y = element_blank(),
               axis.ticks.y = element_blank()) + 
