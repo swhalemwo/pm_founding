@@ -205,7 +205,7 @@ imputation_checker <- function(vrbl_to_check, df_regx) {
         mutate(nbr_flags = n_distinct(flag)) %>% 
         filter(nbr_flags > 1)
         
-    print(nrow(dfx))
+    ## print(nrow(dfx))
         
     plt <- dfx %>% 
         ggplot(aes(x=year, y=get(vrbl_to_check))) +
