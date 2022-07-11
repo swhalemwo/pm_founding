@@ -69,7 +69,9 @@ add_coef_sig <- function(coef_df,  df_reg_anls_cfgs_wide) {
     #' add significance to coefs
 
     df_anls_base <- coef_df %>%
-        mutate(vrbl_name_unlag = gsub("_lag[1-5]", "", vrbl_name)) %>%
+        mutate(vrbl_name_unlag = gsub("_lag[1-5]", "", vrbl_name),
+               lag = as.numeric(substring(str_extract(vrbl_name, "_lag(\\d+)"), 5)),
+               lag = ifelse(is.na(lag), 0, lag)) %>%
         merge(df_reg_anls_cfgs_wide) %>% atb() %>%
         mutate(t_value = coef/se, 
                sig = ifelse(pvalues < 0.05, 1, 0))
@@ -186,8 +188,8 @@ construct_df_best_mdls <- function(df_anls_base, gof_df_cbn) {
 
     best_mdl_coefs <- merge(df_anls_base, best_mdls) %>% atb()
     
-    best_mdl_coefs$lag <- as.numeric(substring(str_extract(best_mdl_coefs$vrbl_name, "_lag(\\d+)"), 5))
-    best_mdl_coefs$lag[is.na(best_mdl_coefs$lag)] <- 0
+    ## best_mdl_coefs$lag <- as.numeric(substring(str_extract(best_mdl_coefs$vrbl_name, "_lag(\\d+)"), 5))
+    ## best_mdl_coefs$lag[is.na(best_mdl_coefs$lag)] <- 0
     
     ## vrbl_levels <- c("sum_core", vvs$ti_vars, vvs$density_vars, vvs$hnwi_vars, vvs$inc_ineq_vars,
     ##                  vvs$weal_ineq_vars, vvs$cult_spending_vars, vvs$ctrl_vars_lngtd)
@@ -506,10 +508,8 @@ df_anls_base_optmzd <- add_coef_sig(reg_anls_base_optmz$coef_df, reg_anls_base_o
 ## construct_df_best_mdls(reg_anls_base_optmz, reg_anls_base_optmz$gof_df_cbn)
 
 best_mdls_optmzd_coefs <- merge(df_anls_base_optmzd, best_mdls_optmzd) %>% atb() %>%
-    mutate(min = coef - 1.96*se, max = coef + 1.96*se,
-           lag = as.numeric(substring(str_extract(vrbl_name, "_lag(\\d+)"), 5)),
-           lag = ifelse(is.na(lag), 1, lag)) %>%
-        filter(vrbl_name_unlag %!in% c("ln_s", "cons", "ln_r"))
+    mutate(min = coef - 1.96*se, max = coef + 1.96*se) %>% 
+    filter(vrbl_name_unlag %!in% c("ln_s", "cons", "ln_r"))
     
 
 ## condense the ystack to be able to save vertical space when expanding the xstack
