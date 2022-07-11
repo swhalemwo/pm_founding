@@ -224,10 +224,11 @@ get_taxinc_dfs <- function() {
     res.pca.dfs <- lapply(res.pca, function(x) create_pca_df(df_taxinc, pca.res = x$pca, id.col = "iso3c", nbr.factors = 2, rename_cols = x$lbl))
 
      df_manual_sums <- df_taxinc %>% 
-               mutate(sum_core = NPO.tax.exemption + Individual.Tax.Incentives,
-                      sum_more = NPO.tax.exemption + Individual.Tax.Incentives + Corporate.Tax.Incentives + Donations.after.death.exempt,
-                      rtgb_score = ifelse(Score < 0, NA, Score)) %>%
-        select(iso3c, sum_core, sum_more, rtgb_score)
+         mutate(sum_core = NPO.tax.exemption + Individual.Tax.Incentives,
+                sum_more = NPO.tax.exemption + Individual.Tax.Incentives + Corporate.Tax.Incentives + Donations.after.death.exempt,
+                rtgb_score = ifelse(Score < 0, NA, Score)) %>%
+         select(iso3c, sum_core, NPO.tax.exemption, Ind.tax.incentives = Individual.Tax.Incentives,
+                sum_more, rtgb_score)
     
     res.pca.dfs[[3]] <- df_manual_sums
 

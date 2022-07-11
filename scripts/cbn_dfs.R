@@ -121,7 +121,7 @@ get_df_reg <- function(df_anls) { #
 
     
     ## generate interaction
-    df_reg$ti_tmitr_interact <- df_reg$sum_core*df_reg$tmitr_approx_linear20step
+    df_reg$ti_tmitr_interact <- df_reg$Ind.tax.incentives * df_reg$tmitr_approx_linear20step
 
     df_reg$SP.POP.TOTL <- df_reg$SP.POP.TOTL/1
 
@@ -129,6 +129,21 @@ get_df_reg <- function(df_anls) { #
 
     
 }
+
+## mtcars$vs_scaled <- scale_wo_attr(mtcars$vs)
+
+## t1 <- lm(mpg ~ cyl + vs, mtcars) 
+## t2 <- lm(mpg ~ cyl + vs_scaled, mtcars) 
+
+## t3 <- lm(mpg ~ cyl * vs, mtcars) 
+## t4 <- lm(mpg ~ cyl * vs_scaled, mtcars) 
+
+## t5 <- lm(mpg ~ scale_wo_attr(cyl) * vs, mtcars)
+## t6 <- lm(mpg ~ scale_wo_attr(cyl) * vs_scaled, mtcars) 
+
+
+## screenreg(list(t1, t2, t3, t4, t5, t6))
+
 
 check_if_var_is_longitudinal <- function(dfx, vx) {
     

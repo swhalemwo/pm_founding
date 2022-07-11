@@ -315,9 +315,15 @@ gen_cbn_dfs <- function(lngtd_vars, crscn_vars, vrbl_cnbs, base_vars) {
         select(iso3c, year, vrbl_lag, value) %>%
         pivot_wider(names_from = vrbl_lag, values_from = value)
 
+    ## split up? 
     cbn_dfs <- lapply(cbn_cvrg, \(x) atb(merge(select(all_of(x), iso3c, year), df_all_lags)))
 
-    cbn_dfs <- lapply(cbn_dfs, \(x) mutate(x, across(all_of(setdiff(names(x), base_vars)), scale_wo_attr)) %>%
+    ## scale variables
+    vrbls_to_not_scale <- c("Ind.tax.incentives", "NPO.tax.exemption")
+    
+    cbn_dfs <- lapply(cbn_dfs, \(x) mutate(x,
+                                           across(all_of(setdiff(names(x), c(vrbls_to_not_scale, base_vars))),
+                                                  scale_wo_attr)) %>%
                                     mutate(iso3c_num = as.numeric(factor(iso3c))))
 
     ## sd(cbn_dfs$cbn_all$ti_tmitr_interact_lag1)
@@ -335,7 +341,7 @@ gen_cbn_dfs <- function(lngtd_vars, crscn_vars, vrbl_cnbs, base_vars) {
            lapply(seq(1,5), \(lagx)
                   x %>% 
                   mutate(!!paste0("ti_tmitr_interact_lag", lagx) :=
-                             get(paste0("tmitr_approx_linear20step_lag", lagx)) * sum_core) %>% 
+                             get(paste0("tmitr_approx_linear20step_lag", lagx)) * Ind.tax.incentives) %>% 
                   select(!!paste0("ti_tmitr_interact_lag", lagx))) %>%
            Reduce(\(x,y) cbind(x,y), .) %>% atb())
            
@@ -760,7 +766,8 @@ gen_vrbl_vectors <- function() {
     
 
     base_vars <- c("iso3c", "year")
-    crscn_vars <- c("sum_core", "cnt_contemp_1995")
+    ## crscn_vars <- c("sum_core", "cnt_contemp_1995")
+    crscn_vars <- c("Ind.tax.incentives", "NPO.tax.exemption", "cnt_contemp_1995")
     hnwi_vars <- sapply(hnwi_cutoff_vlus, \(x) paste0("hnwi_nbr_", sanitize_number(x)))
     inc_ineq_vars <- c("sptinc992j_p90p100", "sptinc992j_p99p100", "gptinc992j")
     weal_ineq_vars <- c("shweal992j_p90p100", "shweal992j_p99p100", "ghweal992j")
@@ -781,8 +788,10 @@ gen_vrbl_vectors <- function() {
 
     vrbl_lbls <- c("nbr_opened" = "Number of Private Museums opened",
                    "sum_core" = "Tax incentives",
-                   "ti_tmitr_interact" = "Marginal Income Tax Rate * Tax Incentives",
+                   "NPO.tax.exemption" = "Tax exemption of non-profits",
+                   "Ind.tax.incentives" = "Tax deductibility of donations",
                    "tmitr_approx_linear20step" = "Marginal Income Tax Rate (%)",
+                   "ti_tmitr_interact" = "Marginal Income Tax Rate * Tax deductibility",
                    "hnwi_nbr_1M" = "# HNWIs with net worth >= 1M",
                    "hnwi_nbr_5M" = "# HNWIs with net worth >= 5M",
                    "hnwi_nbr_30M" = "# HNWIs with net worth >= 30M",
