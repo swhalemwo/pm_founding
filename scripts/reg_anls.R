@@ -496,7 +496,9 @@ plot_stacker <- function(dfx, ystack, xstack, shape_clm = NULL, color_clm="lag")
               axis.ticks.y = element_blank()) + 
         geom_vline(xintercept = 0, linetype = "dashed") +
         scale_linetype_manual(values = c(2, 1)) + # setting errorbar linetype
-        scale_size_manual(values=c(0.4, 0.7)) ## setting errorbar size 
+        scale_size_manual(values=c(0.4, 0.7)) + ## setting errorbar size
+        theme(panel.spacing.y = unit(0.3, "lines"))
+    
     
 }
 
@@ -514,7 +516,7 @@ best_mdls_optmzd_coefs <- merge(df_anls_base_optmzd, best_mdls_optmzd) %>% atb()
 best_mdls_optmzd_coefs <- best_mdls_optmzd_coefs %>%
     group_by(cbn_name, vrbl_name_unlag, vrbl_choice) %>%
     mutate(vrbl_choice_factor = row_number(), ## when using xstack=vrbl_choice
-           just_one = 1) ## when using xstac=base_lag_spec
+           just_one = factor(1)) ## when using xstac=base_lag_spec
 
 
 ## most straightforward way to see if different variable choices lead to different coefs/lags
@@ -527,8 +529,10 @@ plot_stacker(best_mdls_optmzd_coefs, ystack = "vrbl_choice_factor", xstack = "vr
              shape_clm = "vrbl_choice", color_clm = "lag")
 
 ## similar to first coef visualization (one model per column), but seems like the height of geom_errorbarh doesn't play well together with facet_grid
+## column has to be factor 
 plot_stacker(best_mdls_optmzd_coefs, ystack = "just_one", xstack = "base_lag_spec",
              shape_clm = "vrbl_choice", color_clm = "lag")
+
 
 
 
