@@ -194,15 +194,18 @@ get_linear_imputation_vars_to_check <- function(df_regx, lngtd_vars) {
 }
 
 
-imputation_checker <- function(vrbl_to_check) {
+imputation_checker <- function(vrbl_to_check, df_regx) {
+    
 
     print(paste0("vrbl_to_check: ", vrbl_to_check))
 
-    dfx <- df_reg %>% select(iso3c, year, all_of(vrbl_to_check)) %>% na.omit()%>%
+    dfx <- df_regx %>% select(iso3c, year, all_of(c(vrbl_to_check))) %>% na.omit()%>%
         impute_variable_linearly(varx = vrbl_to_check) %>% na.omit() %>%
         group_by(iso3c) %>% 
         mutate(nbr_flags = n_distinct(flag)) %>% 
         filter(nbr_flags > 1)
+        
+    print(nrow(dfx))
         
     plt <- dfx %>% 
         ggplot(aes(x=year, y=get(vrbl_to_check))) +
@@ -218,13 +221,14 @@ imputation_checker <- function(vrbl_to_check) {
 }
 
 ## imputation_checker(vrbl_to_check)
+## imputation_checker("hnwi_nbr_1M")
 
 check_lin_imptd_vars <- function(df_regx, lngtd_vars) {
     #' wrapper function for visually checking whether the linearly imputed variables make sense
     
     vars_to_check <- get_linear_imputation_vars_to_check(df_regx, lngtd_vars)
 
-    lapply(vars_to_check, imputation_checker)
+    lapply(vars_to_check, \(x) imputation_checker(x, df_regx))
 }
     
 
