@@ -737,6 +737,10 @@ vary_spec <- function(reg_spec, vvs, vary_vrbl_lag){
         ## if i don't want to vary variable lag, still add base_lag_spec
     } else {
         
+        reg_spec$lngtd_vrbls[which(reg_spec$lngtd_vrbls$vrbl == "ti_tmitr_interact"),]$lag <-
+            reg_spec$lngtd_vrbls[reg_spec$lngtd_vrbls$vrbl == "tmitr_approx_linear20step", ]$lag
+        
+
         varied_specs_long <- list(c(reg_spec,
                                list("base_lag_spec" = base_lag_spec)
                                ))
@@ -1018,7 +1022,7 @@ NULL
 
 ## restore_base_lag_spec <- 
 modfy_optmz_cfg <- function(reg_spec, base_lag_spec_orig, loop_nbr, vrblx) {
-    #' restore the base_lag_spec in a reg_spec
+    #' restore the base_lag_spec in a reg_spec, also add other things to config: loop nbr, variable varied
 
     ## reg_spec$other_cfgs <- reg_spec$other_cfgs %>%
     ##     mutate(value = ifelse(variable == "base_lag_spec", base_lag_spec_orig, value))
@@ -1048,6 +1052,8 @@ optmz_vrbl_lag <- function(reg_spec, vrblx, loop_nbr, fldr_info) {
     ## reconstruct the full reg_spec again 
     reg_specs_full_again <- vary_batch_reg_spec(reg_specs_vrblx_varied, reg_settings_optmz, vvs)
     
+    ## lapply(reg_specs_full_again, \(x) x$lngtd_vrbls)
+
     ## modify base_lag_spec back 
     reg_specs_full_again2 <- lapply(reg_specs_full_again, \(x)
                                     modfy_optmz_cfg(x, base_lag_spec_orig, loop_nbr, vrblx))
@@ -1070,7 +1076,13 @@ optmz_vrbl_lag <- function(reg_spec, vrblx, loop_nbr, fldr_info) {
     ## assign best_lag value back to reg_spec 
     reg_spec$lngtd_vrbls <- reg_spec$lngtd_vrbls %>%
         mutate(lag = ifelse(vrbl == vrblx, best_lag, lag))
-           
+
+    
+    ## adjust the lag of ti_tmitr interaction to tmitr
+    reg_spec$lngtd_vrbls[which(reg_spec$lngtd_vrbls == "ti_tmitr_interact"),]$lag <-
+        reg_spec$lngtd_vrbls[reg_spec$lngtd_vrbls$vrbl == "tmitr_approx_linear20step", ]$lag
+        
+        
            
     return(reg_spec)
     
@@ -1085,7 +1097,10 @@ optmz_vrbl_lag <- function(reg_spec, vrblx, loop_nbr, fldr_info) {
 optmz_reg_spec_once <- function(reg_spec, loop_nbr, fldr_info) {
     #' one round of optimization
 
-    for (v in sample(reg_spec$lngtd_vrbls$vrbl)) {
+    
+
+    for (v in sample(reg_spec$lngtd_vrbls$vrbl[reg_spec$lngtd_vrbls$vrbl != "ti_tmitr_interact"])) {
+        
         
         cur_lag_id <- gen_lag_id(reg_spec, vvs) %>% pull(value) %>% paste0(collapse = "")
 
@@ -1144,7 +1159,7 @@ reg_spec_mdls_optmz <- gen_batch_reg_specs(reg_settings_optmz, vvs, vrbl_thld_ch
 
 reg_settings_optmz <- list(
     nbr_specs = 6,
-    batch_nbr = "v27",
+    batch_nbr = "v29",
     vary_vrbl_lag = F,
     cbns_to_include = c("cbn_all"),
     mdls_to_include = c("full")
