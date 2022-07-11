@@ -768,7 +768,10 @@ gen_vrbl_vectors <- function() {
     base_vars <- c("iso3c", "year")
     ## crscn_vars <- c("sum_core", "cnt_contemp_1995")
     crscn_vars <- c("Ind.tax.incentives", "NPO.tax.exemption", "cnt_contemp_1995", "cnt_contemp_1995_squared")
-    hnwi_vars <- sapply(hnwi_cutoff_vlus, \(x) paste0("hnwi_nbr_", sanitize_number(x)))
+
+    ## for now manually exclude the 1B threshold
+
+    hnwi_vars <- sapply(hnwi_cutoff_vlus[1:4], \(x) paste0("hnwi_nbr_", sanitize_number(x)))
     inc_ineq_vars <- c("sptinc992j_p90p100", "sptinc992j_p99p100", "gptinc992j")
     weal_ineq_vars <- c("shweal992j_p90p100", "shweal992j_p99p100", "ghweal992j")
     density_vars <- c("nbr_opened_cum", "nbr_opened_cum_sqrd")
