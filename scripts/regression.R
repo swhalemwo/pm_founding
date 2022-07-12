@@ -184,12 +184,12 @@ gen_vrbl_thld_choices <- function(hnwi_vars, inc_ineq_vars, weal_ineq_vars) {
 
 
 
-gen_reg_spec <- function(non_thld_lngtd_vars, vrbl_thld_choices) {
+gen_reg_spec <- function(non_thld_lngtd_vars, vrbl_thld_choice) {
     
     #' generate the regression specification: basically just choice of some variables/thresholds and lag lengths
 
     ## could also just sample here, probably have to
-    x <- vrbl_thld_choices[sample(nrow(vrbl_thld_choices),1),]
+    ## x <- vrbl_thld_choices[sample(nrow(vrbl_thld_choices),1),]
 
     ## select variable, generate random lag
 
@@ -201,7 +201,8 @@ gen_reg_spec <- function(non_thld_lngtd_vars, vrbl_thld_choices) {
     ##     ## group_by(vrbl) %>% 
     ##     mutate(lag = sample(seq(1,5),1))
 
-    lngtd_vars <- data.frame(vrbl = c(x$hnwi_var, x$inc_ineq_var,  x$weal_ineq_var,  non_thld_lngtd_vars))
+    lngtd_vars <- data.frame(vrbl = c(vrbl_thld_choice$hnwi_var, vrbl_thld_choice$inc_ineq_var,
+                                      vrbl_thld_choice$weal_ineq_var,  non_thld_lngtd_vars))
     lngtd_vars$lag <- sample(seq(1,5), nrow(lngtd_vars), replace = T)
 
     ## lag TI*TMITR interaction with same lag as TMITR
@@ -895,9 +896,15 @@ gen_batch_reg_specs <- function(reg_settings, vvs, vrbl_thld_choices) {
     ## generate basic spec of lag, variable and threshold choices
     t1 = Sys.time()
     ## NBR_SPECS <- 750
-    reg_specs <- lapply(seq(1,reg_settings$nbr_specs), \(x)
-                        gen_reg_spec(vvs$non_thld_lngtd_vars, vrbl_thld_choices)) %>%
-        unique() #
+
+
+    reg_specs <- lapply(seq(1, nrow(vrbl_thld_choices)), \(x)
+                        lapply(seq(1, reg_settings$nbr_specs_per_thld), \(i)
+                               gen_reg_spec(vvs$non_thld_lngtd_vars, vrbl_thld_choices[x,]))) %>% flatten()
+
+    ## reg_specs <- lapply(seq(1,reg_settings$nbr_specs_per_thld), \(x)
+    ##                     gen_reg_spec(vvs$non_thld_lngtd_vars, vrbl_thld_choices)) %>%
+    ##     unique() #
     
 
     reg_spec_mdls <- vary_batch_reg_spec(reg_specs, reg_settings, vvs)
@@ -1133,8 +1140,8 @@ optmz_reg_spec_once <- function(reg_spec, loop_nbr, fldr_info) {
         ## if variable hasn't run yet with current lag spec, run it now 
         if (cur_lag_id %!in% reg_spec$run_lag_specs[[v]]) {
 
-            reg_spec <- optmz_vrbl_lag(reg_spec, v, loop_nbr, fldr_info, verbose = T)
-            reg_spec2 <- optmz_vrbl_lag(reg_spec, v, loop_nbr, fldr_info, verbose = T)
+            reg_spec <- optmz_vrbl_lag(reg_spec, v, loop_nbr, fldr_info)
+            ## reg_spec2 <- optmz_vrbl_lag(reg_spec, v, loop_nbr, fldr_info, verbose = T)
             reg_spec$run_lag_specs[[v]] <- c(reg_spec$run_lag_specs[[v]], cur_lag_id)
             reg_spec$nbr_skipped_in_row <- 0
 
@@ -1180,12 +1187,12 @@ optmz_reg_spec <- function(reg_spec, nbr_loops, fldr_info) {
 
 ## ** running 
 
-vrbl_thld_choices_optmz <- slice_sample(vrbl_thld_choices, n=2)
+vrbl_thld_choices_optmz <- slice_sample(vrbl_thld_choices, n=3)
 
 
 reg_settings_optmz <- list(
-    nbr_specs = 4,
-    batch_nbr = "v36",
+    nbr_specs_per_thld = 2,
+    batch_nbr = "v37",
     vary_vrbl_lag = F,
     ## cbns_to_include = c("cbn_all"),
     cbns_to_include = names(cbn_dfs)[1:3],
