@@ -74,12 +74,14 @@ cleanup_old_stata_procs <- function() {
 }
 
 
-get_stata_result <- function(iv_vars, stata_output_vars, gof_names, dfx, verbose) {
+get_stata_result <- function(iv_vars, stata_output_vars, gof_names, dfx, technique_str, difficult_str, verbose) {
     #' run the xtnbreg regression with stata() given independent vars,
     #' also give stata_output_vars since also needed in parse_stata_res
 
     ## the different stata matrices have some overlapping (row/col) names, is not allowed for svmat
     ## -> generate generic names (actual names throw weird errors)
+
+    
 
     iv_vars_stata <- gsub("\\.", "_", iv_vars)
     
@@ -93,7 +95,9 @@ get_stata_result <- function(iv_vars, stata_output_vars, gof_names, dfx, verbose
 
     stata_code = list(
         panel_setup = "xtset iso3c_num year",
-        reg_cmd = paste0("xtnbreg nbr_opened ", paste(iv_vars_stata, collapse = " "), ", re"),
+        cvrgd_setup = "set maxiter 100",
+        reg_cmd = paste0("xtnbreg nbr_opened ", paste(iv_vars_stata, collapse = " "),
+                         ", re ", difficult_str, " technique(", technique_str, ")"),
         coef_cmd = "mata: b=st_matrix(\"e(b)\")' \n mata: st_matrix(\"b_stata\", b)",
         se_cmd = "mata: se=sqrt(diagonal(st_matrix(\"e(V)\"))) \n mata: st_matrix(\"se_stata\", se)",
         gof_cmd = "matrix gof = ( e(N), e(ll), e(N_g), e(chi2), e(p), e(df_m))'", 
@@ -448,30 +452,38 @@ gen_mdl_id <- function(reg_spec, vvs) {
 ## gen_mdl_id(reg_spec_mdls[[1]], vvs)
         
 
-timeout_stata <- function(iv_vars, stata_output_vars, gof_names, dfx, file_id, fldr_info, verbose) {
+timeout_stata <- function(iv_vars, stata_output_vars, gof_names, dfx, file_id, fldr_info, technique_str,
+                          difficult_str, verbose) {
     #' run stata command, time it out if taking too long
     
     
     ## setwd(PROJECT_DIR)
 
-    cur_wd <- getwd()
+    ## cur_wd <- getwd()
     
     pid <- Sys.getpid()
     new_dir <- paste0(fldr_info$PID_DIR, pid)
     
-    present_dirs <- list.dirs(paste0(fldr_info$PID_DIR), recursive = F)
+    ## present_dirs <- list.dirs(paste0(fldr_info$PID_DIR), recursive = F)
+    ## change current_dir generation, hope that doesn't break stuff
+    ## print("a")
+    present_dirs <- paste0(fldr_info$PID_DIR, list.dirs(fldr_info$PID_DIR, recursive = F, full.names = F))
     
+
     if (new_dir %!in% present_dirs) {
     
         mkdir_cmd <- paste0("mkdir ", new_dir)
+        ## print("b")
         system(mkdir_cmd)
 
     }
-
+    ## print("c")
     setwd(new_dir)
-
+    ## print("d")
+    
     stata_res_raw <- get_stata_result(iv_vars = iv_vars, stata_output_vars = stata_output_vars,
-                                      gof_names = gof_names, dfx = dfx, verbose = verbose)
+                                      gof_names = gof_names, dfx = dfx, technique_str=technique_str,
+                                      difficult_str = difficult_str, verbose = verbose)
 
     ## setwd(cur_wd)
     ## print(pid)
@@ -514,8 +526,18 @@ run_vrbl_mdl_vars <- function(reg_spec, vvs, fldr_info, return_objs = c("result"
     df_idx <- reg_spec$df_idx
     other_cfgs <- reg_spec$other_cfgs
     file_id <- reg_spec$mdl_id
+    
+    ## 
+    technique_str <- reg_spec$cfg$technique_str
+    ## technique_str <- "nr"
 
-
+    if (reg_spec$cfg$difficulty) {
+        difficult_str <- "difficult"
+    } else {
+        difficult_str <- ""
+    }
+    ## difficult_str <- "difficult"
+    
     ## saving reg spec information to debug later 
     saveRDS(reg_spec, file = paste0(fldr_info$REG_SPEC_DIR, file_id))
     ## write model id to start_file to see which models don't converge
@@ -523,37 +545,30 @@ run_vrbl_mdl_vars <- function(reg_spec, vvs, fldr_info, return_objs = c("result"
 
 
     iv_vars <- reg_spec$mdl_vars[reg_spec$mdl_vars %!in% vvs$base_vars]
-
-    ## print("---")
-
-    ## print(iv_vars)
+    
     
     stata_output_vars <- c(iv_vars, c("cons", "ln_r", "ln_s"))
     gof_names <- c("N", "log_likelihood", "N_g", "Chi2", "p", "df")
 
-    
-
     dfx <- select(df_cbn, all_of(c(vvs$base_vars, "iso3c_num", "nbr_opened",iv_vars)))
 
-    ## Sys.sleep(runif(1)/10)
+    ## new converged command, relying on stata maxiter to quite convergence
+    converged <- tryCatch(
+        timeout_stata(iv_vars, stata_output_vars, gof_names, dfx, file_id,
+                      fldr_info, technique_str = technique_str, difficult_str = difficult_str,
+                      verbose = verbose),
+        error=function(e) {list(result = NULL, pid = Sys.getpid(), log_likelihood = NA)})
     
-    ## use trycatch with fscaret to terminate stata command if it doesn't converge
-    ## NEED PID DIR HERE
-    converged <- suppressWarnings(
-        tryCatch({
-            fscaret::timeout(timeout_stata(iv_vars, stata_output_vars, gof_names, dfx, file_id,
-                                           fldr_info, verbose = verbose),
-                             seconds = 5)},
-            error=function(e) {list(result = NULL, pid = Sys.getpid(), log_likelihood = NA)}
-            )
-    )
 
     ## keep pure version here since fscaret makes debuggin impossible
     ## converged <- timeout_stata(iv_vars, stata_output_vars, gof_names, dfx, file_id,
-    ##                                        fldr_info, verbose = verbose)
+    ##                            fldr_info, technique_str =technique_str, difficult_str = difficult_str,
+    ##                            verbose = verbose)
 
                                  
     ## converged <- T
+    setwd(PROJECT_DIR)
+    
     proc_dir <- paste0(fldr_info$PID_DIR, converged$pid)
     
     rmdir_cmd <- paste0("rm -r ", proc_dir)
@@ -627,6 +642,39 @@ gen_spec_mdl_info <- function(reg_spec) {
     return(specs_mod)
 
 }
+
+proc_mdl_technique_addgs <- function(reg_spec, technique_str) {
+    #' add the optimization technique to the model 
+    reg_spec$cfg <- c(reg_spec$cfg,
+                      list(technique_str = technique_str))
+    return(reg_spec)
+}
+
+
+gen_spec_technique_info <- function(reg_spec, technique_strs) {
+    #' add technique string to model spec
+    
+    reg_spec_techniques_added <- lapply(technique_strs, \(x) proc_mdl_technique_addgs(reg_spec, x))
+    return(reg_spec_techniques_added)
+
+}
+
+proc_mdl_difficulty_addgs <- function(reg_spec, difficulty) {
+    #' add the difficulty to the model 
+    reg_spec$cfg <- c(reg_spec$cfg,
+                      list(difficulty = difficulty))
+    return(reg_spec)
+}
+
+
+gen_spec_difficulty_info <- function(reg_spec, difficulty_switches) {
+    #' add difficulty switch to model spec
+    
+    reg_spec_difficulty_added <- lapply(difficulty_switches, \(x) proc_mdl_difficulty_addgs(reg_spec, x))
+    return(reg_spec_difficulty_added)
+
+}
+
 
 gen_spec_id_info <- function(reg_spec, vvs) {
     #' add the id information to a reg_spec
@@ -947,10 +995,21 @@ vary_batch_reg_spec <- function(reg_specs, reg_settings, vvs) {
 
     ## add the model info
     ## reg_spec_mdls <- sapply(reg_spec_cbns, gen_spec_mdl_info)
+    
+    
     reg_spec_mdls <- mclapply(reg_spec_cbns, gen_spec_mdl_info, mc.cores = 6) %>% flatten()
     ## same issue here: mclapply with Reduce is slow, but with flatten it's faster :)))
 
-    return(reg_spec_mdls)
+    reg_spec_techniques <- mclapply(reg_spec_mdls, \(x)
+                                    gen_spec_technique_info(x, reg_settings$technique_strs),
+                                    mc.cores = 6) %>% flatten()
+    ## gen_spec_technique_info(reg_spec_mdls[[1]])
+
+    reg_spec_difficulties <- mclapply(reg_spec_techniques, \(x)
+                                      gen_spec_difficulty_info(x, reg_settings$difficulty_switches),
+                                      mc.cores = 6) %>% flatten()
+
+    return(reg_spec_difficulties)
 
 }
     
@@ -1043,11 +1102,12 @@ NULL
 ## reg_spec <- reg_spec_mdls_optmz[[1]]
 
 ## restore_base_lag_spec <- 
-modfy_optmz_cfg <- function(reg_spec, base_lag_spec_orig, loop_nbr, vrblx) {
+modfy_optmz_cfg <- function(reg_spec, cfg_orig, base_lag_spec_orig, loop_nbr, vrblx) {
     #' restore the base_lag_spec in a reg_spec, also add other things to config: loop nbr, variable varied
 
     ## reg_spec$other_cfgs <- reg_spec$other_cfgs %>%
     ##     mutate(value = ifelse(variable == "base_lag_spec", base_lag_spec_orig, value))
+    reg_spec$cfg <- cfg_orig
 
     reg_spec$cfg$base_lag_spec <- base_lag_spec_orig
 
@@ -1058,7 +1118,7 @@ modfy_optmz_cfg <- function(reg_spec, base_lag_spec_orig, loop_nbr, vrblx) {
 }
 
 
-optmz_vrbl_lag <- function(reg_spec, vrblx, loop_nbr, fldr_info, verbose = F) {
+optmz_vrbl_lag <- function(reg_spec, vrblx, loop_nbr, fldr_info, reg_settings, verbose = F) {
     #' optimize the lag of one variable 
     
 
@@ -1069,6 +1129,8 @@ optmz_vrbl_lag <- function(reg_spec, vrblx, loop_nbr, fldr_info, verbose = F) {
 
     ##  generate models, need exception for ti_tmitr_interact
     base_lag_spec_orig <- reg_spec$base_lag_spec
+    cfg_orig <- reg_spec$cfg
+    
 
     ## only pick the lngtd_vrbls, and vary vrblx
     reg_specs_vrblx_varied <- lapply(seq(1,5), \(x)
@@ -1077,16 +1139,18 @@ optmz_vrbl_lag <- function(reg_spec, vrblx, loop_nbr, fldr_info, verbose = F) {
                                     list(lngtd_vrbls = .))
 
     ## reconstruct the full reg_spec again
-    reg_settings_optmz2 <- reg_settings_optmz
-    reg_settings_optmz2$cbns_to_include <- reg_spec$cfg$cbn_name
+    reg_settings2 <- reg_settings
+    reg_settings2$cbns_to_include <- reg_spec$cfg$cbn_name
+    reg_settings2$technique_strs <- reg_spec$cfg$technique_str
+    reg_settings2$difficulty_switches <- reg_spec$cfg$difficulty
     
-    reg_specs_full_again <- vary_batch_reg_spec(reg_specs_vrblx_varied, reg_settings_optmz2, vvs)
+    reg_specs_full_again <- vary_batch_reg_spec(reg_specs_vrblx_varied, reg_settings2, vvs)
     
     ## lapply(reg_specs_full_again, \(x) x$lngtd_vrbls)
 
     ## modify base_lag_spec back 
     reg_specs_full_again2 <- lapply(reg_specs_full_again, \(x)
-                                    modfy_optmz_cfg(x, base_lag_spec_orig, loop_nbr, vrblx))
+                                    modfy_optmz_cfg(x, cfg_orig, base_lag_spec_orig, loop_nbr, vrblx))
 
     ## add ids
     reg_specs_w_ids <- idfy_reg_specs(reg_specs_full_again2, vvs)
@@ -1124,9 +1188,9 @@ optmz_vrbl_lag <- function(reg_spec, vrblx, loop_nbr, fldr_info, verbose = F) {
 ## optmz_vrbl_lag(reg_spec_mdls_optmz[[2]], "nbr_opened_cum", loop_nbr = 1, fldr_info_optmz)
 
 
-optmz_reg_spec_once <- function(reg_spec, loop_nbr, fldr_info) {
+optmz_reg_spec_once <- function(reg_spec, loop_nbr, fldr_info, reg_settings) {
     #' one round of optimization
-
+    
     
     ## v = sample(reg_spec$lngtd_vrbls$vrbl[reg_spec$lngtd_vrbls$vrbl != "ti_tmitr_interact"])[1]
     ## reg_spec_bu <- reg_spec
@@ -1140,7 +1204,7 @@ optmz_reg_spec_once <- function(reg_spec, loop_nbr, fldr_info) {
         ## if variable hasn't run yet with current lag spec, run it now 
         if (cur_lag_id %!in% reg_spec$run_lag_specs[[v]]) {
 
-            reg_spec <- optmz_vrbl_lag(reg_spec, v, loop_nbr, fldr_info)
+            reg_spec <- optmz_vrbl_lag(reg_spec, v, loop_nbr, fldr_info, reg_settings)
             ## reg_spec2 <- optmz_vrbl_lag(reg_spec, v, loop_nbr, fldr_info, verbose = T)
             reg_spec$run_lag_specs[[v]] <- c(reg_spec$run_lag_specs[[v]], cur_lag_id)
             reg_spec$nbr_skipped_in_row <- 0
@@ -1159,7 +1223,7 @@ optmz_reg_spec_once <- function(reg_spec, loop_nbr, fldr_info) {
 ## optmz_reg_spec_once(reg_spec_mdls_optmz[[2]], 1, fldr_info_optmz)
 
 
-optmz_reg_spec <- function(reg_spec, nbr_loops, fldr_info) {
+optmz_reg_spec <- function(reg_spec, fldr_info, reg_settings) {
     #' optimize a regression specification by randomly choosing a variable and then picking the best lag
     
     
@@ -1173,12 +1237,12 @@ optmz_reg_spec <- function(reg_spec, nbr_loops, fldr_info) {
     reg_spec$nbr_skipped_in_row <- 0
 
     l <- 0
-    ## for (l in seq(1, nbr_loops)) {
+    ## run until no more improvement 
     while (T) {
 
-        reg_spec <- optmz_reg_spec_once(reg_spec, loop_nbr = l, fldr_info)
+        reg_spec <- optmz_reg_spec_once(reg_spec, loop_nbr = l, fldr_info, reg_settings)
 
-        if (reg_spec$nbr_skipped_in_row > 2*nrow(reg_spec$lngtd_vrbls)) {break}
+        if (reg_spec$nbr_skipped_in_row > nrow(reg_spec$lngtd_vrbls)+1) {break}
         l <- l+1
 
     }
@@ -1192,7 +1256,7 @@ vrbl_thld_choices_optmz <- slice_sample(vrbl_thld_choices, n=3)
 
 reg_settings_optmz <- list(
     nbr_specs_per_thld = 2,
-    batch_nbr = "v37",
+    batch_nbr = "v39",
     vary_vrbl_lag = F,
     ## cbns_to_include = c("cbn_all"),
     cbns_to_include = names(cbn_dfs)[1:3],
@@ -1202,6 +1266,44 @@ reg_settings_optmz <- list(
 reg_spec_mdls_optmz <- gen_batch_reg_specs(reg_settings_optmz, vvs, vrbl_thld_choices_optmz)
 
 fldr_info_optmz <- setup_regression_folders_and_files(reg_settings_optmz$batch_nbr)
-mclapply(reg_spec_mdls_optmz, \(x) optmz_reg_spec(x, nbr_loops = 4, fldr_info_optmz), mc.cores = 6)
 
-optmz_reg_spec(reg_spec_mdls_optmz[[1]], nbr_loops = 3, fldr_info_optmz)
+mclapply(reg_spec_mdls_optmz, \(x) optmz_reg_spec(x, fldr_info_optmz, reg_settings_optmz),
+         mc.cores = 6)
+
+## optmz_reg_spec(reg_spec_mdls_optmz[[1]], nbr_loops = 3, fldr_info_optmz, reg_settings_optmz)
+
+## run_vrbl_mdl_vars(reg_spec_mdls_optmz[[1]], vvs, fldr_info_optmz, verbose = F)
+
+## ** debugging lack of convergence
+
+non_cvrgd_spec <- get_reg_spec_from_id(
+    "XX5XXX2XX3111135211--cbn_no_cult_spending_and_mitr--full--XX2XXX4XX4555532345--1--hnwi_nbr_30M",
+    fldr_info_optmz)
+
+run_vrbl_mdl_vars(non_cvrgd_spec, vvs, fldr_info_optmz, verbose = T)
+
+
+## *** convergence testing
+
+vrbl_thld_choices_cvrg <- slice_sample(vrbl_thld_choices, n=1)
+
+
+reg_settings_cvrg <- list(
+    nbr_specs_per_thld = 2,
+    batch_nbr = "v40",
+    vary_vrbl_lag = F,
+    cbns_to_include = "cbn_all",
+    mdls_to_include = c("full"),
+    technique_strs = c("nr", "dfp", "bfgs", "nr 5 dfp 5 bfgs 5"),
+    difficulty_switches = c(T,F)
+)
+    
+reg_spec_mdls_cvrg <- gen_batch_reg_specs(reg_settings_cvrg, vvs, vrbl_thld_choices_cvrg)
+
+fldr_info_cvrg <- setup_regression_folders_and_files(reg_settings_cvrg$batch_nbr)
+
+              
+mclapply(reg_spec_mdls_cvrg, \(x) optmz_reg_spec(x, fldr_info_cvrg, reg_settings_cvrg),
+         mc.cores = 6)
+
+optmz_reg_spec(reg_spec_mdls_cvrg[[1]], fldr_info = fldr_info_cvrg, reg_settings = reg_settings_cvrg)

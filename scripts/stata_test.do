@@ -241,3 +241,36 @@ estimates store model3
 while 1==1 {
 ds
 }
+
+/* ** debug non-convergence */
+
+set more off
+use RStataDataIn
+capture noisily {
+/*RSTATA: cut me here*/
+xtset iso3c_num year
+
+display c(maxiter)
+set maxiter 100
+
+xtnbreg nbr_opened Ind_tax_incentives NPO_tax_exemption, re technique(bfgs)
+xtnbreg nbr_opened Ind_tax_incentives NPO_tax_exemption, re technique(nr)
+xtnbreg nbr_opened Ind_tax_incentives NPO_tax_exemption, re difficult technique(nr)
+
+
+xtnbreg nbr_opened Ind_tax_incentives NPO_tax_exemption cnt_contemp_1995 cnt_contemp_1995_squared hnwi_nbr_30M_lag5 gptinc992j_lag2 ghweal992j_lag3 NY_GDP_PCAP_CDk_lag3 SP_POP_TOTLm_lag5 clctr_cnt_cpaer_lag2 nbr_opened_cum_lag1 nbr_opened_cum_sqrd_lag1, re difficult
+
+mata: b=st_matrix("e(b)")' 
+ mata: st_matrix("b_stata", b)
+mata: se=sqrt(diagonal(st_matrix("e(V)"))) 
+ mata: st_matrix("se_stata", se)
+matrix gof = ( e(N), e(ll), e(N_g), e(chi2), e(p), e(df_m))'
+matrix stata_return = (b_stata', se_stata', gof')
+matrix colnames stata_return = r1 r2 r3 r4 r5 r6 r7 r8 r9 r10 r11 r12 r13 r14 r15 r16 r17 r18 r19 r20 r21 r22 r23 r24 r25 r26 r27 r28 r29 r30 r31 r32 r33 r34 r35 r36
+svmat stata_return 
+ keep stata_return* 
+ drop if missing(stata_return1)
+/*RSTATA: cut me here*/
+} /* end capture noisily */
+saveold RStataDataOut, version(12)
+exit, clear STATA

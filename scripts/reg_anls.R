@@ -35,7 +35,7 @@ read_reg_res_files <- function(fldr_info) {
         atb()
 
     df_reg_anls_cfgs_wide <- df_reg_anls_cfgs %>% select(variable, value, mdl_id, lag_spec, cvrgd) %>% unique() %>% 
-        pivot_wider(id_cols = c(mdl_id, lag_spec), names_from = variable, values_from = value)
+        pivot_wider(id_cols = c(mdl_id, lag_spec, cvrgd), names_from = variable, values_from = value)
 
 
     ## read_reg_res(df_reg_anls_cfgs$mdl_id[[1]])
@@ -465,7 +465,7 @@ plot_stacker <- function(dfx, ystack, xstack, shape_clm = NULL, color_clm="lag")
 
 ## *** optimized functions end here 
 
-reg_anls_base_optmz <- read_reg_res_files(fldr_info_optmz)
+reg_anls_base_optmz <- read_reg_res_files(fldr_info_cvrg)
 
 ## best result per base_spec after each loop of optimization
 filter(reg_anls_base_optmz$gof_df_cbn, gof_names == "log_likelihood") %>%
@@ -503,10 +503,12 @@ filter(reg_anls_base_optmz$gof_df_cbn, gof_names == "log_likelihood") %>%
 
 ## see if different starting coefs of same vrbl_choice lead to same results
 best_mdls_optmzd <- filter(reg_anls_base_optmz$gof_df_cbn, gof_names == "log_likelihood") %>% 
-    select(mdl_id, gof_value, base_lag_spec, loop_nbr, vrbl_optmzd, cbn_name) %>%
+    ## select(mdl_id, gof_value, base_lag_spec, loop_nbr, vrbl_optmzd, cbn_name) %>%
+    select(mdl_id, gof_value, base_lag_spec, loop_nbr, vrbl_optmzd, cbn_name, technique_str, difficulty) %>%
     mutate(step_base = 1, loop_nbr = as.numeric(loop_nbr),
            vrbl_choice = gsub("[1-5]", "0", base_lag_spec)) %>%
-    group_by(cbn_name, vrbl_choice, base_lag_spec) %>%
+    ## group_by(cbn_name, vrbl_choice, base_lag_spec) %>%
+    group_by(cbn_name, vrbl_choice, base_lag_spec, technique_str, difficulty) %>%
     slice_max(gof_value, n=1) %>% 
     slice_sample(n=1)
 
@@ -552,6 +554,14 @@ plot_stacker(best_mdls_optmzd_coefs, ystack = "vrbl_choice_factor", xstack = "vr
 ## similar to first coef visualization (one model per column)
 plot_stacker(best_mdls_optmzd_coefs, ystack = "just_one", xstack = "base_lag_spec",
              shape_clm = "vrbl_choice", color_clm = "lag")
+
+
+## convergence tests
+plot_stacker(best_mdls_optmzd_coefs, xstack = "technique_str", ystack = "difficulty",
+             shape_clm = "cbn_name", color_clm = "lag")
+
+plot_stacker(best_mdls_optmzd_coefs, ystack = "technique_str", xstack = "difficulty",
+             shape_clm = "technique_str", color_clm = "lag")
 
 
 ## **** non-identical convergence
