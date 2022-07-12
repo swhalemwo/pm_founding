@@ -442,7 +442,7 @@ plot_stacker <- function(dfx, ystack, xstack, shape_clm = NULL, color_clm="lag")
     ## actual plotting 
     ggplot(dfx, aes(y=get(ystack))) + 
         geom_errorbarh(aes(xmin = min, xmax = max, height= 0.2, linetype = factor(sig), size = factor(sig)),
-                       alpha = 0.8, show.legend = F)  +
+                       alpha = 0.8, show.legend = T)  +
         geom_point(point_aes, size = 2.5,  show.legend = T) +
         facet_grid(vrbl_name_unlag ~ get(xstack), switch = "y",
                    labeller = labeller(vrbl_name_unlag = rev(vvs$vrbl_lbls))) +
@@ -452,7 +452,13 @@ plot_stacker <- function(dfx, ystack, xstack, shape_clm = NULL, color_clm="lag")
         geom_vline(xintercept = 0, linetype = "dashed") +
         scale_linetype_manual(values = c(2, 1)) + # setting errorbar linetype
         scale_size_manual(values=c(0.4, 0.7)) + ## setting errorbar size
-        theme(panel.spacing.y = unit(0.3, "lines"))
+        theme(panel.spacing.y = unit(0.3, "lines"),
+              legend.position = "bottom",
+              legend.justification = "left") + 
+        guides(shape = guide_legend(order=1, label.position = "right", direction = "vertical"),
+               color = guide_colorbar(order=2),
+               size = "none", ## remove the supid sig() legend
+               linetype = "none")
     
     
 }
@@ -466,7 +472,10 @@ filter(reg_anls_base_optmz$gof_df_cbn, gof_names == "log_likelihood") %>%
     group_by(loop_nbr, base_lag_spec, cbn_name) %>%
     slice_max(gof_value) %>% 
     ggplot(aes(x=loop_nbr, y=gof_value, group = interaction(base_lag_spec, cbn_name))) +
-    geom_line()
+    geom_line() +
+    facet_wrap(~cbn_name, ncol = 1, scales = "free_y")
+
+
 
 
 
@@ -479,16 +488,17 @@ filter(reg_anls_base_optmz$gof_df_cbn, gof_names == "log_likelihood") %>%
 ## progress after each variable
 ## variables are randomly chosen, so step is different for each base_lag_spec
 filter(reg_anls_base_optmz$gof_df_cbn, gof_names == "log_likelihood") %>% 
-    select(gof_value, base_lag_spec, loop_nbr, vrbl_optmzd) %>%
+    select(gof_value, base_lag_spec, loop_nbr, vrbl_optmzd, cbn_name) %>%
     mutate(step_base = 1, loop_nbr = as.numeric(loop_nbr),
            vrbl_choice = gsub("[1-5]", "0", base_lag_spec)) %>%
-    group_by(vrbl_choice, base_lag_spec, loop_nbr, vrbl_optmzd) %>%
+    group_by(vrbl_choice, cbn_name, base_lag_spec, loop_nbr, vrbl_optmzd) %>%
     slice_max(gof_value) %>% 
-    group_by(base_lag_spec) %>% 
+    group_by(cbn_name,base_lag_spec) %>% 
     arrange(gof_value) %>%
     mutate(step = ave(step_base, FUN = cumsum)) %>% 
     ggplot(aes(x=step, y=gof_value, group = base_lag_spec, color = vrbl_choice)) +
-    geom_line()
+    geom_line() +
+    facet_wrap(~cbn_name, ncol = 1, scales = "free_y")
 
 
 ## see if different starting coefs of same vrbl_choice lead to same results
@@ -528,20 +538,27 @@ best_mdls_optmzd_coefs <- best_mdls_optmzd_coefs %>%
 plot_stacker(best_mdls_optmzd_coefs, ystack = "base_lag_spec", xstack = "cbn_name",
              shape_clm = "vrbl_choice", color_clm = "lag")
 
+## want those from different combinations on top of each other: compare 
+plot_stacker(best_mdls_optmzd_coefs, xstack = "vrbl_choice", ystack = "cbn_name",
+             shape_clm = "cbn_name", color_clm = "lag")
+
+
 ## even more effective way to show that reg_specs with same variable choice converge to same results
+## these 2 only make sense for having only one combination: would need more detailed ystacking
 plot_stacker(best_mdls_optmzd_coefs, ystack = "vrbl_choice_factor", xstack = "vrbl_choice",
              shape_clm = "vrbl_choice", color_clm = "lag")
 
-## similar to first coef visualization (one model per column), but seems like the height of geom_errorbarh doesn't play well together with facet_grid
-## column has to be factor 
+
+## similar to first coef visualization (one model per column)
 plot_stacker(best_mdls_optmzd_coefs, ystack = "just_one", xstack = "base_lag_spec",
              shape_clm = "vrbl_choice", color_clm = "lag")
 
 
+## **** non-identical convergence
 
 
 
-## lag test
+## **** lag test
 
 filter(df_anls_base_optmzd, vrbl_name_unlag %in% c("ti_tmitr_interact", "tmitr_approx_linear20step")) %>%
     select(mdl_id, vrbl_name_unlag, lag, base_lag_spec) %>%
