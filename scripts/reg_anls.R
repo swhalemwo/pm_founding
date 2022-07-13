@@ -458,7 +458,8 @@ plot_stacker <- function(dfx, ystack, xstack, shape_clm = NULL, color_clm="lag")
         guides(shape = guide_legend(order=1, label.position = "right", direction = "vertical"),
                color = guide_colorbar(order=2),
                size = "none", ## remove the supid sig() legend
-               linetype = "none")
+               linetype = "none") +
+        labs(y=ystack)
     
     
 }
