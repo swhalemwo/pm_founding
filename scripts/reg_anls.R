@@ -532,8 +532,9 @@ best_mdls_optmzd_coefs <- merge(df_anls_base_optmzd, best_mdls_optmzd) %>% atb()
 best_mdls_optmzd_coefs <- best_mdls_optmzd_coefs %>%
     group_by(cbn_name, vrbl_name_unlag, vrbl_choice) %>%
     mutate(vrbl_choice_factor = row_number(), ## when using xstack=vrbl_choice
-           just_one = factor(1)) ## when using xstac=base_lag_spec
-
+           just_one = factor(1), ## when using xstac=base_lag_spec
+           tec_base_interact = interaction(technique_str, base_lag_spec), ## spread out the multiple versions 
+           tec_diffl_interact = interaction(technique_str, difficulty))
 
 ## most straightforward way to see if different variable choices lead to different coefs/lags
 ## coefs/lags are pretty much the same, but handful of marginally significant coefs :/
@@ -556,16 +557,56 @@ plot_stacker(best_mdls_optmzd_coefs, ystack = "just_one", xstack = "base_lag_spe
              shape_clm = "vrbl_choice", color_clm = "lag")
 
 
-## convergence tests
+## **** convergence tests
+## compare difficulty within technique strs 
 plot_stacker(best_mdls_optmzd_coefs, xstack = "technique_str", ystack = "difficulty",
              shape_clm = "cbn_name", color_clm = "lag")
 
+## compare techniques within difficulty 
 plot_stacker(best_mdls_optmzd_coefs, ystack = "technique_str", xstack = "difficulty",
              shape_clm = "technique_str", color_clm = "lag")
 
+## compare technique within difficulty, with different runs unstacked
+plot_stacker(best_mdls_optmzd_coefs, ystack = "tec_base_interact", xstack = "difficulty",
+             shape_clm = "technique_str", color_clm = "lag")
+
+## compare difficulty within tec_base_interact
+plot_stacker(best_mdls_optmzd_coefs, xstack = "tec_base_interact", ystack = "difficulty",
+             shape_clm = "technique_str", color_clm = "lag")
+
+
+
+## "formal" test: all gof_values of best-fitting models are the same 
+best_mdls_optmzd_coefs %>%
+    group_by(vrbl_name_unlag, difficulty, technique_str) %>%
+    slice_max(gof_value) %>%
+    select(vrbl_name_unlag, difficulty, technique_str, gof_value) %>%
+    ## pull(technique_strs) %>%
+    pull(gof_value) %>%
+    n_distinct()
+
+
 
 ## **** non-identical convergence
+best_mdls_optmzd_coefs %>%
+    group_by(vrbl_name_unlag, difficulty, technique_str) %>%
+    select(vrbl_name_unlag, difficulty, technique_str, coef, gof_value, base_lag_spec) %>%
+    mutate(base_lag_spec_fctr = as.numeric(as.factor(base_lag_spec)),
+           ctr = interaction(vrbl_name_unlag, difficulty, technique_str)) %>%
+    pivot_wider(id_cols = c(vrbl_name_unlag, difficulty, technique_str), names_from = base_lag_spec_fctr,
+                values_from = c(coef, gof_value))
 
+## huh this looks like quite some different values
+## well they don't look so different when you plot them, also in partly due to small differences being dwarved by the few huge coefs 
+
+## compare base_lag_spec within tec_diffl_interact
+plot_stacker(best_mdls_optmzd_coefs, xstack = "tec_diffl_interact", ystack = "base_lag_spec",
+             shape_clm = "base_lag_spec", color_clm = "lag")
+
+
+    
+    pivot_wider(idnames_from = base_lag_spec_fctr, values_from = setdiff(names(.), "base_lag_spec"))
+    
 
 
 ## **** lag test
