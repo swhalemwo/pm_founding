@@ -589,14 +589,34 @@ best_mdls_optmzd_coefs %>%
 
 
 ## **** non-identical convergence
-best_mdls_optmzd_coefs %>%
-    group_by(vrbl_name_unlag, difficulty, technique_str) %>%
-    select(vrbl_name_unlag, difficulty, technique_str, coef, gof_value, base_lag_spec) %>%
-    mutate(base_lag_spec_fctr = as.numeric(as.factor(base_lag_spec)),
-           ctr = interaction(vrbl_name_unlag, difficulty, technique_str)) %>%
-    pivot_wider(id_cols = c(vrbl_name_unlag, difficulty, technique_str), names_from = base_lag_spec_fctr,
-                values_from = c(coef, gof_value))
 
+
+
+## see how coefs/lags differ between different base_lag_specs
+base_lag_spec_cprn_df <- best_mdls_optmzd_coefs %>%
+    group_by(vrbl_name_unlag, difficulty, technique_str) %>%
+    select(vrbl_name_unlag, difficulty, technique_str, coef, gof_value, base_lag_spec, lag) %>%
+    mutate(base_lag_spec_fctr = as.numeric(as.factor(base_lag_spec))) %>% 
+    pivot_wider(id_cols = c(vrbl_name_unlag, difficulty, technique_str), names_from = base_lag_spec_fctr,
+                values_from = c(coef, gof_value, lag)) %>% 
+    mutate(diff_coef = coef_1 - coef_2,
+           diff_lag = lag_1 - lag_2) 
+
+base_lag_spec_cprn_df %>% 
+    ggplot(aes(x=diff_coef)) +
+    ## ggplot(aes(x=diff_lag)) +
+    geom_histogram(bins = 100)
+
+base_lag_spec_cprn_df %>%
+    filter(diff_coef !=0) %>%
+    ## pull(vrbl_name_unlag) %>%
+    ## pull(technique_str) %>%
+    pull(difficulty) %>%
+    table()
+
+
+## pull(diff) %>% table()
+## pull(diff) %>% hist(breaks = 50)
 ## huh this looks like quite some different values
 ## well they don't look so different when you plot them, also in partly due to small differences being dwarved by the few huge coefs 
 
