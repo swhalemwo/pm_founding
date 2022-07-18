@@ -625,10 +625,33 @@ plot_stacker(best_mdls_optmzd_coefs, xstack = "tec_diffl_interact", ystack = "ba
              shape_clm = "base_lag_spec", color_clm = "lag")
 
 
-    
-    pivot_wider(idnames_from = base_lag_spec_fctr, values_from = setdiff(names(.), "base_lag_spec"))
-    
+## should also do lag test comparison, there seems to be some difference
+filter(base_lag_spec_cprn_df, diff_lag != 0) %>%
+    select(vrbl_name_unlag, difficulty, technique_str, lag_1, lag_2) %>% 
+    ## pull(vrbl_name_unlag) %>%
+    ## pull(technique_str) %>%
+    pull(difficulty) %>%
+    table()
 
+
+## difference between techniques: which is closest to nr
+
+base_lag_spec_cprn_df2 <- best_mdls_optmzd_coefs %>%
+    group_by(vrbl_name_unlag, difficulty, technique_str) %>%
+    select(vrbl_name_unlag, difficulty, technique_str, coef, gof_value, base_lag_spec, lag)
+
+
+merge(filter(base_lag_spec_cprn_df2, technique_str == "nr") %>%
+      select(vrbl_name_unlag, difficulty, base_lag_spec, technique_str_nr = technique_str, coef_nr = coef),
+      filter(base_lag_spec_cprn_df2, technique_str != "nr")) %>% atb() %>%
+    mutate(coef_diff = abs(coef_nr - coef)) %>%
+    ggplot(aes(x=coef_diff)) +
+    geom_histogram() +
+    facet_wrap(~technique_str)
+    ## group_by(technique_str) %>% 
+    ## summarize(coef_diff_mean = mean(coef_diff))
+
+ 
 
 ## **** lag test
 
