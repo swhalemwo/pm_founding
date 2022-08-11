@@ -49,110 +49,32 @@ conversion_df <- data.table(collector_name_artnews = names(conversions_list),
 
 
 
-
-
-## https://stackoverflow.com/questions/44590935/recode-a-variable-using-data-tabel
-## update assignment in by-part, amazing and not a footgun at all
-## artnews_name_check_dt[conversion_df]
-## error: conversion_df in i-part (filtering) isn't even part that works on its own
-## probably should read dt-join vignette:
-
-## update by reference, AVOID!!
-## artnews_name_check_dt[conversion_df, on = .(collector_name_artnews), collector_name_artnews := i.to]
-
-
-## use copying to maintain original object 
-artnews_name_check_dt %>% copy() %>%
-    .[conversion_df,  on = .(collector_name_artnews), collector_name_artnews := i.to]
-
-
-
-
-artnews_name_check_dt[scramblematch("Schaufler", collector_name_artnews)]
-
-
-
-
-
-
-## the fact that only the update assingment expands the df is fucking weird:
-## is because only passing dt in X[Y] is effectively filtering, and by update by referencing does meaning change from subset to update 
-
-## ## just joining (filtering)
-## artnews_name_check_dt %>% copy() %>%
-##     .[conversion_df, on = .(collector_name_artnews)]
-
-## ## renaming collector_name_artnews
-## artnews_name_check_dt %>% copy() %>%
-##     .[conversion_df, on = .(collector_name_artnews), collector_name_artnews := i.to] %>% 
-##     .[scramblematch("Schaufler", collector_name_artnews)]
-
-## ## can reorder
-## artnews_name_check_dt %>% copy() %>%
-##     .[conversion_df, collector_name_artnews := i.to, on = .(collector_name_artnews)] %>%
-##     .[scramblematch("Schaufler", collector_name_artnews)]
-
-## ## see if I can get natural joins working: yup
-## artnews_name_check_dt %>% copy() %>%
-##     .[,on=conversion_df, collector_name_artnews := i.to] # have to keep i free in [], on=Y uses Y tho LUL
-
-
 ## combining with splitting long
 artnews_name_check_dt2 <- artnews_name_check_dt %>% copy() %>%
-    .[,on=conversion_df, collector_name_artnews := i.to] %>% 
+    .[,on=conversion_df, collector_name_artnews := i.to] %>%
     .[, .(collector_name_artnews = unlist(ctstrsplit(collector_name_artnews, ";"))), by = "founder_name_pmdb"]
-
-
-## different ways of debugging the count
-## {.[, .N, founder_name_pmdb][, .N, N]}    
-## pull(founder_name_pmdb) %>% table() %>% table()
-
 
 
 ## artnews_name_check_dt[scramblematch("Schaufler", collector_name_artnews)]
     
-
-## weird order due to default RHS table first and then outer join??
-
-
-## trying to do the recoding the other way around (starting with conversion df), don't think it works:
-## there's no way to easily refer to conversion_df$collector_name artnews with assignment (only update by reference, which then only refers to rows in conversion df, but I want entire table
-## also nomatch=NULL not really working
-
-## conversion_df[artnews_name_check_dt, on = .(collector_name_artnews)]
-## conversion_df %>% copy() %>%
-##     .[,on=artnews_name_check_dt, collector_name_artnews := collector_name_artnews]
-
-## conversion_df %>% copy() %>%
-##     .[,on=artnews_name_check_dt, i.collector_name_artnews := x.collector_name_artnews, nomatch=NULL]
-
-## conversion_df %>% copy() %>%
-##     .[,on=artnews_name_check_dt, collector_name_artnews = x.collector_name_artnews]
-
-
-
-## recode within dt: 
-## y <- artnews_name_check_dt[, .(collector_name_artnews = recode(collector_name_artnews, !!!conversions_list))]
-## am smarter now 
-
-
-
 
 ## this is what I have to replicate in data.table 
 artnews_name_check_tbl <- artnews_name_check_dt %>%
     mutate(collector_name_artnews = recode(collector_name_artnews, !!!conversions_list)) %>%
     separate_rows(collector_name_artnews, sep= ";")
 
-## 
+
 if (len(setdiff(artnews_name_check_dt2$collector_name_artnews, artnews_time_df$clctr_name)) > 0) {
     stop("match incomplete")}
 
 
 
-adt(artnews_name_check_dt2)[scramblematch("Kulczyk", collector_name_artnews)]
+[(adt(artnews_name_check_dt2)[scramblematch("Kulczyk", collector_name_artnews)])]
 adt(artnews_name_check_dt2)[scramblematch(";", collector_name_artnews)]
 
+some_long_fun.method(asdf)
 
+some_long_fun.method[asdf ~ jjj]
 
 
 ## also need some expansion of rows with ; to multiple rows
@@ -165,8 +87,10 @@ dt_founder_crpn <- cbind(founder_res=artnews_name_check_dt$founder_name_pmdb,
       founder_orig = artnews_orig_dt$founder_name_pmdb) %>% adt()
 
 ## check manually whether mismatches are just formatting bs 
-dt_founder_crpn[founder_orig != founder_res]
+jj <- dt_founder_crpn[founder_orig != founder_res] #
 ## seems to be the case -> can just work with founder_orig
+## -> can just recode
+
 
 
 
@@ -301,7 +225,54 @@ artnews_name_check_dt[, .(collector_name_artnews = unlist(ctstrsplit(collector_n
 ## artnews_name_check_dt2[, lapply(.SD, \(x) unlist(tstrsplit(x, "; ?"))),
 ##    .SDcols = "collector_name_artnews", by = founder_name_pmdb]
 
+## *** some other SO attempt 
+
+## https://stackoverflow.com/questions/13773770/split-comma-separated-strings-in-a-column-into-separate-rows/31514711#31514711
+
+artnews_name_check_dt %>% copy() %>%
+    .[,on=conversion_df, collector_name_artnews := i.to] %>%
+    .[,lapply(.SD, \(x) unlist(ctstrsplit(x, ";")))] %>% unique()
+## doesn't even work properly when having multiple columns with commas
+    
+
+
+
+## different ways of debugging the count
+## {.[, .N, founder_name_pmdb][, .N, N]}    
+## pull(founder_name_pmdb) %>% table() %>% table()
+
+v <- data.frame(director = c("Aaron Blaise,Bob Walker", "Akira Kurosawa", 
+                        "Alan J. Pakula", "Alan Parker", "Alejandro Amenabar", "Alejandro Gonzalez Inarritu", 
+                        "Alejandro Gonzalez Inarritu,Benicio Del Toro", "Alejandro González Iñárritu", 
+                        "Alex Proyas", "Alexander Hall", "Alfonso Cuaron", "Alfred Hitchcock", 
+                        "Anatole Litvak", "Andrew Adamson,Marilyn Fox", "Andrew Dominik", 
+                        "Andrew Stanton", "Andrew Stanton,Lee Unkrich", "Angelina Jolie,John Stevenson", 
+                        "Anne Fontaine", "Anthony Harvey"), AB = c('A', 'B', 'A', 'A', 'B', 'B', 'B', 'A', 'B', 'A', 'B', 'A', 'A', 'B', 'B', 'B', 'B', 'B', 'B', 'A'))
+
+setDT(v)[, lapply(.SD, function(x) unlist(tstrsplit(x, ",", fixed=TRUE))), by = AB
+         ][!is.na(director)]
+## splitting every column LMAO what could go wrong???
+
+
 ## ** recoding, generally chaining/piping dt operations
+## https://stackoverflow.com/questions/44590935/recode-a-variable-using-data-tabel
+## update assignment in by-part, amazing and not a footgun at all
+## artnews_name_check_dt[conversion_df]
+## error: conversion_df in i-part (filtering) isn't even part that works on its own
+## probably should read dt-join vignette:
+
+## update by reference, AVOID!!
+## artnews_name_check_dt[conversion_df, on = .(collector_name_artnews), collector_name_artnews := i.to]
+
+
+## use copying to maintain original object 
+artnews_name_check_dt %>% copy() %>%
+    .[conversion_df,  on = .(collector_name_artnews), collector_name_artnews := i.to]
+
+
+artnews_name_check_dt[scramblematch("Schaufler", collector_name_artnews)]
+
+
 ## see if I can modify conversion_df 
 artnews_name_check_dt %>% copy() %>%
     .[conversion_df,  on = .(collector_name_artnews), collector_name_artnews := i.to]
@@ -318,4 +289,49 @@ artnews_name_check_dt %>% copy() %>% {
         scramblematch("en", collector_name_artnews)]}
     
 ## for now use copying     
+
+## the fact that only the update assingment expands the df is fucking weird:
+## is because only passing dt in X[Y] is effectively filtering, and by update by referencing does meaning change from subset to update 
+
+## ## just joining (filtering)
+## artnews_name_check_dt %>% copy() %>%
+##     .[conversion_df, on = .(collector_name_artnews)]
+
+## ## renaming collector_name_artnews
+## artnews_name_check_dt %>% copy() %>%
+##     .[conversion_df, on = .(collector_name_artnews), collector_name_artnews := i.to] %>% 
+##     .[scramblematch("Schaufler", collector_name_artnews)]
+
+## ## can reorder
+## artnews_name_check_dt %>% copy() %>%
+##     .[conversion_df, collector_name_artnews := i.to, on = .(collector_name_artnews)] %>%
+##     .[scramblematch("Schaufler", collector_name_artnews)]
+
+## ## see if I can get natural joins working: yup
+## artnews_name_check_dt %>% copy() %>%
+##     .[,on=conversion_df, collector_name_artnews := i.to] # have to keep i free in [], on=Y uses Y tho LUL
+
+## *** some other attempts at recoding, seem pretty useless
+## weird order due to default RHS table first and then outer join??
+
+
+## trying to do the recoding the other way around (starting with conversion df), don't think it works:
+## there's no way to easily refer to conversion_df$collector_name artnews with assignment (only update by reference, which then only refers to rows in conversion df, but I want entire table
+## also nomatch=NULL not really working
+
+## conversion_df[artnews_name_check_dt, on = .(collector_name_artnews)]
+## conversion_df %>% copy() %>%
+##     .[,on=artnews_name_check_dt, collector_name_artnews := collector_name_artnews]
+
+## conversion_df %>% copy() %>%
+##     .[,on=artnews_name_check_dt, i.collector_name_artnews := x.collector_name_artnews, nomatch=NULL]
+
+## conversion_df %>% copy() %>%
+##     .[,on=artnews_name_check_dt, collector_name_artnews = x.collector_name_artnews]
+
+
+
+## recode within dt: 
+## y <- artnews_name_check_dt[, .(collector_name_artnews = recode(collector_name_artnews, !!!conversions_list))]
+## am smarter now 
 
