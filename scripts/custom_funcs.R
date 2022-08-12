@@ -6,6 +6,7 @@ table = function (..., useNA = 'ifany') base::table(..., useNA = useNA)
 len <- length
 adf <- as.data.frame
 atb <- as_tibble
+adt <- as.data.table
 
 ## https://stats.stackexchange.com/questions/123366/lmer-standardized-regression-coefficients
 lm.beta.lmer <- function(mod) {
@@ -205,6 +206,7 @@ scramblematch<-function(query,target, ignore.case=T) {
     Reduce("&",lapply(strsplit(query," ")[[1]], grepl, target, ignore.case = ignore.case))
 }
 
+findt <- scramblematch
 
 locate_col <- function(df, term) {
     #' find the column labeled as term (if data is not clearly structured)
@@ -290,3 +292,17 @@ scale_wo_attr <- function(x) {
     return(scld)
 }
 
+
+print_data_table <- function(x, ...) {
+  # Adapted from data.table:::as.data.frame.data.table()
+    ans <- x
+    attr(ans, "row.names") <- .set_row_names(nrow(x))
+    attr(ans, "class") <- c("tbl", "data.frame")
+    attr(ans, "sorted") <- NULL
+    attr(ans, ".internal.selfref") <- NULL
+    print(ans, ...)
+  invisible(x)
+}
+
+
+print.data.table <- print_data_table
