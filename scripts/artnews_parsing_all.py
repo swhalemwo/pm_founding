@@ -49,6 +49,25 @@ def extract_cltr_info(nbr, ranking_soup):
     return(data_dict)
 
 
+def get_nbr_of_clctrs(ranking_soup):
+    """get number of collectors (some years only have 199)"""
+
+    collector_list = ranking_soup.select("#main-wrapper > main > div.lrv-a-wrapper.lrv-a-grid.lrv-a-cols4\@tablet.lrv-u-padding-t-2.js-ProfileFilter > div > ul")
+
+    cl2 = collector_list.pop()
+    nbr_clctrs = len(cl2.findAll('li'))
+
+    return(nbr_clctrs)
+
+
+
+
+# main-wrapper > main > div.lrv-a-wrapper.lrv-a-grid.lrv-a-cols4\@tablet.lrv-u-padding-t-2.js-ProfileFilter > div > ul
+
+
+# main-wrapper > main > div.lrv-a-wrapper.lrv-a-grid.lrv-a-cols4\@tablet.lrv-u-padding-t-2.js-ProfileFilter > div > ul
+
+
 def extract_info(prfl, regex):
 
     return_obj = ""
@@ -72,11 +91,15 @@ def proc_year(year):
     print(year)
     ranking_soup = get_year_ranking(year)
     
-    ranking_infos = [extract_cltr_info(i, ranking_soup) for i in range(1,201)]
-    ranking_pd = pd.DataFrame(ranking_infos)
+    ranking_infos = [extract_cltr_info(i, ranking_soup) for i in range(1,202)]
+    empty_dict = ranking_infos[-1]
+    ranking_infos2 = [i for i in ranking_infos if i != empty_dict]
+    ranking_pd = pd.DataFrame(ranking_infos2)
     ranking_pd['year'] = year
     
     return(ranking_pd)
+
+# year = 1990
     
 
 # for i in range(1990, 2022):
