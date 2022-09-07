@@ -306,3 +306,11 @@ print_data_table <- function(x, ...) {
 
 
 print.data.table <- print_data_table
+
+
+## have imap_dfr return data tables instead of tibbles
+imap_dfr_bu <- imap_dfr # assign original to backup (bu) function
+imap_dfr <- function(...) {adt(imap_dfr_bu(...))}
+
+## l <- list(x=list(a=1, b=2), y=list(a=3, b=4))
+## imap_dfr(l, ~list(jj = .y, kk = .x$a))
