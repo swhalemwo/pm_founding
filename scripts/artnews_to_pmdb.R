@@ -107,10 +107,18 @@ gen_pm_founder_names_fixed <- function(artnews_name_check_dt2, artnews_orig_dt, 
                                      data.table(founder_res = "Copelouzos Family",
                                                 founder_orig = "Copelouzos Family"))
 
-    ## actually do the recoding
+    ## actually do the recoding with update join 
     artnews_name_check_dt3 <- artnews_name_check_dt2 %>% copy() %>%
         .[founder_name_mismatches, founder_name_pmdb := i.founder_orig, on=.(founder_name_pmdb = founder_res)]
 
+    ## artnews_name_check_dt3[founder_name_pmdb == "Copelouzos Family"]
+    ## df_excl %>% filter(`Founder name` %in% "Cope")
+
+    
+
+    ## some test, idk what it does
+    ## checks whether there are founders in artnews that are not in pmdb???
+    ## ofc there are... 
     if (len(setdiff(artnews_name_check_dt3$founder_name_pmdb, df_excl$`Founder name`)) > 1) {
         print(setdiff(artnews_name_check_dt3$founder_name_pmdb, df_excl$`Founder name`))
         stop("match of museum founders incomplete")}
@@ -123,7 +131,7 @@ gen_pm_founder_names_fixed <- function(artnews_name_check_dt2, artnews_orig_dt, 
 
 gen_merge_res <- function(df_excl) {
     #' generate the merge res: artnews_time with fitting founder name 
-
+    
 
     check_for_ids(df_excl)
 
@@ -170,50 +178,52 @@ gen_merge_res <- function(df_excl) {
 
 ## aggregate res now works without having to specify collector_name_artnews != "",
 
-df_excl <- create_excel_df(PMDB_FILE, only_pms = F)
+export_an_data_to_gdocs <- function() {
+    #' wrapper function for exporting the artnews data to google docs db 
 
-merge_res <- gen_merge_res(df_excl)
+    df_excl <- create_excel_df(PMDB_FILE, only_pms = F)
 
-an_agg_res <- merge_res[!is.na(founder_name_pmdb),
-                        .(artnews_first_year = min(year),
-                          artnews_last_year = max(year),
-                          artnews_nbr_years = len(year),
-                          artnews_nbr_clctrs = len(unique(collector_name_artnews)))
-                       ,by = founder_name_pmdb]
+    merge_res <- gen_merge_res(df_excl)
 
-filter(mtcars, cyl == 4)
-
-an_agg_res[artnews_nbr_years == 1]
-
-mtcars %>%
-    atb() %>%
-    group_by(gear) %>% 
-    filter(cyl == 4)
-
-
-setdiff(an_agg_res$founder_name_pmdb, df_excl$`Founder name`)
+    an_agg_res <- merge_res[!is.na(founder_name_pmdb),
+                            .(artnews_first_year = min(year),
+                              artnews_last_year = max(year),
+                              artnews_nbr_years = len(year),
+                              artnews_nbr_clctrs = len(unique(collector_name_artnews)))
+                           ,by = founder_name_pmdb]
 
 
 
-an_dt_gdocs <- an_agg_res[adt(df_excl)[, .(`Founder name`, ID = as.numeric(ID))],
-                          on=.(founder_name_pmdb = `Founder name`)]
+    ## an_agg_res[artnews_nbr_years == 1]
 
-an_dt_gdocs[artnews_nbr_clctrs >1]
-
-print(an_dt_gdocs[order(-artnews_nbr_years)], n=150)
-
-
-
-GDOCS_FILE <- "/home/johannes/Dropbox/phd/papers/org_pop/scripts/artnews_cleaning/gdocs_res.csv"
-
-write.table(an_dt_gdocs[order(ID)], file = GDOCS_FILE, row.names = F)
-
-## check that 
-
-adt(df_excl)[`Founder name` != founder_name_pmdb, .(`Founder name`, founder_name_pmdb)]
-adt(df_excl)[as.numeric(`ID...18`) != `ID...120`, .(`Founder name`, founder_name_pmdb, `ID...18`, `ID...120`)]
+    ## mtcars %>%
+    ##     atb() %>%
+    ##     group_by(gear) %>% 
+    ##     filter(cyl == 4)
 
 
+
+    setdiff(an_agg_res$founder_name_pmdb, df_excl$`Founder name`)
+
+
+    an_dt_gdocs <- an_agg_res[adt(df_excl)[, .(`Founder name`, ID = as.numeric(ID))],
+                              on=.(founder_name_pmdb = `Founder name`)]
+
+    an_dt_gdocs[artnews_nbr_clctrs >1]
+
+    print(an_dt_gdocs[order(-artnews_nbr_years)], n=150)
+
+
+
+    GDOCS_FILE <- "/home/johannes/Dropbox/phd/papers/org_pop/scripts/artnews_cleaning/gdocs_res.csv"
+
+    write.table(an_dt_gdocs[order(ID)], file = GDOCS_FILE, row.names = F)
+
+    ## check some things, idk 
+    ## adt(df_excl)[`Founder name` != founder_name_pmdb, .(`Founder name`, founder_name_pmdb)]
+    ## adt(df_excl)[as.numeric(`ID...18`) != `ID...120`, .(`Founder name`, founder_name_pmdb, `ID...18`, `ID...120`)]
+
+}
 
 
 ## an_agg_res[order(-nbr_an_clctrs)]
@@ -221,6 +231,12 @@ adt(df_excl)[as.numeric(`ID...18`) != `ID...120`, .(`Founder name`, founder_name
 
 
 ## check, wait for proper encoding
+
+## ** merging test
+
+## 81 mismatches??
+
+
 
 
 ## ** printing debug
