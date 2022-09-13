@@ -47,6 +47,19 @@ df_reg <- impute_df_reg_vrbls(df_reg_pre_impt)
 get_all_descriptives()
 
 
+## ** testing
+
+test_me <- function(a,b) {
+
+    a+b
+}
+
+TEST_DIR <- paste0(PROJECT_DIR, "scripts/tests/")
+
+testing_res <- testthat::test_file(path = paste0(TEST_DIR, "test_testing.R")) # reporter = "list")
+
+
+
 
 
 
