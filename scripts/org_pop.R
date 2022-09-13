@@ -57,7 +57,9 @@ test_me <- function(a,b) {
 TEST_DIR <- paste0(PROJECT_DIR, "scripts/tests/")
 
 testing_res <- testthat::test_file(path = paste0(TEST_DIR, "test_testing.R")) # reporter = "list")
-
+testing_res <- testthat::test_file(path = paste0(TEST_DIR, "test_artnews.R"), reporter = c("check"))
+testing_res <- testthat::test_file(path = paste0(TEST_DIR, "test_artnews.R"), reporter = c("progress"))
+testing_res[[1]]$results
 
 
 
