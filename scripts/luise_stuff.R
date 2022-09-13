@@ -4,6 +4,8 @@
 
 ## ** artnews to check 
 
+df_excl <- create_excel_df(PMDB_FILE, only_pms = F)
+
 pmdb_luise <- df_excl %>% select(founder_name_pmdb = "Founder name") %>%
     unique() %>% na.omit()
 

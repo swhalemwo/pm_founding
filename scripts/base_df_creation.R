@@ -20,7 +20,8 @@ create_excel_df <- function(db_file, only_pms=T) {
 
     df$name <- df[1] # reeeee-name because column names get changed
     df$year_opened_str <- df$"Opening year"
-    df$year_closed <- df$"Closing year / year it changed structure"
+    df$year_closed <- as.numeric(df$"Closing year / year it changed structure")
+    df$ID <- as.numeric(df$ID)
     df$museum_status <- df$`Museum status`
     ## df$museum_closed <- df$"Museum closed"
 

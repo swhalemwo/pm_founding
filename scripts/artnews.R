@@ -333,11 +333,14 @@ get_founder_years <- function(dt_excl2, an_merge_res, nbr_years_around) {
 
 
 get_fltr_old_method <- function(an_merge_res, dt_excl2, nbr_years_around) {
+    #' old method of filtering out rankings based on year_opened_first_pm and year_closed_last_pm
+    #' limited since it can't deal with inclusions in ranking of intermittent period:
+    # years after closing of first and before opening of second would be excluded
 
 
     ## blow it up 
     ## should get some ugly cartesian cross-merges here that need to be reduced
-    an_merge_res2 <- dt_excl2[an_merge_res, on = c("Founder name" = "founder_name_pmdb")]
+    an_merge_res2 <- dt_excl2[an_merge_res, on = .(`Founder name` = founder_name_pmdb)]
     ## an_merge_res2[findt("rachofsky", `Founder name`)]
     ## an_merge_res2[!is.na(`Founder name`)]
 
@@ -348,17 +351,22 @@ get_fltr_old_method <- function(an_merge_res, dt_excl2, nbr_years_around) {
                   year_closed_last_pm = max(year_closed)), ## year of last closing 
           collector_name_artnews]  ## per collector
 
-    ## filter out mentions in rankings after opening of first museum, or if not having PM 
-    an_merge_res41 <- an_merge_res3[is.na(year_opened_first_pm) | year <= year_opened_first_pm + nbr_years_around]
+    ## filter to mentions in rankings before opening of first museum, or if not having PM, or after closing
 
     an_merge_res42 <- an_merge_res3[is.na(year_opened_first_pm) |
                                     year < year_opened_first_pm - nbr_years_around |
                                     year > year_closed_last_pm]
 
-    an_merge_res42[!an_merge_res41, on = c("collector_name_artnews", "year")]
+    ## inspect which rows get removed in previous step
+    ## an_merge_res[, .N, .(collector_name_artnews, year)][N > 1] %>% adf()
+    ## indeed, Rachofsky, Cohen, Wang Wei/Liu Yiqian 
 
 
-    ## compare the differences 
+    ## old comparison with res41 that didn't include ranking entries after closing
+    ## an_merge_res41 <- an_merge_res3[is.na(year_opened_first_pm) | year <= year_opened_first_pm + nbr_years_around]
+    ## an_merge_res42[!an_merge_res41, on = c("collector_name_artnews", "year")]
+
+
     founder_years_fltrd2 <- an_merge_res42[, .(collector_name_artnews, year)] %>% unique()
 
     return(founder_years_fltrd2)
@@ -366,10 +374,16 @@ get_fltr_old_method <- function(an_merge_res, dt_excl2, nbr_years_around) {
 
 
 
-clean_artnews_time_df <- function(artnews_time_df, nbr_years_around = 0) {
+clean_artnews_time_df <- function(artnews_time_df, nbr_years_around) {
+    
+    
     #' remove the entries from artnews_time_df
     #' artnews_time_df: the dataframe about inclusion in artnews top200 ranking: rows of collector name, year
     #' nbr_years_around: how many years before opening of PMs should inclusion in AN ranking stop?
+
+    ##:ess-bp-start::browser@nil:##
+browser(expr=is.null(.ESSBP.[["@21@"]]));##:ess-bp-end:##
+    
 
     ## get the link between artnews_ranking and pm_founders
     ## need only_pms = F for gen_merge_res (unfortunately)
@@ -392,8 +406,9 @@ clean_artnews_time_df <- function(artnews_time_df, nbr_years_around = 0) {
     src_cprn_diff2 <- an_merge_res[src_cprn_diff, on = .(collector_name_artnews = clctr_name)] %>%
         .[, .(founder_name_pmdb, collector_name_artnews)] %>% unique(.)
     
-    ## check the museums 
-    dt_excl[src_cprn_diff2, .(`Founder name`, year_opened_int, museum_status),
+    ## check the museums
+    ## 
+    adt(df_excl)[src_cprn_diff2, .(`Founder name`, year_opened_int, museum_status),
             on = c("Founder name" = "founder_name_pmdb")]
 
 
@@ -402,7 +417,7 @@ clean_artnews_time_df <- function(artnews_time_df, nbr_years_around = 0) {
     ## quite some people have multiple PMs -> need some uniqueness check 
     ## dt_excl2[, .N, `Founder name`] %>% .[order(-N)]
 
-    founder_years <- get_founder_years(dt_excl2, an_merge_res, nbr_years_around = 2)
+    founder_years <- get_founder_years(dt_excl2, an_merge_res, nbr_years_around = nbr_years_around)
 
     ## exclude the founder years
     ## two different approaches
@@ -424,8 +439,10 @@ clean_artnews_time_df <- function(artnews_time_df, nbr_years_around = 0) {
     ## need to collapse an_merge_res but keep founder_name_pmdb
     ## maybe first join the df_excl year info, and use it to filter?
 
-    ## founder_years_fltrd2 <- get_fltr_old_method(an_merge_res, dt_excl2)
     
+    ## founder_years_fltrd2 <- get_fltr_old_method(an_merge_res, dt_excl2, nbr_years_around = nbr_years_around)
+    
+
     ## founder_years_fltrd1
 
     ## founder_years_fltrd1[!founder_years_fltrd2, on = .NATURAL]
@@ -433,27 +450,7 @@ clean_artnews_time_df <- function(artnews_time_df, nbr_years_around = 0) {
 
     
     ## founder_years is in pmdb names, not in artnews names
-    
-    
 
-    ## |
-    ## year > year_closed
-    ## ] %>%
-    ## remove duplicate entries of collectors with multiple museums
-    ## .[, .(collector_name_artnews, year)] %>% unique() 
-    
-    ## these years after PM has closed are supposed to stay: founder could found PM again 
-    ## an_merge_res3[year > year_closed_last_pm]
-
-    ## an_merge_res3[, .(collector_name_artnews, year)] %>% unique() 
-
-    ## filter out mentions in rankings after opening of 
-
-    ## inspect which rows get removed in previous step
-    ## an_merge_res[, .N, .(collector_name_artnews, year)][N > 1] %>% adf()
-    ## indeed, Rachofsky, Cohen, Wang Wei/Liu Yiqian 
-    
-    
 
     ## test how many results -> more aggregation needed
     ## an_merge_res3[, .N, collector_name_artnews][order(-N)]
@@ -467,7 +464,7 @@ clean_artnews_time_df <- function(artnews_time_df, nbr_years_around = 0) {
 
     dt_excl2[findt(test_name, `Founder name`),]
     an_merge_res[findt(test_name, collector_name_artnews)][order(year)] %>% adf()
-    artnews_time_dt[findt(test_name, clctr_name)][order(year)] %>% adf()
+    adt(artnews_time_df)[findt(test_name, clctr_name)][order(year)] %>% adf()
     founder_years[findt(test_name, `Founder name`)] %>% adf()
     founder_years_fltrd1[findt(test_name, collector_name_artnews)][order(year)] %>% adf()
     founder_years_fltrd2[findt(test_name, collector_name_artnews)][order(year)] %>% adf()
@@ -477,11 +474,7 @@ clean_artnews_time_df <- function(artnews_time_df, nbr_years_around = 0) {
 
     ## an_merge_res3[collector_name_artnews == test_name][order(year)] %>% adf()
 
-    
-
-
-
-    }
+}
 
 
 generate_artnews_data <- function() {
@@ -496,7 +489,7 @@ browser(expr=is.null(.ESSBP.[["@18@"]]));##:ess-bp-end:##
     artnews_collection_df <- artnews_all_res$artnews_collection_df
     ## table(artnews_time_df$year)
 
-    clean_artnews_time_df() ## NOT READY 
+    clean_artnews_time_df(artnews_time_df, nbr_years_around) ## NOT READY 
 
 
     ## ----------- TESTING END 
