@@ -305,8 +305,11 @@ print_data_table <- function(x, ...) {
 }
 
 
-print.data.table <- print_data_table
 
+paint::mask_print()
+
+print.data.table <- print_data_table
+print.data.table <- paint
 
 ## have imap_dfr return data tables instead of tibbles
 imap_dfr_bu <- imap_dfr # assign original to backup (bu) function
