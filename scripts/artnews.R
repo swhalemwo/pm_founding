@@ -375,14 +375,11 @@ get_fltr_old_method <- function(an_merge_res, dt_excl2, nbr_years_around) {
 
 
 clean_artnews_time_df <- function(artnews_time_df, nbr_years_around) {
-    
-    
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
     #' remove the entries from artnews_time_df
     #' artnews_time_df: the dataframe about inclusion in artnews top200 ranking: rows of collector name, year
     #' nbr_years_around: how many years before opening of PMs should inclusion in AN ranking stop?
 
-    ##:ess-bp-start::browser@nil:##
-browser(expr=is.null(.ESSBP.[["@21@"]]));##:ess-bp-end:##
     
 
     ## get the link between artnews_ranking and pm_founders
@@ -478,9 +475,7 @@ browser(expr=is.null(.ESSBP.[["@21@"]]));##:ess-bp-end:##
 
 
 generate_artnews_data <- function() {
-
-    ##:ess-bp-start::browser@nil:##
-browser(expr=is.null(.ESSBP.[["@18@"]]));##:ess-bp-end:##
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
     
 
     artnews_all_res <- readin_artnews_all()
@@ -489,7 +484,7 @@ browser(expr=is.null(.ESSBP.[["@18@"]]));##:ess-bp-end:##
     artnews_collection_df <- artnews_all_res$artnews_collection_df
     ## table(artnews_time_df$year)
 
-    clean_artnews_time_df(artnews_time_df, nbr_years_around) ## NOT READY 
+    clean_artnews_time_df(artnews_time_df, nbr_years_around = 0) ## NOT READY 
 
 
     ## ----------- TESTING END 
