@@ -186,6 +186,7 @@ readin_artnews_all <- function() {
 
     artnews_time_df <- artnews_sep %>%
         select(clctr_name, year) %>%
+        mutate(clctr_name = gsub(" ", " ", clctr_name)) %>% 
         unique()
 
     ## locations don't change over time -> fine to not store location with time
@@ -193,6 +194,7 @@ readin_artnews_all <- function() {
     
     artnews_loc_df <- artnews_sep %>%
         select(clctr_name, country=country3) %>%
+        mutate(clctr_name = gsub(" ", " ", clctr_name)) %>% 
         unique()
 
     ## collection focus: some minor renmaing
@@ -204,6 +206,7 @@ readin_artnews_all <- function() {
     
     artnews_collection_df <- artnews_sep %>%
         select(clctr_name, collection_focus) %>%
+        mutate(clctr_name = gsub(" ", " ", clctr_name)) %>% 
         unique()
 
     return(list(
@@ -390,11 +393,14 @@ clean_artnews_time_df <- function(artnews_time_df, nbr_years_around) {
     ## comparing the sources artnews_time_df and merge_res regarding collector distributions
     orig_res <- cpr_an_sources(artnews_time_df, clctr_col_name = "clctr_name")
     merge_res <- cpr_an_sources(an_merge_res, clctr_col_name = "collector_name_artnews")
+    ## = gsub(" ", " ", clctr_name)
     src_cprn <- merge(
-        orig_res$clctr_dist[, .(clctr_name = gsub(" ", " ", clctr_name), N_orig = N)],
+        orig_res$clctr_dist[, .(clctr_name, N_orig = N)],
         merge_res$clctr_dist[, .(collector_name_artnews, N_merge = N)],
         by.x = "clctr_name", by.y = "collector_name_artnews", all = T)
     
+
+
     ## check which collectors have different numbers of entries
     src_cprn_diff <- src_cprn[N_orig != N_merge]
     ## due to multiple museums 
