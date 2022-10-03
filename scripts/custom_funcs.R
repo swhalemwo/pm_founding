@@ -306,14 +306,41 @@ print_data_table <- function(x, ...) {
 
 
 
-paint::mask_print()
+## paint::mask_print()
 
+## print.data.table <- paint
 print.data.table <- print_data_table
-print.data.table <- paint
+
 
 ## have imap_dfr return data tables instead of tibbles
-imap_dfr_bu <- imap_dfr # assign original to backup (bu) function
-imap_dfr <- function(...) {adt(imap_dfr_bu(...))}
+## imap_dfr_bu <- imap_dfr # assign original to backup (bu) function
+## imap_dfr <- function(...) {adt(imap_dfr_bu(...))}
+imap_dfr <- function(...) {adt(purrr::imap_dfr(...))}
 
 ## l <- list(x=list(a=1, b=2), y=list(a=3, b=4))
 ## imap_dfr(l, ~list(jj = .y, kk = .x$a))
+
+## paint::unmask_print()
+
+ctstrsplit <- function(x, ...) {
+    #' custom version of tstrsplit that works with empty strings 
+    res <- tstrsplit(x, ...)
+    
+    ## if nothing gets returned, return original string
+    if (len(res) == 0) {
+        res <- x
+    }        
+     
+    return(res)
+}
+
+
+view_xl <- function(.data) {
+    if (interactive()) {
+        tmp <- tempfile(fileext = ".csv")
+        fwrite(.data, tmp)
+        browseURL(tmp, browser = "gnumeric")
+    }
+}
+
+

@@ -13,17 +13,6 @@ check_for_ids <- function(df_excl) {
     }
 }
 
-ctstrsplit <- function(x, ...) {
-    #' custom version of tstrsplit that works with empty strings 
-    res <- tstrsplit(x, ...)
-    
-    ## if nothing gets returned, return original string
-    if (len(res) == 0) {
-        res <- x
-    }        
-     
-    return(res)
-}
 
 
 gen_artnews_names_fixed <- function(artnews_name_check_dt, antdf){
