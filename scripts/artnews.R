@@ -153,6 +153,7 @@ get_changed_values(artnews_sep, vlu="location", group="clctr_name", aux_group = 
 ## ** actually artnews
 
 readin_artnews_all <- function() {
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
     #' just read in the artnews df, fix the country coding
     #' returns
     #' - time_df: clctr_name, year,
@@ -292,8 +293,9 @@ cpr_an_sources <- function(an_time_df, clctr_col_name) {
 
 
 get_founder_years <- function(dt_excl2, an_merge_res, nbr_years_around) {
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
     #' construct the founder-years during which PM is open -> get filtered out later
-    #' only construct years of founders that are in an ranking 
+    #' only construct years of founders that are in Artnews ranking 
     #' nbr_years_around: how many years before opening of PMs should inclusion in AN ranking stop?
        
     pmdb_to_an_names <- an_merge_res[, .(founder_name_pmdb, collector_name_artnews)] %>% unique()
@@ -319,8 +321,17 @@ get_founder_years <- function(dt_excl2, an_merge_res, nbr_years_around) {
     ## x[complete.cases(x)] # not enough? although I just need the founder years, not everybody from AN 
     ## x[findt("hahnloser", collector_name_artnews)]
     
+    ## one museum can result in multiple collectors
+    ## museum_years_an[, jjj := .N, by = .(ID, year_cvrd)][jjj>1]
+
+    ## inspect some mismatches
+    ## museum_years_an[!complete.cases(museum_years_an)]
+
+    ## complete cases means here what? being in both pmdb and AN? let's hope so...
+
     founder_years <- museum_years_an[complete.cases(museum_years_an),
-                       .(`Founder name` = collector_name_artnews, year_cvrd)]
+                                     .(`Founder name` = collector_name_artnews, year_cvrd)] %>%
+        unique()
 
     ## museum_years$`Founder name` == x$`Founder name`
     ## cbind(museum_years, x[, .(fndr_name2 = `Founder name`)]) %>%
@@ -411,8 +422,8 @@ clean_artnews_time_df <- function(artnews_time_df, nbr_years_around) {
     
     ## check the museums
     ## 
-    adt(df_excl)[src_cprn_diff2, .(`Founder name`, year_opened_int, museum_status),
-            on = c("Founder name" = "founder_name_pmdb")]
+    ## adt(df_excl)[src_cprn_diff2, .(`Founder name`, year_opened_int, museum_status),
+    ##         on = c("Founder name" = "founder_name_pmdb")]
 
 
     ## generate new dt_excl, now only with PMs (default) to yeet only PM founders (not any institution founders)
@@ -429,7 +440,19 @@ clean_artnews_time_df <- function(artnews_time_df, nbr_years_around) {
     ## in both cases founder_years use `Founder name` because i'm stupid
     founder_years_fltrd1 <- an_merge_res[
         !founder_years, on = .(collector_name_artnews = `Founder name`, year = year_cvrd)] %>%
-        .[, .(collector_name_artnews, year)] %>% unique()
+        .[, .(collector_name_artnews, year)]
+
+
+    ## somehow founder_years_fltrd1 is not unique (should it be? idk): Frank Cohen is there twice
+    ## founder_years_fltrd1[, jjj := .N, by = .(collector_name_artnews, year)][order(-jjj)]
+
+    ## an_merge_res[, .N, by = names(an_merge_res)]
+
+    ## founder_years_fltrd1[grepl("Frank Cohen", collector_name_artnews)] %>% adf()
+    ## founder_years[grepl("Cohen", `Founder name`)]
+    ## an_merge_res[grepl("Cohen", founder_name_pmdb)]
+
+    ## dt_excl2[grepl("Cohen", `Founder name`)]
 
     ## an_merge_res
     ## artnews_time_dt <- adt(artnews_time_df)[, clctr_name := gsub(" ", " ", clctr_name)]
@@ -464,43 +487,44 @@ clean_artnews_time_df <- function(artnews_time_df, nbr_years_around) {
     test_name = "François Pinault"
     test_name = "Wang Wei and Liu Yiqian"
     test_name = "Cindy and Howard Rachofsky"
+    test_name = "Frank Cohen"
 
     dt_excl2[findt(test_name, `Founder name`),]
     an_merge_res[findt(test_name, collector_name_artnews)][order(year)] %>% adf()
     adt(artnews_time_df)[findt(test_name, clctr_name)][order(year)] %>% adf()
     founder_years[findt(test_name, `Founder name`)] %>% adf()
     founder_years_fltrd1[findt(test_name, collector_name_artnews)][order(year)] %>% adf()
-    founder_years_fltrd2[findt(test_name, collector_name_artnews)][order(year)] %>% adf()
+
+     ## no reason to include df based on old filter method
+    ## founder_years_fltrd2[findt(test_name, collector_name_artnews)][order(year)] %>% adf()
 
 
     ## an_merge_res[findt("elham", collector_name_artnews)] %>% .[order(year)]
 
     ## an_merge_res3[collector_name_artnews == test_name][order(year)] %>% adf()
 
+    return(atb(founder_years_fltrd1[, .(clctr_name = collector_name_artnews, year)]))
+
+    ## return(founder_years_fltrd1)
+
 }
 
+## test_clctr_name <- function(test_name, dt_excl2, an_merge_res, artnews_time_df,
+##                             founder_years, founder_year_fltrd1) {
+##     #' test whether test_name (collector/founder is processed properly
 
-generate_artnews_data <- function() {
-    if (as.character(match.call()[[1]]) %in% fstd){browser()}
+##     earliest_pm_open <- dt_excl2[`Founder name` == test_name, min(year_opened_int)]
+##     last_pm_close <- dt_excl2[`Founder name` == test_name, max(c(year_closed, ENDING_YEAR), na.rm = T)]
+
     
 
-    artnews_all_res <- readin_artnews_all()
-    artnews_time_df <- artnews_all_res$artnews_time_df
-    artnews_loc_df <- artnews_all_res$artnews_loc_df
-    artnews_collection_df <- artnews_all_res$artnews_collection_df
-    ## table(artnews_time_df$year)
-
-    clean_artnews_time_df(artnews_time_df, nbr_years_around = 0) ## NOT READY 
-
-
-    ## ----------- TESTING END 
-
-    artnews_genre_df <- readin_artnews_genre()
+    
+## }
+    
+gen_cnt_clctrs <- function(rel_clctrs_loc, artnews_time_df, artnews_loc_df) {
+    #' generate the country counts, 
 
     ## getting the relevant (contemporary/modern art collectors from all and genre dfs)
-    rel_clctrs <- get_cpaer_clctrs(artnews_genre_df, artnews_collection_df)
-    ## joining with location 
-    rel_clctrs_loc <- as_tibble(merge(rel_clctrs, artnews_loc_df))
 
     ## joining with time 
     rel_clctrs_time <- as_tibble(merge(rel_clctrs_loc, artnews_time_df))
@@ -530,11 +554,63 @@ generate_artnews_data <- function() {
     cnt_clctrs <- cnt_clctrs %>%
         rename(iso3c=country)
 
+
+
     return (select(cnt_clctrs,
                    iso3c, year, 
                    clctr_cnt_cpaer = cnt_cpaer,
                    clctr_cnt_all = cnt_all,
                    clctr_cpaer_all_diff = clctr_cpaer_all_diff))
+}
+
+
+
+
+generate_artnews_data <- function() {
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
+    
+
+    artnews_all_res <- readin_artnews_all()
+    artnews_time_df <- artnews_all_res$artnews_time_df
+    artnews_loc_df <- artnews_all_res$artnews_loc_df
+    artnews_collection_df <- artnews_all_res$artnews_collection_df
+    ## table(artnews_time_df$year)
+
+
+
+    artnews_time_df_clnd2 <- clean_artnews_time_df(artnews_time_df, nbr_years_around = 2)
+
+    artnews_genre_df <- readin_artnews_genre()
+
+    rel_clctrs <- get_cpaer_clctrs(artnews_genre_df, artnews_collection_df)
+    ## joining with location 
+    rel_clctrs_loc <- as_tibble(merge(rel_clctrs, artnews_loc_df))
+
+    ## artnews_time_df_clnd <- clean_artnews_time_df(artnews_time_df, nbr_years_around = 0)
+    ## artnews_time_df_clnd2 <- clean_artnews_time_df(artnews_time_df, nbr_years_around = 2)
+    ## artnews_time_df_clnd5 <- clean_artnews_time_df(artnews_time_df, nbr_years_around = 5) 
+
+
+    cnts_clnd2 <- gen_cnt_clctrs(rel_clctrs_loc, atb(artnews_time_df_clnd2), artnews_loc_df)
+
+    ## cnts_orig <- gen_cnt_clctrs(rel_clctrs_loc, artnews_time_df, artnews_loc_df)
+    ## cnts_clnd0 <- gen_cnt_clctrs(rel_clctrs_loc, atb(artnews_time_df_clnd), artnews_loc_df)
+    ## cnts_clnd2 <- gen_cnt_clctrs(rel_clctrs_loc, atb(artnews_time_df_clnd2), artnews_loc_df)
+    ## cnts_clnd5 <- gen_cnt_clctrs(rel_clctrs_loc, atb(artnews_time_df_clnd5), artnews_loc_df)
+
+    ## cnts_cpr <- rbind(mutate(cnts_orig, source = "orig"),
+    ##                   mutate(cnts_clnd, source = "clnd"),
+    ##                   mutate(cnts_clnd2, source = "clnd2"),
+    ##                   mutate(cnts_clnd2, source = "clnd5"))
+
+    
+    ## ggplot(cnts_cpr, aes(x=year, y=clctr_cnt_cpaer, color = iso3c, linetype = source)) +
+    ##     geom_line() +
+    ##     facet_wrap(~iso3c, scales = "free")
+
+    return(cnts_clnd2)
+
+
 }
  
 
@@ -548,15 +624,21 @@ artnews_descriptives <- function(cnt_clctrs) {
 
 
     pdf(paste0(FIG_DIR, "artnews_ranking_diff.pdf"), width = 17, height = 10)
+
     viz_lines(na.omit(cnt_clctrs), x="year", y="clctr_cpaer_all_diff", grp = "iso3c", facets = "region", time_level = "ra", duration = 2, fill_up = T, max_lines = 6)
-    dev.off()
+    
+dev.off()
 
     pdf(paste0(FIG_DIR, "artnews_ranking_all.pdf"), width = 17, height = 10)
+
     viz_lines(na.omit(cnt_clctrs), x="year", y="cnt_all", grp = "iso3c", facets = "region", time_level = "ra", duration = 2, fill_up = T, max_lines = 6)
+
     dev.off()
 
     pdf(paste0(FIG_DIR, "artnews_ranking_cpaer.pdf"), width = 17, height = 10)
+
     viz_lines(na.omit(cnt_clctrs), x="year", y="cnt_cpaer", grp = "iso3c", facets = "region", time_level = "ra", duration = 2, fill_up = T, max_lines = 6)
+
     dev.off()
     
 }
