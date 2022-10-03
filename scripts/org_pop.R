@@ -3,21 +3,6 @@
 PROJECT_DIR <- "/home/johannes/Dropbox/phd/papers/org_pop/"
 SCRIPT_DIR <- paste0(PROJECT_DIR, "scripts/")
 
-source(paste0(SCRIPT_DIR, "startup_org_pop.R")) ## startup: libraries, global vars
-source(paste0(SCRIPT_DIR, "custom_funcs.R")) # random utils
-source(paste0(SCRIPT_DIR, "wb_api.R")) ## World Bank data, has to be run before sourcing base_df_creationn since it provides the country-year structure
-source(paste0(SCRIPT_DIR, "base_df_creation.R")) # function to read in excel data
-source(paste0(SCRIPT_DIR, "WID_setup_and_checks.R"))
-source(paste0(SCRIPT_DIR, "viz_opngs.R"))
-source(paste0(SCRIPT_DIR, "oecd_api.R"))
-source(paste0(SCRIPT_DIR, "mow.R"))
-source(paste0(SCRIPT_DIR, "tax_incentives.R"))
-source(paste0(SCRIPT_DIR, "artnews.R"))
-source(paste0(SCRIPT_DIR, "cbn_dfs.R"))
-source(paste0(SCRIPT_DIR, "cultural_spending.R"))
-source(paste0(SCRIPT_DIR, "marginal_tax_rates.R"))
-## source(paste0(SCRIPT_DIR, "descriptives.R"))
-
 PMDB_FILE <- "Private museum database2.xlsx"
 PMDB_FILE <- "Private museum database3.xlsx"
 PMDB_FILE <- "Private museum database4.xlsx"
@@ -29,6 +14,24 @@ PMDB_FILE <- "Private museum database11.xlsx"
 PMDB_FILE <- "Private museum database12.xlsx"
 ## PMDB_FILE <- "Private museum database13.xlsx" ## just use to check if merging went well 
 PMDB_FILE <- "Private museum database15.xlsx"
+
+source(paste0(SCRIPT_DIR, "startup_org_pop.R")) ## startup: libraries, global vars
+source(paste0(SCRIPT_DIR, "custom_funcs.R")) # random utils
+source(paste0(SCRIPT_DIR, "wb_api.R")) ## World Bank data, has to be run before sourcing base_df_creationn since it provides the country-year structure
+source(paste0(SCRIPT_DIR, "base_df_creation.R")) # function to read in excel data
+source(paste0(SCRIPT_DIR, "WID_setup_and_checks.R"))
+source(paste0(SCRIPT_DIR, "viz_opngs.R"))
+source(paste0(SCRIPT_DIR, "oecd_api.R"))
+source(paste0(SCRIPT_DIR, "mow.R"))
+source(paste0(SCRIPT_DIR, "tax_incentives.R"))
+source(paste0(SCRIPT_DIR, "artnews_to_pmdb.R"))
+source(paste0(SCRIPT_DIR, "artnews.R"))
+source(paste0(SCRIPT_DIR, "cbn_dfs.R"))
+source(paste0(SCRIPT_DIR, "cultural_spending.R"))
+source(paste0(SCRIPT_DIR, "marginal_tax_rates.R"))
+## source(paste0(SCRIPT_DIR, "descriptives.R"))
+
+
 
 
 ## df_excl <- create_excel_df(PMDB_FILE, only_pms = F)
