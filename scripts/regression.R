@@ -840,7 +840,7 @@ gen_vrbl_vectors <- function() {
     all_rel_vars <- unique(c(hnwi_vars, inc_ineq_vars, weal_ineq_vars, non_thld_lngtd_vars, crscn_vars))
 
     vrbl_lbls <- c("nbr_opened" = "Number of Private Museums opened",
-                   "sum_core" = "Tax incentives",
+                   # "sum_core" = "Tax incentives",
                    "NPO.tax.exemption" = "Tax exemption of non-profits",
                    "Ind.tax.incentives" = "Tax deductibility of donations",
                    "tmitr_approx_linear20step" = "Marginal Income Tax Rate (%)",
