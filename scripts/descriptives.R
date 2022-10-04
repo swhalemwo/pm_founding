@@ -359,40 +359,158 @@ lapply(cbn_plots, \(x) plt_to_pdf(x$plt, width = x$width, height=x$height, fig_n
 ## * clustering
 
 get_df_clust <- function(df_reg, vvs) {
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
     #' generate the dataframe used for clustering 
+
     df_clust_prep <- df_reg %>%
-        filter(year > 1995) %>% 
-        select(iso3c, year, NY.GDP.PCAP.CDk, sptinc992j_p99p100, shweal992j_p99p100, sum_core, cnt_contemp_1995,
+        filter(year >= 1995) %>% 
+        select(iso3c, year, NY.GDP.PCAP.CDk, sptinc992j_p99p100, shweal992j_p99p100,
+               NPO.tax.exemption, Ind.tax.incentives, cnt_contemp_1995,
                hnwi_nbr_30M, SP.POP.TOTLm) %>%
         mutate(cnt_contemp_1995 = cnt_contemp_1995/SP.POP.TOTLm,
                hnwi_nbr_30M = hnwi_nbr_30M/SP.POP.TOTLm) %>%
-        select(-SP.POP.TOTLm) %>% 
-        na.omit()
+        select(-SP.POP.TOTLm) 
 
 
+    ## pivot the columns into wider
     df_clust <- df_clust_prep %>%
         pivot_wider(id_cols = iso3c, names_from = year,
-                    values_from = setdiff(names(df_clust_prep), vvs$base_vars)) %>%
-        na.omit() ## ugly
+                    values_from = setdiff(names(df_clust_prep), vvs$base_vars))
 
-    return(df_clust)
+    
+    ## select the cross-sectional variables separately, yeet them from main df, then re-add them once
+    ## (otherwise get added for every year)
+    crscn_vrbls <- c("NPO.tax.exemption", "Ind.tax.incentives", "cnt_contemp_1995")
+    crscn_vrbls_to_keep <- c("NPO.tax.exemption_2014", "Ind.tax.incentives_2014", "cnt_contemp_1995_1995")
+
+    crscn_data <- df_clust %>% select(crscn_vrbls_to_keep)
+
+    df_clust2 <- df_clust %>% select(-starts_with(crscn_vrbls)) %>%
+        bind_cols(crscn_data)
+
+    
+    ## NA investigation
+    ## rows: countries
+    ## na.omit(df_clust2)
+
+    ## df_clust2 %>%
+    ##     mutate(nbr_nas = rowSums(is.na(.))) %>%
+    ##     select(iso3c, nbr_nas) %>%
+    ##     arrange(-nbr_nas) %>%
+    ##     print(n=100)
+    ## ## hmm there are around 20 with missing where it's worth considering to keep them (nbr_nas < 30)
+
+    ## columns: variables
+
+    ## colsums_na <- colSums(is.na(df_clust2))
+    ## colsums_na_dt <- data.table(vrbl = names(colsums_na), nbr_na = colsums_na)
+    ## colsums_na_dt[order(-nbr_na)] %>% print(n=50)
+    ## colsums_na_dt[order(nbr_na)] %>% print(n=500)
+    ## seems to go high quite quickly: sptinc992j, hnwi, shweal all have at least 40 missing
+    ## yeeting all them would basically mean only using GDP and cross-sectional variables to cluster
+
+    ## -> unless there's a comfy option to adjust distances to missing values, ~50 countries have to be yeeted
+
+
+
+    return(df_clust2)
 }
 
-df_clust <- get_df_clust(df_reg, vvs)
 
-dists <- dist(df_clust)
-
-
-
-run_cluster <- function(dists, method) {
+run_cluster <- function(dists, method, nbr_clusts, na_rm) {
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
+    #' evaluate the clustering solution
 
     clusts <- hclust(dists, method = method)
     ## plot(clusts)
-    table(cutree(clusts, k=8))
+    tree_cutted <- cutree(clusts, k=nbr_clusts)
+
+    clust_tbl <- table(tree_cutted)
+
+    skew <- skewness(clust_tbl)
+    mean_nbr_crys <- mean(clust_tbl)
+    min_nbr_crys <- min(clust_tbl)
+    max_nbr_crys <- max(clust_tbl)
+
+    ## number of clusters with only one entry
+    nbr_clusters_w_one <- len(which(clust_tbl == 1))
+
+
+    return(
+        list(
+            nbr_clusts = nbr_clusts,
+            method = method,
+            skew = skew,
+            mean_nbr_crys = mean_nbr_crys,
+            min_nbr_crys = min_nbr_crys,
+            max_nbr_crys = max_nbr_crys,
+            nbr_clusters_w_one = nbr_clusters_w_one,
+            na_rm = na_rm)) 
 }
 
 
+
+df_clust <- get_df_clust(df_reg, vvs)
+
+dists_wna <- dist(df_clust)
+dists_wona <- dist(na.omit(df_clust))
+
+dist_options <- list(
+    wna = dists_wna,
+    wona = dists_wona)
+    
+
+## nrow(dists)
+## ncol(dists)
+## as.matrix(dists)[,2]
+run_cluster(dists, "ward.D", 8, "wna")
+
 clust_methods <- c("ward.D", "ward.D2", "single", "complete", "average", "mcquitty", "median", "centroid")
+nbr_clusts <- seq(3,8)
+na_rm <- c("wna","wona")
+clust_cfg_df <- expand.grid(clust_method = clust_methods, nbr_clusts = nbr_clusts, na_rm = na_rm) %>% adt()
 
-lapply(clust_methods, \(x) run_cluster(dists, x))
+clust_res <- apply(clust_cfg_df, 1, \(x) run_cluster(dists = dist_options[[x[["na_rm"]]]],
+                                                     method = x[["clust_method"]],
+                                                     nbr_clusts = x[["nbr_clusts"]],
+                                                     na_rm = x[["na_rm"]])) %>%
+    rbindlist()
 
+
+ggplot(clust_res, aes(x=skew, y = mean_nbr_crys, color = na_rm, size = max_nbr_crys)) +
+    geom_point() +
+    facet_wrap(~nbr_clusts)
+
+## 8 clusters, wna, smallest skew
+
+## clust_res[nbr_clusts == 8 &na_rm == "wna"]
+
+
+
+world <- ne_countries(scale = "medium", returnclass = "sf") %>% atb() %>%
+    select(iso3c = iso_a3, geometry)
+
+
+
+plot_world_clustered <- function(df_clust, tree_cutted, na_rm) {
+    #' plot visualization on map 
+
+    ## yeet NAs if necessary 
+    if (na_rm == "wona") {
+        df_clust2 <- na.omit(df_clust)
+    } else {
+        df_clust2 <- df_clust
+    }
+        
+    df_clust2$clust <- tree_cutted
+
+    world_clstrd <- left_join(world, 
+                              select(df_clust2, iso3c, clust))
+    
+    plt_world_clstrd <- ggplot(world_clstrd, aes(geometry = geometry, fill = factor(clust))) +
+        geom_sf() +
+        coord_sf(ylim = c(-55, 83)) +
+        scale_fill_brewer(palette = "Set3")
+
+    return(plt_world_clstrd)
+}
