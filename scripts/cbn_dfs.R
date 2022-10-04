@@ -270,7 +270,7 @@ check_imputed_values <- function(df_reg) {
     
     ## check all df vars that are not "base vars"
     ## also exclude tmitr because has only 1 obs for some countries, and I'm never gonna use that purely anyways
-    lin_imptd_vars <- (setdiff(names(df_reg), c("iso3c", "year", "name", "country", "tmitr")))
+    lin_imptd_vars <- (setdiff(names(df_reg), c("iso3c", "region", "year", "name", "country", "tmitr")))
 
     ## narrow down to longitudinal variables
     lngtd_flag <- sapply(lin_imptd_vars, \(x) check_if_var_is_longitudinal(df_reg, x))
@@ -285,7 +285,8 @@ check_imputed_values <- function(df_reg) {
     return(imputation_vars_to_check2)
 }
 
-impute_df_reg_vrbls <- function(df_reg) { 
+impute_df_reg_vrbls <- function(df_reg) {
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
     ## impute the variables that are suitable and replace the original values
     
 

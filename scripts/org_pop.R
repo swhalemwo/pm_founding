@@ -14,6 +14,7 @@ PMDB_FILE <- "Private museum database11.xlsx"
 PMDB_FILE <- "Private museum database12.xlsx"
 ## PMDB_FILE <- "Private museum database13.xlsx" ## just use to check if merging went well 
 PMDB_FILE <- "Private museum database15.xlsx"
+fstd <- ""
 
 source(paste0(SCRIPT_DIR, "startup_org_pop.R")) ## startup: libraries, global vars
 source(paste0(SCRIPT_DIR, "custom_funcs.R")) # random utils

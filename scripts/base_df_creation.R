@@ -109,6 +109,8 @@ create_anls_df <- function(df_wb, df_open) {
 
     df_anls$nbr_opened[which(is.na(df_anls$nbr_opened))] <- 0
 
+    df_anls$region <- countrycode(df_anls$iso3c, "iso3c", "un.region.name")
+
     ## maybe move these things somewhere proper 
     ## df_anls$wv <- 0
     ## df_anls$nbr_opened_cum <- ave(df_anls$nbr_opened, df_anls$iso3c, FUN = cumsum)

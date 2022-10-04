@@ -614,7 +614,7 @@ generate_artnews_data <- function() {
 }
  
 
-generate_artnews_data()
+## generate_artnews_data()
 
 
 artnews_descriptives <- function(cnt_clctrs) {
