@@ -203,28 +203,7 @@ get_all_descriptives <- function(){
 
 ## get_all_descriptives()
 
-
-## * coverage visualizations
-
-rel_lngtd_vars <- c("tmitr_approx_linear20step",
-                    "hnwi_nbr_30M",
-                    "gptinc992j",
-                    "ghweal992j",
-                    "smorc_dollar_fxm",
-                    "NY.GDP.PCAP.CDk",
-                    "SP.POP.TOTLm")
-
-
-
-cpltns_vrbl_plot <- df_reg %>% select(c("iso3c", "year", rel_lngtd_vars)) %>%
-    pivot_longer(cols=rel_lngtd_vars) %>%
-    na.omit() %>%
-    group_by(year, name) %>%
-    summarize(nbr_crys = len(iso3c)) %>%
-    ggplot(aes(x=year, y=nbr_crys, color = name, group=name)) +
-    geom_line(size = 1.5) +
-    scale_color_manual(values = colors_manual3)
-
+## some help functions
 plt_to_pdf <- function(plt, width, height, fig_name) {
     if (missing(fig_name)) { 
         fig_name <- deparse(substitute(plt))
@@ -247,8 +226,9 @@ plt_to_pdf2 <- function(plt, width, height) {
     dev.off()
 }
 
-plt_to_pdf(cpltns_vrbl_plot, width = 8, height = 4)
 
+
+## * coverage visualizations
 
 
 
