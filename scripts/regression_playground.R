@@ -896,40 +896,6 @@ run_vrbl_mdl_vars(test_mdl2, verbose = T)
 
 ## ** clustering
 
-get_df_clust <- function() {
-    #' generate the dataframe used for clustering 
-    df_clust_prep <- df_reg %>%
-        filter(year > 1995) %>% 
-        select(iso3c, year, NY.GDP.PCAP.CDk, sptinc992j_p99p100, shweal992j_p99p100, sum_core, cnt_contemp_1995,
-               hnwi_nbr_30M, SP.POP.TOTLm) %>%
-        mutate(cnt_contemp_1995 = cnt_contemp_1995/SP.POP.TOTLm,
-               hnwi_nbr_30M = hnwi_nbr_30M/SP.POP.TOTLm) %>%
-        select(-SP.POP.TOTLm) %>% 
-        na.omit()
-
-
-    df_clust <- df_clust_prep %>%
-        pivot_wider(id_cols = iso3c, names_from = year, values_from = setdiff(names(df_clust_prep), base_vars)) %>%
-        na.omit() ## ugly
-
-    return(df_clust)
-}
-
-
-
-dists <- dist(df_clust)
-
-run_cluster <- function(dists, method) {
-
-    clusts <- hclust(dists, method = method)
-    ## plot(clusts)
-    table(cutree(clusts, k=8))
-}
-
-
-clust_methods <- c("ward.D", "ward.D2", "single", "complete", "average", "mcquitty", "median", "centroid")
-
-lapply(clust_methods, \(x) run_cluster(dists, x))
 
 
 ## * scrap 
