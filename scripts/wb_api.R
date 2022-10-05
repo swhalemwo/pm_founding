@@ -117,7 +117,8 @@ cvrt_ny.gdp.pcap.cd <- function(df_wb_new) {
 
     df_wb_new3 <- df_wb_new2 %>%
         select(-NY.GDP.PCAP.CD) %>%
-        select(everything(), NY.GDP.PCAP.CD = USD_constant)
+        select(everything(), NY.GDP.PCAP.CD = USD_constant) %>%
+        filter(iso3c != "VEN")
 
     return(df_wb_new3)
 }

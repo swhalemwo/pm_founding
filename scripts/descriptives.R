@@ -449,8 +449,8 @@ run_cluster <- function(dists, method, nbr_clusts, na_rm) {
 }
 
 
-
-df_clust <- get_df_clust(df_reg, vvs)
+## just yeet Channel Islands and South Sudan (don't have anything in common)
+df_clust <- get_df_clust(filter(df_reg, iso3c %!in% c("CHI", "SSD")), vvs)
 
 dists_wna <- dist(df_clust)
 dists_wona <- dist(na.omit(df_clust))
