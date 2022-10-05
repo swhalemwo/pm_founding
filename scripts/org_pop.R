@@ -16,6 +16,9 @@ PMDB_FILE <- "Private museum database12.xlsx"
 PMDB_FILE <- "Private museum database15.xlsx"
 fstd <- ""
 
+source(paste0(SCRIPT_DIR, "cultural_spending.R"))
+cur_df <- gen_cur_df()
+
 source(paste0(SCRIPT_DIR, "startup_org_pop.R")) ## startup: libraries, global vars
 source(paste0(SCRIPT_DIR, "custom_funcs.R")) # random utils
 source(paste0(SCRIPT_DIR, "wb_api.R")) ## World Bank data, has to be run before sourcing base_df_creationn since it provides the country-year structure
@@ -28,10 +31,8 @@ source(paste0(SCRIPT_DIR, "tax_incentives.R"))
 source(paste0(SCRIPT_DIR, "artnews_to_pmdb.R"))
 source(paste0(SCRIPT_DIR, "artnews.R"))
 source(paste0(SCRIPT_DIR, "cbn_dfs.R"))
-source(paste0(SCRIPT_DIR, "cultural_spending.R"))
 source(paste0(SCRIPT_DIR, "marginal_tax_rates.R"))
 ## source(paste0(SCRIPT_DIR, "descriptives.R"))
-
 
 
 
@@ -39,9 +40,7 @@ source(paste0(SCRIPT_DIR, "marginal_tax_rates.R"))
 df_excl <- create_excel_df(PMDB_FILE)
 df_open <- aggregate_openings(df_excl)
 df_wb <- get_WB_data(c("NY.GDP.PCAP.CD", "SP.POP.TOTL", "NY.GDP.MKTP.CN"))
-cur_df <- gen_cur_df()
 df_anls <- create_anls_df(df_wb, df_open)
-
 df_reg_pre_impt <- get_df_reg(df_anls)
 df_reg <- impute_df_reg_vrbls(df_reg_pre_impt)
 
