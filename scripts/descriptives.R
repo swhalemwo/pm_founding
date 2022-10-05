@@ -423,6 +423,13 @@ run_cluster <- function(dists, method, nbr_clusts, na_rm) {
 
     clusts <- hclust(dists, method = method)
     ## plot(clusts)
+
+    ## incplt_cases <- which(!complete.cases(as.matrix(dists)))
+    ## df_clust[incplt_cases,] %>% adf()
+
+    ## as.matrix(dists)[incplt_cases,]
+    
+    
     tree_cutted <- cutree(clusts, k=nbr_clusts)
 
     clust_tbl <- table(tree_cutted)
@@ -463,7 +470,7 @@ dist_options <- list(
 ## nrow(dists)
 ## ncol(dists)
 ## as.matrix(dists)[,2]
-run_cluster(dists, "ward.D", 8, "wna")
+run_cluster(dist_options[["wna"]], "ward.D", 8, "wna")
 
 clust_methods <- c("ward.D", "ward.D2", "single", "complete", "average", "mcquitty", "median", "centroid")
 nbr_clusts <- seq(3,8)
@@ -493,6 +500,7 @@ world <- ne_countries(scale = "medium", returnclass = "sf") %>% atb() %>%
 
 
 plot_world_clustered <- function(df_clust, tree_cutted, na_rm) {
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
     #' plot visualization on map 
 
     ## yeet NAs if necessary 
