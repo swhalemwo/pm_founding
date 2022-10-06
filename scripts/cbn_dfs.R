@@ -35,7 +35,8 @@ check_dupl_names <- function(df1_name, df2_name) {
 
 
 
-get_df_reg <- function(df_anls) { #
+get_df_reg <- function(df_anls) { 
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
     #' combine together df_anls, inequality, tax incentive, mow, hnwi
 
     df_anls$NY.GDP.PCAP.CDk <- df_anls$NY.GDP.PCAP.CD/1000
@@ -81,28 +82,20 @@ get_df_reg <- function(df_anls) { #
     df_cult <- gen_cult_spending_imptd()
     
     
-    ## need to fill NAs of MOW with 0s
-
     df_hnwi <- get_hnwi_pcts()
+
+    df_hdi <- get_hdi()
+
 
     ## combine everything
     dfs_to_combine <- list(df_anls=df_anls, df_hnwi=df_hnwi, df_ineq=df_ineq, df_taxinc=df_taxinc,
                            mow_crssctn=mow_crssctn, mow_cntns=mow_cntns,df_mtr=df_mtr,
-                           df_artnews=df_artnews, df_cult=df_cult)
+                           df_artnews=df_artnews, df_cult=df_cult, df_hdi = df_hdi)
 
-    
-    
-    ## checking that names are unique
-    all_col_names <- unname(unlist(sapply(dfs_to_combine, names)))
-    nbr_cols_unq <- len(unique(all_col_names)) - 2 ## subtract 2 for iso3c and year
-    nbr_cols_ttl <- sum(sapply(dfs_to_combine, \(x) ncol(x[,c(names(x) %!in% c("iso3c", "year"))])))
+    ## checking that names are unique    
+    check_df_name_unqns(dfs_to_combine, skip_var_names = c("iso3c", "year"))
+    ## check_dupl_names() # can use check_dupl_names to check manually
 
-
-    if (nbr_cols_unq != nbr_cols_ttl) {
-        df_combns <- as.data.frame(t(combn(names(dfs_to_combine), 2)))
-        apply(df_combns, 1, \(x) check_dupl_names(x[["V1"]], x[["V2"]]))
-        stop("you have duplicate column names")
-    }
     
 
     df_reg <- as_tibble(Reduce(function(x,y,...) merge(x,y, all.x = TRUE), dfs_to_combine))

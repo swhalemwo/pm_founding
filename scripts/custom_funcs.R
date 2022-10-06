@@ -344,3 +344,18 @@ view_xl <- function(.data) {
 }
 
 
+check_df_name_unqns <- function(l, skip_var_names) {
+    #' check whether names of dataframes in list l are overlapping (check their uniqueness)
+    #' skip_names: don't consider them
+
+    
+
+    df_names <- unlist(sapply(l, names)) %>% table() %>% adt() %>% .[order(-N)]
+    if (df_names[. %!in% skip_var_names, max(N)] != 1) {
+        print(df_names[. %!in% skip_var_names & N>1])
+        stop("duplicate variable names in dfs")
+    } else {
+        print("no duplicate variable names")
+    }
+    return(invisible(NULL))
+}

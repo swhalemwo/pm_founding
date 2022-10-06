@@ -373,7 +373,7 @@ fill_up2 <- function(df, x, y, grp) {
 
 create_facets <- function(dfx, facets, grp, max_lines) {
     #' create more viewable facets by splitting facet variable into facets with at most max_lines
-
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
     
     for (i in unique(dfx[[facets]])) {
         ## print(i)
@@ -418,6 +418,7 @@ create_facets <- function(dfx, facets, grp, max_lines) {
 viz_lines <- function(dfx, x ="year", y, time_level = "ra", duration = 4, grp = "iso3c",
                       extra =FALSE, div=FALSE, max_lines=8,
                       return ="df",fill_up = FALSE, facets="facetcol")  {
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
     #' general vizualization function
     #' dfx: overall dataframe, containing at least columns for
     #' x: the time series that ends up on the x axis
