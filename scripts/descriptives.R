@@ -416,6 +416,36 @@ get_df_clust <- function(df_reg, vvs) {
     return(df_clust2)
 }
 
+get_df_clust_lame <- function(df_reg, cutoffs = seq(0, 1, 0.25)) {
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
+    #' super lame way of clustering based on 2020 HDI cutoffs
+
+    hdi_prep <- df_reg %>%
+        filter(year == 2020) %>%
+        select(iso3c, year, hdi) %>% adt()
+        
+    
+    ## prepare for rolling join: remove last number (max)
+    qntls <- quantile(hdi_prep$hdi, probs = cutoffs, na.rm = T) %>% adt() %>% .[1:.N-1]
+    names(qntls) <- "hdi"
+    qntls$cluster <- seq(1,nrow(qntls))
+    ## qntls$asdf <- qntls$qntl
+    
+    ## do rolling joins work? yup
+    dt_hdi_clustered <- qntls[na.omit(hdi_prep), on = "hdi", roll = Inf]
+
+    ## test that rolling worked
+    ## dt_hdi_clustered[, paste(paste0(iso3c, ":", hdi), collapse = ""), by = cluster] %>% .[order(cluster)]
+    ## dt_hdi_clustered[, .(min_hdi = min(hdi), max_hdi = max(hdi)), cluster]
+
+    return(dt_hdi_clustered)
+
+}
+
+get_df_clust_lame(df_reg)
+
+    
+
 
 run_cluster <- function(dists, method, nbr_clusts, na_rm) {
     if (as.character(match.call()[[1]]) %in% fstd){browser()}
@@ -498,11 +528,8 @@ world <- ne_countries(scale = "medium", returnclass = "sf") %>% atb() %>%
     select(iso3c = iso_a3, geometry)
 
 
-
-plot_world_clustered <- function(df_clust, tree_cutted, na_rm) {
-    if (as.character(match.call()[[1]]) %in% fstd){browser()}
-    #' plot visualization on map 
-
+assign_clusters <- function(df_clust, tree_cutted, na_rm) {
+    #' assign the clustering solution to df_clust: IDK IF WORKS, not tested
     ## yeet NAs if necessary 
     if (na_rm == "wona") {
         df_clust2 <- na.omit(df_clust)
@@ -511,14 +538,96 @@ plot_world_clustered <- function(df_clust, tree_cutted, na_rm) {
     }
         
     df_clust2$clust <- tree_cutted
+}
+
+
+
+plot_world_clustered <- function(df_clustrd) {
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
+    #' plot visualization on map 
+
 
     world_clstrd <- left_join(world, 
-                              select(df_clust2, iso3c, clust))
+                              select(df_clustrd, iso3c, cluster))
     
-    plt_world_clstrd <- ggplot(world_clstrd, aes(geometry = geometry, fill = factor(clust))) +
+    plt_world_clstrd <- ggplot(world_clstrd, aes(geometry = geometry, fill = factor(cluster))) +
         geom_sf() +
         coord_sf(ylim = c(-55, 83)) +
         scale_fill_brewer(palette = "Set3")
 
     return(plt_world_clstrd)
 }
+
+get_df_clust_lame(df_reg) %>% # , cutoffs = c(0, 0.4, 0.6, 0.8,1)) , cutoffs = c(0,0.5, 0.7, 0.82,1)
+    plot_world_clustered()
+
+df_reg_clstrd <- get_df_clust_lame(df_reg) %>%
+    select(iso3c, cluster) %>%
+    inner_join(df_reg, .) %>%
+    filter(year >= 1995)
+
+
+## ** cluster-based analysis 
+
+mean_wo_na <- function(...) {
+    mean(..., na.rm = T)}
+sd_wo_na <- function(...) {
+    sd(..., na.rm = T)}
+
+sumrz_clusters <- function(df_reg_clstrd, mean_vrbls, sum_vrbls) {
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
+    #' summarize the clustered df_reg
+    #' so far: calculate mean and sd of interval (mean) variables
+
+    names(mean_vrbls) <- paste0(mean_vrbls, "_mean")
+
+    ## construct custom versions of base functions that by default yeet nas
+    
+    vc_funcs <- c(mean_wo_na, sd_wo_na)
+    names(vc_funcs) <- c("mean", "sd")
+
+    ## use across() to process multiple internval variables: mean and sd (custom versions)
+    df_reg_clstr_smrzd <- df_reg_clstrd %>%
+        group_by(cluster, year) %>%
+        summarize(across(all_of(unname(mean_vrbls)), .fns = vc_funcs, .names = "{.col}_{.fn}")) %>%
+        adt()
+
+    ## need to construct manual df to rename variables back to strings 
+    melt_vrbl_fctrs_dt <- data.table(vrbl_label = mean_vrbls, variable = factor(seq(1:len(mean_vrbls))))
+
+    ## multi-column melting; for some reason converts variable names to numeric factor
+    # use patterns to melt several colmns
+    clstr_melt_mean_sd <- melt(df_reg_clstr_smrzd, measure = patterns("mean$", "sd$"),
+                               value.name = c("mean", "sd")) %>%
+        ## have to recode variable with update join
+        .[melt_vrbl_fctrs_dt, variable := vrbl_label, on = "variable"] %>% 
+        .[, `:=`(high = mean + sd, low = mean - sd)] # calculate ribbons 
+
+    return(clstr_melt_mean_sd)
+}
+
+
+
+sum_vrbls <- c("nbr_opened_clstrd")
+mean_vrbls <- c("NY.GDP.PCAP.CD", "gptinc992j", "ghweal992j", "hdi",
+                "tmitr_approx_linear20step", "smorc_dollar_fxm", "cnt_contemp", "clctr_cnt_cpaer")
+clstr_melt_mean_sd <- sumrz_clusters(df_reg_clstrd, mean_vrbls, sum_vrbls)
+ggplot(clstr_melt_mean_sd, aes(x=year, y=mean, color = factor(cluster), fill = factor(cluster))) +
+    geom_line() +
+    ## geom_ribbon(aes(ymin = low, ymax = high), alpha = 0.2) + 
+    facet_wrap(~variable, scales = "free")
+
+clstr_melt_mean_sd[variable == "ghweal992j"]
+
+
+
+    
+ggplot(df_reg_clstrd, aes(x=year, y=hdi, group = iso3c, color = factor(cluster))) +
+    geom_line()
+
+
+
+
+ggplot(clst_t1_melt, aes(x=year, y = value, color = factor(cluster))) +
+    geom_line() +
+    facet_wrap(~variable, scales = "free")
