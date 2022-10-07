@@ -564,70 +564,112 @@ get_df_clust_lame(df_reg) %>% # , cutoffs = c(0, 0.4, 0.6, 0.8,1)) , cutoffs = c
 df_reg_clstrd <- get_df_clust_lame(df_reg) %>%
     select(iso3c, cluster) %>%
     inner_join(df_reg, .) %>%
-    filter(year >= 1995)
+    filter(year >= 1995) %>%
+    mutate(NY.GDP.TTL = NY.GDP.PCAP.CD * SP.POP.TOTLm)
+
+           
+           
 
 
 ## ** cluster-based analysis 
 
+## construct custom versions of base functions that by default yeet nas
 mean_wo_na <- function(...) {
     mean(..., na.rm = T)}
+median_wo_na <- function(...) {
+    median(..., na.rm = T)}
 sd_wo_na <- function(...) {
     sd(..., na.rm = T)}
+sum_wo_na <- function(...) {
+    sum(..., na.rm = T)}
 
-sumrz_clusters <- function(df_reg_clstrd, mean_vrbls, sum_vrbls) {
+
+sumrz_clusters <- function(df_reg_clstrd, mean_vrbls, sum_vrbls, sum_vrbls_pure) {
     if (as.character(match.call()[[1]]) %in% fstd){browser()}
     #' summarize the clustered df_reg
-    #' so far: calculate mean and sd of interval (mean) variables
+    #' calculate mean and sd of interval (mean) variables
+    #' convert the sum_vrbls into rates per capita (per million capita)
+    #' aggregate the sum_vrbls_pure into sums
 
     names(mean_vrbls) <- paste0(mean_vrbls, "_mean")
 
-    ## construct custom versions of base functions that by default yeet nas
-    
-    vc_funcs <- c(mean_wo_na, sd_wo_na)
-    names(vc_funcs) <- c("mean", "sd")
+    ## vector funcs 
+    vc_funcs <- c(mean_wo_na, sd_wo_na, median_wo_na)
+    names(vc_funcs) <- c("mean", "sd", "median")
 
-    ## use across() to process multiple internval variables: mean and sd (custom versions)
+    ## use across() to process multiple interval variables: mean and sd (custom versions)
     df_reg_clstr_smrzd <- df_reg_clstrd %>%
         group_by(cluster, year) %>%
         summarize(across(all_of(unname(mean_vrbls)), .fns = vc_funcs, .names = "{.col}_{.fn}")) %>%
         adt()
-
+    
+    
     ## need to construct manual df to rename variables back to strings 
     melt_vrbl_fctrs_dt <- data.table(vrbl_label = mean_vrbls, variable = factor(seq(1:len(mean_vrbls))))
 
     ## multi-column melting; for some reason converts variable names to numeric factor
     # use patterns to melt several colmns
-    clstr_melt_mean_sd <- melt(df_reg_clstr_smrzd, measure = patterns("mean$", "sd$"),
-                               value.name = c("mean", "sd")) %>%
+    clstr_melt_mean_sd <- melt(df_reg_clstr_smrzd, measure = patterns("mean$", "sd$", "median$"),
+                               value.name = c("mean", "sd", "median")) %>%
         ## have to recode variable with update join
         .[melt_vrbl_fctrs_dt, variable := vrbl_label, on = "variable"] %>% 
-        .[, `:=`(high = mean + sd, low = mean - sd)] # calculate ribbons 
+        .[, `:=`(high = mean + sd, low = mean - sd, type = "intvl")] # calculate ribbons 
 
-    return(clstr_melt_mean_sd)
+    ## process count variables: into rates per capita: first shape into long, then aggregate
+    clstr_melt_rates <- df_reg_clstrd %>% select(iso3c, cluster, year, sum_vrbls) %>%
+        pivot_longer(cols = c(sum_vrbls), names_to = "variable") %>%
+        inner_join(select(df_reg_clstrd, iso3c, year, SP.POP.TOTLm)) %>%
+        na.omit() %>% # yeet countries that miss either population or value to get good rates
+        group_by(year, cluster, variable) %>%
+        summarize(value = sum(value), SP.POP.TOTLm = sum(SP.POP.TOTLm)) %>% # sum by cluster
+        mutate(rate = value/SP.POP.TOTLm) %>% # then calculate rates
+        ## rename rate to mean to fit with clstr_melt_mean_sd, also assign rate to median to have option to use it
+        select(year, cluster, variable, mean=rate, median = rate) %>% 
+        mutate(type = "cnt")
+
+    ## process sum_vrbls_pure variables: just aggregate without calculating rates
+    clstr_melt_cnts <- df_reg_clstrd %>% select(iso3c, cluster, year, all_of(sum_vrbls_pure)) %>%
+        pivot_longer(cols = c(sum_vrbls_pure), names_to = "variable") %>%
+        group_by(year, cluster, variable) %>%
+        summarize(value = sum(value, na.rm = T)) %>%
+        select(year, cluster, variable, mean = value, median = value) %>%
+        mutate(variable = paste0(variable, "_pure"), type = "cnt_pure")
+        
+
+    clstrd_melt_cbn <- bind_rows(clstr_melt_mean_sd, clstr_melt_rates, clstr_melt_cnts)
+
+    
+
+    return(clstrd_melt_cbn)
 }
 
 
 
-sum_vrbls <- c("nbr_opened_clstrd")
-mean_vrbls <- c("NY.GDP.PCAP.CD", "gptinc992j", "ghweal992j", "hdi",
-                "tmitr_approx_linear20step", "smorc_dollar_fxm", "cnt_contemp", "clctr_cnt_cpaer")
-clstr_melt_mean_sd <- sumrz_clusters(df_reg_clstrd, mean_vrbls, sum_vrbls)
+sum_vrbls <- c("nbr_opened", "clctr_cnt_cpaer", "cnt_contemp", "smorc_dollar_fxm", "NY.GDP.TTL", "hnwi_nbr_30M")
+sum_vrbls_pure <- c("SP.POP.TOTL", "nbr_opened", "hnwi_nbr_30M")
+mean_vrbls <- c("NY.GDP.PCAP.CD", "gptinc992j", "ghweal992j", "hdi", 
+                "tmitr_approx_linear20step")
+clstr_melt_mean_sd <- sumrz_clusters(df_reg_clstrd, mean_vrbls, sum_vrbls, sum_vrbls_pure)
 ggplot(clstr_melt_mean_sd, aes(x=year, y=mean, color = factor(cluster), fill = factor(cluster))) +
     geom_line() +
     ## geom_ribbon(aes(ymin = low, ymax = high), alpha = 0.2) + 
     facet_wrap(~variable, scales = "free")
 
-clstr_melt_mean_sd[variable == "ghweal992j"]
 
 
 
-    
+## compare difference between median and mean (for interval variables)
+clstr_melt_mean_sd[, .(cluster, year, variable, mean, median)] %>%
+    melt(measure.vars = c("mean", "median"), variable.name = "summary_type") %>%
+    ggplot(aes(x=year, y=value, color = factor(cluster), fill = factor(cluster), linetype = summary_type)) +
+    geom_line() +
+    ## geom_ribbon(aes(ymin = low, ymax = high), alpha = 0.2) + 
+    facet_wrap(~variable, scales = "free")
+
+
+
+## basic spaghetti line plotting
 ggplot(df_reg_clstrd, aes(x=year, y=hdi, group = iso3c, color = factor(cluster))) +
     geom_line()
 
 
-
-
-ggplot(clst_t1_melt, aes(x=year, y = value, color = factor(cluster))) +
-    geom_line() +
-    facet_wrap(~variable, scales = "free")
