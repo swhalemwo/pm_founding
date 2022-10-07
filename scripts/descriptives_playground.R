@@ -61,3 +61,36 @@ var_table$`# Countries` <- more_vrbl_info$nbr_crys
 var_xtbl <- xtable(var_table, caption = "main variables (all monetary variables are in or based on 2021 constant US dollars)", label = "var_desc", digits = c(0, 0, rep(2,6)))
 
 print(var_xtbl, file = paste0(TABLE_DIR, "var_desc.tex"), include.rownames = T, hline.after =c(-1,0,7,11))
+
+## ** some SO inspired testing of rates vs counts
+
+## https://stats.stackexchange.com/questions/522275/controlling-for-population-size-using-per-capita-or-including-a-variable-for-po
+
+test_df <- data.table(name = c("nebraska", "kansas", "idaho"), mort = c(5, 1, 3), sales = c(100,100, 50), pop = c(1000, 100, 500)) %>%
+    .[, `:=`(mort_pcap = mort/pop,
+             sales_pcap = sales/pop)]
+
+lm(mort ~ sales + pop, test_df)
+lm(mort_pcap ~ sales_pcap, test_df)
+lm(mort ~ sales_pcap, test_df)
+
+
+ggplot(test_df, aes(x=sales_pcap, y=mort_pcap)) + geom_point()
+ggplot(test_df, aes(x=sales, y=mort, size = pop)) + geom_point()
+
+
+## ** debugging lack of private museum openings even in cluster 4 (developed countries)
+## kinda fixed by first summing by cluster, then dividing by population
+df_reg_clstrd %>% filter(cluster == 4) %>% select(iso3c, year, nbr_opened, nbr_opened_pcap) %>%
+    ## pull(nbr_opened) %>% table()
+    summarize(mean_nbr_opened = mean(nbr_opened),
+              mean_nbr_opened_pcap = mean(nbr_opened_pcap),
+              median_nbr_opened = median(nbr_opened),
+              median_nbr_opened_pcap = median(nbr_opened_pcap))
+
+## see which countries have many contemporary art collectors per capita
+
+## arrange(df_reg_clstrd, -clctr_cnt_cpaer_pcap) %>% select(iso3c, year, clctr_cnt_cpaer_pcap, cluster) %>%
+##     filter(cluster != 4) %>% head(30) %>% distinct(iso3c)
+
+## countrycode(c("BRB", "BHS", "CRI"), "iso3c", "country.name")
