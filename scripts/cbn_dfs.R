@@ -50,7 +50,7 @@ get_df_reg <- function(df_anls) {
     ## have to divide by 100 otherwise R glmer.nb complains
 
     ## PMs opened per 1m people -> rate
-    df_anls$nbr_opened_prop <- df_anls$nbr_opened/(df_anls$SP.POP.TOTL/1e6)
+    df_anls$nbr_opened_prop <- df_anls$nbr_opened/(df_anls$SP.POP.TOTLm)
 
     ## filter(df_anls, nbr_opened_prop > 1)
     ## iceland, monaco, cyprus LUL
