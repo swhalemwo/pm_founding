@@ -274,3 +274,11 @@ svmat stata_return
 } /* end capture noisily */
 saveold RStataDataOut, version(12)
 exit, clear STATA
+
+/* testing xtsum */
+clear
+import delimited /home/johannes/Dropbox/phd/papers/org_pop/data/processed/df_reg2.csv
+
+xtset iso3c_num year
+
+xtsum nbr_opened

@@ -683,3 +683,6 @@ ggplot(df_reg_clstrd, aes(x=year, y=gptinc992j, group = iso3c, color = factor(cl
 
 
 ## ** xtsum based descriptives
+
+
+xtsum(df_reg, nbr_opened, iso3c)

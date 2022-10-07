@@ -70,7 +70,10 @@ testing_res[[1]]$results
 
 ## ** another shitty analysis
 
-## write.table(select(df_reg, -matches("name")), paste0(PROJECT_DIR, "data/processed/df_reg.csv"))
+## select(df_reg, -matches("name")) %>%
+##     mutate(iso3c_num = as.numeric(as.factor(iso3c))) %>% adt() %>%
+##     fwrite(paste0(PROJECT_DIR, "data/processed/df_reg2.csv"))
+
 df_reg1 <- df_reg[,c("iso3c", "nbr_opened", "SP.POP.TOTLm", "NY.GDP.PCAP.CDk", "pct_fx", "ghweal992j")] %>% na.omit()
 
 x_within <- pglm(nbr_opened ~ SP.POP.TOTLm + NY.GDP.PCAP.CDk + pct_fx + ghweal992j, data = df_reg1, family = negbin, model = "within", index = "iso3c", method = "bfgs", effect = "individual")
