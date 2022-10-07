@@ -678,7 +678,8 @@ clstr_melt_mean_sd[, .(cluster, year, variable, mean, median)] %>%
 
 
 ## basic spaghetti line plotting
-ggplot(df_reg_clstrd, aes(x=year, y=hdi, group = iso3c, color = factor(cluster))) +
+ggplot(df_reg_clstrd, aes(x=year, y=gptinc992j, group = iso3c, color = factor(cluster))) +
     geom_line()
 
 
+## ** xtsum based descriptives
