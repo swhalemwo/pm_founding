@@ -655,6 +655,15 @@ ggplot(clstr_melt_mean_sd, aes(x=year, y=mean, color = factor(cluster), fill = f
     ## geom_ribbon(aes(ymin = low, ymax = high), alpha = 0.2) + 
     facet_wrap(~variable, scales = "free")
 
+## test rollmean_custom again
+clstr_melt_mean_sd %>%
+    group_by(cluster, variable) %>%
+    arrange(cluster, variable, year) %>%
+    mutate(mean_ra = rollmean_custom(mean, win_len = 6)) %>%
+    ggplot(aes(x=year, y=mean_ra, color = factor(cluster), fill = factor(cluster))) +
+    geom_line() +
+    ## geom_ribbon(aes(ymin = low, ymax = high), alpha = 0.2) + 
+    facet_wrap(~variable, scales = "free")
 
 
 
