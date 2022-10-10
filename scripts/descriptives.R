@@ -699,44 +699,41 @@ x <- xtsum(df_reg, nbr_opened, iso3c)
 ## xtsum_dt2[, .(s_within_p1, s_within_p1^2)] %>% .[, sqrt(sum(V2)/5)]
 
 
-xtsum(df_reg, nbr_opened, iso3c) %>% adt()
 
-lapply(c(vvs$all_rel_vars, "nbr_opened"), \(x)
-       xtsum(df_reg, get(x), iso3c) %>% adt() %>% 
-       list(name = x,
-            overall = .[["sd"]][[1]],
-            bewteen = .[["sd"]][[2]],
-            within = .[["sd"]][[3]]))
-    
-## stupidly inefficiently calculating xtsum for every number separately since apparently I can't pipe properly
-## -> move into separate function
+proc_xtsum <- function(dfx, vrbl, id_vrbl) {
+    #' run xtsum on vrbl with id_vrbl, get the overall, between, within sds
+
+    sdx <- xtsum_res <- xtsum(dfx, get(vrbl), get(id_vrbl))$sd
+
+    return(list(
+        name = vrbl,
+        overall = sdx[[1]],
+        between = sdx[[2]],
+        within = sdx [[3]]))
+}
+
+                       
 xtsum_res <- mclapply(c(vvs$all_rel_vars, "nbr_opened"), \(x)
-                      list(name = x,
-                           sds = xtsum(df_reg, get(x), iso3c)$sd) %>%
-
-                           
-                           overall = xtsum(df_reg, get(x), iso3c)$sd[[1]],
-                           between = xtsum(df_reg, get(x), iso3c)$sd[[2]],
-                           within = xtsum(df_reg, get(x), iso3c)$sd[[3]]),
-                      mc.cores = 6) %>%
-    rbindlist()
+                      proc_xtsum(df_reg, x, "iso3c"),
+                      mc.cores = 6) %>% rbindlist()
 
 xtsum_res2 <- xtsum_res %>% copy() %>%
     .[, `:=`(between_prop = between/overall, within_prop = within/overall,
              within_between_ratio = within/between)]
-             
-lbl_dt <- data.table(vrbl = names(vvs$vrbl_lbls), vrbl_name = vvs$vrbl_lbls)
 
+## convert variable names to labels
+lbl_dt <- data.table(vrbl = names(vvs$vrbl_lbls), vrbl_name = vvs$vrbl_lbls)
 xtsum_res2[lbl_dt, name := vrbl_name, on = .(name = vrbl)]
 
-ggplot(xtsum_res2, aes(x=within_between_ratio, y = name)) +
-    geom_bar(stat="identity")
 
 ggplot(xtsum_res2, aes(x=within_prop, y=between_prop, color = within_between_ratio)) +
     geom_point() +
     geom_text_repel(aes(label = name), ) +
-    geom_hline(yintercept = 0.5) +
-    geom_vline(xintercept = 0.5) +
+    ## geom_hline(yintercept = 0.5) +
+    ## geom_vline(xintercept = 0.5) +
     scale_color_gradient2(low = "blue", mid = "darkgray", high = "red", midpoint = 1) +
     xlim(c(min(xtsum_res2$within_prop)-0.2,max(xtsum_res2$within_prop))) +
     ylim(c(min(xtsum_res2$between_prop), max(xtsum_res2$between_prop +0.03)))
+
+## ggplot(xtsum_res2, aes(x=within_between_ratio, y = name)) +
+##     geom_bar(stat="identity")
