@@ -68,7 +68,58 @@ efw_clean_values <- function(values){
     
 }
 
+te_cry_input <- function(iso3c, years, values) {
+    #' manual input to trading economics (te) data
+    data.table(iso3c = iso3c, year = years, tmitr = values)
+}
+    
+
+
+te_manual_mitr_input <- function() {
+    #' manually filled in data from tradingeconomics (te)
+
+    ## x here is the result of construct_mtrs()
+    ## go through block and check which countries have missing values, look them up individually at e.g.:
+    ## https://tradingeconomics.com/yemen/personal-income-tax-rate
+
+    ## x %>% mutate(no_value = is.na(tmitr)) %>%
+    ##     filter(year > 2000) %>%
+    ##     group_by(iso3c) %>% 
+    ##     mutate(nbr_nas = sum(no_value)) %>%
+    ##     filter(nbr_nas > 2) %>%
+    ##     select(iso3c, year, tmitr) %>% adf() %>%
+    ##     mutate(country_name = countrycode(iso3c, "iso3c", "country.name"))
+
+    te_mnl_mitrs <- rbind(
+        te_cry_input("AGO", c(seq(2004, 2008)), rep(15,5)),
+        te_cry_input("ALB", 2004, 25),
+        te_cry_input("ARM", seq(2003,2007), 20),
+        te_cry_input("BIH", 2004, 5),
+        te_cry_input("BLR", c(seq(2004,2008), seq(2009,2014), 2015), c(rep(30,5), rep(12,6), 13)),
+        te_cry_input("BRN", seq(2004,2009), 0),
+        te_cry_input("GIN", seq(2006,2012), 40),
+        te_cry_input("IRQ", seq(2009,2015), 15),
+        te_cry_input("KHM", 2009, 20),
+        te_cry_input("LAO", seq(2009, 2013), c(25,25,28,28,24)),
+        te_cry_input("LBN", seq(2004,2009), c(20)),
+        te_cry_input("LBY", seq(2009, 2012), c(15, 10, 10, 10)),
+        te_cry_input("LSO", seq(2006, 2010), 35),
+        te_cry_input("MDG", 2007, 30),
+        te_cry_input("QAT", seq(2004, 2009), 0),
+        te_cry_input("RWA", seq(2006, 2010), 30),
+        te_cry_input("SAU", seq(2001,2009), 0),
+        te_cry_input("SDN", seq(2006, 2015), c(20,20, rep(15,8))),
+        te_cry_input("SLE", seq(2004, 2010), c(35,35, rep(30,5))),
+        te_cry_input("SWZ", seq(2004, 2009), 33),
+        te_cry_input("SYC", seq(2006, 2012), 15),
+        te_cry_input("TJK", seq(2008,2009), 13),
+        te_cry_input("YEM", seq(2004,2010), 20))
+
+    return(te_mnl_mitrs)
+}
+
 construct_mtrs <- function() {
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
     #' wrapper function
 
     efw_dfs <- lapply(EFW_FILES, extract_efw_data)
@@ -90,17 +141,35 @@ construct_mtrs <- function() {
     
     efw_base <- as_tibble(expand.grid(iso3c=unique(efw_df$iso3c), year = seq(1985, 2020)))
     efw_fill_up <- as_tibble(merge(efw_base, efw_df, all.x = T))
-## use na.rm=F to return leading NAs
+    ## use na.rm=F to return leading NAs
 
-    efw_fill_up2 <- efw_fill_up %>%
-        select(iso3c, year, tmitr = data_Top.marginal.income.tax.rate) %>%
+    ## prepare/test merging of efw (economic freedom of the world) and TE (tradings economics data)
+    efw_dt_prep <- select(efw_fill_up, iso3c, year, tmitr = data_Top.marginal.income.tax.rate) %>% adt()
+
+    te_mnl_mitrs <- te_manual_mitr_input()
+
+    ## check that TE only adds CYs where EFW has NAs: negative joining TE from EFW should not decrease rows
+    if (nrow(na.omit(efw_dt_prep)) != nrow(na.omit(efw_dt_prep)[!te_mnl_mitrs, on=.(iso3c, year)])) {
+        stop("TE and EFW CYs are overlapping")}
+
+    ## change name in TE tmitrs to allow update join (te_mnl_mitrs should only change NAs in efw_dt_prep
+    setnames(te_mnl_mitrs, "tmitr", "tmitr_te")
+    efw_dt_prep2 <- efw_dt_prep %>% copy() %>% .[te_mnl_mitrs, tmitr := tmitr_te, on = .(iso3c, year)]
+    ## manual counting sums 
+    ## sum(is.na(efw_dt_prep$tmitr))
+    ## sum(is.na(efw_dt_prep2$tmitr))
+
+
+    efw_fill_up2 <- atb(efw_dt_prep2) %>% 
+        ## efw_fill_up2 <- efw_fill_up %>%
+        ##     select(iso3c, year, tmitr = data_Top.marginal.income.tax.rate) %>%
         group_by(iso3c) %>%
         mutate(tmitr_approx_linear = na.approx(tmitr, na.rm = F),
                tmitr_approx_step = na.locf(tmitr, na.rm = F),
                tmitr_approx_linear20step = tmitr_approx_linear)
 
     ## fill in last values manually like a fucking tool
-    efw_fill_up2[which(efw_fill_up2$year == 2020),c("tmitr_approx_linear20step")] <- efw_fill_up2[which(efw_fill_up2$year == 2019),c("tmitr_approx_linear20step")]
+    ## efw_fill_up2[which(efw_fill_up2$year == 2020),c("tmitr_approx_linear20step")] <- efw_fill_up2[which(efw_fill_up2$year == 2019),c("tmitr_approx_linear20step")]
 
     return(efw_fill_up2)
     
