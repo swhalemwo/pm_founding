@@ -558,14 +558,9 @@ plot_world_clustered <- function(df_clustrd) {
     return(plt_world_clstrd)
 }
 
-get_df_clust_lame(df_reg) %>% # , cutoffs = c(0, 0.4, 0.6, 0.8,1)) , cutoffs = c(0,0.5, 0.7, 0.82,1)
-    plot_world_clustered()
+## get_df_clust_lame(df_reg) %>% # , cutoffs = c(0, 0.4, 0.6, 0.8,1)) , cutoffs = c(0,0.5, 0.7, 0.82,1)
+##     plot_world_clustered()
 
-df_reg_clstrd <- get_df_clust_lame(df_reg) %>%
-    select(iso3c, cluster) %>%
-    inner_join(df_reg, .) %>%
-    filter(year >= 1995) %>%
-    mutate(NY.GDP.TTL = NY.GDP.PCAP.CD * SP.POP.TOTLm)
 
            
            
@@ -644,48 +639,73 @@ sumrz_clusters <- function(df_reg_clstrd, mean_vrbls, sum_vrbls, sum_vrbls_pure)
 }
 
 
+render_cluster_means <- function() {
+    #' generate and plot with rollmean_custom some cluster means/medians
+    #' should be split up later into separate functions tho:
+    #' - clustering
+    #' - summarizing (kinda own function, but variable specification should be argument)
+    #' - plotting
 
-sum_vrbls <- c("nbr_opened", "clctr_cnt_cpaer", "cnt_contemp", "smorc_dollar_fxm", "NY.GDP.TTL", "hnwi_nbr_30M")
-sum_vrbls_pure <- c("SP.POP.TOTL", "nbr_opened", "hnwi_nbr_30M")
-mean_vrbls <- c("NY.GDP.PCAP.CD", "gptinc992j", "ghweal992j", "hdi", 
-                "tmitr_approx_linear20step")
-clstr_melt_mean_sd <- sumrz_clusters(df_reg_clstrd, mean_vrbls, sum_vrbls, sum_vrbls_pure)
-ggplot(clstr_melt_mean_sd, aes(x=year, y=mean, color = factor(cluster), fill = factor(cluster))) +
-    geom_line() +
-    ## geom_ribbon(aes(ymin = low, ymax = high), alpha = 0.2) + 
-    facet_wrap(~variable, scales = "free")
+    sum_vrbls <- c("nbr_opened", "clctr_cnt_cpaer", "cnt_contemp", "smorc_dollar_fxm", "NY.GDP.TTL", "hnwi_nbr_30M")
+    sum_vrbls_pure <- c("SP.POP.TOTL", "nbr_opened", "hnwi_nbr_30M")
+    mean_vrbls <- c("NY.GDP.PCAP.CD", "gptinc992j", "ghweal992j", "hdi", 
+                    "tmitr_approx_linear20step")
 
-## test rollmean_custom again
-clstr_melt_mean_sd %>%
-    group_by(cluster, variable) %>%
-    arrange(cluster, variable, year) %>%
-    mutate(mean_ra = rollmean_custom(mean, win_len = 6)) %>%
-    ggplot(aes(x=year, y=mean_ra, color = factor(cluster), fill = factor(cluster))) +
-    geom_line() +
-    ## geom_ribbon(aes(ymin = low, ymax = high), alpha = 0.2) + 
-    facet_wrap(~variable, scales = "free")
+    df_reg_clstrd <- get_df_clust_lame(df_reg) %>%
+        select(iso3c, cluster) %>%
+        inner_join(df_reg, .) %>%
+        filter(year >= 1995) %>%
+        mutate(NY.GDP.TTL = NY.GDP.PCAP.CD * SP.POP.TOTLm)
+    
+    clstr_melt_mean_sd <- sumrz_clusters(df_reg_clstrd, mean_vrbls, sum_vrbls, sum_vrbls_pure)
+
+    ## add some manual labels -> should be made more elegant, also the distinction between counts (pure) and rates 
+    
+    cluster_sumry_addgns <- c(
+        "hdi" = "Human Development Index", 
+        "hnwi_nbr_30M_pure" = "HNWI with net worth 30M USD (count)",
+        "nbr_opened_pure" = "private museums openings (count)",
+        "NY.GDP.PCAP.CD" = "country-avg. GDP per cap.",
+        "NY.GDP.TTL" = "individual-avg. GDP per cap.",
+        "SP.POP.TOTL_pure" = "population")
+
+    plt_clstr_means <- clstr_melt_mean_sd %>%
+        group_by(cluster, variable) %>%
+        arrange(cluster, variable, year) %>%
+        mutate(mean_ra = rollmean_custom(mean, win_len = 6)) %>%
+        ggplot(aes(x=year, y=mean_ra, color = factor(cluster), fill = factor(cluster))) +
+        geom_line() +
+        ## geom_ribbon(aes(ymin = low, ymax = high), alpha = 0.2) + 
+        facet_wrap(~variable, scales = "free", labeller = as_labeller(
+                                                   c(cluster_sumry_addgns, vvs$vrbl_lbls))) +
+        theme(legend.position = c(0.7,0.08))
+
+    pdf(paste0(FIG_DIR, "plt_clstr_means.pdf"), width = 12, height = 7)
+    plot(plt_clstr_means)
+    dev.off()
+}
+
+render_cluster_means()
 
 
-
-## compare difference between median and mean (for interval variables)
-clstr_melt_mean_sd[, .(cluster, year, variable, mean, median)] %>%
-    melt(measure.vars = c("mean", "median"), variable.name = "summary_type") %>%
-    ggplot(aes(x=year, y=value, color = factor(cluster), fill = factor(cluster), linetype = summary_type)) +
-    geom_line() +
-    ## geom_ribbon(aes(ymin = low, ymax = high), alpha = 0.2) + 
-    facet_wrap(~variable, scales = "free")
-
+## ## compare difference between median and mean (for interval variables)
+## clstr_melt_mean_sd[, .(cluster, year, variable, mean, median)] %>%
+##     melt(measure.vars = c("mean", "median"), variable.name = "summary_type") %>%
+##     ggplot(aes(x=year, y=value, color = factor(cluster), fill = factor(cluster), linetype = summary_type)) +
+##     geom_line() +
+##     ## geom_ribbon(aes(ymin = low, ymax = high), alpha = 0.2) + 
+##     facet_wrap(~variable, scales = "free")
 
 
-## basic spaghetti line plotting
-ggplot(df_reg_clstrd, aes(x=year, y=gptinc992j, group = iso3c, color = factor(cluster))) +
-    geom_line()
+## ## basic spaghetti line plotting
+## ggplot(df_reg_clstrd, aes(x=year, y=gptinc992j, group = iso3c, color = factor(cluster))) +
+##     geom_line()
 
 
 ## ** xtsum based descriptives
 
 ## finding out the weird internal workings of xtsum
-x <- xtsum(df_reg, nbr_opened, iso3c)
+## x <- xtsum(df_reg, nbr_opened, iso3c)
 
 ## xtsum_dt <- data.table(id = c(1,1,2,2,3,3), score1 = c(70,70,60,80,90,50), score2 = c(70,70,70,90,90,30))
 ## xtsum(xtsum_dt, score1, id)
@@ -712,28 +732,45 @@ proc_xtsum <- function(dfx, vrbl, id_vrbl) {
         within = sdx [[3]]))
 }
 
-                       
-xtsum_res <- mclapply(c(vvs$all_rel_vars, "nbr_opened"), \(x)
-                      proc_xtsum(df_reg, x, "iso3c"),
-                      mc.cores = 6) %>% rbindlist()
-
-xtsum_res2 <- xtsum_res %>% copy() %>%
-    .[, `:=`(between_prop = between/overall, within_prop = within/overall,
-             within_between_ratio = within/between)]
-
-## convert variable names to labels
-lbl_dt <- data.table(vrbl = names(vvs$vrbl_lbls), vrbl_name = vvs$vrbl_lbls)
-xtsum_res2[lbl_dt, name := vrbl_name, on = .(name = vrbl)]
 
 
-ggplot(xtsum_res2, aes(x=within_prop, y=between_prop, color = within_between_ratio)) +
-    geom_point() +
-    geom_text_repel(aes(label = name), ) +
-    ## geom_hline(yintercept = 0.5) +
-    ## geom_vline(xintercept = 0.5) +
-    scale_color_gradient2(low = "blue", mid = "darkgray", high = "red", midpoint = 1) +
-    xlim(c(min(xtsum_res2$within_prop)-0.2,max(xtsum_res2$within_prop))) +
-    ylim(c(min(xtsum_res2$between_prop), max(xtsum_res2$between_prop +0.03)))
+render_xtsum_prop_plt <- function() {
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
+    #' generate plot of proportion of within and between country-variation
+    
+    
 
-## ggplot(xtsum_res2, aes(x=within_between_ratio, y = name)) +
-##     geom_bar(stat="identity")
+    xtsum_res <- mclapply(c(vvs$all_rel_vars, "nbr_opened", "hdi"), \(x)
+                          proc_xtsum(df_reg, x, "iso3c"),
+                          mc.cores = 6) %>% rbindlist()
+
+    xtsum_res2 <- xtsum_res %>% copy() %>%
+        .[, `:=`(between_prop = between/overall, within_prop = within/overall,
+                 within_between_ratio = within/between)]
+
+    ## convert variable names to labels
+    lbl_dt <- data.table(vrbl = names(vvs$vrbl_lbls), vrbl_name = vvs$vrbl_lbls)
+    xtsum_res2[lbl_dt, name := vrbl_name, on = .(name = vrbl)]
+
+    ## yeet some squared variables
+    xtsum_res2 <- xtsum_res2[!grepl("sqrd", name)]
+
+
+    plt_xtsum <-  ggplot(xtsum_res2, aes(x=within_prop, y=between_prop, color = within_between_ratio)) +
+        geom_point() +
+        geom_text_repel(aes(label = name), force_pull = 0, force = 1, point.padding = 0) + 
+                                ## geom_hline(yintercept = 0.5) +
+        ## geom_vline(xintercept = 0.5) +
+        scale_color_gradient2(low = "blue", mid = "darkgray", high = "red", midpoint = 1) +
+        xlim(c(min(xtsum_res2$within_prop)-0.1,max(xtsum_res2$within_prop))) +
+        ylim(c(min(xtsum_res2$between_prop), max(xtsum_res2$between_prop +0.03))) +
+        theme(legend.position = c(0.2, 0.3))
+
+    ## ggplot(xtsum_res2, aes(x=within_between_ratio, y = name)) +
+    ##     geom_bar(stat="identity")
+    pdf(paste0(FIG_DIR, "plt_xtsum.pdf"), width = 9, height = 6)
+    plot(plt_xtsum)
+    dev.off()
+}
+
+render_xtsum_prop_plt()

@@ -840,7 +840,8 @@ gen_vrbl_vectors <- function() {
     all_rel_vars <- unique(c(hnwi_vars, inc_ineq_vars, weal_ineq_vars, non_thld_lngtd_vars, crscn_vars))
 
     vrbl_lbls <- c("nbr_opened" = "Number of Private Museums opened",
-                   # "sum_core" = "Tax incentives",
+                   ## "sum_core" = "Tax incentives",
+                   "hdi" = "Human Development Index", 
                    "NPO.tax.exemption" = "Tax exemption of non-profits",
                    "Ind.tax.incentives" = "Tax deductibility of donations",
                    "tmitr_approx_linear20step" = "Marginal Income Tax Rate (%)",
@@ -860,6 +861,7 @@ gen_vrbl_vectors <- function() {
                    "smorc_dollar_fxm_sqrd" = "Gvt cultural spending (millions, sqrd)",
                    "NY.GDP.PCAP.CDk" = "GDP per capita (thousands)",
                    "SP.POP.TOTLm" = "Population (millions)",
+                   "cnt_contemp" = "# openings of contemporary art museums", 
                    "cnt_contemp_1985" = "# Museums of contemporary art in 1985",
                    "cnt_contemp_1995" = "# of modern/contemp. art museums in 1995",
                    "cnt_contemp_1995_squared" = "# of contemp. art museums (1995) (sqrd)",
@@ -1032,7 +1034,14 @@ get_reg_spec_from_id <- function(mdl_id, fldr_info) {
     reg_spec <- readRDS(paste0(fldr_info$REG_SPEC_DIR, mdl_id))
 }
 
+cluster_sumry_addgns <- c(
+    "hnwi_nbr_30M_pure" = "HNWI with net worth 30M USD (count)",
+    "nbr_opened_pure" = "private museums openings (count)",
+    "NY.GDP.PCAP.CD" = "country-average GDP per capita (2021 constant USD)",
+    "NY.GDP.TTL" = "individual-average GDP per capita (2021 constant USD)",
+    "SP.POP.TOTL_pure" = "population")
 
+    
 
 #' overall regression wrapping 
 
