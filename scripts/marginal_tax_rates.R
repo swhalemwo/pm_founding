@@ -6,6 +6,7 @@ FRASER_DIR <- paste0(PROJECT_DIR, "data/Fraser Institute/")
 EFW_FILES <- list.files(FRASER_DIR, pattern = "csv")
 
 extract_efw_data <- function(filename) {
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
     #' read in the EFW data, rename the data columns
     efw_df <- as_tibble(read.csv(paste0(FRASER_DIR, filename), skip=4))
 
@@ -28,6 +29,8 @@ extract_efw_data <- function(filename) {
 
     return(efw_df)
 }
+
+## extract_efw_data("economicdata2020-2020.csv")
     
 
 
@@ -118,6 +121,14 @@ te_manual_mitr_input <- function() {
     return(te_mnl_mitrs)
 }
 
+
+
+
+## efw_xl <- read_excel(paste0(FRASER_DIR, "efotw-2022-master-index-data-for-researchers-iso.xlsx"), skip=3)
+## names(efw_xl) <- 
+
+## efw_col_names <- na.omit(unlist(efw_xl[1,]))
+
 construct_mtrs <- function() {
     if (as.character(match.call()[[1]]) %in% fstd){browser()}
     #' wrapper function
@@ -125,6 +136,8 @@ construct_mtrs <- function() {
     efw_dfs <- lapply(EFW_FILES, extract_efw_data)
     ## efw_names <- unlist(lapply(efw_dfs, names))
     ## table(efw_names)
+    ## data.table(namex = efw_names) %>% .[, .N, namex] %>% .[N != 25]
+    
     ## names are consistent across datafiles
 
     efw_df <- as_tibble(Reduce(function(x,y) rbind(x,y), efw_dfs))
