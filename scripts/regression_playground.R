@@ -929,3 +929,118 @@ t2 = Sys.time()
 print(t2-t1)
 
 
+
+## * glmmTMB
+
+fwrite(select(cbn_dfs$cbn_all, iso3c_num, year, nbr_opened, smorc_dollar_fxm_lag1, NY.GDP.PCAP.CDk_lag1,
+                   Ind.tax.incentives, nbr_opened_cum_lag1),
+            paste0(PROJECT_DIR, "data/processed/glmmTMB_test.csv"))
+
+
+library(glmmTMB)
+
+## compare glmmTMB and glmer.nb, which has to be RE (time-invariant models work)
+## with somewhat similar results (within 10%)
+
+r_glmmtmb <- glmmTMB(nbr_opened ~ smorc_dollar_fxm_lag1 + NY.GDP.PCAP.CDk_lag1 + Ind.tax.incentives +
+                     (1 | iso3c),
+                     ## (smorc_dollar_fxm_lag1 | iso3c) + (NY.GDP.PCAP.CDk_lag1 | iso3c)
+                 data = cbn_dfs$cbn_all,
+                 family = nbinom2)
+r_glmernb <- glmer.nb(nbr_opened ~ smorc_dollar_fxm_lag1 + NY.GDP.PCAP.CDk_lag1 + Ind.tax.incentives + (1 | iso3c),
+              data = cbn_dfs$cbn_all)
+screenreg(list(r_glmmtmb,r_glmernb))
+
+
+
+## see if lmer has the same as:
+## - xtreg: very similar values
+## - lmer is maximum likelihood, and xtreg is OLS/GLS:
+## https://stats.stackexchange.com/questions/143705/maximum-likelihood-method-vs-least-squares-method ML and OLS seem to be very similar 
+r_lmer <- lmer(nbr_opened ~ smorc_dollar_fxm_lag1 + NY.GDP.PCAP.CDk_lag1 + Ind.tax.incentives + (1 | iso3c),
+               data = cbn_dfs$cbn_all)
+
+screenreg(r_lmer, digits = 5)                                        
+##   nbr_opened |      Coef.      
+## -------------+-----------                                    
+## smorc_doll~1 |   .4673727      smorc_dollar_fxm_lag1       0.45770 *** (0.03304)   
+## nygdppcapc~1 |  -.0155816      NY.GDP.PCAP.CDk_lag1       -0.01618  (0.03238)
+## indtaxince~s |   .0183852      Ind.tax.incentives          0.01957 (0.08819)   
+##        _cons |   .2431858      (Intercept)                 0.23875 **  (0.08190)                              
+                                  
+
+
+## compare plm and lmer: basically the same (r_lmer and plm_re), PLM seem to use OLS;
+## R^2 between plm and stata is quite off tho: stata 0.38 total, plm has 0.127
+## when specifying between model: R^2 of stata and pglm basically agrees: 0.73
+## xtreg, be and plgm(model = "between") are basically the same: stata: regression on group means, pglm has n=88
+r_plm_re <- plm(nbr_opened ~ smorc_dollar_fxm_lag1 + NY.GDP.PCAP.CDk_lag1 + Ind.tax.incentives,
+          index = "iso3c",
+         data = cbn_dfs$cbn_all, model = "random", effect = "individual")
+## within model: drops 
+r_plm_fe <- plm(nbr_opened ~ smorc_dollar_fxm_lag1 + NY.GDP.PCAP.CDk_lag1 + Ind.tax.incentives,
+          index = "iso3c",
+         data = cbn_dfs$cbn_all, model = "within", effect = "individual")
+r_plm_be <- plm(nbr_opened ~ smorc_dollar_fxm_lag1 + NY.GDP.PCAP.CDk_lag1 + Ind.tax.incentives,
+          index = "iso3c",
+         data = cbn_dfs$cbn_all, model = "between", effect = "individual")
+
+
+screenreg(list(r_lmer,r_plm_re,r_plm_fe, r_plm_be), digits = 5)
+
+## r_plm_fe is same as xtreg, fe
+
+## ** again testing pglm: complete garbage with random model
+
+## random negbin is garbage, fe/be plausible (and neither possible in stata)
+
+r_pglm_re <- pglm(nbr_opened ~ smorc_dollar_fxm_lag1 + NY.GDP.PCAP.CDk_lag1 + Ind.tax.incentives,
+          index = "iso3c",
+          data = cbn_dfs$cbn_all, model = "random", effect = "individual", family = negbin)
+## try within model: 
+
+r_pglm_fe <- pglm(nbr_opened ~ smorc_dollar_fxm_lag1 + NY.GDP.PCAP.CDk_lag1, # + Ind.tax.incentives,
+          index = "iso3c",
+          data = cbn_dfs$cbn_all, model = "within", effect = "individual", family = negbin)
+
+## between 
+r_pglm_be <- pglm(nbr_opened ~ smorc_dollar_fxm_lag1 + NY.GDP.PCAP.CDk_lag1, # + Ind.tax.incentives,
+          index = "iso3c",
+          data = cbn_dfs$cbn_all, model = "between", effect = "individual", family = negbin)
+
+screenreg(list(r_pglm_re, r_pglm_fe, r_pglm_be))
+
+## ** test poisson
+
+## pglm produces same results as xtpoisson
+
+r_glmer_poi <- glmer(nbr_opened ~ smorc_dollar_fxm_lag1 + NY.GDP.PCAP.CDk_lag1 + Ind.tax.incentives + (1 | iso3c),
+                     data = cbn_dfs$cbn_all, family = poisson)
+
+r_pglm_poi_re <- pglm(nbr_opened ~ smorc_dollar_fxm_lag1 + NY.GDP.PCAP.CDk_lag1 + Ind.tax.incentives,
+          index = "iso3c",
+          data = cbn_dfs$cbn_all, model = "random", effect = "individual", family = poisson)
+screenreg(list(r_pglm_poi_re, r_glmer_poi, r_glmernb), digits = 5)
+
+## glmer poisson doesn't produce same as pglm: 
+
+## does glmer.nb produce same as xtnbreg? nope but how much different? 
+
+
+
+
+
+## ** margins tests: not working well 
+devtools::install_github("benjaminguinaudeau/margins.pglm")
+
+library(margins.pglm)
+margins::margins(y2)
+
+formula <- union ~ exper + wage 
+
+anb <- pglm(formula, union_wage, family = binomial('probit'), 
+            model = "pooling", method = "bfgs", print.level = 3, R = 5)
+
+summary(margins::margins(model = anb, formula = formula))
+m <- margins::margins(model = anb, at = list("wage" = c(-3:4)), formula = formula)
+

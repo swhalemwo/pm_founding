@@ -283,7 +283,7 @@ xtset iso3c_num year
 
 xtsum nbr_opened
 
-/* trying to find VIF */
+/* ** trying to find VIF */
 xtnbreg nbr_opened indtaxincentives npotaxexemption cnt_contemp_1995 cnt_contemp_1995_squared hnwi_nbr_30m gptinc992j ghweal992j nygdppcapcdk sppoptotlm clctr_cnt_cpaer nbr_opened_cum nbr_opened_cum_sqrd, re
 
 reg nbr_opened indtaxincentives npotaxexemption cnt_contemp_1995 cnt_contemp_1995_squared hnwi_nbr_30m gptinc992j ghweal992j nygdppcapcdk sppoptotlm clctr_cnt_cpaer nbr_opened_cum nbr_opened_cum_sqrd
@@ -296,3 +296,32 @@ collin nbr_opened indtaxincentives npotaxexemption cnt_contemp_1995 cnt_contemp_
 collin nbr_opened indtaxincentives npotaxexemption cnt_contemp_1995 hnwi_nbr_30m gptinc992j ghweal992j nygdppcapcdk sppoptotlm clctr_cnt_cpaer nbr_opened_cum
 
 
+/* ** comparison with glmmTMB */
+
+clear
+import delimited /home/johannes/Dropbox/phd/papers/org_pop/data/processed/glmmTMB_test.csv
+
+xtset iso3c_num year
+
+xtnbreg nbr_opened smorc_dollar_fxm_lag1 nygdppcapcdk_lag1 indtaxincentives, re
+
+/* try fixed effects: not even converging in stata */
+xtnbreg nbr_opened smorc_dollar_fxm_lag1 nygdppcapcdk_lag1 indtaxincentives, fe 
+
+
+xtpoisson nbr_opened smorc_dollar_fxm_lag1 nygdppcapcdk_lag1 indtaxincentives, re
+
+xtreg nbr_opened smorc_dollar_fxm_lag1 nygdppcapcdk_lag1 indtaxincentives, re
+
+xtreg nbr_opened smorc_dollar_fxm_lag1 nygdppcapcdk_lag1 indtaxincentives, be
+
+xtreg nbr_opened smorc_dollar_fxm_lag1 nygdppcapcdk_lag1 indtaxincentives, fe
+
+
+
+/* try some pseudo-r2, doesn't work ofc */
+local llt = e(ll)
+display "pseudo R2 t=" (`ll0' - `llt')/`ll0' 
+
+/* try nbreg with country_dummies, but produces different results than xtnbreg */
+nbreg nbr_opened smorc_dollar_fxm_lag1 nygdppcapcdk_lag1 indtaxincentives i.iso3c_num
