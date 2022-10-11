@@ -282,3 +282,17 @@ import delimited /home/johannes/Dropbox/phd/papers/org_pop/data/processed/df_reg
 xtset iso3c_num year
 
 xtsum nbr_opened
+
+/* trying to find VIF */
+xtnbreg nbr_opened indtaxincentives npotaxexemption cnt_contemp_1995 cnt_contemp_1995_squared hnwi_nbr_30m gptinc992j ghweal992j nygdppcapcdk sppoptotlm clctr_cnt_cpaer nbr_opened_cum nbr_opened_cum_sqrd, re
+
+reg nbr_opened indtaxincentives npotaxexemption cnt_contemp_1995 cnt_contemp_1995_squared hnwi_nbr_30m gptinc992j ghweal992j nygdppcapcdk sppoptotlm clctr_cnt_cpaer nbr_opened_cum nbr_opened_cum_sqrd
+
+estat vif
+estat vce, corr
+
+collin nbr_opened indtaxincentives npotaxexemption cnt_contemp_1995 cnt_contemp_1995_squared hnwi_nbr_30m gptinc992j ghweal992j nygdppcapcdk sppoptotlm clctr_cnt_cpaer nbr_opened_cum nbr_opened_cum_sqrd
+
+collin nbr_opened indtaxincentives npotaxexemption cnt_contemp_1995 hnwi_nbr_30m gptinc992j ghweal992j nygdppcapcdk sppoptotlm clctr_cnt_cpaer nbr_opened_cum
+
+
