@@ -4,6 +4,7 @@
 
 FRASER_DIR <- paste0(PROJECT_DIR, "data/Fraser Institute/")
 EFW_FILES <- list.files(FRASER_DIR, pattern = "csv")
+names(EFW_FILES) <- EFW_FILES
 
 extract_efw_data <- function(filename) {
     if (as.character(match.call()[[1]]) %in% fstd){browser()}
@@ -134,9 +135,14 @@ construct_mtrs <- function() {
     #' wrapper function
 
     efw_dfs <- lapply(EFW_FILES, extract_efw_data)
+
     ## efw_names <- unlist(lapply(efw_dfs, names))
+    ## x <- imap_dfr(efw_dfs, ~data.table(cnames = names(.x), filename = .y))
+    ## x[, Nx := .N, cnames]
+    ## x[Nx!=26] %>% adf()
+
     ## table(efw_names)
-    ## data.table(namex = efw_names) %>% .[, .N, namex] %>% .[N != 25]
+    ## data.table(namex = efw_names) %>% .[, .N, namex] %>% .[, .N, N]
     
     ## names are consistent across datafiles
 

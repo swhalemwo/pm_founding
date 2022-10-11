@@ -31,6 +31,7 @@ source(paste0(SCRIPT_DIR, "artnews_to_pmdb.R"))
 source(paste0(SCRIPT_DIR, "artnews.R"))
 source(paste0(SCRIPT_DIR, "cbn_dfs.R"))
 source(paste0(SCRIPT_DIR, "marginal_tax_rates.R"))
+source(paste0(SCRIPT_DIR, "hdi.R"))
 ## source(paste0(SCRIPT_DIR, "descriptives.R"))
 
 
