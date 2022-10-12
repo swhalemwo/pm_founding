@@ -34,7 +34,8 @@ library(DescTools)
 library(testthat)
 
 
-
+filter <- dplyr::filter
+melt <- data.table::melt
 
 
 ds <- docstring

@@ -40,6 +40,7 @@ gen_ilo_df <- function() {
 ## *** WID currency converter
 
 gen_cur_df <- function() {
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
     #' generate currency converter df for all kinds of purposes
 
     currency_cmd <- paste0("select iso3c, year, variable, value from wid_v2 where (variable='xlcusx999i' or variable='inyixx999i' or variable='xlcusp999i') and year>=", STARTING_YEAR)
