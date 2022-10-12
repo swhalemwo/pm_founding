@@ -318,6 +318,22 @@ xtreg nbr_opened smorc_dollar_fxm_lag1 nygdppcapcdk_lag1 indtaxincentives, be
 xtreg nbr_opened smorc_dollar_fxm_lag1 nygdppcapcdk_lag1 indtaxincentives, fe
 
 
+clear
+import delimited /home/johannes/Dropbox/phd/papers/org_pop/data/processed/cpbb.csv
+import delimited /path/to/cpbb.csv
+xtset herd period
+xtnbreg incidence size, re
+xtnbreg incidence size, fe
+
+xtpoisson incidence size
+
+
+clear
+import delimited /home/johannes/Dropbox/phd/papers/org_pop/data/processed/PatentsRDUS.csv
+xtset cusip year
+
+xtnbreg patents rd sumpat
+
 
 /* try some pseudo-r2, doesn't work ofc */
 local llt = e(ll)

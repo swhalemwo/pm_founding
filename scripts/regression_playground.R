@@ -1002,8 +1002,7 @@ r_pglm_re <- pglm(nbr_opened ~ smorc_dollar_fxm_lag1 + NY.GDP.PCAP.CDk_lag1 + In
                   model = "random",
                   effect = "individual",
                   family = negbin,
-                  verbose = 5,
-                  method = "nm")
+                  print.level = 5)
 screenreg(r_pglm_re)
 
 ## optim_methods <- c("bfgs", "bfgsr", "cg", "nm")
@@ -1176,20 +1175,69 @@ sd(l_r2)
 
 data("PatentsRDUS", package="pglm")
 
-r_nb_wi <- pglm(patents ~ rd + scisect, PatentsRDUS,
+fwrite(PatentsRDUS, paste0(PROJECT_DIR, "data/processed/PatentsRDUS.csv"))
+
+r_nb_wi <- pglm(patents ~ rd  + sumpat, PatentsRDUS,
                  family = negbin,
                  model = "within", print.level = 4,
                  index = "cusip")
 
-r_nb_ra <- pglm(patents ~ rd + scisect , PatentsRDUS,
+r_nb_ra <- pglm(patents ~ rd  + sumpat, PatentsRDUS,
                  family = negbin,
                  model = "random", print.level = 4,
                  index = "cusip")
 
-r_poi_ra <- pglm(patents ~ rd + scisect , PatentsRDUS,
+r_poi_ra <- pglm(patents ~ rd + sumpat , PatentsRDUS,
                  family = poisson,
                  model = "random", print.level = 4,
                  index = "cusip")
 
+screenreg(list(r_nb_wi, r_nb_ra, r_poi_ra), digits = 5)
 
-screenreg(list(r_nb_wi, r_nb_ra, r_poi_ra))
+x <- pglm(count ~ spp + mined, Salamanders, family = negbin,  model = "within", index = "site")
+y <- pglm(count ~ spp + mined, Salamanders, family = negbin,  model = "random", index = "site")
+
+screenreg(list(x,y))
+
+data("cbpp", package = "lme4")
+
+fwrite(cbpp, paste0(PROJECT_DIR, "data/processed/cpbb.csv"))
+
+cbpp_dt <- adt(cbpp)[, N := .N, herd][N > 1]
+
+r_within <- pglm(incidence ~ size, cbpp, family = negbin, model = "within", index = "herd", print.level = 4)
+r_random <- pglm(incidence ~ size, cbpp, family = negbin, model = "random", index = "herd", print.level = 1, tol = 1e-30)
+
+screenreg(list(r_within, r_within_stata,r_random), digits =5)
+
+wage_data_num <- adt(WageData)[, .(wage_num = round(lwage), wks, blk, id)]
+
+c <- pglm(wage_num ~ wks + blk, wage_data_num, family = negbin, model = "within", index = "id")
+d <- pglm(wage_num ~ wks + blk, wage_data_num, family = negbin, model = "random", index = "id")
+
+
+
+## ** writing SE post
+
+library(pglm)
+library(lme4)
+library(texreg)
+
+data("cbpp", package = "lme4")
+
+r_within <- pglm(incidence ~ size, cbpp, family = negbin, model = "within", index = "herd") 
+r_random <- pglm(incidence ~ size, cbpp, family = negbin, model = "random", index = "herd")
+
+screenreg(r_random, digits=5)
+
+r_random_poi <- pglm(incidence ~ size, cbpp, family = poisson, model = "random", index = "herd")
+screenreg(r_random_poi, digits = 5)
+
+
+
+r_random <- pglm(incidence ~ size, cbpp, family = negbin, model = "random", index = "herd", print.level = 4)
+
+
+data("PatentsRDUS", package="pglm")
+r_patents <- pglm(patents ~ rd  + sumpat, PatentsRDUS, family = negbin,  model = "random", index = "cusip")
+screenreg(r_patents, digits = 5)
