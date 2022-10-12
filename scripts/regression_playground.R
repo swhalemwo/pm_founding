@@ -947,8 +947,10 @@ r_glmmtmb <- glmmTMB(nbr_opened ~ smorc_dollar_fxm_lag1 + NY.GDP.PCAP.CDk_lag1 +
                      ## (smorc_dollar_fxm_lag1 | iso3c) + (NY.GDP.PCAP.CDk_lag1 | iso3c)
                  data = cbn_dfs$cbn_all,
                  family = nbinom2)
+
 r_glmernb <- glmer.nb(nbr_opened ~ smorc_dollar_fxm_lag1 + NY.GDP.PCAP.CDk_lag1 + Ind.tax.incentives + (1 | iso3c),
-              data = cbn_dfs$cbn_all)
+                      data = cbn_dfs$cbn_all, verbose = T)
+
 screenreg(list(r_glmmtmb,r_glmernb))
 
 
@@ -995,8 +997,34 @@ screenreg(list(r_lmer,r_plm_re,r_plm_fe, r_plm_be), digits = 5)
 ## random negbin is garbage, fe/be plausible (and neither possible in stata)
 
 r_pglm_re <- pglm(nbr_opened ~ smorc_dollar_fxm_lag1 + NY.GDP.PCAP.CDk_lag1 + Ind.tax.incentives,
-          index = "iso3c",
-          data = cbn_dfs$cbn_all, model = "random", effect = "individual", family = negbin)
+                  index = "iso3c",
+                  data = cbn_dfs$cbn_all,
+                  model = "random",
+                  effect = "individual",
+                  family = negbin,
+                  verbose = 5,
+                  method = "nm")
+screenreg(r_pglm_re)
+
+## optim_methods <- c("bfgs", "bfgsr", "cg", "nm")
+optim_methods <- c("nr", "bfgs", "bfgsr", "bhhh", "sann", "cg", "nm")
+
+r_pglm_res <- lapply(optim_methods, \(x)
+                     pglm(nbr_opened ~ smorc_dollar_fxm_lag1 + NY.GDP.PCAP.CDk_lag1 + Ind.tax.incentives,
+                          index = "iso3c",
+                          data = cbn_dfs$cbn_all,
+                          model = "random",
+                          effect = "individual",
+                          family = negbin,
+                          method = x))
+
+screenreg(r_pglm_res[c(1,4,7)])
+
+
+
+untar(download.packages(pkgs = "Matrix",  destdir = ".",  type = "source")[,2])
+
+
 ## try within model: 
 
 r_pglm_fe <- pglm(nbr_opened ~ smorc_dollar_fxm_lag1 + NY.GDP.PCAP.CDk_lag1, # + Ind.tax.incentives,
@@ -1008,25 +1036,75 @@ r_pglm_be <- pglm(nbr_opened ~ smorc_dollar_fxm_lag1 + NY.GDP.PCAP.CDk_lag1, # +
           index = "iso3c",
           data = cbn_dfs$cbn_all, model = "between", effect = "individual", family = negbin)
 
+
 screenreg(list(r_pglm_re, r_pglm_fe, r_pglm_be))
 
 ## ** test poisson
 
-## pglm produces same results as xtpoisson
 
 r_glmer_poi <- glmer(nbr_opened ~ smorc_dollar_fxm_lag1 + NY.GDP.PCAP.CDk_lag1 + Ind.tax.incentives + (1 | iso3c),
+                     data = cbn_dfs$cbn_all, family = poisson)
+
+r_glmer_poi_xx <- glmer(nbr_opened ~ smorc_dollar_fxm_lag1 + NY.GDP.PCAP.CDk_lag1 + Ind.tax.incentives +
+                            (1 + NY.GDP.PCAP.CDk_lag1 + smorc_dollar_fxm_lag1 + Ind.tax.incentives| iso3c) +
+                            (1|iso3c),
                      data = cbn_dfs$cbn_all, family = poisson)
 
 r_pglm_poi_re <- pglm(nbr_opened ~ smorc_dollar_fxm_lag1 + NY.GDP.PCAP.CDk_lag1 + Ind.tax.incentives,
           index = "iso3c",
           data = cbn_dfs$cbn_all, model = "random", effect = "individual", family = poisson)
-screenreg(list(r_pglm_poi_re, r_glmer_poi, r_glmernb), digits = 5)
 
-## glmer poisson doesn't produce same as pglm: 
+poi_mdls_cpr <- list(r_pglm_poi_re, r_glmer_poi, r_glmernb, r_glmer_poi_xx, r_wbm)
+screenreg(poi_mdls_cpr, digits = 5, single.row = F,
+          custom.model.names = c("r_pglm_poi_re", "r_glmer_poi", "r_glmernb", "r_glmer_poi_xx", "r_wbm"))
+
+## does pglm produces same results as xtpoisson? yup (previously had copied wrong model output)
+
+##                   stata                   r_pglm_poi_re                 r_glmer_poi              
+## smorc_doll~1 |    .521141   .1074379      0.52114 (0.10744) ***        0.58984 (0.11378) ***    
+## nygdppcapc~1 |   .1938606   .1733529      0.19386 (0.17335)            0.15664 (0.15956)        
+## indtaxince~s |   1.234667   .5965622      1.23467 (0.59656) *          1.01886 (0.59307)         
+##        _cons |  -3.138592    .570038    -3.13859 (0.57004) ***        -3.49400 (0.58121) ***    
+                                                                             
+## glmber and pglm : also somewhat different, and r_glmer_poi_re has
+
+library(parameters)
+parameters(r_glmer_poi)
+parameters(r_glmernb)
+parameters(r_pglm_poi_re)
+parameters(r_glmer_poi_xx)
+
+
+
+
+
+
+
+## glmer poisson doesn't produce same as pglm: maybe 10-20% difference in parameter size 
 
 ## does glmer.nb produce same as xtnbreg? nope but how much different? 
 
+## ** try panelR
 
+install.packages("panelr")
+library(panelr)
+
+wbm_data <- panel_data(cbn_dfs$cbn_all, id = iso3c, wave = year)
+
+
+r_wbm <- wbm(nbr_opened ~ smorc_dollar_fxm_lag1 + NY.GDP.PCAP.CDk_lag1 | Ind.tax.incentives,
+             data = wbm_data, family = MASS::negative.binomial(theta = 12.5281712))
+screenreg(r_wbm)
+
+## ** try bbmle
+library(bbmle)
+
+
+r_bbmle <- mle2(nbr_opened ~ dnbinom(mu = exp(logmu), size = exp(logtheta)),
+     parameters = list(logmu ~ smorc_dollar_fxm_lag1 + NY.GDP.PCAP.CDk_lag1 + Ind.tax.incentives),
+     data = cbn_dfs$cbn_all, 
+     start = list(logmu = 0, logtheta = 0))
+     
 
 
 
@@ -1044,3 +1122,74 @@ anb <- pglm(formula, union_wage, family = binomial('probit'),
 summary(margins::margins(model = anb, formula = formula))
 m <- margins::margins(model = anb, at = list("wage" = c(-3:4)), formula = formula)
 
+
+
+## ** debugging pglm
+
+## running lnl.negbin with breakpoints:
+## betas go completely bonkers in third iteration, are already when arriving 
+## gradients and Hessian don't seem super weird after second run 
+
+grad_r1 <<- gradi
+H_r1 <<- H
+l_r1 <<- l
+
+
+grad_r2 <<- gradi
+H_r2 <<- H
+l_r2 <<- l
+
+## compare gradients 
+
+cpr_grads_dt <- rbind(
+    adt(grad_r1) %>% melt() %>% .[, source := "r1"],
+    adt(grad_r2) %>% melt() %>% .[, source := "r2"])
+
+cpr_grads_smry <- cpr_grads_dt[, .(mean_value = mean(value), sd = sd(value)), by = .(source, variable)] 
+
+ggplot(cpr_grads_smry, aes(x=variable, y=mean_value, group = source, fill = source)) +
+    geom_bar(stat = "identity", position = "dodge")
+
+## much smaller gradients in r2 as it should be
+
+mean(H_r1)
+mean(H_r2)
+sd(H_r1)
+sd(H_r2)
+
+## mean and SD of Hession also smaller in r2
+
+mean(l_r1)
+mean(l_r2)
+sd(l_r1)
+sd(l_r2)
+
+## mean/sd increase in r2 but this shouldn't really matter, this is estimation 
+
+## let's see what happens between lnl.negbin calls
+## effectively seems to be called by maxNRCompute, which seems standard MLE function
+
+
+
+
+## see whether to find some MWE
+
+data("PatentsRDUS", package="pglm")
+
+r_nb_wi <- pglm(patents ~ rd + scisect, PatentsRDUS,
+                 family = negbin,
+                 model = "within", print.level = 4,
+                 index = "cusip")
+
+r_nb_ra <- pglm(patents ~ rd + scisect , PatentsRDUS,
+                 family = negbin,
+                 model = "random", print.level = 4,
+                 index = "cusip")
+
+r_poi_ra <- pglm(patents ~ rd + scisect , PatentsRDUS,
+                 family = poisson,
+                 model = "random", print.level = 4,
+                 index = "cusip")
+
+
+screenreg(list(r_nb_wi, r_nb_ra, r_poi_ra))
