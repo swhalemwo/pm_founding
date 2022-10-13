@@ -951,7 +951,7 @@ r_glmmtmb <- glmmTMB(nbr_opened ~ smorc_dollar_fxm_lag1 + NY.GDP.PCAP.CDk_lag1 +
 r_glmernb <- glmer.nb(nbr_opened ~ smorc_dollar_fxm_lag1 + NY.GDP.PCAP.CDk_lag1 + Ind.tax.incentives + (1 | iso3c),
                       data = cbn_dfs$cbn_all, verbose = T)
 
-screenreg(list(r_glmmtmb,r_glmernb))
+screenreg(list(r_glmmtmb,r_glmernb), digits = 5)
 
 
 
@@ -1023,7 +1023,11 @@ screenreg(r_pglm_res[c(1,4,7)])
 
 
 
+## *** inspecting source code 
+
 untar(download.packages(pkgs = "Matrix",  destdir = ".",  type = "source")[,2])
+
+## *** within/between
 
 
 ## try within model: 
@@ -1243,3 +1247,17 @@ r_random <- pglm(incidence ~ size, cbpp, family = negbin, model = "random", inde
 data("PatentsRDUS", package="pglm")
 r_patents <- pglm(patents ~ rd  + sumpat, PatentsRDUS, family = negbin,  model = "random", index = "cusip")
 screenreg(r_patents, digits = 5)
+
+## ** test menbreg
+
+library(lme4)
+
+menbreg_res <- glmer.nb(incidence ~ size + (1 | herd), cbpp)
+screenreg(menbreg_res, digits = 6)
+adt(mtcars)
+
+mtcars
+
+iris
+
+

@@ -317,15 +317,63 @@ xtreg nbr_opened smorc_dollar_fxm_lag1 nygdppcapcdk_lag1 indtaxincentives, be
 
 xtreg nbr_opened smorc_dollar_fxm_lag1 nygdppcapcdk_lag1 indtaxincentives, fe
 
+/* compare menbreg and xtnbreg */
+xtnbreg nbr_opened smorc_dollar_fxm_lag1 nygdppcapcdk_lag1 indtaxincentives, re
+estimates store r_xtnbreg
+
+menbreg nbr_opened smorc_dollar_fxm_lag1 nygdppcapcdk_lag1 indtaxincentives || iso3c_num:
+estimates store r_menbreg
+
+estimates table r_xtnbreg r_menbreg
+
+
+
+
+/* work on cbpp for SO MWE */
 
 clear
 import delimited /home/johannes/Dropbox/phd/papers/org_pop/data/processed/cpbb.csv
 import delimited /path/to/cpbb.csv
 xtset herd period
 xtnbreg incidence size, re
-xtnbreg incidence size, fe
+estimates store r_xtnbreg
 
-xtpoisson incidence size
+xtnbreg incidence size, pa corr(exchangeable)
+/* estimates store r_xtnbreg */
+
+
+
+
+/* xtnbreg incidence size, fe */
+
+/* xtpoisson incidence size */
+
+menbreg incidence size || herd:
+estimates store r_menbreg
+
+estimates table r_xtnbreg r_menbreg
+
+
+/* model comparison (xt vs me)  */
+
+/* https://errickson.net/stats-notes/xtsetvsmixed.html */
+
+xtreg incidence size, re
+estimates store r_xtreg
+
+xtreg incidence size, re mle
+estimates store r_xtreg_mle
+
+mixed incidence size || herd:
+estimates store r_mixed
+
+meglm incidence size || herd:
+estimates store r_meglm
+
+estimates table r_xtreg r_xtreg_mle r_meglm r_mixed
+
+
+
 
 
 clear
