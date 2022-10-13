@@ -1002,7 +1002,9 @@ r_pglm_re <- pglm(nbr_opened ~ smorc_dollar_fxm_lag1 + NY.GDP.PCAP.CDk_lag1 + In
                   model = "random",
                   effect = "individual",
                   family = negbin,
-                  print.level = 5)
+                  reltol = 1e-4)
+                  ## print.level = 5,
+                  ## method = "nm"
 screenreg(r_pglm_re)
 
 ## optim_methods <- c("bfgs", "bfgsr", "cg", "nm")
