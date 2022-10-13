@@ -318,7 +318,7 @@ xtreg nbr_opened smorc_dollar_fxm_lag1 nygdppcapcdk_lag1 indtaxincentives, be
 xtreg nbr_opened smorc_dollar_fxm_lag1 nygdppcapcdk_lag1 indtaxincentives, fe
 
 /* compare menbreg and xtnbreg */
-xtnbreg nbr_opened smorc_dollar_fxm_lag1 nygdppcapcdk_lag1 indtaxincentives, re
+xtnbreg nbr_opened smorc_dollar_fxm_lag1 nygdppcapcdk_lag1 indtaxincentives, re 
 estimates store r_xtnbreg
 
 menbreg nbr_opened smorc_dollar_fxm_lag1 nygdppcapcdk_lag1 indtaxincentives || iso3c_num:
@@ -326,14 +326,38 @@ estimates store r_menbreg
 
 estimates table r_xtnbreg r_menbreg
 
+xtmixed nbr_opened smorc_dollar_fxm_lag1 nygdppcapcdk_lag1 indtaxincentives || iso3c_num:
+estimates store r_mixed
+xtmrho
 
+
+estimates table r_xtnbreg r_mixed
+
+/* covariance structure testing */
+
+xtmixed nbr_opened smorc_dollar_fxm_lag1 nygdppcapcdk_lag1 indtaxincentives || iso3c_num:, cov(indep)
+
+menbreg nbr_opened smorc_dollar_fxm_lag1 nygdppcapcdk_lag1 indtaxincentives || iso3c_num: smorc_dollar_fxm_lag1, cov(unstr)
+estimates store r_menbreg_unstr
+estat vce
+estat vce, corr
+
+gen gdp = nygdppcapcdk_lag1
+gen csp = smorc_dollar_fxm_lag1
+gen nbo = nbr_opened
+gen ti = indtaxincentives
+
+menbreg nbo csp gdp ti || iso3c_num: csp, cov(unstr)
+estat vce
+
+estimates table r_menbreg r_menbreg_unstr
 
 
 /* work on cbpp for SO MWE */
 
 clear
 import delimited /home/johannes/Dropbox/phd/papers/org_pop/data/processed/cpbb.csv
-import delimited /path/to/cpbb.csv
+/* import delimited /path/to/cpbb.csv */
 xtset herd period
 xtnbreg incidence size, re
 estimates store r_xtnbreg
@@ -364,13 +388,16 @@ estimates store r_xtreg
 xtreg incidence size, re mle
 estimates store r_xtreg_mle
 
+xtmixed incidence size || herd:
+estimates store r_xtmixed
+
 mixed incidence size || herd:
 estimates store r_mixed
 
 meglm incidence size || herd:
 estimates store r_meglm
 
-estimates table r_xtreg r_xtreg_mle r_meglm r_mixed
+estimates table r_xtreg r_xtreg_mle r_meglm r_mixed r_xtmixed
 
 
 

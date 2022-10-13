@@ -951,7 +951,51 @@ r_glmmtmb <- glmmTMB(nbr_opened ~ smorc_dollar_fxm_lag1 + NY.GDP.PCAP.CDk_lag1 +
 r_glmernb <- glmer.nb(nbr_opened ~ smorc_dollar_fxm_lag1 + NY.GDP.PCAP.CDk_lag1 + Ind.tax.incentives + (1 | iso3c),
                       data = cbn_dfs$cbn_all, verbose = T)
 
-screenreg(list(r_glmmtmb,r_glmernb), digits = 5)
+r_glmer <- glmer(nbr_opened ~ smorc_dollar_fxm_lag1 + NY.GDP.PCAP.CDk_lag1 + Ind.tax.incentives + (1 | iso3c),
+                 data = cbn_dfs$cbn_all, verbose = T)
+
+## fitting some random slope models lalala
+
+r_glmmtmb_rs <- glmmTMB(nbr_opened ~ smorc_dollar_fxm_lag1 + NY.GDP.PCAP.CDk_lag1 + Ind.tax.incentives +
+                            (1 + smorc_dollar_fxm_lag1 | iso3c),
+                 data = cbn_dfs$cbn_all,
+                 family = nbinom2)
+
+r_glmmtmb_rs2 <- glmmTMB(nbr_opened ~ smorc_dollar_fxm_lag1 + NY.GDP.PCAP.CDk_lag1 + Ind.tax.incentives +
+                            (1 + NY.GDP.PCAP.CDk_lag1 | iso3c),
+                 data = cbn_dfs$cbn_all,
+                 family = nbinom2)
+
+## see if variation of random slope of smorc_dollar depends on tax incentives
+## https://stats.stackexchange.com/questions/156237/interactions-between-levels-in-lme4: this is the format they suggest as well
+r_glmmtmb_rs3 <- glmmTMB(nbr_opened ~ smorc_dollar_fxm_lag1*Ind.tax.incentives + NY.GDP.PCAP.CDk_lag1 + 
+                            (1 + smorc_dollar_fxm_lag1 | iso3c),
+                 data = cbn_dfs$cbn_all,
+                 family = nbinom2)
+
+## https://rpubs.com/corey_sparks/70812: try different specification of cross-level interaction -> 
+r_glmmtmb_rs4 <- glmmTMB(nbr_opened ~ smorc_dollar_fxm_lag1*Ind.tax.incentives + NY.GDP.PCAP.CDk_lag1 + 
+                            (1 | iso3c),
+                 data = cbn_dfs$cbn_all,
+                 family = nbinom2)
+
+
+screenreg(list(r_glmmtmb, r_glmmtmb_rs, r_glmmtmb_rs3, r_glmmtmb_rs4))
+
+## interpreation of variance-covariance:
+summary(r_glmmtmb_rs)
+
+
+
+library(lmtest)
+x <- lrtest(r_glmmtmb, r_glmmtmb_rs)
+
+screenreg(list(r_glmmtmb,r_glmernb, r_glmer, r_glmmtmb_rs, r_glmmtmb_rs2), digits = 5)
+
+VarCorr(r_glmer) %>%
+  as_data_frame() %>%
+  mutate(icc=vcov/sum(vcov)) %>%
+  select(grp, icc)
 
 
 
