@@ -954,7 +954,7 @@ r_glmernb <- glmer.nb(nbr_opened ~ smorc_dollar_fxm_lag1 + NY.GDP.PCAP.CDk_lag1 
 r_glmer <- glmer(nbr_opened ~ smorc_dollar_fxm_lag1 + NY.GDP.PCAP.CDk_lag1 + Ind.tax.incentives + (1 | iso3c),
                  data = cbn_dfs$cbn_all, verbose = T)
 
-## fitting some random slope models lalala
+## ** fitting some random slope models lalala
 
 r_glmmtmb_rs <- glmmTMB(nbr_opened ~ smorc_dollar_fxm_lag1 + NY.GDP.PCAP.CDk_lag1 + Ind.tax.incentives +
                             (1 + smorc_dollar_fxm_lag1 | iso3c),
@@ -982,7 +982,7 @@ r_glmmtmb_rs4 <- glmmTMB(nbr_opened ~ smorc_dollar_fxm_lag1*Ind.tax.incentives +
 
 screenreg(list(r_glmmtmb, r_glmmtmb_rs, r_glmmtmb_rs3, r_glmmtmb_rs4))
 
-## interpreation of variance-covariance:
+## ** interpreation of variance-covariance, lrtests
 summary(r_glmmtmb_rs)
 
 
@@ -1013,7 +1013,40 @@ screenreg(r_lmer, digits = 5)
 ## nygdppcapc~1 |  -.0155816      NY.GDP.PCAP.CDk_lag1       -0.01618  (0.03238)
 ## indtaxince~s |   .0183852      Ind.tax.incentives          0.01957 (0.08819)   
 ##        _cons |   .2431858      (Intercept)                 0.23875 **  (0.08190)                              
-                                  
+
+
+## ** DHARMa
+
+library(DHARMa)
+sim_resids <- simulateResiduals(r_glmmtmb)
+residuals(sim_resids) %>% hist()
+
+residuals(sim_resids, quantileFunction = qnorm, outlierValues = c(-7,7)) %>% hist()
+
+plot(sim_resids)
+
+testZeroInflation(sim_resids)
+
+plotResiduals(sim_resids, cbn_dfs$cbn_all$smorc_dollar_fxm_lag1, rank = F, quantreg = T)
+
+
+plotResiduals(sim_resids, cbn_dfs$cbn_all$NY.GDP.PCAP.CDk_lag1, rank = F)
+
+
+
+## ** dynamic panel models 
+data("EmplUK", package = "plm")
+     
+## Arellano and Bond (1991), table 4 col. b 
+z1 <- pgmm(log(emp) ~ plm::lag(log(emp), 1:2) + plm::lag(log(wage), 0:1)
+           + log(capital) + plm::lag(log(output), 0:1) | plm::lag(log(emp), 2:99),
+           data = EmplUK, effect = "twoways", model = "twosteps")
+
+summary(z1, robust = FALSE)
+
+
+
+## ** compare lmer and plm 
 
 
 ## compare plm and lmer: basically the same (r_lmer and plm_re), PLM seem to use OLS;
@@ -1065,6 +1098,16 @@ r_pglm_res <- lapply(optim_methods, \(x)
 
 screenreg(r_pglm_res[c(1,4,7)])
 
+## *** test passing starting values to pglm
+
+
+pglm(nbr_opened ~ smorc_dollar_fxm_lag1 + NY.GDP.PCAP.CDk_lag1 + Ind.tax.incentives,
+     index = "iso3c",
+     data = cbn_dfs$cbn_all,
+     model = "random",
+     effect = "individual",
+     family = negbin,
+     start = rep(1000000000000,5))
 
 
 ## *** inspecting source code 
