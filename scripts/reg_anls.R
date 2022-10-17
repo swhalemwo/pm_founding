@@ -81,24 +81,43 @@ add_coef_sig <- function(coef_df,  df_reg_anls_cfgs_wide) {
 }
 
 
-construct_df_anls_within_prep <- function(df_anls_base) {
+construct_df_anls_within_prep <- function(df_anls_base, optmzd) {
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
     #' construct the within-base-spec changes:
     #' only get the coefs of variables where the variable is varied (within base-spec changes)
     #' only get coefs where all 5 variations converged
     
-    df_anls_within_prep <- df_anls_base %>%
+    df_anls_within_prep1 <- df_anls_base %>%
         filter(vrbl_name_unlag != vrbl_name) %>% ## only use the lag variables
-        mutate(lag = as.numeric(substring(str_extract(vrbl_name, "_lag(\\d+)"), 5))) %>%
+        mutate(lag = as.numeric(substring(str_extract(vrbl_name, "_lag(\\d+)"), 5)))
+
+    ## if reg_res is created by step-wise optimization, vrbl_varied is not available 
+    ## here it's created from vrbl_optmzd, which is the best within-lag variation I think I have for optmzed runs
+
+    if (!optmzd) {
+        df_anls_within_prep2 <- df_anls_within_prep1 %>%
         filter(vrbl_varied == vrbl_name_unlag |
                (vrbl_varied == "tmitr_approx_linear20step" & vrbl_name_unlag == "ti_tmitr_interact") 
-              ,cbn_name != "cbn_controls") %>% ## only use within-base_spec changes, add special case for tmitr
+              ,cbn_name != "cbn_controls")  ## only use within-base_spec changes, add special case for tmitr
+    } else {
+        
+        df_anls_within_prep2 <- df_anls_within_prep1 %>%
+            mutate(vrbl_varied = vrbl_optmzd) %>% 
+            filter(vrbl_varied == vrbl_name_unlag |
+                   (vrbl_varied == "tmitr_approx_linear20step" & vrbl_name_unlag == "ti_tmitr_interact") 
+                  ,cbn_name != "cbn_controls")
+
+        
+    }
+    
+    df_anls_within_prep3 <- df_anls_within_prep2 %>%
         group_by(vrbl_name_unlag, cbn_name) %>%
         mutate(base_lag_spec_id = as.numeric(factor(base_lag_spec))) %>%
         group_by(vrbl_name_unlag, cbn_name, base_lag_spec_id) %>%
         mutate(nbr_mdls_cvrgd = len(base_lag_spec_id)) %>% 
         filter(nbr_mdls_cvrgd == 5)
 
-    return(df_anls_within_prep)
+    return(df_anls_within_prep3)
 
 }
 
@@ -120,9 +139,10 @@ construct_time_invariant_coefs <- function(df_anls_base, vvs) {
 }
 
 construct_df_anls_within <- function(df_anls_base, vvs, NBR_MDLS) {
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
     #' construct the dataset of the within lag-spec changes
 
-    df_anls_within_prep <- construct_df_anls_within_prep(df_anls_base)
+    df_anls_within_prep <- construct_df_anls_within_prep(df_anls_base, optmzd = T)
 
 
     ## filter out a number of models per lag (and cbn)
@@ -226,6 +246,7 @@ construct_best_mdls_summary <- function(df_best_mdls) {
 
 
 proc_reg_res_objs <- function(reg_anls_base, vvs) {
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
     #' further processing of the regression res objects, no reading-in here
 
     
@@ -237,9 +258,8 @@ proc_reg_res_objs <- function(reg_anls_base, vvs) {
     df_anls_base <- add_coef_sig(coef_df, df_reg_anls_cfgs_wide)
 
     ## number of models to pick for the analyses
-    NBR_MDLS <- 10
-    
-    
+    NBR_MDLS <- 1
+        
     df_anls_within <- construct_df_anls_within(df_anls_base, vvs, NBR_MDLS)
     df_anls_all <- construct_df_anls_all(df_anls_base, vvs, NBR_MDLS)
 
@@ -396,7 +416,8 @@ plot_reg_res <- function(plt_name, fldr_info) {
 
 ## ** main analysis
 
-## read in stuff, construct objects 
+## read in stuff, construct objects
+## fldr_info <- fldr_info_optmz
 reg_anls_base <- read_reg_res_files(fldr_info)
 reg_res_objs <- proc_reg_res_objs(reg_anls_base, vvs)
 
@@ -460,13 +481,12 @@ plot_stacker <- function(dfx, ystack, xstack, shape_clm = NULL, color_clm="lag")
                size = "none", ## remove the supid sig() legend
                linetype = "none") +
         labs(y=ystack)
-    
-    
 }
 
 ## *** optimized functions end here 
 
 reg_anls_base_optmz <- read_reg_res_files(fldr_info_cvrg)
+reg_anls_base_optmz <- read_reg_res_files(fldr_info_optmz)
 
 ## best result per base_spec after each loop of optimization
 filter(reg_anls_base_optmz$gof_df_cbn, gof_names == "log_likelihood") %>%

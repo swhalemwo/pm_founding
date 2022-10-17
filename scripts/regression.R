@@ -903,7 +903,7 @@ setup_regression_folders_and_files <- function(batch_version) {
     #' setup folders and files for running regressions
 
     ## batch_version <- "v20"
-    REG_MONKEY_DIR <- "/home/johannes/ownCloud/reg_res/"
+    REG_MONKEY_DIR <- "/home/johannes/reg_res/"
     BATCH_DIR <- paste0(REG_MONKEY_DIR, batch_version, "/")
 
     REG_RES_DIR <- paste0(BATCH_DIR, "reg_res/")
@@ -938,6 +938,7 @@ setup_regression_folders_and_files <- function(batch_version) {
 }
 
 gen_batch_reg_specs <- function(reg_settings, vvs, vrbl_thld_choices) {
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
     #' generate the regression specs for a batch 
 
     
@@ -972,6 +973,7 @@ gen_batch_reg_specs <- function(reg_settings, vvs, vrbl_thld_choices) {
 
 
 vary_batch_reg_spec <- function(reg_specs, reg_settings, vvs) {
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
     #' generate variations (lags, combinations, models) of list of reg_specs, also add ID
 
     
@@ -1016,6 +1018,7 @@ vary_batch_reg_spec <- function(reg_specs, reg_settings, vvs) {
 }
     
 idfy_reg_specs <- function(reg_spec_mdls, vvs){
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
     #' add ids to reg_specs 
     
     reg_spec_mdls_with_ids <- mclapply(reg_spec_mdls, \(x) gen_spec_id_info(x, vvs), mc.cores = 6)
@@ -1034,72 +1037,6 @@ get_reg_spec_from_id <- function(mdl_id, fldr_info) {
     reg_spec <- readRDS(paste0(fldr_info$REG_SPEC_DIR, mdl_id))
 }
 
-cluster_sumry_addgns <- c(
-    "hnwi_nbr_30M_pure" = "HNWI with net worth 30M USD (count)",
-    "nbr_opened_pure" = "private museums openings (count)",
-    "NY.GDP.PCAP.CD" = "country-average GDP per capita (2021 constant USD)",
-    "NY.GDP.TTL" = "individual-average GDP per capita (2021 constant USD)",
-    "SP.POP.TOTL_pure" = "population")
-
-    
-
-#' overall regression wrapping 
-
-## ** end of functions
-
-vvs <- gen_vrbl_vectors()
-vrbl_cbns <- gen_cbns(vvs$all_rel_vars, vvs$base_vars)
-cbn_dfs <- gen_cbn_dfs(vvs$lngtd_vars, vvs$crscn, vrbl_cbns, vvs$base_vars)
-vrbl_thld_choices <- gen_vrbl_thld_choices(vvs$hnwi_vars, vvs$inc_ineq_vars, vvs$weal_ineq_vars)
-
-reg_settings <- list(
-    nbr_specs = 1,
-    batch_nbr = "v20",
-    vary_vrbl_lag = T,
-    cbns_to_include = names(cbn_dfs),
-    mdls_to_include = c("full")
-)
-
-
-fldr_info <- setup_regression_folders_and_files(reg_settings$batch_nbr)
-
-## generating 20k models costs around 5 secs
-
-
-reg_spec_mdls <- gen_batch_reg_specs(reg_settings, vvs, vrbl_thld_choices)
-names(reg_spec_mdls) <- lapply(reg_spec_mdls, \(x) x$mdl_id)
-
-## check how unique the model cfgs are 
-table(table(names(reg_spec_mdls)))
-
-## run_vrbl_mdl_vars(reg_spec_mdls[[2]])
-## gen_mdl_id(reg_spec_mdls[[2]])
-
-cvrgns <- mclapply(reg_spec_mdls[1:12], \(x) run_vrbl_mdl_vars(x, vvs, fldr_info, c("log_likelihood")), mc.cores = 6) %>% unlist()
-
-lapply(reg_spec_mdls[1:30], \(x) run_vrbl_mdl_vars(x, vvs, fldr_info, c("converged"))) %>% unlist()
-
-## run_vrbl_mdl_vars(reg_spec_mdls[[1]], vvs, fldr_info)
-NULL
-
-
-
-
-
-## * debugging, re-running
-
-## mdl_ids_tbl <- tibble(mdl_id = unlist(mdl_ids)) 
-## mdl_ids_tbl$x <- 1
-
-## mdls_to_check_ids <- merge(mdl_ids_tbl,
-##       df_reg_anls_cfgs_wide %>% select(mdl_id) %>% mutate(y=2),
-##       all.x = T) %>% atb() %>%
-##     filter(is.na(y)) %>% pull(mdl_id)
-
-## mdls_to_check_locs <- which(mdl_ids %in% mdls_to_check_ids)
-
-## ## reg_spec_mdls[mdls_to_check_specs]
-## mclapply(reg_spec_mdls[mdls_to_check_locs], run_vrbl_mdl_vars, mc.cores = 6) 
 
 
 
@@ -1260,13 +1197,21 @@ optmz_reg_spec <- function(reg_spec, fldr_info, reg_settings) {
 
 ## ** running 
 
+vvs <- gen_vrbl_vectors()
+vrbl_cbns <- gen_cbns(vvs$all_rel_vars, vvs$base_vars)
+cbn_dfs <- gen_cbn_dfs(vvs$lngtd_vars, vvs$crscn, vrbl_cbns, vvs$base_vars)
+vrbl_thld_choices <- gen_vrbl_thld_choices(vvs$hnwi_vars, vvs$inc_ineq_vars, vvs$weal_ineq_vars)
+
+
 vrbl_thld_choices_optmz <- slice_sample(vrbl_thld_choices, n=3)
 
 
 reg_settings_optmz <- list(
     nbr_specs_per_thld = 2,
-    batch_nbr = "v39",
+    batch_nbr = "v41",
     vary_vrbl_lag = F,
+    technique_strs = c("nr"),
+    difficulty_switches = T,
     ## cbns_to_include = c("cbn_all"),
     cbns_to_include = names(cbn_dfs)[1:3],
     mdls_to_include = c("full")
@@ -1279,6 +1224,8 @@ fldr_info_optmz <- setup_regression_folders_and_files(reg_settings_optmz$batch_n
 mclapply(reg_spec_mdls_optmz, \(x) optmz_reg_spec(x, fldr_info_optmz, reg_settings_optmz),
          mc.cores = 6)
 
+
+
 ## optmz_reg_spec(reg_spec_mdls_optmz[[1]], nbr_loops = 3, fldr_info_optmz, reg_settings_optmz)
 
 ## run_vrbl_mdl_vars(reg_spec_mdls_optmz[[1]], vvs, fldr_info_optmz, verbose = F)
@@ -1290,6 +1237,55 @@ non_cvrgd_spec <- get_reg_spec_from_id(
     fldr_info_optmz)
 
 run_vrbl_mdl_vars(non_cvrgd_spec, vvs, fldr_info_optmz, verbose = T)
+
+## * running old
+
+cluster_sumry_addgns <- c(
+    "hnwi_nbr_30M_pure" = "HNWI with net worth 30M USD (count)",
+    "nbr_opened_pure" = "private museums openings (count)",
+    "NY.GDP.PCAP.CD" = "country-average GDP per capita (2021 constant USD)",
+    "NY.GDP.TTL" = "individual-average GDP per capita (2021 constant USD)",
+    "SP.POP.TOTL_pure" = "population")
+
+    
+
+#' overall regression wrapping 
+
+## ** end of functions
+
+
+reg_settings <- list(
+    nbr_specs = 1,
+    batch_nbr = "v20",
+    vary_vrbl_lag = T,
+    cbns_to_include = names(cbn_dfs),
+    mdls_to_include = c("full")
+)
+
+fldr_info <- setup_regression_folders_and_files(reg_settings$batch_nbr)
+
+## generating 20k models costs around 5 secs
+
+
+reg_spec_mdls <- gen_batch_reg_specs(reg_settings, vvs, vrbl_thld_choices)
+names(reg_spec_mdls) <- lapply(reg_spec_mdls, \(x) x$mdl_id)
+
+## check how unique the model cfgs are 
+table(table(names(reg_spec_mdls)))
+
+## run_vrbl_mdl_vars(reg_spec_mdls[[2]])
+## gen_mdl_id(reg_spec_mdls[[2]])
+
+cvrgns <- mclapply(reg_spec_mdls[1:12], \(x) run_vrbl_mdl_vars(x, vvs, fldr_info, c("log_likelihood")), mc.cores = 6) %>% unlist()
+
+lapply(reg_spec_mdls[1:30], \(x) run_vrbl_mdl_vars(x, vvs, fldr_info, c("converged"))) %>% unlist()
+
+## run_vrbl_mdl_vars(reg_spec_mdls[[1]], vvs, fldr_info)
+NULL
+
+
+
+
 
 
 ## *** convergence testing
@@ -1316,3 +1312,20 @@ mclapply(reg_spec_mdls_cvrg, \(x) optmz_reg_spec(x, fldr_info_cvrg, reg_settings
          mc.cores = 6)
 
 optmz_reg_spec(reg_spec_mdls_cvrg[[1]], fldr_info = fldr_info_cvrg, reg_settings = reg_settings_cvrg)
+
+## * scrap: debugging, re-running
+
+## mdl_ids_tbl <- tibble(mdl_id = unlist(mdl_ids)) 
+## mdl_ids_tbl$x <- 1
+
+## mdls_to_check_ids <- merge(mdl_ids_tbl,
+##       df_reg_anls_cfgs_wide %>% select(mdl_id) %>% mutate(y=2),
+##       all.x = T) %>% atb() %>%
+##     filter(is.na(y)) %>% pull(mdl_id)
+
+## mdls_to_check_locs <- which(mdl_ids %in% mdls_to_check_ids)
+
+## ## reg_spec_mdls[mdls_to_check_specs]
+## mclapply(reg_spec_mdls[mdls_to_check_locs], run_vrbl_mdl_vars, mc.cores = 6) 
+
+
