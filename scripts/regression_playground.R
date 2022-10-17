@@ -942,11 +942,14 @@ library(glmmTMB)
 ## compare glmmTMB and glmer.nb, which has to be RE (time-invariant models work)
 ## with somewhat similar results (within 10%)
 
+t1 = Sys.time()
 r_glmmtmb <- glmmTMB(nbr_opened ~ smorc_dollar_fxm_lag1 + NY.GDP.PCAP.CDk_lag1 + Ind.tax.incentives +
                      (1 | iso3c),
                      ## (smorc_dollar_fxm_lag1 | iso3c) + (NY.GDP.PCAP.CDk_lag1 | iso3c)
                  data = cbn_dfs$cbn_all,
                  family = nbinom2)
+t2 = Sys.time()
+t2-t1
 
 r_glmernb <- glmer.nb(nbr_opened ~ smorc_dollar_fxm_lag1 + NY.GDP.PCAP.CDk_lag1 + Ind.tax.incentives + (1 | iso3c),
                       data = cbn_dfs$cbn_all, verbose = T)
@@ -1135,9 +1138,24 @@ r_glm <- glm.nb(nbr_opened ~ smorc_dollar_fxm_lag1 + NY.GDP.PCAP.CDk_lag1 + fact
                 data = cbn_dfs$cbn_all)
 
 
-
-
 screenreg(list(r_pglm_re, r_pglm_fe, r_glm), custom.model.names = c("r_pglm_re", "r_pglm_fe", "r_glm"))
+
+## ** test glmmadaptive
+install.packages("GLMMadaptive")
+library(GLMMadaptive)
+
+t1 = Sys.time()
+r_glmma <- mixed_model(fixed = nbr_opened ~ smorc_dollar_fxm_lag1 + NY.GDP.PCAP.CDk_lag1 + Ind.tax.incentives,
+                       random = ~ 1 | iso3c,
+                       data = cbn_dfs$cbn_all,
+                       family = GLMMadaptive::negative.binomial())
+t2 = Sys.time()
+t2-t1
+
+
+summary(r_glmma)
+
+screenreg(r_glmernb)
 
 ## ** test poisson
 
