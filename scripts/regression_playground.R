@@ -1128,8 +1128,16 @@ r_pglm_be <- pglm(nbr_opened ~ smorc_dollar_fxm_lag1 + NY.GDP.PCAP.CDk_lag1, # +
           index = "iso3c",
           data = cbn_dfs$cbn_all, model = "between", effect = "individual", family = negbin)
 
+## run FE models with base packages
+library(MASS)
 
-screenreg(list(r_pglm_re, r_pglm_fe, r_pglm_be))
+r_glm <- glm.nb(nbr_opened ~ smorc_dollar_fxm_lag1 + NY.GDP.PCAP.CDk_lag1 + factor(iso3c),
+                data = cbn_dfs$cbn_all)
+
+
+
+
+screenreg(list(r_pglm_re, r_pglm_fe, r_glm), custom.model.names = c("r_pglm_re", "r_pglm_fe", "r_glm"))
 
 ## ** test poisson
 
