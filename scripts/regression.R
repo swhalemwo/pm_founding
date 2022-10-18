@@ -33,9 +33,8 @@ library(ps)
 ## make sure all kinds of basic functions aren't masked
 select <- dplyr::select
 lag <- dplyr::lag
-timeout <- fscaret::timeout
 library(purrr)
-
+library(modelsummary)
 
 cleanup_old_r_procs <- function() {
     #' kill old R procs, not used so far
@@ -454,6 +453,7 @@ gen_mdl_id <- function(reg_spec, vvs) {
 
 timeout_stata <- function(iv_vars, stata_output_vars, gof_names, dfx, file_id, fldr_info, technique_str,
                           difficult_str, verbose) {
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
     #' run stata command, time it out if taking too long
     
     
@@ -502,7 +502,75 @@ timeout_stata <- function(iv_vars, stata_output_vars, gof_names, dfx, file_id, f
     ## return("asdf")
 }
 
+get_r_gof <- function(rx_glmmtmb, rx_smry){
+    #' get the goodness of fits stats from glmmTMB run 
+
+    r_gof_prep1 <- get_gof(rx_glmmtmb)
+    r_gof_prep2 <- data.frame(gof_names = names(r_gof_prep1), gof_value = as.numeric(r_gof_prep1[1,]))
+
+    ## some more gofs from AICtab
+    r_gof_prep_aictab <- adf(rx_smry$AICtab)
+    r_gof_prep_aictab2 <- data.table(gof_names = rownames(r_gof_prep_aictab), gof_value = r_gof_prep_aictab[,1]) %>%
+        .[gof_names %in% c("logLik", "deviance", "df.resid")] %>% adf()
     
+    
+    ## some additional gof
+    disp_sigma <- glmmTMB::sigma(rx_glmmtmb)
+    N_g <- rx_smry$ngrps$cond
+    intcpt_var <- rx_smry$varcor$cond$iso3c[1,1]
+
+    algns_gof <- data.frame(gof_names = c("disp_sigma", "N_g", "intcpt_var"),
+                            gof_value = c(disp_sigma,    N_g,   intcpt_var))
+
+    r_gof_cbn <- Reduce(\(x,y) rbind(x,y), list(r_gof_prep2, r_gof_prep_aictab2, algns_gof))
+
+    ## rename some gofs to ensure consistency with stata gof names
+    r_gof_cbn2 <- r_gof_cbn %>% adt() %>%
+        .[gof_names == "nobs", gof_names := "N"] %>%
+        .[gof_names == "logLik", gof_names := "log_likelihood"] %>% adf()
+
+    return(r_gof_cbn2)
+
+}
+
+
+## r_vars <- iv_vars
+run_regspec_from_r <- function(dfx, r_vars, fldr_info, verbose) {
+    #' run a regression specification from R
+
+    ## generate formula
+    fx <- sprintf("nbr_opened ~ %s + (1 | iso3c)", paste0(r_vars, collapse = " + ")) %>% as.formula()
+
+    ## generate results
+    rx_glmmtmb <- glmmTMB(fx, dfx, family = nbinom2)
+    
+    ## glmmTMP really necessary, glmer.nb takes for fucking ever 
+    ##  rx <- glmer.nb(fx, dfx)
+    ## screenreg(list(rx_glmmtmb, rx))
+
+    screenreg(rx_glmmtmb, digits = 5, single.row = T)
+    ## parse the R res 
+    x <- adt(coef(rx_glmmtmb)$cond$iso3c)
+
+    rx_smry <- summary(rx_glmmtmb)
+    rx_coefs_prep <- rx_smry %>% coef() %>% .[["cond"]]
+    rx_coefs_prep2 <- adt(rx_coefs_prep)
+
+    ## gof that we get from get_gof from library(modelsummary)
+    rx_coefs <- data.frame(vrbl_name = rownames(rx_coefs_prep), coef = rx_coefs_prep2$Estimate,
+                       se = rx_coefs_prep2$`Std. Error`, pvalues = rx_coefs_prep2$`Pr(>|z|)`)
+
+
+    rx_gof <- get_r_gof(rx_glmmtmb, rx_smry)
+
+    rx_res <- list(coef_df = rx_coefs, gof_df = rx_gof)
+
+    save_parsed_res(rx_res, idx = file_id, fldr_info)
+
+    return(list(
+        result = T,
+        log_likelihood = rx_gof[which(rx_gof$gof_names == "log_likelihood"),"gof_value"]))
+}
     
     
 
@@ -510,6 +578,7 @@ timeout_stata <- function(iv_vars, stata_output_vars, gof_names, dfx, file_id, f
     
 ## run_vrbl_mdl_vars <- function(mdl_vars, df_cbn, cbn_name, mdl_name, reg_specx) {
 run_vrbl_mdl_vars <- function(reg_spec, vvs, fldr_info, return_objs = c("result"), verbose = F) {
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
     #' run one regression given the model vars
     
     
@@ -1208,7 +1277,7 @@ vrbl_thld_choices_optmz <- slice_sample(vrbl_thld_choices, n=3)
 
 reg_settings_optmz <- list(
     nbr_specs_per_thld = 2,
-    batch_nbr = "v41",
+    batch_nbr = "v42",
     vary_vrbl_lag = F,
     technique_strs = c("nr"),
     difficulty_switches = T,
@@ -1228,7 +1297,7 @@ mclapply(reg_spec_mdls_optmz, \(x) optmz_reg_spec(x, fldr_info_optmz, reg_settin
 
 ## optmz_reg_spec(reg_spec_mdls_optmz[[1]], nbr_loops = 3, fldr_info_optmz, reg_settings_optmz)
 
-## run_vrbl_mdl_vars(reg_spec_mdls_optmz[[1]], vvs, fldr_info_optmz, verbose = F)
+run_vrbl_mdl_vars(reg_spec_mdls_optmz[[1]], vvs, fldr_info_optmz, verbose = F)
 
 ## ** debugging lack of convergence
 
