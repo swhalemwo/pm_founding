@@ -321,6 +321,7 @@ xtreg nbr_opened smorc_dollar_fxm_lag1 nygdppcapcdk_lag1 indtaxincentives, fe
 xtnbreg nbr_opened smorc_dollar_fxm_lag1 nygdppcapcdk_lag1 indtaxincentives, re 
 estimates store r_xtnbreg
 
+
 menbreg nbr_opened smorc_dollar_fxm_lag1 nygdppcapcdk_lag1 indtaxincentives || iso3c_num:
 estimates store r_menbreg
 
@@ -351,6 +352,13 @@ menbreg nbo csp gdp ti || iso3c_num: csp, cov(unstr)
 estat vce
 
 estimates table r_menbreg r_menbreg_unstr
+
+/* test speed of menbreg */
+
+timer on 1
+menbreg nbr_opened smorc_dollar_fxm_lag1 nygdppcapcdk_lag1 indtaxincentives || iso3c_num:
+timer off 1
+timer list
 
 
 /* work on cbpp for SO MWE */

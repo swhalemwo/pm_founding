@@ -535,22 +535,26 @@ get_r_gof <- function(rx_glmmtmb, rx_smry){
 
 
 ## r_vars <- iv_vars
-run_regspec_from_r <- function(dfx, r_vars, fldr_info, verbose) {
+run_regspec_from_r <- function(dfx, r_vars, fldr_info, file_id, verbose) {
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
     #' run a regression specification from R
 
     ## generate formula
     fx <- sprintf("nbr_opened ~ %s + (1 | iso3c)", paste0(r_vars, collapse = " + ")) %>% as.formula()
 
+    ## glmmcrol <- glmmTMBControl(profile = T, optCtrl = list(iter.max = 300))
+
     ## generate results
-    rx_glmmtmb <- glmmTMB(fx, dfx, family = nbinom2)
-    
+
+    rx_glmmtmb <- glmmTMB(fx, dfx, family = nbinom2, verbose = verbose)
+
     ## glmmTMP really necessary, glmer.nb takes for fucking ever 
     ##  rx <- glmer.nb(fx, dfx)
     ## screenreg(list(rx_glmmtmb, rx))
 
-    screenreg(rx_glmmtmb, digits = 5, single.row = T)
+    ## screenreg(rx_glmmtmb, digits = 5, single.row = T)
     ## parse the R res 
-    x <- adt(coef(rx_glmmtmb)$cond$iso3c)
+    ## x <- adt(coef(rx_glmmtmb)$cond$iso3c)
 
     rx_smry <- summary(rx_glmmtmb)
     rx_coefs_prep <- rx_smry %>% coef() %>% .[["cond"]]
@@ -571,11 +575,9 @@ run_regspec_from_r <- function(dfx, r_vars, fldr_info, verbose) {
         result = T,
         log_likelihood = rx_gof[which(rx_gof$gof_names == "log_likelihood"),"gof_value"]))
 }
-    
-    
 
 
-    
+
 ## run_vrbl_mdl_vars <- function(mdl_vars, df_cbn, cbn_name, mdl_name, reg_specx) {
 run_vrbl_mdl_vars <- function(reg_spec, vvs, fldr_info, return_objs = c("result"), verbose = F) {
     if (as.character(match.call()[[1]]) %in% fstd){browser()}
@@ -584,49 +586,51 @@ run_vrbl_mdl_vars <- function(reg_spec, vvs, fldr_info, return_objs = c("result"
     
     df_cbn <- cbn_dfs[[reg_spec$cfg$cbn_name]]
 
-    ## id_res <- gen_mdl_id(reg_spec, vvs)
-
-    ## df_idx <- id_res$df_idx
-    ## other_cfgs <- id_res$other_cfgs
-    ## mdl_id <- id_res$mdl_id
-          
-    ## file_id <- df_idx$mdl_id[1]
-
     df_idx <- reg_spec$df_idx
     other_cfgs <- reg_spec$other_cfgs
     file_id <- reg_spec$mdl_id
     
-    ## 
-    technique_str <- reg_spec$cfg$technique_str
-    ## technique_str <- "nr"
+    iv_vars <- reg_spec$mdl_vars[reg_spec$mdl_vars %!in% vvs$base_vars]
 
-    if (reg_spec$cfg$difficulty) {
-        difficult_str <- "difficult"
-    } else {
-        difficult_str <- ""
-    }
-    ## difficult_str <- "difficult"
-    
     ## saving reg spec information to debug later 
     saveRDS(reg_spec, file = paste0(fldr_info$REG_SPEC_DIR, file_id))
     ## write model id to start_file to see which models don't converge
     write.table(file_id, fldr_info$MDL_START_FILE, append = T, col.names = F, row.names = F)
 
 
-    iv_vars <- reg_spec$mdl_vars[reg_spec$mdl_vars %!in% vvs$base_vars]
-    
-    
-    stata_output_vars <- c(iv_vars, c("cons", "ln_r", "ln_s"))
-    gof_names <- c("N", "log_likelihood", "N_g", "Chi2", "p", "df")
+    if (reg_spec$prog == "stata") {
 
-    dfx <- select(df_cbn, all_of(c(vvs$base_vars, "iso3c_num", "nbr_opened",iv_vars)))
+        technique_str <- reg_spec$cfg$technique_str
+    
+
+        if (reg_spec$cfg$difficulty) {
+            difficult_str <- "difficult"
+        } else {
+            difficult_str <- ""
+        }
+        
+    
+        stata_output_vars <- c(iv_vars, c("cons", "ln_r", "ln_s"))
+        gof_names <- c("N", "log_likelihood", "N_g", "Chi2", "p", "df")
+
+        dfx <- select(df_cbn, all_of(c(vvs$base_vars, "iso3c_num", "nbr_opened",iv_vars)))
 
     ## new converged command, relying on stata maxiter to quite convergence
-    converged <- tryCatch(
-        timeout_stata(iv_vars, stata_output_vars, gof_names, dfx, file_id,
-                      fldr_info, technique_str = technique_str, difficult_str = difficult_str,
-                      verbose = verbose),
-        error=function(e) {list(result = NULL, pid = Sys.getpid(), log_likelihood = NA)})
+        
+        converged <- tryCatch(
+            timeout_stata(iv_vars, stata_output_vars, gof_names, dfx, file_id,
+                          fldr_info, technique_str = technique_str, difficult_str = difficult_str,
+                          verbose = verbose),
+            error=function(e) {list(result = NULL, pid = Sys.getpid(), log_likelihood = NA)})
+        
+
+    } else if (reg_spec$prog == "R") {
+        
+        t1 = Sys.time()
+        converged <- run_regspec_from_r(dfx, r_vars, fldr_info, file_id, T)
+        t2 = Sys.time()
+
+    }
     
 
     ## keep pure version here since fscaret makes debuggin impossible
