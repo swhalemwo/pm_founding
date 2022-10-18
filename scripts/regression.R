@@ -74,6 +74,7 @@ cleanup_old_stata_procs <- function() {
 
 
 get_stata_result <- function(iv_vars, stata_output_vars, gof_names, dfx, technique_str, difficult_str, verbose) {
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
     #' run the xtnbreg regression with stata() given independent vars,
     #' also give stata_output_vars since also needed in parse_stata_res
 
@@ -82,24 +83,21 @@ get_stata_result <- function(iv_vars, stata_output_vars, gof_names, dfx, techniq
 
     
 
-    iv_vars_stata <- gsub("\\.", "_", iv_vars)
-    
-    res_names <- paste0("r", seq(len(stata_output_vars)*2 + len(gof_names)))
-
     ## for gof and stata_return matrix turn into wide and transpose to avoid backslashes:
     ## backslash would be easier in stata syntax, but is messy in plain text
 
-    # print(Sys.getpid())    
-    
+    ## print(Sys.getpid())    
 
+        
+
+
+    ## menbreg
     stata_code = list(
-        panel_setup = "xtset iso3c_num year",
         cvrgd_setup = "set maxiter 100",
-        reg_cmd = paste0("xtnbreg nbr_opened ", paste(iv_vars_stata, collapse = " "),
-                         ", re ", difficult_str, " technique(", technique_str, ")"),
+        reg_cmd = paste0("menbreg nbr_opened ", paste(iv_vars_stata, collapse = " "), " || iso3c_num:"),
         coef_cmd = "mata: b=st_matrix(\"e(b)\")' \n mata: st_matrix(\"b_stata\", b)",
+        gof_cmd = "matrix gof = ( e(N), e(ll), e(N_g), e(chi2), e(p), e(df_m))'",
         se_cmd = "mata: se=sqrt(diagonal(st_matrix(\"e(V)\"))) \n mata: st_matrix(\"se_stata\", se)",
-        gof_cmd = "matrix gof = ( e(N), e(ll), e(N_g), e(chi2), e(p), e(df_m))'", 
         cbn_cmd = "matrix stata_return = (b_stata', se_stata', gof')",
         rename_cmd = paste0("matrix colnames stata_return = ", paste0(res_names, collapse = " ")),
         sv_cmd = "svmat stata_return \n keep stata_return* \n drop if missing(stata_return1)")
@@ -107,10 +105,8 @@ get_stata_result <- function(iv_vars, stata_output_vars, gof_names, dfx, techniq
 
     stata_src <- paste(stata_code, collapse = "\n")
 
-    
-    
     stata_res <- stata(stata_src, data.in = dfx, data.out = T, stata.echo = verbose) %>% atb()
-
+    
     return(stata_res)
 }
 
@@ -449,17 +445,9 @@ gen_mdl_id <- function(reg_spec, vvs) {
 ## print(t2-t1)
 
 ## gen_mdl_id(reg_spec_mdls[[1]], vvs)
-        
 
-timeout_stata <- function(iv_vars, stata_output_vars, gof_names, dfx, file_id, fldr_info, technique_str,
-                          difficult_str, verbose) {
-    if (as.character(match.call()[[1]]) %in% fstd){browser()}
-    #' run stata command, time it out if taking too long
-    
-    
-    ## setwd(PROJECT_DIR)
-
-    ## cur_wd <- getwd()
+prep_and_set_pid_fldr <- function() {
+    #' if necessarily, prep the pid folder (for stata multiprocessing), set process to corresponding pid folder
     
     pid <- Sys.getpid()
     new_dir <- paste0(fldr_info$PID_DIR, pid)
@@ -469,7 +457,6 @@ timeout_stata <- function(iv_vars, stata_output_vars, gof_names, dfx, file_id, f
     ## print("a")
     present_dirs <- paste0(fldr_info$PID_DIR, list.dirs(fldr_info$PID_DIR, recursive = F, full.names = F))
     
-
     if (new_dir %!in% present_dirs) {
     
         mkdir_cmd <- paste0("mkdir ", new_dir)
@@ -480,27 +467,75 @@ timeout_stata <- function(iv_vars, stata_output_vars, gof_names, dfx, file_id, f
     ## print("c")
     setwd(new_dir)
     ## print("d")
-    
-    stata_res_raw <- get_stata_result(iv_vars = iv_vars, stata_output_vars = stata_output_vars,
-                                      gof_names = gof_names, dfx = dfx, technique_str=technique_str,
-                                      difficult_str = difficult_str, verbose = verbose)
 
     ## setwd(cur_wd)
     ## print(pid)
     ## print(Sys.getpid())
 
-    if (nrow(stata_res_raw) > 1) {stop("something wrong")} ## debug 
+    return(pid)
+    
+}
 
-    stata_res_parsed <- parse_stata_res(stata_res_raw, stata_output_vars, gof_names)
+gen_stata_code_xtnbreg <- function(iv_vars, gof_names, stata_output_vars, difficult_str, technique_str) {
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
+    #' generate the code for xtnbreg
 
-    save_parsed_res(stata_res_parsed, idx = file_id, fldr_info)
+    iv_vars_stata <- gsub("\\.", "_", iv_vars)
+
+    res_names <- paste0("r", seq(len(stata_output_vars)*2 + len(gof_names)))
+
+    ## xtnbreg
+    stata_code = list(
+        panel_setup = "xtset iso3c_num year",
+        cvrgd_setup = "set maxiter 100",
+        reg_cmd = paste0("xtnbreg nbr_opened ", paste(iv_vars_stata, collapse = " "),
+                         ", re ", difficult_str, " technique(", technique_str, ")"),
+        coef_cmd = "mata: b=st_matrix(\"e(b)\")' \n mata: st_matrix(\"b_stata\", b)",
+        se_cmd = "mata: se=sqrt(diagonal(st_matrix(\"e(V)\"))) \n mata: st_matrix(\"se_stata\", se)",
+        gof_cmd = "matrix gof = ( e(N), e(ll), e(N_g), e(chi2), e(p), e(df_m))'", 
+        cbn_cmd = "matrix stata_return = (b_stata', se_stata', gof')",
+        rename_cmd = paste0("matrix colnames stata_return = ", paste0(res_names, collapse = " ")),
+        sv_cmd = "svmat stata_return \n keep stata_return* \n drop if missing(stata_return1)")
+
+    stata_src <- paste(stata_code, collapse = "\n")
+    return(stata_src)
+
+}
+
+
+run_xtnbreg <- function(iv_vars, gof_names, dfx, file_id, fldr_info, technique_str,
+                        difficult_str, verbose) {
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
+    #' run xtnbreg command, time it out if taking too long
+
+    xtnbreg_output_vars <- c(iv_vars, c("cons", "ln_r", "ln_s"))
+    
+    pid = prep_and_set_pid_fldr()
+
+    stata_code_xtnbreg <- gen_stata_code_xtnbreg(iv_vars, gof_names, xtnbreg_output_vars,
+                                                 difficult_str, technique_str)
+
+    xtnbreg_res_raw <- stata(stata_code_xtnbreg, data.in = dfx, data.out = T, stata.echo = verbose) %>% atb()
+
+    
+    ## stata_res_raw <- get_stata_result(iv_vars = iv_vars, stata_output_vars = stata_output_vars,
+    ##                                   gof_names = gof_names, dfx = dfx, technique_str=technique_str,
+    ##                                   difficult_str = difficult_str, verbose = verbose)
+
+    if (nrow(xtnbreg_res_raw) > 1) {stop("something wrong with get_stata_result")} ## debug 
+
+    xtnbreg_res_parsed <- parse_stata_res(xtnbreg_res_raw, xtnbreg_output_vars, gof_names)
+
+    save_parsed_res(xtnbreg_res_parsed, idx = file_id, fldr_info)
     
     return(list(
         result = T,
         pid = pid,
-        log_likelihood = stata_res_parsed$gof_df[which(stata_res_parsed$gof_df$gof_names == "log_likelihood"),]$gof_value))
-    ## return("asdf")
+        log_likelihood = xtnbreg_res_parsed$gof_df[which(xtnbreg_res_parsed$gof_df$gof_names == "log_likelihood"),]$gof_value))
 }
+
+
+
 
 get_r_gof <- function(rx_glmmtmb, rx_smry){
     #' get the goodness of fits stats from glmmTMB run 
@@ -591,6 +626,7 @@ run_vrbl_mdl_vars <- function(reg_spec, vvs, fldr_info, return_objs = c("result"
     file_id <- reg_spec$mdl_id
     
     iv_vars <- reg_spec$mdl_vars[reg_spec$mdl_vars %!in% vvs$base_vars]
+    dfx <- select(df_cbn, all_of(c(vvs$base_vars, "iso3c_num", "nbr_opened",iv_vars)))
 
     ## saving reg spec information to debug later 
     saveRDS(reg_spec, file = paste0(fldr_info$REG_SPEC_DIR, file_id))
@@ -598,7 +634,7 @@ run_vrbl_mdl_vars <- function(reg_spec, vvs, fldr_info, return_objs = c("result"
     write.table(file_id, fldr_info$MDL_START_FILE, append = T, col.names = F, row.names = F)
 
 
-    if (reg_spec$prog == "stata") {
+    if (reg_spec$prog == "xtnbreg") {
 
         technique_str <- reg_spec$cfg$technique_str
     
@@ -609,22 +645,20 @@ run_vrbl_mdl_vars <- function(reg_spec, vvs, fldr_info, return_objs = c("result"
             difficult_str <- ""
         }
         
-    
-        stata_output_vars <- c(iv_vars, c("cons", "ln_r", "ln_s"))
         gof_names <- c("N", "log_likelihood", "N_g", "Chi2", "p", "df")
 
-        dfx <- select(df_cbn, all_of(c(vvs$base_vars, "iso3c_num", "nbr_opened",iv_vars)))
+        
 
     ## new converged command, relying on stata maxiter to quite convergence
         
         converged <- tryCatch(
-            timeout_stata(iv_vars, stata_output_vars, gof_names, dfx, file_id,
+            run_xtnbreg(iv_vars, gof_names, dfx, file_id,
                           fldr_info, technique_str = technique_str, difficult_str = difficult_str,
-                          verbose = verbose),
+                          verbose = verbose)
             error=function(e) {list(result = NULL, pid = Sys.getpid(), log_likelihood = NA)})
         
 
-    } else if (reg_spec$prog == "R") {
+    } else if (reg_spec$prog == "glmmTMB") {
         
         t1 = Sys.time()
         converged <- run_regspec_from_r(dfx, r_vars, fldr_info, file_id, T)

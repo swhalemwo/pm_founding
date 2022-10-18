@@ -424,3 +424,18 @@ display "pseudo R2 t=" (`ll0' - `llt')/`ll0'
 
 /* try nbreg with country_dummies, but produces different results than xtnbreg */
 nbreg nbr_opened smorc_dollar_fxm_lag1 nygdppcapcdk_lag1 indtaxincentives i.iso3c_num
+
+
+/* menbreg export */
+clear
+import delimited /home/johannes/Dropbox/phd/papers/org_pop/data/processed/glmmTMB_test.csv
+
+menbreg nbr_opened smorc_dollar_fxm_lag1 nygdppcapcdk_lag1 indtaxincentives || iso3c_num:
+mata: b=st_matrix("e(b)")'
+mata: st_matrix("b_stata", b)
+mata: se=sqrt(diagonal(st_matrix("e(V)"))) 
+mata: st_matrix("se_stata", se)
+matrix gof = ( e(N), e(ll), e(N_g), e(chi2), e(p), e(df_m))'
+matrix stata_return = (b_stata', se_stata', gof')
+svmat stata_return
+  keep stata_return* 
