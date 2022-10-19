@@ -431,6 +431,19 @@ clear
 import delimited /home/johannes/Dropbox/phd/papers/org_pop/data/processed/glmmTMB_test.csv
 
 menbreg nbr_opened smorc_dollar_fxm_lag1 nygdppcapcdk_lag1 indtaxincentives || iso3c_num:
+
+local nbr_itr = e(ic)
+display `nbr_itr'
+
+if `nbr_itr' < 100 {
+/* display `nbr_itr' */
+matrix kappa = (90909)
+matrix kappa = (`nbr_itr')
+svmat kappa
+keep kappa*
+}
+
+
 mata: b=st_matrix("e(b)")'
 mata: st_matrix("b_stata", b)
 mata: se=sqrt(diagonal(st_matrix("e(V)"))) 
@@ -439,3 +452,29 @@ matrix gof = ( e(N), e(ll), e(N_g), e(chi2), e(p), e(df_m))'
 matrix stata_return = (b_stata', se_stata', gof')
 svmat stata_return
   keep stata_return* 
+
+/* non-convergence testing */
+clear
+import delimited /home/johannes/Dropbox/phd/papers/org_pop/data/processed/dfx_ncvrgd.csv
+xtset iso3c_num year
+set maxiter 5
+
+capture xtnbreg nbr_opened indtaxincentives npotaxexemption cnt_contemp_1995 cnt_contemp_1995_squared hnwi_nbr_30m_lag4 sptinc992j_p99p100_lag3 shweal992j_p90p100_lag3 nygdppcapcdk_lag2 sppoptotlm_lag5 clctr_cnt_cpaer_lag2 nbr_opened_cum_lag1 nbr_opened_cum_sqrd_lag1, re difficult technique(nr)
+/* local cvrgnc = e(converge) */
+/* display `cvrgnc' */
+local nbr_itr = e(ic)
+display `nbr_itr'
+
+if `nbr_itr' < 100 {
+matrix ncvrg_mat = (`nbr_itr')
+svmat ncvrg_mat
+keep ncvrg_mat*
+drop if missing(ncvrg_mat1)
+}
+
+
+matrix krappa = (`nbr_itr')
+svmat krappa
+keep krappa*
+drop if missing(krappa1)
+list in 1
