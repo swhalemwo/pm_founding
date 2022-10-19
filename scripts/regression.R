@@ -472,8 +472,7 @@ gen_stata_code_xtnbreg <- function(iv_vars, gof_names, stata_output_vars, diffic
 ## gen_stata_code_xtnbreg(c("aaa", "bb"), c("jj", "kk"), c("asdf", "bbbbb", "ccc"), "difficult", "technique") %>% cat()
 
 
-run_xtnbreg <- function(iv_vars, gof_names, dfx, file_id, fldr_info, technique_str,
-                        difficult_str, verbose) {
+run_xtnbreg <- function(iv_vars, gof_names, dfx, technique_str, difficult_str, fldr_info, verbose) {
     if (as.character(match.call()[[1]]) %in% fstd){browser()}
     #' run xtnbreg command
 
@@ -493,7 +492,7 @@ run_xtnbreg <- function(iv_vars, gof_names, dfx, file_id, fldr_info, technique_s
     
     if (nrow(xtnbreg_res_raw) > 1) {stop("something wrong with get_stata_result")} ## debug 
 
-    if (names(xtnbreg_res_raw) == "ncvrg_mat1") {
+    if (names(xtnbreg_res_raw)[1] == "ncvrg_mat1") {
 
         ret_obj = list(converged = F, pid = pid)
         
@@ -520,17 +519,23 @@ gen_stata_code_menbreg <- function(iv_vars, gof_names, stata_output_vars) {
 
     res_names <- paste0("r", seq(len(stata_output_vars)*2 + len(gof_names)))
 
+    maxiter <- 100
+
 
     ## menbreg
     stata_code = list(
-        cvrgd_setup = "set maxiter 100",
-        reg_cmd = paste0("menbreg nbr_opened ", paste(iv_vars_stata, collapse = " "), " || iso3c_num:"),
+        cvrgd_setup = sprintf("set maxiter %s", maxiter),
+        reg_cmd = paste0("capture menbreg nbr_opened ", paste(iv_vars_stata, collapse = " "), " || iso3c_num:"),
+        cvrg_check = paste0(c("local nbr_itr = e(ic)", sprintf("if `nbr_itr' < %s {", maxiter)), collapse = "\n"),
         coef_cmd = "mata: b=st_matrix(\"e(b)\")' \n mata: st_matrix(\"b_stata\", b)",
         gof_cmd = "matrix gof = ( e(N), e(ll), e(N_g), e(chi2), e(p), e(df_m))'",
         se_cmd = "mata: se=sqrt(diagonal(st_matrix(\"e(V)\"))) \n mata: st_matrix(\"se_stata\", se)",
         cbn_cmd = "matrix stata_return = (b_stata', se_stata', gof')",
         rename_cmd = paste0("matrix colnames stata_return = ", paste0(res_names, collapse = " ")),
-        sv_cmd = "svmat stata_return \n keep stata_return* \n drop if missing(stata_return1)")
+        sv_cmd = "svmat stata_return \n keep stata_return* \n drop if missing(stata_return1)",
+        cvrg_check_curly_brace = "}",
+        no_cvrg_return = paste0(c(sprintf("else if `nbr_itr' == %s {", maxiter),  "matrix ncvrg_mat = (`nbr_itr')", "svmat ncvrg_mat", "keep ncvrg_mat*", "drop if missing(ncvrg_mat1)", "}"), collapse = "\n")
+    )
 
 
     stata_src <- paste(stata_code, collapse = "\n")
@@ -538,13 +543,13 @@ gen_stata_code_menbreg <- function(iv_vars, gof_names, stata_output_vars) {
 }
     
 
-run_menbreg <- function(iv_vars, gof_names, dfx, file_id, fldr_info, verbose) {
+run_menbreg <- function(iv_vars, gof_names, dfx, fldr_info, verbose) {
     if (as.character(match.call()[[1]]) %in% fstd){browser()}
     #' run menbreg command
 
     menbreg_output_vars <- c(iv_vars, c("cons", "alpha", "intcpt_var"))
 
-    pid = prep_and_set_pid_fldr()
+    pid = prep_and_set_pid_fldr(fldr_info)
 
     stata_code_menbreg <- gen_stata_code_menbreg(iv_vars, gof_names, menbreg_output_vars)
     
@@ -557,17 +562,25 @@ run_menbreg <- function(iv_vars, gof_names, dfx, file_id, fldr_info, verbose) {
 
     if (nrow(menbreg_res_raw) > 1) {stop("something wrong with stata result")} ## debug 
 
-    menbreg_res_parsed <- parse_stata_res(menbreg_res_raw, menbreg_output_vars, gof_names)
+    if (names(menbreg_res_raw)[1] == "ncvrg_mat1") {
 
-    save_parsed_res(menbreg_res_parsed, idx = file_id, fldr_info)
+        ret_obj = list(converged = F, pid = pid)
+    } else {
+
+        menbreg_res_parsed <- parse_stata_res(menbreg_res_raw, menbreg_output_vars, gof_names)
+
+        ## save_parsed_res(menbreg_res_parsed, idx = file_id, fldr_info)
     
-    return(list(
-        result = T,
-        pid = pid,
-        log_likelihood = menbreg_res_parsed$gof_df[which(menbreg_res_parsed$gof_df$gof_names == "log_likelihood"),]$gof_value))
+        ret_obj <- list(
+            converged = T,
+            pid = pid,
+            log_likelihood = menbreg_res_parsed$gof_df[which(menbreg_res_parsed$gof_df$gof_names == "log_likelihood"),]$gof_value,
+            res_parsed = menbreg_res_parsed)
 
+    }
+    
+    return(ret_obj)
 }
-
 
 
 get_r_gof <- function(rx_glmmtmb, rx_smry){
@@ -603,7 +616,7 @@ get_r_gof <- function(rx_glmmtmb, rx_smry){
 
 
 ## r_vars <- iv_vars
-run_regspec_from_r <- function(dfx, r_vars, fldr_info, file_id, verbose) {
+run_glmmtmb <- function(dfx, r_vars, verbose) {
     if (as.character(match.call()[[1]]) %in% fstd){browser()}
     #' run a regression specification from R
 
@@ -637,63 +650,53 @@ run_regspec_from_r <- function(dfx, r_vars, fldr_info, file_id, verbose) {
 
     rx_res <- list(coef_df = rx_coefs, gof_df = rx_gof)
 
-    save_parsed_res(rx_res, idx = file_id, fldr_info)
+    ## save_parsed_res(rx_res, idx = file_id, fldr_info)
 
     return(list(
-        result = T,
-        log_likelihood = rx_gof[which(rx_gof$gof_names == "log_likelihood"),"gof_value"]))
+        converged = T,
+        log_likelihood = rx_gof[which(rx_gof$gof_names == "log_likelihood"),"gof_value"],
+        res_parsed = rx_res))
 }
 
 
-reg_spec_run_dispatch <- function(iv_vars, dfx, regcmd, fldr_info, file_id, technique_str, difficult_str, verbose) {
+reg_spec_run_dispatch <- function(iv_vars, dfx, regcmd, fldr_info, technique_str, difficult_str, verbose) {
     if (as.character(match.call()[[1]]) %in% fstd){browser()}
     #' run regression with reg_cmd (one of xtnbreg, menbreg or glmmTMB): facilitates time comparison
     #' iv_vars: independent variables
-    #' dfx: data frame (filtered down to only have iv_vars
-    #' technique/difficulty str: additional options for now implemented to xtnbreg
+    #' dfx: data frame (filtered down to only have iv_vars)
+    #' regcmd: one of xtnbreg, menbreg, glmmTMB
+    #' technique/difficulty str: additional options for now implemented only in xtnbreg
     
 
     if (regcmd == "xtnbreg") {
-
        
         gof_names <- c("N", "log_likelihood", "N_g", "Chi2", "p", "df")
 
-        ## new converged command, relying on stata maxiter to quite convergence
-        ## converged <- tryCatch(
-
-        converged <- run_xtnbreg(iv_vars, gof_names, dfx, file_id,
-                        fldr_info, technique_str = technique_str, difficult_str = difficult_str,
-                        verbose = verbose)
+        r_regspec <- run_xtnbreg(iv_vars, gof_names, dfx, technique_str, difficult_str, fldr_info, verbose)
            
-        ## error=function(e) {list(result = NULL, pid = Sys.getpid(), log_likelihood = NA)})
-
     } else if (regcmd == "menbreg") {
         ## separate command for menbreg
-
+        
         gof_names <- c("N", "log_likelihood", "N_g", "Chi2", "p", "df")
 
-        ## converged <- tryCatch(
-        converged <- run_menbreg(iv_vars, gof_names, dfx, file_id, fldr_info, verbose = verbose)
-            ## error=function(e) {list(result = NULL, pid = Sys.getpid(), log_likelihood = NA)})
-
+        r_regspec <- run_menbreg(iv_vars, gof_names, dfx, fldr_info, verbose)
 
     } else if (regcmd == "glmmTMB") {
         
-        converged <- run_regspec_from_r(dfx, iv_vars, fldr_info, file_id, verbose)
+        r_regspec <- run_glmmtmb(dfx, iv_vars, verbose)
 
     }
 
-    return(converged)
+    return(r_regspec)
     
 }
 
 
 ## run_vrbl_mdl_vars <- function(mdl_vars, df_cbn, cbn_name, mdl_name, reg_specx) {
-run_vrbl_mdl_vars <- function(reg_spec, vvs, fldr_info, return_objs = c("result"), verbose = F) {
+run_vrbl_mdl_vars <- function(reg_spec, vvs, fldr_info, return_objs = c("converged"), verbose = F) {
     if (as.character(match.call()[[1]]) %in% fstd){browser()}
     #' run one regression given the model vars
-    
-    
+        
     df_cbn <- cbn_dfs[[reg_spec$cfg$cbn_name]]
 
     df_idx <- reg_spec$df_idx
@@ -713,34 +716,31 @@ run_vrbl_mdl_vars <- function(reg_spec, vvs, fldr_info, return_objs = c("result"
     technique_str <- reg_spec$cfg$technique_str
     if (reg_spec$cfg$difficulty) {difficult_str <- "difficult"} else {difficult_str <- ""}
 
-
     t1 <- Sys.time()
-    ## regcmd <- "menbreg"
-    ## regcmd <- "glmmTMB"
-
-    r_regspec <- reg_spec_run_dispatch(iv_vars, dfx, regcmd, fldr_info, file_id,
-                                       technique_str, difficult_str, verbose)
+    
+    r_regspec <- reg_spec_run_dispatch(iv_vars, dfx, regcmd, fldr_info, technique_str, difficult_str, verbose)
     
     t2 <- Sys.time()
     t_diff <- t2-t1
     
     ## converged <- T
     setwd(PROJECT_DIR)
-    
-    ## clean up pid dir
-    proc_dir <- paste0(fldr_info$PID_DIR, r_regspec$pid)
-    rmdir_cmd <- paste0("rm -r ", proc_dir)
-    system(rmdir_cmd)
 
+    ## clean up pid dir for stata-based commands
+    if ("pid" %in% names(r_regspec)) {
+        proc_dir <- paste0(fldr_info$PID_DIR, r_regspec$pid)
+        rmdir_cmd <- paste0("rm -r ", proc_dir)
+        system(rmdir_cmd)}
     
     if (!r_regspec$converged) {
         df_idx$cvrgd <- 0 # if converged is null, it means the convergence failed
         other_cfgs$cvrgd <- 0
         print("convergence failed")
-    
-                
+                    
     } else {
         
+        save_parsed_res(r_regspec$res_parsed, file_id, fldr_info)
+
         df_idx$cvrgd <- 1
         ## add time passed to other_cfgs
         other_cfgs <- rbind(other_cfgs, data.frame(variable = "t_diff", value = difftime(t2, t1, units = "secs"),
@@ -1358,10 +1358,10 @@ optmz_reg_spec <- function(reg_spec, fldr_info, reg_settings) {
 
 ## ** running 
 
-vvs <- gen_vrbl_vectors()
-vrbl_cbns <- gen_cbns(vvs$all_rel_vars, vvs$base_vars)
-cbn_dfs <- gen_cbn_dfs(vvs$lngtd_vars, vvs$crscn, vrbl_cbns, vvs$base_vars)
-vrbl_thld_choices <- gen_vrbl_thld_choices(vvs$hnwi_vars, vvs$inc_ineq_vars, vvs$weal_ineq_vars)
+## vvs <- gen_vrbl_vectors()
+## vrbl_cbns <- gen_cbns(vvs$all_rel_vars, vvs$base_vars)
+## cbn_dfs <- gen_cbn_dfs(vvs$lngtd_vars, vvs$crscn, vrbl_cbns, vvs$base_vars)
+## vrbl_thld_choices <- gen_vrbl_thld_choices(vvs$hnwi_vars, vvs$inc_ineq_vars, vvs$weal_ineq_vars)
 
 
 ## vrbl_thld_choices_optmz <- slice_sample(vrbl_thld_choices, n=3)
@@ -1420,8 +1420,8 @@ non_cvrgd_spec <- get_reg_spec_from_id(
     "XX4XX3X3XX111125211--cbn_no_cult_spending_and_mitr--full--nr--TRUE--XX3XX2X3XX443221213--1--NY.GDP.PCAP.CDk",
     fldr_info_optmz)
 
-non_cvrgd_spec$regcmd <- "xtnbreg"
-run_vrbl_mdl_vars(non_cvrgd_spec, vvs, fldr_info_optmz, verbose = T)
+non_cvrgd_spec$regcmd <- "glmmTMB"
+run_vrbl_mdl_vars(non_cvrgd_spec, vvs, fldr_info_optmz, verbose = F)
 
 
 
