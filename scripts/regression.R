@@ -1304,135 +1304,71 @@ optmz_reg_spec <- function(reg_spec, fldr_info, reg_settings) {
 
 ## ** running 
 
-vvs <- gen_vrbl_vectors()
-vrbl_cbns <- gen_cbns(vvs$all_rel_vars, vvs$base_vars)
-cbn_dfs <- gen_cbn_dfs(vvs$lngtd_vars, vvs$crscn, vrbl_cbns, vvs$base_vars)
-vrbl_thld_choices <- gen_vrbl_thld_choices(vvs$hnwi_vars, vvs$inc_ineq_vars, vvs$weal_ineq_vars)
+## vvs <- gen_vrbl_vectors()
+## vrbl_cbns <- gen_cbns(vvs$all_rel_vars, vvs$base_vars)
+## cbn_dfs <- gen_cbn_dfs(vvs$lngtd_vars, vvs$crscn, vrbl_cbns, vvs$base_vars)
+## vrbl_thld_choices <- gen_vrbl_thld_choices(vvs$hnwi_vars, vvs$inc_ineq_vars, vvs$weal_ineq_vars)
 
 
-vrbl_thld_choices_optmz <- slice_sample(vrbl_thld_choices, n=3)
+## vrbl_thld_choices_optmz <- slice_sample(vrbl_thld_choices, n=3)
 
 
-reg_settings_optmz <- list(
-    nbr_specs_per_thld = 2,
-    batch_nbr = "v42",
-    vary_vrbl_lag = F,
-    technique_strs = c("nr"),
-    difficulty_switches = T,
-    ## cbns_to_include = c("cbn_all"),
-    cbns_to_include = names(cbn_dfs)[1:3],
-    mdls_to_include = c("full")
-)
+## reg_settings_optmz <- list(
+##     nbr_specs_per_thld = 2,
+##     batch_nbr = "v41",
+##     vary_vrbl_lag = F,
+##     technique_strs = c("nr"),
+##     difficulty_switches = T,
+##     ## cbns_to_include = c("cbn_all"),
+##     cbns_to_include = names(cbn_dfs)[1:3],
+##     mdls_to_include = c("full")
+## )
 
-reg_spec_mdls_optmz <- gen_batch_reg_specs(reg_settings_optmz, vvs, vrbl_thld_choices_optmz)
+## reg_spec_mdls_optmz <- gen_batch_reg_specs(reg_settings_optmz, vvs, vrbl_thld_choices_optmz)
 
-fldr_info_optmz <- setup_regression_folders_and_files(reg_settings_optmz$batch_nbr)
+## fldr_info_optmz <- setup_regression_folders_and_files(reg_settings_optmz$batch_nbr)
 
-mclapply(reg_spec_mdls_optmz, \(x) optmz_reg_spec(x, fldr_info_optmz, reg_settings_optmz),
-         mc.cores = 6)
+## mclapply(reg_spec_mdls_optmz, \(x) optmz_reg_spec(x, fldr_info_optmz, reg_settings_optmz),
+##          mc.cores = 6)
+
 
 
 
 ## optmz_reg_spec(reg_spec_mdls_optmz[[1]], nbr_loops = 3, fldr_info_optmz, reg_settings_optmz)
 
-run_vrbl_mdl_vars(reg_spec_mdls_optmz[[1]], vvs, fldr_info_optmz, verbose = F)
+## x <- reg_spec_mdls_optmz[[1]]
+## x$regcmd <- "xtnbreg"
+
+## run_vrbl_mdl_vars(x, vvs, fldr_info_optmz, verbose = F)
 
 ## ** debugging lack of convergence
 
-non_cvrgd_spec <- get_reg_spec_from_id(
-    "XX5XXX2XX3111135211--cbn_no_cult_spending_and_mitr--full--XX2XXX4XX4555532345--1--hnwi_nbr_30M",
-    fldr_info_optmz)
+## *** v38
 
-run_vrbl_mdl_vars(non_cvrgd_spec, vvs, fldr_info_optmz, verbose = T)
-
-## * running old
-
-cluster_sumry_addgns <- c(
-    "hnwi_nbr_30M_pure" = "HNWI with net worth 30M USD (count)",
-    "nbr_opened_pure" = "private museums openings (count)",
-    "NY.GDP.PCAP.CD" = "country-average GDP per capita (2021 constant USD)",
-    "NY.GDP.TTL" = "individual-average GDP per capita (2021 constant USD)",
-    "SP.POP.TOTL_pure" = "population")
-
-    
-
-#' overall regression wrapping 
-
-## ** end of functions
+## non_cvrgd_spec <- get_reg_spec_from_id(
+##     "XX5XXX2XX3111135211--cbn_no_cult_spending_and_mitr--full--XX2XXX4XX4555532345--1--hnwi_nbr_30M",
+##     fldr_info_optmz)
 
 
-reg_settings <- list(
-    nbr_specs = 1,
-    batch_nbr = "v20",
-    vary_vrbl_lag = T,
-    cbns_to_include = names(cbn_dfs),
-    mdls_to_include = c("full")
-)
-
-fldr_info <- setup_regression_folders_and_files(reg_settings$batch_nbr)
-
-## generating 20k models costs around 5 secs
+## non_cvrgd_spec$cfg$difficulty <- T
+## non_cvrgd_spec$cfg$technique_str <- "nr"
+## non_cvrgd_spec$regcmd <- "xtnbreg"
 
 
-reg_spec_mdls <- gen_batch_reg_specs(reg_settings, vvs, vrbl_thld_choices)
-names(reg_spec_mdls) <- lapply(reg_spec_mdls, \(x) x$mdl_id)
+## run_vrbl_mdl_vars(non_cvrgd_spec, vvs, fldr_info_optmz, verbose = T)
 
-## check how unique the model cfgs are 
-table(table(names(reg_spec_mdls)))
+## *** v41
 
-## run_vrbl_mdl_vars(reg_spec_mdls[[2]])
-## gen_mdl_id(reg_spec_mdls[[2]])
+## dt_cfgs <- fread("/home/johannes/reg_res/v41/v41_cfgs.csv")
+## dt_cfgs[V6 == 0] %>% adf()
 
-cvrgns <- mclapply(reg_spec_mdls[1:12], \(x) run_vrbl_mdl_vars(x, vvs, fldr_info, c("log_likelihood")), mc.cores = 6) %>% unlist()
+## non_cvrgd_spec <- get_reg_spec_from_id(
+##     "XX4XX3X3XX111125211--cbn_no_cult_spending_and_mitr--full--nr--TRUE--XX3XX2X3XX443221213--1--NY.GDP.PCAP.CDk",
+##     fldr_info_optmz)
 
-lapply(reg_spec_mdls[1:30], \(x) run_vrbl_mdl_vars(x, vvs, fldr_info, c("converged"))) %>% unlist()
-
-## run_vrbl_mdl_vars(reg_spec_mdls[[1]], vvs, fldr_info)
-NULL
+## non_cvrgd_spec$regcmd <- "xtnbreg"
+## run_vrbl_mdl_vars(non_cvrgd_spec, vvs, fldr_info_optmz, verbose = T)
 
 
-
-
-
-
-## *** convergence testing
-
-vrbl_thld_choices_cvrg <- slice_sample(vrbl_thld_choices, n=1)
-
-
-reg_settings_cvrg <- list(
-    nbr_specs_per_thld = 2,
-    batch_nbr = "v40",
-    vary_vrbl_lag = F,
-    cbns_to_include = "cbn_all",
-    mdls_to_include = c("full"),
-    technique_strs = c("nr", "dfp", "bfgs", "nr 5 dfp 5 bfgs 5"),
-    difficulty_switches = c(T,F)
-)
-    
-reg_spec_mdls_cvrg <- gen_batch_reg_specs(reg_settings_cvrg, vvs, vrbl_thld_choices_cvrg)
-
-fldr_info_cvrg <- setup_regression_folders_and_files(reg_settings_cvrg$batch_nbr)
-
-              
-mclapply(reg_spec_mdls_cvrg, \(x) optmz_reg_spec(x, fldr_info_cvrg, reg_settings_cvrg),
-         mc.cores = 6)
-
-optmz_reg_spec(reg_spec_mdls_cvrg[[1]], fldr_info = fldr_info_cvrg, reg_settings = reg_settings_cvrg)
-
-## * scrap: debugging, re-running
-
-## mdl_ids_tbl <- tibble(mdl_id = unlist(mdl_ids)) 
-## mdl_ids_tbl$x <- 1
-
-## mdls_to_check_ids <- merge(mdl_ids_tbl,
-##       df_reg_anls_cfgs_wide %>% select(mdl_id) %>% mutate(y=2),
-##       all.x = T) %>% atb() %>%
-##     filter(is.na(y)) %>% pull(mdl_id)
-
-## mdls_to_check_locs <- which(mdl_ids %in% mdls_to_check_ids)
-
-## ## reg_spec_mdls[mdls_to_check_specs]
-## mclapply(reg_spec_mdls[mdls_to_check_locs], run_vrbl_mdl_vars, mc.cores = 6) 
 
 
