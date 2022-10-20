@@ -27,3 +27,6 @@ reg_settings_optmz_v46 <- list(
     cbns_to_include = names(cbn_dfs)[1:3],
     mdls_to_include = c("full")
 )
+
+
+fldr_info_optmz <- setup_regression_folders_and_files(reg_settings_optmz_v46$batch_nbr)
