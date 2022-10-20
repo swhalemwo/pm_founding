@@ -374,6 +374,7 @@ gen_plt_mdl_summary <- function(mdl_summary, vvs) {
 }
 
 gen_plt_cvrgnc <- function(gof_df_cbn) {
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
     #' generate plot of convergence: run it only if loop_nbr in gof_df_cbn
 
     ## formalized test of convergence
@@ -396,12 +397,22 @@ gen_plt_cvrgnc <- function(gof_df_cbn) {
 
     ## progress after each variable
     ## variables are randomly chosen, so step is different for each base_lag_spec
-    plt_cvrgnc <- cvrgnc_df_prep %>% 
+    cvrgnc_df_prep2 <- cvrgnc_df_prep %>% 
         group_by(vrbl_choice, cbn_name, base_lag_spec, loop_nbr, vrbl_optmzd, regcmd) %>%
-        slice_max(gof_value) %>% 
+        slice_max(gof_value, with_ties = F)
+
+    ## group_vrbls <- c("vrbl_choice", "cbn_name", "base_lag_spec", "loop_nbr", "vrbl_optmzd", "regcmd")
+
+    ## cvrgnc_df_prep2 <- cvrgnc_df_prep %>% adt() %>%
+    ##     .[, .(gof_value = max(gof_value), step_base = 1), by = group_vrbls] %>% atb()
+
+    cvrgnc_df_prep3 <- cvrgnc_df_prep2 %>% 
         group_by(cbn_name,base_lag_spec,regcmd) %>% 
         arrange(gof_value) %>%
-        mutate(step = ave(step_base, FUN = cumsum)) %>% 
+        mutate(step = ave(step_base, FUN = cumsum)) 
+
+
+    plt_cvrgnc <- cvrgnc_df_prep3 %>% 
         ggplot(aes(x=step, y=gof_value, group = interaction(base_lag_spec, regcmd), color = vrbl_choice,
                    linetype =regcmd)) +
         geom_line() +
