@@ -1399,6 +1399,8 @@ optmz_reg_spec <- function(reg_spec, fldr_info, reg_settings) {
 
 ## ** running 
 
+## stop("functions are DONE")
+
 vvs <- gen_vrbl_vectors()
 vrbl_cbns <- gen_cbns(vvs$all_rel_vars, vvs$base_vars)
 cbn_dfs <- gen_cbn_dfs(vvs$lngtd_vars, vvs$crscn, vrbl_cbns, vvs$base_vars)
@@ -1411,11 +1413,11 @@ vrbl_thld_choices_optmz <- slice_sample(vrbl_thld_choices, n=6)
 
 reg_settings_optmz <- list(
     nbr_specs_per_thld = 2,
-    batch_nbr = "v45",
+    batch_nbr = "v46",
     vary_vrbl_lag = F,
     technique_strs = c("nr"),
     difficulty_switches = T,
-    regcmds = c("menbreg", "glmmTMB"),
+    regcmds = c("menbreg", "xtnbreg"),
     ## cbns_to_include = c("cbn_all"),
     cbns_to_include = names(cbn_dfs)[1:3],
     mdls_to_include = c("full")
