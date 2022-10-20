@@ -44,6 +44,7 @@ df_anls <- create_anls_df(df_wb, df_open)
 df_reg_pre_impt <- get_df_reg(df_anls)
 df_reg <- impute_df_reg_vrbls(df_reg_pre_impt)
 
+source(paste0(SCRIPT_DIR, "regression.R"))
 
 
 

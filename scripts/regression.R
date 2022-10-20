@@ -649,14 +649,21 @@ run_glmmtmb <- function(dfx, r_vars, verbose) {
 
     rx_gof <- get_r_gof(rx_glmmtmb, rx_smry)
 
-    rx_res <- list(coef_df = rx_coefs, gof_df = rx_gof)
+    if (any(is.na(rx_gof$gof_value)) | any(is.na(rx_coefs))) {
+        ## model did not converge properly
 
-    ## save_parsed_res(rx_res, idx = file_id, fldr_info)
+        ret_obj <- list(converged = F, log_likelihood = NA)
+    } else  {
 
-    return(list(
-        converged = T,
-        log_likelihood = rx_gof[which(rx_gof$gof_names == "log_likelihood"),"gof_value"],
-        res_parsed = rx_res))
+        rx_res <- list(coef_df = rx_coefs, gof_df = rx_gof)
+
+        ret_obj <- list(
+            converged = T,
+            log_likelihood = rx_gof[which(rx_gof$gof_names == "log_likelihood"),"gof_value"],
+            res_parsed = rx_res)
+    }
+
+    return(ret_obj)
 }
 
 
@@ -1272,6 +1279,7 @@ optmz_vrbl_lag <- function(reg_spec, vrblx, loop_nbr, fldr_info, reg_settings, v
     reg_settings2$cbns_to_include <- reg_spec$cfg$cbn_name
     reg_settings2$technique_strs <- reg_spec$cfg$technique_str
     reg_settings2$difficulty_switches <- reg_spec$cfg$difficulty
+    reg_settings2$regcmds <- reg_spec$cfg$regcmd
     
     reg_specs_full_again <- vary_batch_reg_spec(reg_specs_vrblx_varied, reg_settings2, vvs)
     
@@ -1292,9 +1300,16 @@ optmz_vrbl_lag <- function(reg_spec, vrblx, loop_nbr, fldr_info, reg_settings, v
                       run_vrbl_mdl_vars(x, vvs, fldr_info, return_objs = "log_likelihood"))
 
     ## seems to be robust against non-convergence
-    ## lag_lls[[1]] <- NA
+    ## lag_lls[[3]] <- NA
 
-    best_lag <- which.max(lag_lls)
+    if (all(is.na(lag_lls))) {
+        # time for break
+        best_lag <- sample(1:5, 1)
+        print("all lags of current model result in non-convergence, pick lag at random")
+            
+    } else {
+        best_lag <- which.max(lag_lls)
+    }
 
     ## assign best_lag value back to reg_spec 
     reg_spec$lngtd_vrbls <- reg_spec$lngtd_vrbls %>%
@@ -1380,22 +1395,23 @@ optmz_reg_spec <- function(reg_spec, fldr_info, reg_settings) {
     return (reg_spec)
 }
 
+
+
 ## ** running 
 
-## vvs <- gen_vrbl_vectors()
-## vrbl_cbns <- gen_cbns(vvs$all_rel_vars, vvs$base_vars)
-## cbn_dfs <- gen_cbn_dfs(vvs$lngtd_vars, vvs$crscn, vrbl_cbns, vvs$base_vars)
-## vrbl_thld_choices <- gen_vrbl_thld_choices(vvs$hnwi_vars, vvs$inc_ineq_vars, vvs$weal_ineq_vars)
+vvs <- gen_vrbl_vectors()
+vrbl_cbns <- gen_cbns(vvs$all_rel_vars, vvs$base_vars)
+cbn_dfs <- gen_cbn_dfs(vvs$lngtd_vars, vvs$crscn, vrbl_cbns, vvs$base_vars)
+vrbl_thld_choices <- gen_vrbl_thld_choices(vvs$hnwi_vars, vvs$inc_ineq_vars, vvs$weal_ineq_vars)
 
 
-stop("functions end here")
 
-vrbl_thld_choices_optmz <- slice_sample(vrbl_thld_choices, n=3)
+vrbl_thld_choices_optmz <- slice_sample(vrbl_thld_choices, n=6)
 
 
 reg_settings_optmz <- list(
-    nbr_specs_per_thld = 3,
-    batch_nbr = "v44",
+    nbr_specs_per_thld = 2,
+    batch_nbr = "v45",
     vary_vrbl_lag = F,
     technique_strs = c("nr"),
     difficulty_switches = T,
@@ -1409,9 +1425,12 @@ reg_spec_mdls_optmz <- gen_batch_reg_specs(reg_settings_optmz, vvs, vrbl_thld_ch
 
 fldr_info_optmz <- setup_regression_folders_and_files(reg_settings_optmz$batch_nbr)
 
-mclapply(reg_spec_mdls_optmz, \(x) optmz_reg_spec(x, fldr_info_optmz, reg_settings_optmz),
-         mc.cores = 5)
+pbmclapply(reg_spec_mdls_optmz, \(x) optmz_reg_spec(x, fldr_info_optmz, reg_settings_optmz),
+         mc.cores = 4)
 
+
+
+stop("models are DONE")
 
 regspec_x <- reg_spec_mdls_optmz[[1]]
 
@@ -1455,3 +1474,12 @@ t2 = Sys.time()
 
 print(t2-t1)
 
+## *** v44
+
+glmm_na_spec <- get_reg_spec_from_id(
+    "XX5X3XX3XX441155232--cbn_no_cult_spending--full--nr--TRUE--glmmTMB--XX5X2XX5XX114113144--2--hnwi_nbr_30M",
+    fldr_info_optmz)
+
+run_vrbl_mdl_vars(glmm_na_spec, vvs, fldr_info_optmz, verbose = T)
+
+optmz_reg_spec(glmm_na_spec, fldr_info_optmz, reg_settings_optmz)
