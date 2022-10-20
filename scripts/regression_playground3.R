@@ -94,3 +94,11 @@ optmz_reg_spec(reg_spec_mdls_cvrg[[1]], fldr_info = fldr_info_cvrg, reg_settings
 
 
 
+
+## ** standardization of cbn_dfs
+
+cbn_dfs$cbn_all
+
+adt(cbn_dfs$cbn_all)[, lapply(.SD, sd)] %>% melt() %>% adf()
+adt(cbn_dfs$cbn_no_cult_spending)[, lapply(.SD, sd)] %>% melt() %>% adf()
+adt(cbn_dfs$cbn_no_cult_spending_and_mitr)[, lapply(.SD, sd)] %>% melt() %>% adf()
