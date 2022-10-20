@@ -303,16 +303,33 @@ proc_reg_res_objs <- function(reg_anls_base, vvs) {
 
 
 gen_plt_cbn_log_likelihoods <- function(gof_df_cbn) {
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
     #' generate plot of likelihoods
 
     ## ok makes sense: cbn_all models have best fit: most variables, least observations
     ## fit gets worse the more variables are removed and the more cases are added
 
    
-    gof_df_cbn %>% 
-        filter(gof_names == "log_likelihood") %>%
-        ggplot(aes(x = gof_value, fill = cbn_name)) +
-        geom_histogram(binwidth = 1)
+    gof_df_cbn_prep <- gof_df_cbn %>% 
+        filter(gof_names == "log_likelihood")
+
+    vlines <- gof_df_cbn_prep %>%
+        group_by(cbn_name, regcmd) %>%
+        summarize(vlines = max(gof_value))
+
+
+    gof_df_cbn_prep %>% 
+        ggplot(aes(x = gof_value, fill = cbn_name, group = cbn_name)) +
+        geom_histogram(aes(y= ..density..), binwidth = 1) +
+        ## geom_density(geom = "line", position = "identity", n=8000) +
+        ## geom_vline(aes(xintercept =max (gof_value))) + 
+        xlim(c(min(gof_df_cbn_prep$gof_value)-1,
+               max(gof_df_cbn_prep$gof_value)+1)) + 
+        geom_vline(vlines, mapping = aes(xintercept = vlines)) + 
+        facet_wrap(~regcmd, ncol = 1) 
+
+
+
 
 }
 
