@@ -454,7 +454,8 @@ gen_stata_code_xtnbreg <- function(iv_vars, gof_names, stata_output_vars, diffic
         panel_setup = "xtset iso3c_num year",
         cvrgd_setup = sprintf("set maxiter %s", maxiter),
         reg_cmd = paste0("capture xtnbreg nbr_opened ", paste(iv_vars_stata, collapse = " "), ", re ", difficult_str, " technique(", technique_str, ")"),
-        cvrg_check = paste0(c("local nbr_itr = e(ic)", sprintf("if `nbr_itr' < %s {", maxiter)), collapse = "\n"),
+        ## cvrg_check= paste0(c("local nbr_itr = e(ic)", sprintf("if `nbr_itr' < %s {", maxiter)), collapse = "\n"),
+        cvrg_check = paste0(c("if _rc == 0 {")),
         coef_cmd = "mata: b=st_matrix(\"e(b)\")' \n mata: st_matrix(\"b_stata\", b)",
         se_cmd = "mata: se=sqrt(diagonal(st_matrix(\"e(V)\"))) \n mata: st_matrix(\"se_stata\", se)",
         gof_cmd = "matrix gof = ( e(N), e(ll), e(N_g), e(chi2), e(p), e(df_m))'", 
@@ -462,7 +463,11 @@ gen_stata_code_xtnbreg <- function(iv_vars, gof_names, stata_output_vars, diffic
         rename_cmd = paste0("matrix colnames stata_return = ", paste0(res_names, collapse = " ")),
         sv_cmd = "svmat stata_return \n keep stata_return* \n drop if missing(stata_return1)",
         cvrg_check_curly_brace = "}",
-        no_cvrg_return = paste0(c(sprintf("else if `nbr_itr' == %s {", maxiter),  "matrix ncvrg_mat = (`nbr_itr')", "svmat ncvrg_mat", "keep ncvrg_mat*", "drop if missing(ncvrg_mat1)", "}"), collapse = "\n")
+        ## no_cvrg_return = paste0(c(sprintf("else if `nbr_itr' == %s {", maxiter),  "matrix ncvrg_mat = (`nbr_itr')", "svmat ncvrg_mat", "keep ncvrg_mat*", "drop if missing(ncvrg_mat1)", "}"), collapse = "\n")
+        no_cvrg_cond = "else if _rc != 0 {",
+        no_cvrg_mat = "matrix ncvrg_mat = (_rc)",
+        no_cvrg_return = paste0(c("svmat ncvrg_mat", "keep ncvrg_mat*", "drop if missing(ncvrg_mat1)", "}"),
+                                 collapse = "\n")
     )
 
     stata_src <- paste(stata_code, collapse = "\n")
@@ -527,7 +532,8 @@ gen_stata_code_menbreg <- function(iv_vars, gof_names, stata_output_vars) {
     stata_code = list(
         cvrgd_setup = sprintf("set maxiter %s", maxiter),
         reg_cmd = paste0("capture menbreg nbr_opened ", paste(iv_vars_stata, collapse = " "), " || iso3c_num:"),
-        cvrg_check = paste0(c("local nbr_itr = e(ic)", sprintf("if `nbr_itr' < %s {", maxiter)), collapse = "\n"),
+        ## cvrg_check= paste0(c("local nbr_itr = e(ic)", sprintf("if `nbr_itr' < %s {", maxiter)), collapse = "\n"),
+        cvrg_check = paste0(c("if _rc == 0 {")),
         coef_cmd = "mata: b=st_matrix(\"e(b)\")' \n mata: st_matrix(\"b_stata\", b)",
         gof_cmd = "matrix gof = ( e(N), e(ll), e(N_g), e(chi2), e(p), e(df_m))'",
         se_cmd = "mata: se=sqrt(diagonal(st_matrix(\"e(V)\"))) \n mata: st_matrix(\"se_stata\", se)",
@@ -535,7 +541,12 @@ gen_stata_code_menbreg <- function(iv_vars, gof_names, stata_output_vars) {
         rename_cmd = paste0("matrix colnames stata_return = ", paste0(res_names, collapse = " ")),
         sv_cmd = "svmat stata_return \n keep stata_return* \n drop if missing(stata_return1)",
         cvrg_check_curly_brace = "}",
-        no_cvrg_return = paste0(c(sprintf("else if `nbr_itr' == %s {", maxiter),  "matrix ncvrg_mat = (`nbr_itr')", "svmat ncvrg_mat", "keep ncvrg_mat*", "drop if missing(ncvrg_mat1)", "}"), collapse = "\n")
+        ## no_cvrg_cond = sprintf("else if `nbr_itr' == %s {", maxiter),
+        ## no_cvrg_mat = "matrix ncvrg_mat = (`nbr_itr')",
+        no_cvrg_cond = "else if _rc != 0 {",
+        no_cvrg_mat = "matrix ncvrg_mat = (_rc)",
+        no_cvrg_return = paste0(c("svmat ncvrg_mat", "keep ncvrg_mat*", "drop if missing(ncvrg_mat1)", "}"),
+                                 collapse = "\n")
     )
 
 
@@ -741,7 +752,7 @@ run_vrbl_mdl_vars <- function(reg_spec, vvs, fldr_info, return_objs = c("converg
         system(rmdir_cmd)}
     
     if (!r_regspec$converged) {
-        df_idx$cvrgd <- 0 # if converged is null, it means the convergence failed
+        df_idx$cvrgd <- 0 # assign cvrgnc failure to objects
         other_cfgs$cvrgd <- 0
         print("convergence failed")
                     
@@ -1408,13 +1419,13 @@ vrbl_thld_choices <- gen_vrbl_thld_choices(vvs$hnwi_vars, vvs$inc_ineq_vars, vvs
 
 
 
-vrbl_thld_choices_optmz <- slice_sample(vrbl_thld_choices, n=6)
+vrbl_thld_choices_optmz <- slice_sample(vrbl_thld_choices, n=36)
 
 
 reg_settings_optmz <- list(
-    nbr_specs_per_thld = 2,
-    batch_nbr = "v46",
-    vary_vrbl_lag = F,
+    nbr_specs_per_thld = 3,
+    batch_nbr = "v47",
+    vary_vrbl_lag = T,
     technique_strs = c("nr"),
     difficulty_switches = T,
     regcmds = c("menbreg", "xtnbreg"),
@@ -1423,16 +1434,25 @@ reg_settings_optmz <- list(
     mdls_to_include = c("full")
 )
 
+
+
 reg_spec_mdls_optmz <- gen_batch_reg_specs(reg_settings_optmz, vvs, vrbl_thld_choices_optmz)
+len(reg_spec_mdls_optmz)
 
 fldr_info_optmz <- setup_regression_folders_and_files(reg_settings_optmz$batch_nbr)
+
+mclapply(reg_spec_mdls_optmz, \(x) run_vrbl_mdl_vars(x, vvs, fldr_info_optmz), mc.cores = 6)
+
+stop("models are DONE")
+
+
 
 pbmclapply(reg_spec_mdls_optmz, \(x) optmz_reg_spec(x, fldr_info_optmz, reg_settings_optmz),
          mc.cores = 4)
 
 
 
-stop("models are DONE")
+
 
 regspec_x <- reg_spec_mdls_optmz[[1]]
 
@@ -1485,3 +1505,18 @@ glmm_na_spec <- get_reg_spec_from_id(
 run_vrbl_mdl_vars(glmm_na_spec, vvs, fldr_info_optmz, verbose = T)
 
 optmz_reg_spec(glmm_na_spec, fldr_info_optmz, reg_settings_optmz)
+
+## *** v47
+
+## debug errors in v47: some models still throw errors -> FIND them
+
+started <- fread(paste0(fldr_info_optmz$MDL_START_FILE), col.names = "mdl_id", header = F)
+finished <- fread(paste0(fldr_info_optmz$MDL_END_FILE), col.names = "mdl_id", header = F)
+
+setdiff(started$mdl_id, finished$mdl_id)
+setdiff(finished$mdl_id, started$mdl_id)
+
+error_spec <- get_reg_spec_from_id(
+    started[!finished, on = "mdl_id"][c(3)], fldr_info_optmz)
+
+run_vrbl_mdl_vars(error_spec, vvs, fldr_info_optmz, verbose = T)
