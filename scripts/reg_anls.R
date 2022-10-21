@@ -444,7 +444,20 @@ gen_plt_reg_res_within <- function(df_anls_within, vvs, NBR_MDLS) {
     if (as.character(match.call()[[1]]) %in% fstd){browser()}
     #' plot the within coef change (all other coefs constant)
 
-    ggplot(df_anls_within, aes(x=lag, y=coef, group = interaction(base_lag_spec, regcmd))) +
+    ## debugging some weird squiggly lines
+    ## ## general filtering
+    ## filter(df_anls_within, cbn_name == "cbn_all", 
+    ##        vrbl_name_unlag %in% c("smorc_dollar_fxm", "sptinc992j_p99p100")) %>%
+    ##     ## narrow filtering
+    ##     filter(vrbl_name_unlag == "sptinc992j_p99p100", regcmd == "menbreg") %>%
+    ##     select(lag_variatn, mdl_id, base_lag_spec) %>% adt() %>% .[, .N, base_lag_spec]
+        
+
+    ## filter(df_anls_within, cbn_name == "cbn_all", 
+    ##        vrbl_name_unlag %in% c("smorc_dollar_fxm", "sptinc992j_p99p100")) %>%
+    df_anls_within %>%
+        ## group = interaction(base_lag_spec, regcmd)
+        ggplot(aes(x=lag, y=coef, group = lag_variatn)) +
         geom_line(aes(linetype = regcmd), show.legend = T, alpha = 1/NBR_MDLS) +
         geom_quasirandom(aes(color = t_value, shape = factor(sig)), size = 2,  width = 0.3, stroke = 1) + 
         facet_grid(vrbl_name_unlag ~ cbn_name + regcmd, scales = "free", switch = "y", 
