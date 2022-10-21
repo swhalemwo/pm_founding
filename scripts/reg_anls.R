@@ -357,7 +357,7 @@ construct_best_mdls_summary <- function(df_best_mdls) {
 }
 
 
-proc_reg_res_objs <- function(reg_anls_base, vvs) {
+proc_reg_res_objs <- function(reg_anls_base, vvs, NBR_MDLS) {
     if (as.character(match.call()[[1]]) %in% fstd){browser()}
     #' further processing of the regression res objects, no reading-in here
 
@@ -370,11 +370,11 @@ proc_reg_res_objs <- function(reg_anls_base, vvs) {
     df_anls_base <- add_coef_sig(coef_df, df_reg_anls_cfgs_wide)
 
     ## number of models to pick for the analyses
-    NBR_MDLS <- 1
+    
 
     optmzd = "loop_nbr" %in% names(gof_df_cbn)
         
-    df_anls_within <- construct_df_anls_within(df_anls_base, vvs, NBR_MDLS, optmzd)
+    df_anls_within <- construct_df_anls_within(df_anls_base, vvs, NBR_MDLS, optmzd, gof_df_cbn)
     df_anls_all <- construct_df_anls_all(df_anls_base, vvs, NBR_MDLS)
 
     df_best_mdls <- construct_df_best_mdls(df_anls_base, gof_df_cbn)
@@ -432,12 +432,14 @@ gen_plt_cbn_log_likelihoods <- function(gof_df_cbn) {
 
 }
 
-gen_plt_reg_res_within <- function(df_anls_within, vvs) {
+gen_plt_reg_res_within <- function(df_anls_within, vvs, NBR_MDLS) {
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
+    #' plot the within coef change (all other coefs constant)
 
-    ggplot(df_anls_within, aes(x=lag, y=coef, group = base_lag_spec)) +
-        geom_line(show.legend = F, alpha = 0.15) +
-        geom_quasirandom(aes(color = t_value, shape = factor(sig)), size = 2, height = 0, width = 0.3) + 
-        facet_grid(vrbl_name_unlag ~ cbn_name, scales = "free", switch = "y", 
+    ggplot(df_anls_within, aes(x=lag, y=coef, group = interaction(base_lag_spec, regcmd))) +
+        geom_line(aes(linetype = regcmd), show.legend = T, alpha = 1/NBR_MDLS) +
+        geom_quasirandom(aes(color = t_value, shape = factor(sig)), size = 2,  width = 0.3, stroke = 1) + 
+        facet_grid(vrbl_name_unlag ~ cbn_name + regcmd, scales = "free", switch = "y", 
                    labeller = labeller(vrbl_name_unlag = vvs$vrbl_lbls)) +
         theme(strip.text.y.left = element_text(angle = 0)) +
         scale_color_gradient2(low = "blue", mid = "grey", high = "red") +
@@ -446,23 +448,27 @@ gen_plt_reg_res_within <- function(df_anls_within, vvs) {
 }
 
 gen_plt_reg_res_all <- function(df_anls_all, vvs) {
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
     #' plot coefs from all models 
-
+    
 
     ggplot(df_anls_all, aes(x=lag, y=coef)) +
-        geom_quasirandom(aes(color = t_value, shape = factor(sig)), size = 2, height = 0, width = 0.3) +
-        facet_grid(cols = vars(cbn_name), rows = vars(vrbl_name_unlag), scales = "free", switch = "y",
+        geom_quasirandom(aes(color = t_value, shape = factor(sig)), size = 2, width = 0.3, stroke = 1) +
+        ## facet_grid(cols = c(vars(cbn_name), vars(regcmd)), rows = vars(vrbl_name_unlag),
+        facet_grid(vrbl_name_unlag ~ cbn_name + regcmd,
+                            scales = "free", switch = "y",
                    labeller = labeller(vrbl_name_unlag = vvs$vrbl_lbls)) +
         theme(strip.text.y.left = element_text(angle = 0)) +
         scale_color_gradient2(low = "blue", mid = "grey", high = "red") +
         scale_shape_manual(values = c(1,4))
+    
 }
 
 gen_plt_best_mdls_wlag <- function(df_best_mdls, vvs) {
     #' generate plot of coefs of beste models with lag
 
     ggplot(df_best_mdls, aes(x=lag, y=exp(coef), color = t_value)) +
-        geom_quasirandom(aes(shape = factor(sig)), height = 0, width = 0.33, show.legend=T, size = 3) +
+        geom_quasirandom(aes(shape = factor(sig)),  width = 0.33, show.legend=T, size = 3) +
         facet_grid(vrbl_name_unlag~cbn_name, scales="free", switch = "y",
                    labeller = labeller(vrbl_name_unlag = vvs$vrbl_lbls)) +
         theme(strip.text.y.left = element_text(angle = 0)) + 
@@ -540,7 +546,7 @@ gen_plt_cvrgnc <- function(gof_df_cbn) {
 
 
 
-gen_reg_res_plts <- function(reg_res_objs, vvs) {
+gen_reg_res_plts <- function(reg_res_objs, vvs, NBR_MDLS) {
     if (as.character(match.call()[[1]]) %in% fstd){browser()}
     #' generate all the plots
     
@@ -551,7 +557,7 @@ gen_reg_res_plts <- function(reg_res_objs, vvs) {
     mdl_summary <- reg_res_objs$mdl_summary
 
     plt_cbn_log_likelihoods = gen_plt_cbn_log_likelihoods(gof_df_cbn)
-    plt_reg_res_within = gen_plt_reg_res_within(df_anls_within, vvs)
+    plt_reg_res_within = gen_plt_reg_res_within(df_anls_within, vvs, NBR_MDLS)
     plt_reg_res_all = gen_plt_reg_res_all(df_anls_within, vvs)
     plt_best_models_wlag = gen_plt_best_mdls_wlag(df_best_mdls, vvs)
     plt_best_models_condensed = gen_plt_mdl_summary(mdl_summary, vvs)
@@ -618,15 +624,16 @@ stop("functions done")
 ## ** main analysis
 
 ## read in stuff, construct objects
+NBR_MDLS <- 3
 fldr_info <- fldr_info_optmz
 reg_anls_base <- read_reg_res_files(fldr_info)
-reg_res_objs <- proc_reg_res_objs(reg_anls_base, vvs)
+reg_res_objs <- proc_reg_res_objs(reg_anls_base, vvs, NBR_MDLS)
 
 
 reg_res <- list()
 
 ## generate plots, construct configs
-reg_res$plts <- gen_reg_res_plts(reg_res_objs, vvs)
+reg_res$plts <- gen_reg_res_plts(reg_res_objs, vvs, NBR_MDLS)
 reg_res$plt_cfgs <- gen_plt_cfgs()
 
 ## render all plots to file
