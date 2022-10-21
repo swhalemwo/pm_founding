@@ -29,4 +29,24 @@ reg_settings_optmz_v46 <- list(
 )
 
 
+## ** v47: run all the threshold varied randomly -> no optimization 
+
+vrbl_thld_choices_optmz <- slice_sample(vrbl_thld_choices, n=36)
+
+reg_settings_optmz <- list(
+    nbr_specs_per_thld = 3,
+    batch_nbr = "v47",
+    vary_vrbl_lag = T,
+    technique_strs = c("nr"),
+    difficulty_switches = T,
+    regcmds = c("menbreg", "xtnbreg"),
+    ## cbns_to_include = c("cbn_all"),
+    cbns_to_include = names(cbn_dfs)[1:3],
+    mdls_to_include = c("full")
+)
+
+mclapply(reg_spec_mdls_optmz, \(x) run_vrbl_mdl_vars(x, vvs, fldr_info_optmz), mc.cores = 6)
+
+## * read settings back in 
+
 fldr_info_optmz <- setup_regression_folders_and_files(reg_settings_optmz_v46$batch_nbr)
