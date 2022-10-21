@@ -99,6 +99,9 @@ construct_df_anls_within_prep <- function(df_anls_base, optmzd) {
         filter(vrbl_varied == vrbl_name_unlag |
                (vrbl_varied == "tmitr_approx_linear20step" & vrbl_name_unlag == "ti_tmitr_interact") 
               ,cbn_name != "cbn_controls")  ## only use within-base_spec changes, add special case for tmitr
+
+        group_vrbls <- c("vrbl_name_unlag", "cbn_name", "base_lag_spec_id", "regcmd")
+        
     } else {
         
         df_anls_within_prep2 <- df_anls_within_prep1 %>%
@@ -107,15 +110,18 @@ construct_df_anls_within_prep <- function(df_anls_base, optmzd) {
                    (vrbl_varied == "tmitr_approx_linear20step" & vrbl_name_unlag == "ti_tmitr_interact") 
                   ,cbn_name != "cbn_controls")
 
+        ## if optmzd: also group by loop_nbr: otherwise super large
+        group_vrbls <- c("vrbl_name_unlag", "cbn_name", "base_lag_spec_id", "regcmd", "loop_nbr")
         
     }
     
     df_anls_within_prep3 <- df_anls_within_prep2 %>%
         group_by(vrbl_name_unlag, cbn_name) %>%
         mutate(base_lag_spec_id = as.numeric(factor(base_lag_spec))) %>%
-        group_by(vrbl_name_unlag, cbn_name, base_lag_spec_id) %>%
+        group_by(across(all_of(group_vrbls))) %>% # haha plain english verbs make it so EZ AMIRITE
         mutate(nbr_mdls_cvrgd = len(base_lag_spec_id)) %>% 
         filter(nbr_mdls_cvrgd == 5)
+
 
     return(df_anls_within_prep3)
 
@@ -138,11 +144,11 @@ construct_time_invariant_coefs <- function(df_anls_base, vvs) {
     return(df_anls_time_invariant)
 }
 
-construct_df_anls_within <- function(df_anls_base, vvs, NBR_MDLS) {
+construct_df_anls_within <- function(df_anls_base, vvs, NBR_MDLS, optmzd) {
     if (as.character(match.call()[[1]]) %in% fstd){browser()}
     #' construct the dataset of the within lag-spec changes
 
-    df_anls_within_prep <- construct_df_anls_within_prep(df_anls_base, optmzd = T)
+    df_anls_within_prep <- construct_df_anls_within_prep(df_anls_base, optmzd = optmzd)
 
 
     ## filter out a number of models per lag (and cbn)
@@ -274,8 +280,10 @@ proc_reg_res_objs <- function(reg_anls_base, vvs) {
 
     ## number of models to pick for the analyses
     NBR_MDLS <- 1
+
+    optmzd = "loop_nbr" %in% names(gof_df_cbn)
         
-    df_anls_within <- construct_df_anls_within(df_anls_base, vvs, NBR_MDLS)
+    df_anls_within <- construct_df_anls_within(df_anls_base, vvs, NBR_MDLS, optmzd)
     df_anls_all <- construct_df_anls_all(df_anls_base, vvs, NBR_MDLS)
 
     df_best_mdls <- construct_df_best_mdls(df_anls_base, gof_df_cbn)
@@ -464,6 +472,7 @@ gen_reg_res_plts <- function(reg_res_objs, vvs) {
                    plt_best_models_condensed = plt_best_models_condensed)
 
     
+    ## only generate convergence plot when using optimization
     if ("loop_nbr" %in% names(gof_df_cbn)) {
         plt_cvrgnc = gen_plt_cvrgnc(gof_df_cbn)
 
@@ -895,7 +904,7 @@ y <- plotreg(x, type = "facet")
 
 
 
-createTexreg(coef.names = mdl_summary$vrbl_name_unlag, coef = 
+createTexreg(coef.names = mdl_summary$vrbl_name_unlag, coef = )
 
 
 ## *** LL lines
