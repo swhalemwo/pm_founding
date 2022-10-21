@@ -33,7 +33,7 @@ reg_settings_optmz_v46 <- list(
 
 vrbl_thld_choices_optmz <- slice_sample(vrbl_thld_choices, n=36)
 
-reg_settings_optmz <- list(
+reg_settings_optmz_v47 <- list(
     nbr_specs_per_thld = 3,
     batch_nbr = "v47",
     vary_vrbl_lag = T,
@@ -50,3 +50,4 @@ mclapply(reg_spec_mdls_optmz, \(x) run_vrbl_mdl_vars(x, vvs, fldr_info_optmz), m
 ## * read settings back in 
 
 fldr_info_optmz <- setup_regression_folders_and_files(reg_settings_optmz_v46$batch_nbr)
+fldr_info_optmz <- setup_regression_folders_and_files(reg_settings_optmz_v47$batch_nbr)
