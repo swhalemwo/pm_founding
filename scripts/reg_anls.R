@@ -174,8 +174,14 @@ construct_time_invariant_coefs <- function(df_anls_base, vvs, df_anls_within_pre
     ## order the data.table, select top models
     time_invrnt_mdl_ids <- dt_anls_time_invariant_prep2[order(-gof_value), .SD[1:NBR_MDLS], by= grp_vrbls]
 
+    ## just assign lag = 3 to time invariant variables
     time_invrnt_mdl_ids$lag <- 3
 
+    ## if optzmd: make sure that time invariant-variables are also properly labeled 
+    if ("vrbl_optmzd" %in% names(time_invrnt_mdl_ids)) {
+        time_invrnt_mdl_ids$vrbl_varied = time_invrnt_mdl_ids$vrbl_optmzd
+    }
+            
     ## plot(time_invrnt_mdl_ids$gof_value)
     ## data.table seems robust enough to allow different group order? 
     ## len(intersect(time_invrnt_mdl_ids$mdl_id, time_invrnt_mdl_ids2$mdl_id))
@@ -247,8 +253,9 @@ construct_df_anls_within <- function(df_anls_base, vvs, NBR_MDLS, optmzd, gof_df
     
     ## should get the time-invariant coefs of the mdls that I'm using in df_anls_within_prep2
     
-
     df_anls_time_invariant <- construct_time_invariant_coefs(df_anls_base, vvs, df_anls_within_prep2, NBR_MDLS)
+
+    ## setdiff(names(df_anls_within_prep2), names(df_anls_time_invariant))
 
     df_anls_within <- rbind(df_anls_within_prep2, df_anls_time_invariant)
 
@@ -304,11 +311,11 @@ construct_df_best_mdls <- function(df_anls_base, gof_df_cbn) {
         filter(gof_names == "log_likelihood", cbn_name != "cbn_controls",
                mdl_id %in% unique(df_anls_base_no1B$mdl_id)) %>%
         filter(!is.na(gof_value)) %>% 
-        group_by(cbn_name) %>% 
+        group_by(cbn_name, regcmd) %>% 
         arrange(gof_value) %>%
         slice_tail(n=1)
     
-    gof_df_cbn %>% filter(is.na(gof_value)) %>% pull(mdl_id)
+    ## gof_df_cbn %>% filter(is.na(gof_value)) %>% pull(mdl_id)
 
 
     best_mdl_coefs <- merge(df_anls_base, best_mdls) %>% atb()
@@ -342,9 +349,10 @@ construct_df_best_mdls <- function(df_anls_base, gof_df_cbn) {
 
 
 construct_best_mdls_summary <- function(df_best_mdls) {
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
     #' summary variables for best models 
     
-    mdl_summary <- df_best_mdls %>% group_by(vrbl_name_unlag, cbn_name) %>%
+    mdl_summary <- df_best_mdls %>% group_by(vrbl_name_unlag, cbn_name, regcmd) %>%
         summarize(coef = mean(coef), lag_mean = mean(lag), lag_sd = sd(lag), p_value = mean(pvalues),
                   t_value = mean(t_value), se = mean(se), min = coef - 1.96*se, max = coef + 1.96*se,
                   sig = ifelse(abs(t_value) > 1.96, 1,0))
@@ -465,11 +473,13 @@ gen_plt_reg_res_all <- function(df_anls_all, vvs) {
 }
 
 gen_plt_best_mdls_wlag <- function(df_best_mdls, vvs) {
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
     #' generate plot of coefs of beste models with lag
 
     ggplot(df_best_mdls, aes(x=lag, y=exp(coef), color = t_value)) +
-        geom_quasirandom(aes(shape = factor(sig)),  width = 0.33, show.legend=T, size = 3) +
-        facet_grid(vrbl_name_unlag~cbn_name, scales="free", switch = "y",
+        geom_quasirandom(aes(shape = factor(sig), stroke = as.numeric(factor(regcmd))-0.5),
+                         width = 0.33, show.legend=T, size = 3) +
+        facet_grid(vrbl_name_unlag~ cbn_name + regcmd , scales="free", switch = "y",
                    labeller = labeller(vrbl_name_unlag = vvs$vrbl_lbls)) +
         theme(strip.text.y.left = element_text(angle = 0)) + 
         scale_color_gradient2(low = "blue", mid = "grey", high = "red") +
@@ -478,11 +488,14 @@ gen_plt_best_mdls_wlag <- function(df_best_mdls, vvs) {
 }
 
 gen_plt_mdl_summary <- function(mdl_summary, vvs) {
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
     #' generate the summary plot of the best models 
     
-    ggplot(mdl_summary, aes(color = factor(sig), y = vrbl_name_unlag)) +
-        geom_point(aes(x = coef, shape = factor(sig)), size = 2.5, alpha = 0.95, show.legend = F) +
-        geom_errorbarh(aes(xmin = min, xmax = max, , height= 0.1), alpha = 0.6, show.legend = F) + 
+    ggplot(mdl_summary, aes(color = factor(sig), y = vrbl_name_unlag, group = regcmd)) +
+        geom_point(aes(x = coef, shape = factor(regcmd)), size = 2.5, alpha = 0.95, show.legend = T,
+                   position = position_dodge(width = 0.5)) +
+        geom_errorbarh(aes(xmin = min, xmax = max, , height= 0.1), alpha = 0.6, show.legend = F,
+                       position = position_dodge(width = 0.5)) + 
         facet_wrap(~cbn_name) +
         geom_vline(xintercept =0, linetype = "dashed") +
         scale_shape_manual(values = c(15,16)) +
