@@ -3,6 +3,7 @@
 
 library(stringr)
 library(ggbeeswarm)
+library(patchwork)
 
 read_reg_res <- function(idx, fldr_info) {
     #' read back model results with some id    
@@ -462,7 +463,9 @@ gen_plt_reg_res_within <- function(df_anls_within, vvs, NBR_MDLS) {
         geom_quasirandom(aes(color = t_value, shape = factor(sig)), size = 2,  width = 0.3, stroke = 1) + 
         facet_grid(vrbl_name_unlag ~ cbn_name + regcmd, scales = "free", switch = "y", 
                    labeller = labeller(vrbl_name_unlag = vvs$vrbl_lbls)) +
-        theme(strip.text.y.left = element_text(angle = 0)) +
+        theme(strip.text.y.left = element_text(angle = 0),
+              panel.spacing.y = unit(0.1, "lines"),
+              panel.background = element_rect(fill = NA, color = "black")) +
         scale_color_gradient2(low = "blue", mid = "grey", high = "red") +
         scale_shape_manual(values = c(1,4))
     
@@ -579,21 +582,12 @@ gen_plt_mdl_summary <- function(mdl_summary, vvs) {
                         scale_color_manual(values = c("#1C5BA6", "#BD0017")) +
                         scale_y_discrete(labels = vvs$vrbl_lbls) +
                         labs(x="", y="")) 
-    plts_scale[[1]] / plts_scale[[2]] +
+    plt_cbn <- plts_scale[[1]] / plts_scale[[2]] +
         plot_layout(heights = c(nrow(mdl_summary_split[[1]]), nrow(mdl_summary_split[[2]])-6))
 
-    library(patchwork)
 
 
-                        
-
-
-
-
-
-
-
-           
+    return(plt_cbn)           
 
 }
 
