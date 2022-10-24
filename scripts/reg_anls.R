@@ -572,16 +572,20 @@ gen_plt_mdl_summary <- function(mdl_summary, vvs) {
         split(.$se_large)
     plts_scale <- mdl_summary_split %>% lapply(\(x) x %>% 
                     ggplot(aes(color = factor(sig), y = vrbl_name_unlag, group = regcmd)) +
-                        geom_point(aes(x = coef, shape = factor(regcmd)), size = 2.5, alpha = 0.95, show.legend = T,
+                    geom_point(aes(x = coef, shape = factor(regcmd)), size = 2.5, alpha = 0.95, show.legend = T,
+                               position = position_dodge(width = 0.5)) +
+                    geom_errorbarh(aes(xmin = min, xmax = max, , height= 0.1), alpha = 0.6, show.legend = F,
                                    position = position_dodge(width = 0.5)) +
-                        geom_errorbarh(aes(xmin = min, xmax = max, , height= 0.1), alpha = 0.6, show.legend = F,
-                                       position = position_dodge(width = 0.5)) +
-                        facet_wrap(~cbn_name) +
-                        geom_vline(xintercept =0, linetype = "dashed") +
-                        scale_shape_manual(values = c(15,16)) +
-                        scale_color_manual(values = c("#1C5BA6", "#BD0017")) +
-                        scale_y_discrete(labels = vvs$vrbl_lbls) +
-                        labs(x="", y="")) 
+                    facet_wrap(~cbn_name) +
+                    geom_vline(xintercept =0, linetype = "dashed") +
+                    scale_shape_manual(values = c(15,16)) +
+                    scale_color_manual(values = c("#1C5BA6", "#BD0017")) +
+                    scale_y_discrete(labels = vvs$vrbl_lbls) +
+                    labs(x="", y="") +
+                    theme(legend.position = "bottom"))
+        
+    ## combine plots with patchwork,
+    ## add some arbitrary scaling for now to make difference between variables more equal
     plt_cbn <- plts_scale[[1]] / plts_scale[[2]] +
         plot_layout(heights = c(nrow(mdl_summary_split[[1]]), nrow(mdl_summary_split[[2]])-6))
 
@@ -695,25 +699,43 @@ gen_plt_cfgs <- function() {
     
     return(
         list(
-        cbn_log_likelihoods = list(filename = "cbn_log_likelihoods.pdf", width = 6, height = 3),
-        reg_res_within = list(filename = "reg_res_within.pdf", width = 10, height = 12),
-        reg_res_all = list(filename = "reg_res_all.pdf", width = 8, height = 12),
-        best_models_wlag = list(filename = "best_models_wlag.pdf", width = 8, height = 12),
-        best_models_condensed = list(filename = "best_models_condensed.pdf", width = 7, height = 4)
+            plt_cbn_log_likelihoods = list(filename = "cbn_log_likelihoods.pdf", width = 6, height = 3),
+            plt_reg_res_within = list(filename = "reg_res_within.pdf", width = 12, height = 12),
+            plt_reg_res_all = list(filename = "reg_res_all.pdf", width = 12, height = 12),
+            plt_best_models_wlag = list(filename = "best_models_wlag.pdf", width = 8, height = 12),
+            plt_best_models_condensed = list(filename = "best_models_condensed.pdf", width = 9, height = 8),
+            plt_lag_cprn = list(filename = "lag_cprn.pdf", width = 7, height = 5),
+            plt_cvrgnc = list(filename = "crvgnc.pdf", width = 5, height = 7)
         )
     )
 
 }
 
-plot_reg_res <- function(plt_name, fldr_info) {
+render_all_reg_res_plts <- function(reg_res, batch_version) {
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
+    
+    #' wrapper to comfily render all the plots of a regression results version
+
+    
+    lapply(names(reg_res$plts), \(x)
+           render_reg_res(x, reg_res, reg_res$plt_cfgs, batch_version))
+
+    
+}
+    
+
+
+render_reg_res <- function(plt_name, reg_res, plt_cfgs, batch_version) {
     #' general way to plot regression result to file, also adding batch number
     
     plt <- reg_res$plts[[plt_name]]
+
+    
     ## plt_name <- deparse(substitute(plt)) %>% strsplit("$", fixed = T) %>% unlist() %>% tail(1)
 
     plt_cfg <- reg_res$plt_cfgs[[plt_name]]
 
-    plt_filename <- paste0(FIG_DIR, fldr_info$batch_version, "_", plt_cfg$filename)
+    plt_filename <- paste0(FIG_DIR, "plt_", batch_version, "_", plt_cfg$filename)
     
     pdf(plt_filename,  width = plt_cfg$width, height = plt_cfg$height)
     plot(plt)
@@ -721,19 +743,76 @@ plot_reg_res <- function(plt_name, fldr_info) {
     
 }
 
+cpr_vrsns <- function(reg_res_vsns) {
+    #' compare two versions of regression results
+    #' take best model per cbn, regcmd, vrbl_choice
+
+    #' not fully functionalized: want to add this layer of abstraction (versions) as little as possible
+    #' atm still relies on v48 and v49, and has hard-coded plot call
+    
+    ## get best models
+    dt_cpr_vsns <- imap_dfr(reg_res_vsns, ~ .x$reg_res_objs$gof_df_cbn %>%
+                                              filter(gof_names == "log_likelihood") %>%
+                                              mutate(vrbl_choice = gsub("[1-5]", "0", base_lag_spec)) %>% 
+                                              group_by(cbn_name, regcmd, vrbl_choice) %>% 
+                                              slice_max(gof_value, with_ties = F) %>%
+                                              select(cbn_name, regcmd, gof_value) %>%
+                                              mutate(source = .y))
+    ## some shitty plot
+    dt_cpr_vsns %>% 
+        ggplot(aes(x = gof_value, y=source)) +
+        geom_point() + 
+        facet_wrap(~ regcmd + cbn_name, scales = "free")
+        
+    ## cast best gofs wide -> calculate goff diff
+    dt_cpr_vsns_wide <- adt(dt_cpr_vsns) %>%
+        dcast.data.table(vrbl_choice + cbn_name + regcmd ~ source , value.var = "gof_value") %>%
+        .[, gof_diff := v49- v48]
+
+    ## dt_cpr_vsns_wide$gof_diff %>% hist(breaks = 40)
+
+
+    plt_gof_cpr_vsn <- ggplot(dt_cpr_vsns_wide, aes(x=gof_diff)) +
+        geom_histogram(aes(y=..density..), binwidth = 0.2, color = "black", fill = "grey") +
+        xlim(c(0, 7)) + 
+        scale_x_continuous(breaks = seq(-1,7, 0.5)) +
+        geom_vline(xintercept = 0, linetype = "dashed")
+
+    pdf(paste0(FIG_DIR, "plt_vsns_cprsn.pdf"), height = 4, width = 7)
+    plot(plt_gof_cpr_vsn)
+    dev.off()
+
+}
+
+
+gen_reg_res <- function(fldr_info) {
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
+
+    NBR_MDLS <- 3
+    ## fldr_info <- fldr_info_optmz
+    reg_anls_base <- read_reg_res_files(fldr_info)
+    reg_res_objs <- proc_reg_res_objs(reg_anls_base, vvs, NBR_MDLS)
+
+    reg_res <- list()
+
+    ## generate plots, construct configs
+    reg_res$plts <- gen_reg_res_plts(reg_res_objs, vvs, NBR_MDLS)
+    reg_res$plt_cfgs <- gen_plt_cfgs()
+
+    reg_res$reg_res_objs <- reg_res_objs
+
+    return(reg_res)
+}
+
+
 
 stop("functions done")
 
-
-
 ## ** main analysis
-
-## read in stuff, construct objects
 NBR_MDLS <- 3
-fldr_info <- fldr_info_optmz
-reg_anls_base <- read_reg_res_files(fldr_info)
+## fldr_info <- fldr_info_optmz
+reg_anls_base <- read_reg_res_files(setup_regression_folders_and_files("v49"))
 reg_res_objs <- proc_reg_res_objs(reg_anls_base, vvs, NBR_MDLS)
-
 
 reg_res <- list()
 
@@ -742,13 +821,39 @@ reg_res$plts <- gen_reg_res_plts(reg_res_objs, vvs, NBR_MDLS)
 reg_res$plt_cfgs <- gen_plt_cfgs()
 
 ## render all plots to file
-lapply(names(reg_res$plts), \(x) plot_reg_res(x, fldr_info))
+## lapply(names(reg_res$plts), \(x) render_reg_res(x, fldr_info))
+
+
+## ** version comparison 
+## read in stuff, construct objects
+
+reg_res_v48 <- gen_reg_res(setup_regression_folders_and_files("v48"))
+reg_res_v49 <- gen_reg_res(setup_regression_folders_and_files("v49"))
+
+setdiff(names(reg_res_v48$plt_cfgs), names(reg_res_v48$plts))
+
+## reg_res_v48$plt_cfgs <- gen_plt_cfgs()
+## reg_res_v48$plts <- gen_reg_res_plts(reg_res_v48$reg_res_objs, vvs, NBR_MDLS)
+## render_reg_
+render_all_reg_res_plts(reg_res_v48, "v48")
+render_all_reg_res_plts(reg_res_v49, "v49")
+
+
+reg_res_vsns <- list(v48 = reg_res_v48, v49=reg_res_v49)
+cpr_vrsns(reg_res_vsns)
+
+
+
+## filter(reg_res_objs$gof_df_cbn, gof_names == "log_likelihood") %>% 
+
+
+
 
 ## reg_anls_base$df_reg_anls_cfgs_wide$loop_nbr %>% table()
 
 
-## plot_reg_res(reg_res$plts$cbn_log_likelihoods, fldr_info)
-## plot_reg_res(reg_res$plts$best_models_condensed, fldr_info)
+## render_reg_res(reg_res$plts$cbn_log_likelihoods, fldr_info)
+## render_reg_res(reg_res$plts$best_models_condensed, fldr_info)
    
 ## ** step-wise optimization starts here 
 
