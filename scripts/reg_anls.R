@@ -485,6 +485,39 @@ gen_plt_reg_res_all <- function(df_anls_all, vvs) {
     
 }
 
+gen_plt_lag_cprn <- function(df_best_mdls, vvs) {
+    #' generate plot that allows easy comparison of lags chosen across combinations and models 
+    
+    
+
+    ## filter down to necessary variables (lag info)
+    lag_prep <- filter(df_best_mdls, vrbl_name_unlag %!in% vvs$crscn_vars) %>%
+        select(vrbl_name_unlag, lag, regcmd, cbn_name) %>%
+        mutate(source = "lag") %>% adt()
+
+    ## calculate diff in lags, put in into separate (small; space="free") facet
+    lag_diff <- lag_prep %>%  adt() %>% 
+        dcast.data.table(vrbl_name_unlag + cbn_name ~ regcmd, value.var = "lag") %>%
+        .[,lag_diff := abs(menbreg - xtnbreg)] %>%
+        .[, .(vrbl_name_unlag, cbn_name, lag = lag_diff)] %>% .[, source := "lagdiff"]
+
+    lag_cbn <- rbind(lag_prep, lag_diff, fill = T) %>% adf()
+
+
+    lag_cbn %>% 
+        ggplot(aes(x = lag, y= as.character(vrbl_name_unlag), group = regcmd, fill = regcmd)) +
+        geom_bar(stat = "identity", position = position_dodge(width = 0.6), width = 0.5) +
+        facet_grid(~cbn_name + source, scales = "free", space = "free") +
+        scale_y_discrete(labels = vvs$vrbl_lbls) +
+        labs(y="variable") +
+        theme(legend.position = "bottom") +
+        scale_x_continuous(breaks = seq(0,5))
+
+}
+
+
+
+
 gen_plt_best_mdls_wlag <- function(df_best_mdls, vvs) {
     if (as.character(match.call()[[1]]) %in% fstd){browser()}
     #' generate plot of coefs of beste models with lag
@@ -629,12 +662,14 @@ gen_reg_res_plts <- function(reg_res_objs, vvs, NBR_MDLS) {
     plt_reg_res_within = gen_plt_reg_res_within(df_anls_within, vvs, NBR_MDLS)
     plt_reg_res_all = gen_plt_reg_res_all(df_anls_within, vvs)
     plt_best_models_wlag = gen_plt_best_mdls_wlag(df_best_mdls, vvs)
+    plt_lag_cprn <- gen_plt_lag_cprn(df_best_mdls, vvs)
     plt_best_models_condensed = gen_plt_mdl_summary(mdl_summary, vvs)
 
     l_plts <- list(plt_cbn_log_likelihoods= plt_cbn_log_likelihoods,
                    plt_reg_res_within = plt_reg_res_within,
                    plt_reg_res_all = plt_reg_res_all,
                    plt_best_models_wlag = plt_best_models_wlag,
+                   plt_lag_cprn = plt_lag_cprn,
                    plt_best_models_condensed = plt_best_models_condensed)
 
     
