@@ -102,3 +102,36 @@ cbn_dfs$cbn_all
 adt(cbn_dfs$cbn_all)[, lapply(.SD, sd)] %>% melt() %>% adf()
 adt(cbn_dfs$cbn_no_cult_spending)[, lapply(.SD, sd)] %>% melt() %>% adf()
 adt(cbn_dfs$cbn_no_cult_spending_and_mitr)[, lapply(.SD, sd)] %>% melt() %>% adf()
+
+
+## ** debug time
+
+dirx <- "/home/johannes/reg_res/v49/reg_res/"
+
+v49_files <- paste0(dirx, list.files(dirx))
+v49_files[[1]]
+
+v49_file_infos <- lapply(v49_files, file.info)
+
+v49_time_infos <- lapply(v49_file_infos, \(x) format(as.POSIXct(x$ctime), format = "%Y-%m-%d %H:%M"))
+v49_time_infos[[1000]]
+as.POSIXct(v49_time_infos[[1000]])
+
+format(v49_time_infos[[1000]], format = "%Y-%m-%d %H:%M")
+
+v49_time_infos[[1000]]
+
+t_dtx <- data.table(x=1, timex = unlist(v49_time_infos)) %>%
+    .[, timex2 := as.POSIXct(timex)]
+
+t_dtx %>% copy() %>% .[, ten_min := ceiling_date(timex2, '10 min')] %>%
+    .[, .N, ten_min] %>%
+    ggplot(aes(x=ten_min, y=N)) +
+    geom_line()
+
+
+ggplot(t_dtx, aes(x=timex2)) +
+    geom_histogram(bins = 180)
+    
+
+
