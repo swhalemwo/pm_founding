@@ -478,3 +478,29 @@ svmat krappa
 keep krappa*
 drop if missing(krappa1)
 list in 1
+
+
+/* checking for some multicollinearity */
+
+menbreg nbr_opened Ind_tax_incentives NPO_tax_exemption cnt_contemp_1995 cnt_contemp_1995_squared hnwi_nbr_200M_lag2 sptinc992j_p90p100_lag1 ghweal992j_lag5 tmitr_approx_linear20step_lag3 ti_tmitr_interact_lag3 smorc_dollar_fxm_lag5 smorc_dollar_fxm_sqrd_lag1 NY_GDP_PCAP_CDk_lag2 SP_POP_TOTLm_lag2 clctr_cnt_cpaer_lag3 nbr_opened_cum_lag4 || iso3c_num:
+
+gen smorc_dollar_fxm_lag52 = smorc_dollar_fxm_lag5 + 1
+
+menbreg nbr_opened Ind_tax_incentives NPO_tax_exemption cnt_contemp_1995 cnt_contemp_1995_squared hnwi_nbr_200M_lag2 sptinc992j_p90p100_lag1 ghweal992j_lag5 tmitr_approx_linear20step_lag3 ti_tmitr_interact_lag3 smorc_dollar_fxm_lag5 smorc_dollar_fxm_lag52 smorc_dollar_fxm_sqrd_lag1 NY_GDP_PCAP_CDk_lag2 SP_POP_TOTLm_lag2 clctr_cnt_cpaer_lag3 nbr_opened_cum_lag4 || iso3c_num:
+
+xtset iso3c_num year
+
+
+
+xtnbreg nbr_opened Ind_tax_incentives NPO_tax_exemption cnt_contemp_1995 cnt_contemp_1995_squared hnwi_nbr_200M_lag2 sptinc992j_p90p100_lag1 ghweal992j_lag5 tmitr_approx_linear20step_lag3 ti_tmitr_interact_lag3 smorc_dollar_fxm_lag5 smorc_dollar_fxm_lag52 smorc_dollar_fxm_sqrd_lag1 NY_GDP_PCAP_CDk_lag2 SP_POP_TOTLm_lag2 clctr_cnt_cpaer_lag3 nbr_opened_cum_lag4, re
+
+mata: b=st_matrix("e(b)")'
+mata: st_matrix("b_stata", b)
+mata: se=sqrt(diagonal(st_matrix("e(V)"))) 
+mata: st_matrix("se_stata", se)
+matrix gof = ( e(N), e(ll), e(N_g), e(chi2), e(p), e(df_m))'
+matrix stata_return = (b_stata', se_stata', gof')
+svmat stata_return
+display `stata_return'
+
+list in 1
