@@ -1424,8 +1424,8 @@ vrbl_thld_choices_optmz <- slice_sample(vrbl_thld_choices, n=36)
 
 reg_settings_optmz <- list(
     nbr_specs_per_thld = 3,
-    batch_nbr = "v47",
-    vary_vrbl_lag = T,
+    batch_nbr = "v49",
+    vary_vrbl_lag = F,
     technique_strs = c("nr"),
     difficulty_switches = T,
     regcmds = c("menbreg", "xtnbreg"),
@@ -1437,18 +1437,19 @@ reg_settings_optmz <- list(
 
 
 reg_spec_mdls_optmz <- gen_batch_reg_specs(reg_settings_optmz, vvs, vrbl_thld_choices_optmz)
-len(reg_spec_mdls_optmz)
+print(len(reg_spec_mdls_optmz))
 
 fldr_info_optmz <- setup_regression_folders_and_files(reg_settings_optmz$batch_nbr)
 
-mclapply(reg_spec_mdls_optmz, \(x) run_vrbl_mdl_vars(x, vvs, fldr_info_optmz), mc.cores = 6)
+pbmclapply(reg_spec_mdls_optmz, \(x) optmz_reg_spec(x, fldr_info_optmz, reg_settings_optmz),
+         mc.cores = 6)
+
+## mclapply(reg_spec_mdls_optmz, \(x) run_vrbl_mdl_vars(x, vvs, fldr_info_optmz), mc.cores = 6)
 
 stop("models are DONE")
 
 
 
-pbmclapply(reg_spec_mdls_optmz, \(x) optmz_reg_spec(x, fldr_info_optmz, reg_settings_optmz),
-         mc.cores = 4)
 
 
 
