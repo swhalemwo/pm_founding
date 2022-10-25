@@ -321,6 +321,7 @@ xtreg nbr_opened smorc_dollar_fxm_lag1 nygdppcapcdk_lag1 indtaxincentives, fe
 xtnbreg nbr_opened smorc_dollar_fxm_lag1 nygdppcapcdk_lag1 indtaxincentives, re 
 estimates store r_xtnbreg
 
+
 menbreg nbr_opened smorc_dollar_fxm_lag1 nygdppcapcdk_lag1 indtaxincentives || iso3c_num:
 estimates store r_menbreg
 
@@ -351,6 +352,13 @@ menbreg nbo csp gdp ti || iso3c_num: csp, cov(unstr)
 estat vce
 
 estimates table r_menbreg r_menbreg_unstr
+
+/* test speed of menbreg */
+
+timer on 1
+menbreg nbr_opened smorc_dollar_fxm_lag1 nygdppcapcdk_lag1 indtaxincentives || iso3c_num:
+timer off 1
+timer list
 
 
 /* work on cbpp for SO MWE */
@@ -416,3 +424,83 @@ display "pseudo R2 t=" (`ll0' - `llt')/`ll0'
 
 /* try nbreg with country_dummies, but produces different results than xtnbreg */
 nbreg nbr_opened smorc_dollar_fxm_lag1 nygdppcapcdk_lag1 indtaxincentives i.iso3c_num
+
+
+/* menbreg export */
+clear
+import delimited /home/johannes/Dropbox/phd/papers/org_pop/data/processed/glmmTMB_test.csv
+
+menbreg nbr_opened smorc_dollar_fxm_lag1 nygdppcapcdk_lag1 indtaxincentives || iso3c_num:
+
+local nbr_itr = e(ic)
+display `nbr_itr'
+
+if `nbr_itr' < 100 {
+/* display `nbr_itr' */
+matrix kappa = (90909)
+matrix kappa = (`nbr_itr')
+svmat kappa
+keep kappa*
+}
+
+
+mata: b=st_matrix("e(b)")'
+mata: st_matrix("b_stata", b)
+mata: se=sqrt(diagonal(st_matrix("e(V)"))) 
+mata: st_matrix("se_stata", se)
+matrix gof = ( e(N), e(ll), e(N_g), e(chi2), e(p), e(df_m))'
+matrix stata_return = (b_stata', se_stata', gof')
+svmat stata_return
+  keep stata_return* 
+
+/* non-convergence testing */
+clear
+import delimited /home/johannes/Dropbox/phd/papers/org_pop/data/processed/dfx_ncvrgd.csv
+xtset iso3c_num year
+set maxiter 5
+
+capture xtnbreg nbr_opened indtaxincentives npotaxexemption cnt_contemp_1995 cnt_contemp_1995_squared hnwi_nbr_30m_lag4 sptinc992j_p99p100_lag3 shweal992j_p90p100_lag3 nygdppcapcdk_lag2 sppoptotlm_lag5 clctr_cnt_cpaer_lag2 nbr_opened_cum_lag1 nbr_opened_cum_sqrd_lag1, re difficult technique(nr)
+/* local cvrgnc = e(converge) */
+/* display `cvrgnc' */
+local nbr_itr = e(ic)
+display `nbr_itr'
+
+if `nbr_itr' < 100 {
+matrix ncvrg_mat = (`nbr_itr')
+svmat ncvrg_mat
+keep ncvrg_mat*
+drop if missing(ncvrg_mat1)
+}
+
+
+matrix krappa = (`nbr_itr')
+svmat krappa
+keep krappa*
+drop if missing(krappa1)
+list in 1
+
+
+/* checking for some multicollinearity */
+
+menbreg nbr_opened Ind_tax_incentives NPO_tax_exemption cnt_contemp_1995 cnt_contemp_1995_squared hnwi_nbr_200M_lag2 sptinc992j_p90p100_lag1 ghweal992j_lag5 tmitr_approx_linear20step_lag3 ti_tmitr_interact_lag3 smorc_dollar_fxm_lag5 smorc_dollar_fxm_sqrd_lag1 NY_GDP_PCAP_CDk_lag2 SP_POP_TOTLm_lag2 clctr_cnt_cpaer_lag3 nbr_opened_cum_lag4 || iso3c_num:
+
+gen smorc_dollar_fxm_lag52 = smorc_dollar_fxm_lag5 + 1
+
+menbreg nbr_opened Ind_tax_incentives NPO_tax_exemption cnt_contemp_1995 cnt_contemp_1995_squared hnwi_nbr_200M_lag2 sptinc992j_p90p100_lag1 ghweal992j_lag5 tmitr_approx_linear20step_lag3 ti_tmitr_interact_lag3 smorc_dollar_fxm_lag5 smorc_dollar_fxm_lag52 smorc_dollar_fxm_sqrd_lag1 NY_GDP_PCAP_CDk_lag2 SP_POP_TOTLm_lag2 clctr_cnt_cpaer_lag3 nbr_opened_cum_lag4 || iso3c_num:
+
+xtset iso3c_num year
+
+
+
+xtnbreg nbr_opened Ind_tax_incentives NPO_tax_exemption cnt_contemp_1995 cnt_contemp_1995_squared hnwi_nbr_200M_lag2 sptinc992j_p90p100_lag1 ghweal992j_lag5 tmitr_approx_linear20step_lag3 ti_tmitr_interact_lag3 smorc_dollar_fxm_lag5 smorc_dollar_fxm_lag52 smorc_dollar_fxm_sqrd_lag1 NY_GDP_PCAP_CDk_lag2 SP_POP_TOTLm_lag2 clctr_cnt_cpaer_lag3 nbr_opened_cum_lag4, re
+
+mata: b=st_matrix("e(b)")'
+mata: st_matrix("b_stata", b)
+mata: se=sqrt(diagonal(st_matrix("e(V)"))) 
+mata: st_matrix("se_stata", se)
+matrix gof = ( e(N), e(ll), e(N_g), e(chi2), e(p), e(df_m))'
+matrix stata_return = (b_stata', se_stata', gof')
+svmat stata_return
+display `stata_return'
+
+list in 1

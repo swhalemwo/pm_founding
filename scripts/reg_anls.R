@@ -3,6 +3,7 @@
 
 library(stringr)
 library(ggbeeswarm)
+library(patchwork)
 
 read_reg_res <- function(idx, fldr_info) {
     #' read back model results with some id    
@@ -81,57 +82,181 @@ add_coef_sig <- function(coef_df,  df_reg_anls_cfgs_wide) {
 }
 
 
-construct_df_anls_within_prep <- function(df_anls_base) {
+construct_df_anls_within_prep <- function(df_anls_base, optmzd) {
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
     #' construct the within-base-spec changes:
     #' only get the coefs of variables where the variable is varied (within base-spec changes)
     #' only get coefs where all 5 variations converged
     
-    df_anls_within_prep <- df_anls_base %>%
+    df_anls_within_prep1 <- df_anls_base %>%
         filter(vrbl_name_unlag != vrbl_name) %>% ## only use the lag variables
-        mutate(lag = as.numeric(substring(str_extract(vrbl_name, "_lag(\\d+)"), 5))) %>%
+        mutate(lag = as.numeric(substring(str_extract(vrbl_name, "_lag(\\d+)"), 5)))
+
+
+    ## if reg_res is created by step-wise optimization, vrbl_varied is not available 
+    ## here it's created from vrbl_optmzd, which is the best within-lag variation I think I have for optmzed runs
+    ## if optmzd: also group by loop_nbr: otherwise super large
+    
+    if (optmzd) {
+        df_anls_within_prep2 <- df_anls_within_prep1 %>%
+            mutate(vrbl_varied = vrbl_optmzd)
+        
+        group_vrbls <- c("vrbl_name_unlag", "cbn_name", "base_lag_spec_id", "regcmd", "loop_nbr")
+
+    } else {
+        df_anls_within_prep2 <- df_anls_within_prep1
+        group_vrbls <- c("vrbl_name_unlag", "cbn_name", "base_lag_spec_id", "regcmd")
+    }
+    
+    ## only use within-base_spec changes, add special case for tmitr
+    df_anls_within_prep3 <- df_anls_within_prep2 %>% 
         filter(vrbl_varied == vrbl_name_unlag |
                (vrbl_varied == "tmitr_approx_linear20step" & vrbl_name_unlag == "ti_tmitr_interact") 
-              ,cbn_name != "cbn_controls") %>% ## only use within-base_spec changes, add special case for tmitr
+              ,cbn_name != "cbn_controls")
+
+    ## names(df_anls_within_prep3)
+    ## dt_anls_within_prep3 <- adt(df_anls_within_prep3)
+    ## dt_anls_within_prep3[, lapply(.SD, uniqueN)] %>% melt() ## check nbr of unique values, maybe lagspec?
+    ## dt_anls_within_prep3[, .N, lag_spec][, .N, N] ## doesn't seem like it: so much
+    
+
+    df_anls_within_prep4 <- df_anls_within_prep3 %>%
         group_by(vrbl_name_unlag, cbn_name) %>%
-        mutate(base_lag_spec_id = as.numeric(factor(base_lag_spec))) %>%
-        group_by(vrbl_name_unlag, cbn_name, base_lag_spec_id) %>%
+        mutate(base_lag_spec_id = as.numeric(factor(base_lag_spec)))
+
+    ## add some lag_variation ID (lag_variatn): convert to dt because dt is awesome
+    ## lag_variatn: the grouping of models by varying the lag of one variable while keeping all others constant
+    dt_anls_within_prep4 <- adt(df_anls_within_prep4)
+    dt_anls_within_prep4[, lag_variatn := .GRP, by = group_vrbls]
+    ## dt_anls_within_prep4[, .N, group_vrbls][, .N, N] ## check the grouping counts
+    ## dt_anls_within_prep4[, .N, lag_variatn][, .N, N]
+
+
+    df_anls_within_prep5 <- atb(dt_anls_within_prep4) %>%
+        group_by(across(all_of(group_vrbls))) %>% # haha plain english verbs make it so EZ AMIRITE
         mutate(nbr_mdls_cvrgd = len(base_lag_spec_id)) %>% 
         filter(nbr_mdls_cvrgd == 5)
 
-    return(df_anls_within_prep)
+
+    return(df_anls_within_prep5)
 
 }
 
 
 
 
-construct_time_invariant_coefs <- function(df_anls_base, vvs) {
+construct_time_invariant_coefs <- function(df_anls_base, vvs, df_anls_within_prep2, NBR_MDLS) {
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
     #' grab some coefs of cross-sectional variables, to be rbinded with the longitudinal coefs
     
-    df_anls_time_invariant <- df_anls_base %>%
-        filter(vrbl_name %in% vvs$crscn_vars) %>%
-        group_by(cbn_name, vrbl_name) %>%
-        slice_sample(n=15) %>%
-        mutate(base_lag_spec_id = 1,
-               lag = 1,
-               nbr_mdls_cvrgd = 1)
+    df_anls_time_invariant_prep1 <- df_anls_base %>%
+        filter(vrbl_name %in% vvs$crscn_vars)
 
-    return(df_anls_time_invariant)
+    ## inner_join(df_anls_time_invariant_prep1, df_anls_within_prep2, on = "mdl_id")
+    ## intersect(df_anls_time_invariant_prep1$mdl_id, df_anls_within_prep2$mdl_id) %>% len()
+
+    ## can't get ALL the coefs of invariant variables from the models used in df_anls_within_prep2:
+    ## each model has its own set of coefs for the time-invariant variables -> way too many
+    ## just pick some top ones -> need gof
+
+    ## join with data table because for some reason inner_join doesn't work?
+    dt_anls_time_invariant_prep2 <- adt(df_anls_time_invariant_prep1)[
+        ## include all kinds of variables in df_anls_within_prep2 that are later need in rbind 
+        adt(df_anls_within_prep2)[, .(mdl_id,gof_value, lag_variatn, base_lag_spec_id, nbr_mdls_cvrgd)],
+        on = "mdl_id"]
+      
+    ## need to get the mdls from which I want to take coefs
+    ## then use the mdl_ids to get the coefs of time-invariant vrbls
+    ## and also use the mdl_ids to get the lag_variatn/gof_value from df_anls_within_prep2 to rbind stuff together
+    ## LUL actually don't need to because .SD is just so amazing in tucking all the vrbls I need in there
+
+    grp_vrbls <- c("regcmd", "cbn_name", "vrbl_name_unlag")
+
+    ## order the data.table, select top models
+    time_invrnt_mdl_ids <- dt_anls_time_invariant_prep2[order(-gof_value), .SD[1:NBR_MDLS], by= grp_vrbls]
+
+    ## just assign lag = 3 to time invariant variables
+    time_invrnt_mdl_ids$lag <- 3
+
+    ## if optzmd: make sure that time invariant-variables are also properly labeled 
+    if ("vrbl_optmzd" %in% names(time_invrnt_mdl_ids)) {
+        time_invrnt_mdl_ids$vrbl_varied = time_invrnt_mdl_ids$vrbl_optmzd
+    }
+            
+    ## plot(time_invrnt_mdl_ids$gof_value)
+    ## data.table seems robust enough to allow different group order? 
+    ## len(intersect(time_invrnt_mdl_ids$mdl_id, time_invrnt_mdl_ids2$mdl_id))
+    ## grp_vrbls2 <- c("vrbl_name_unlag", "regcmd", "cbn_name")
+    ## time_invrnt_mdl_ids2 <- dt_anls_time_invariant_prep2[order(-gof_value), .SD[1:NBR_MDLS], by= grp_vrbls2]
+    ## plot(dt_anls_time_invariant_prep2[order(-gof_value), .SD, by= grp_vrbls2]$gof_value)
+    ## plot(dt_anls_time_invariant_prep2[order(-gof_value), .SD, by = grp_vrbls]$gof_value)
+
+    ##     group_by(cbn_name, vrbl_name) %>%
+    ##     slice_sample(n=15) %>%
+    ##     mutate(base_lag_spec_id = 1,
+    ##            lag = 1,
+    ##            nbr_mdls_cvrgd = 1)
+
+    ## return(df_anls_time_invariant)
+
+    return(atb(time_invrnt_mdl_ids))
 }
 
-construct_df_anls_within <- function(df_anls_base, vvs, NBR_MDLS) {
+construct_df_anls_within <- function(df_anls_base, vvs, NBR_MDLS, optmzd, gof_df_cbn) {
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
     #' construct the dataset of the within lag-spec changes
 
-    df_anls_within_prep <- construct_df_anls_within_prep(df_anls_base)
+    df_anls_within_prep <- construct_df_anls_within_prep(df_anls_base, optmzd = optmzd)
 
+    gof_df_cbn_fltrd <- gof_df_cbn %>%
+        filter(gof_names == "log_likelihood") %>%
+        select(mdl_id, gof_value)
+
+    ## intersect(names(df_anls_within_prep), names(gof_df_cbn_fltrd))
+
+    df_anls_within_prep1 <- inner_join(df_anls_within_prep, gof_df_cbn_fltrd, by="mdl_id")
 
     ## filter out a number of models per lag (and cbn)
-    df_anls_within_prep2 <- df_anls_within_prep %>%
-        group_by(cbn_name, vrbl_name_unlag) %>%
-        filter(base_lag_spec_id %in% sample(unique(base_lag_spec_id), NBR_MDLS))
+    ## really seems like I need to stick to this awkward filtering: 
+    ## slicing would only select rows, not groups of rows:
+    ## -> either drop coefs or get all (when also grouping by base_lag_spec_id)
+    ## df_anls_within_prep2 <- df_anls_within_prep %>%
+    ##     group_by(cbn_name, vrbl_name_unlag, regcmd) %>%
+    ##     filter(base_lag_spec_id %in% sample(unique(base_lag_spec_id),
+    ##                                         min(NBR_MDLS, n_distinct(base_lag_spec_id))))
+
+    ## ## only select coefs from the NBR_MDLS best fitting ones
+    ## ## probably have to re-number the base_lag_spec_ids
+    ## df_anls_within_prep2 <- df_anls_within_prep1 %>%
+    ##     group_by(cbn_name, vrbl_name_unlag, regcmd) %>%
+    ##     arrange(-gof_value) %>%
+    ##     mutate(base_lag_spec_id2 = as.numeric(factor(base_lag_spec))) %>%
+    ##     select(mdl_id, gof_value, base_lag_spec_id2) %>% 
+    ##     print(n=200)
+        
+
+    ##     filter(base_lag_spec_id %in% sample(unique(base_lag_spec_id),
+    ##                                         min(NBR_MDLS, n_distinct(base_lag_spec_id))))
 
     
-    df_anls_time_invariant <- construct_time_invariant_coefs(df_anls_base, vvs)
+
+    df_lag_variatns <- df_anls_within_prep1 %>%
+        group_by(cbn_name, vrbl_name_unlag, regcmd, lag_variatn) %>%
+        summarize(max_gof = max(gof_value)) %>%
+        group_by(regcmd, cbn_name, vrbl_name_unlag) %>%
+        slice_max(max_gof, n=NBR_MDLS, with_ties = F) %>%
+        ungroup() %>% 
+        select(lag_variatn)
+    
+    df_anls_within_prep2 <- inner_join(df_lag_variatns, df_anls_within_prep1, by="lag_variatn") 
+    ## select(-lag_variatn, -gof_value) ## yeet variables that are not in df_anls_time_invariant
+    ## ehhh should add them there as well
+    
+    ## should get the time-invariant coefs of the mdls that I'm using in df_anls_within_prep2
+    
+    df_anls_time_invariant <- construct_time_invariant_coefs(df_anls_base, vvs, df_anls_within_prep2, NBR_MDLS)
+
+    ## setdiff(names(df_anls_within_prep2), names(df_anls_time_invariant))
 
     df_anls_within <- rbind(df_anls_within_prep2, df_anls_time_invariant)
 
@@ -170,6 +295,7 @@ construct_df_anls_all <- function(df_anls_base, vvs, NBR_MDLS) {
 }
 
 construct_df_best_mdls <- function(df_anls_base, gof_df_cbn) {
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
     #' construct the data of the best fitting models per combination
     
 
@@ -177,17 +303,26 @@ construct_df_best_mdls <- function(df_anls_base, gof_df_cbn) {
     df_anls_base_no1B <- df_anls_base %>% group_by(mdl_id) %>%
         filter("hnwi_nbr_1B" %!in% vrbl_name_unlag)
 
+    ## add some check to make sure there are no NAs in gof_value
+    if (any(is.na(gof_df_cbn$gof_value))) {
+        stop("some NAs in gof_df_cbn$gof_value (construct_df_best_mdls)")}
+
     ## select best model per combination
     best_mdls <- gof_df_cbn %>%
         filter(gof_names == "log_likelihood", cbn_name != "cbn_controls",
                mdl_id %in% unique(df_anls_base_no1B$mdl_id)) %>%
-        group_by(cbn_name) %>% 
+        filter(!is.na(gof_value)) %>% 
+        group_by(cbn_name, regcmd) %>% 
         arrange(gof_value) %>%
         slice_tail(n=1)
     
+    ## gof_df_cbn %>% filter(is.na(gof_value)) %>% pull(mdl_id)
+
 
     best_mdl_coefs <- merge(df_anls_base, best_mdls) %>% atb()
     
+    ## setdiff(unique(best_mdl_coefs$vrbl_name_unlag), names(vvs$vrbl_lbls))
+
     ## best_mdl_coefs$lag <- as.numeric(substring(str_extract(best_mdl_coefs$vrbl_name, "_lag(\\d+)"), 5))
     ## best_mdl_coefs$lag[is.na(best_mdl_coefs$lag)] <- 0
     
@@ -197,22 +332,28 @@ construct_df_best_mdls <- function(df_anls_base, gof_df_cbn) {
     ## other_var_names <- c(unique(best_mdl_coefs$vrbl_name_unlag)[unique(best_mdl_coefs$vrbl_name_unlag) %!in% vrbl_levels])
     ## levels = c(vrbl_levels, other_var_names))
     
-    ## reordering the variables
-    best_mdl_coefs$vrbl_name_unlag <- factor(best_mdl_coefs$vrbl_name_unlag,
-                                             levels = names(vvs$vrbl_lbls)[names(vvs$vrbl_lbls) %in%
-                                                                           unique(best_mdl_coefs$vrbl_name_unlag)])
-    
-    ## filter out stuff I don't need
-    best_mdl_coefs <- filter(best_mdl_coefs, vrbl_name_unlag %!in% c("ln_s", "cons", "ln_r"))
 
-    return(best_mdl_coefs)
+    ## filter out stuff I don't need
+    best_mdl_coefs2 <- filter(best_mdl_coefs, vrbl_name_unlag %!in%
+                                              c("ln_s", "cons", "ln_r", "alpha", "intcpt_var"))
+
+    ## reordering the variables: TI, hnwi, inequ, cult spending, controls (defined in vvs$vrbl_labels)
+   
+    vrbl_lbls <- names(vvs$vrbl_lbls)[names(vvs$vrbl_lbls) %in% unique(best_mdl_coefs2$vrbl_name_unlag)]
+
+    best_mdl_coefs3 <- best_mdl_coefs2 %>%
+        mutate(vrbl_name_unlag = factor(vrbl_name_unlag, levels = vrbl_lbls))
+
+
+    return(best_mdl_coefs3)
 }
 
 
 construct_best_mdls_summary <- function(df_best_mdls) {
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
     #' summary variables for best models 
     
-    mdl_summary <- df_best_mdls %>% group_by(vrbl_name_unlag, cbn_name) %>%
+    mdl_summary <- df_best_mdls %>% group_by(vrbl_name_unlag, cbn_name, regcmd) %>%
         summarize(coef = mean(coef), lag_mean = mean(lag), lag_sd = sd(lag), p_value = mean(pvalues),
                   t_value = mean(t_value), se = mean(se), min = coef - 1.96*se, max = coef + 1.96*se,
                   sig = ifelse(abs(t_value) > 1.96, 1,0))
@@ -225,7 +366,8 @@ construct_best_mdls_summary <- function(df_best_mdls) {
 }
 
 
-proc_reg_res_objs <- function(reg_anls_base, vvs) {
+proc_reg_res_objs <- function(reg_anls_base, vvs, NBR_MDLS) {
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
     #' further processing of the regression res objects, no reading-in here
 
     
@@ -237,10 +379,11 @@ proc_reg_res_objs <- function(reg_anls_base, vvs) {
     df_anls_base <- add_coef_sig(coef_df, df_reg_anls_cfgs_wide)
 
     ## number of models to pick for the analyses
-    NBR_MDLS <- 10
     
-    
-    df_anls_within <- construct_df_anls_within(df_anls_base, vvs, NBR_MDLS)
+
+    optmzd = "loop_nbr" %in% names(gof_df_cbn)
+        
+    df_anls_within <- construct_df_anls_within(df_anls_base, vvs, NBR_MDLS, optmzd, gof_df_cbn)
     df_anls_all <- construct_df_anls_all(df_anls_base, vvs, NBR_MDLS)
 
     df_best_mdls <- construct_df_best_mdls(df_anls_base, gof_df_cbn)
@@ -268,25 +411,76 @@ proc_reg_res_objs <- function(reg_anls_base, vvs) {
 
 
 gen_plt_cbn_log_likelihoods <- function(gof_df_cbn) {
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
     #' generate plot of likelihoods
 
     ## ok makes sense: cbn_all models have best fit: most variables, least observations
     ## fit gets worse the more variables are removed and the more cases are added
 
    
-    gof_df_cbn %>% 
-        filter(gof_names == "log_likelihood") %>%
-        ggplot(aes(x = gof_value, fill = cbn_name)) +
-        geom_histogram(binwidth = 1)
+    gof_df_cbn_prep <- gof_df_cbn %>% 
+        filter(gof_names == "log_likelihood")
+
+    vlines <- gof_df_cbn_prep %>%
+        group_by(cbn_name, regcmd) %>%
+        summarize(vlines = max(gof_value))
+
+
+    gof_df_cbn_prep %>% 
+        ggplot(aes(x = gof_value, fill = cbn_name, group = cbn_name)) +
+        geom_histogram(aes(y= ..density..), binwidth = 1) +
+        ## geom_density(geom = "line", position = "identity", n=8000) +
+        ## geom_vline(aes(xintercept =max (gof_value))) + 
+        xlim(c(min(gof_df_cbn_prep$gof_value)-1,
+               max(gof_df_cbn_prep$gof_value)+1)) + 
+        geom_vline(vlines, mapping = aes(xintercept = vlines)) + 
+        facet_wrap(~regcmd, ncol = 1) 
+
+
+
 
 }
 
-gen_plt_reg_res_within <- function(df_anls_within, vvs) {
+gen_plt_reg_res_within <- function(df_anls_within, vvs, NBR_MDLS) {
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
+    #' plot the within coef change (all other coefs constant)
 
-    ggplot(df_anls_within, aes(x=lag, y=coef, group = base_lag_spec)) +
-        geom_line(show.legend = F, alpha = 0.15) +
-        geom_quasirandom(aes(color = t_value, shape = factor(sig)), size = 2, height = 0, width = 0.3) + 
-        facet_grid(vrbl_name_unlag ~ cbn_name, scales = "free", switch = "y", 
+    ## debugging some weird squiggly lines
+    ## ## general filtering
+    ## filter(df_anls_within, cbn_name == "cbn_all", 
+    ##        vrbl_name_unlag %in% c("smorc_dollar_fxm", "sptinc992j_p99p100")) %>%
+    ##     ## narrow filtering
+    ##     filter(vrbl_name_unlag == "sptinc992j_p99p100", regcmd == "menbreg") %>%
+    ##     select(lag_variatn, mdl_id, base_lag_spec) %>% adt() %>% .[, .N, base_lag_spec]
+        
+
+    ## filter(df_anls_within, cbn_name == "cbn_all", 
+    ##        vrbl_name_unlag %in% c("smorc_dollar_fxm", "sptinc992j_p99p100")) %>%
+    df_anls_within %>%
+        ## group = interaction(base_lag_spec, regcmd)
+        ggplot(aes(x=lag, y=coef, group = lag_variatn)) +
+        geom_line(aes(linetype = regcmd), show.legend = T, alpha = 1/NBR_MDLS) +
+        geom_quasirandom(aes(color = t_value, shape = factor(sig)), size = 2,  width = 0.3, stroke = 1) + 
+        facet_grid(vrbl_name_unlag ~ cbn_name + regcmd, scales = "free", switch = "y", 
+                   labeller = labeller(vrbl_name_unlag = vvs$vrbl_lbls)) +
+        theme(strip.text.y.left = element_text(angle = 0),
+              panel.spacing.y = unit(0.1, "lines"),
+              panel.background = element_rect(fill = NA, color = "black")) +
+        scale_color_gradient2(low = "blue", mid = "grey", high = "red") +
+        scale_shape_manual(values = c(1,4))
+    
+}
+
+gen_plt_reg_res_all <- function(df_anls_all, vvs) {
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
+    #' plot coefs from all models 
+    
+
+    ggplot(df_anls_all, aes(x=lag, y=coef)) +
+        geom_quasirandom(aes(color = t_value, shape = factor(sig)), size = 2, width = 0.3, stroke = 1) +
+        ## facet_grid(cols = c(vars(cbn_name), vars(regcmd)), rows = vars(vrbl_name_unlag),
+        facet_grid(vrbl_name_unlag ~ cbn_name + regcmd,
+                            scales = "free", switch = "y",
                    labeller = labeller(vrbl_name_unlag = vvs$vrbl_lbls)) +
         theme(strip.text.y.left = element_text(angle = 0)) +
         scale_color_gradient2(low = "blue", mid = "grey", high = "red") +
@@ -294,25 +488,47 @@ gen_plt_reg_res_within <- function(df_anls_within, vvs) {
     
 }
 
-gen_plt_reg_res_all <- function(df_anls_all, vvs) {
-    #' plot coefs from all models 
+gen_plt_lag_cprn <- function(df_best_mdls, vvs) {
+    #' generate plot that allows easy comparison of lags chosen across combinations and models 
+    
+    
+
+    ## filter down to necessary variables (lag info)
+    lag_prep <- filter(df_best_mdls, vrbl_name_unlag %!in% vvs$crscn_vars) %>%
+        select(vrbl_name_unlag, lag, regcmd, cbn_name) %>%
+        mutate(source = "lag") %>% adt()
+
+    ## calculate diff in lags, put in into separate (small; space="free") facet
+    lag_diff <- lag_prep %>%  adt() %>% 
+        dcast.data.table(vrbl_name_unlag + cbn_name ~ regcmd, value.var = "lag") %>%
+        .[,lag_diff := abs(menbreg - xtnbreg)] %>%
+        .[, .(vrbl_name_unlag, cbn_name, lag = lag_diff)] %>% .[, source := "lagdiff"]
+
+    lag_cbn <- rbind(lag_prep, lag_diff, fill = T) %>% adf()
 
 
-    ggplot(df_anls_all, aes(x=lag, y=coef)) +
-        geom_quasirandom(aes(color = t_value, shape = factor(sig)), size = 2, height = 0, width = 0.3) +
-        facet_grid(cols = vars(cbn_name), rows = vars(vrbl_name_unlag), scales = "free", switch = "y",
-                   labeller = labeller(vrbl_name_unlag = vvs$vrbl_lbls)) +
-        theme(strip.text.y.left = element_text(angle = 0)) +
-        scale_color_gradient2(low = "blue", mid = "grey", high = "red") +
-        scale_shape_manual(values = c(1,4))
+    lag_cbn %>% 
+        ggplot(aes(x = lag, y= as.character(vrbl_name_unlag), group = regcmd, fill = regcmd)) +
+        geom_bar(stat = "identity", position = position_dodge(width = 0.6), width = 0.5) +
+        facet_grid(~cbn_name + source, scales = "free", space = "free") +
+        scale_y_discrete(labels = vvs$vrbl_lbls) +
+        labs(y="variable") +
+        theme(legend.position = "bottom") +
+        scale_x_continuous(breaks = seq(0,5))
+
 }
 
+
+
+
 gen_plt_best_mdls_wlag <- function(df_best_mdls, vvs) {
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
     #' generate plot of coefs of beste models with lag
 
     ggplot(df_best_mdls, aes(x=lag, y=exp(coef), color = t_value)) +
-        geom_quasirandom(aes(shape = factor(sig)), height = 0, width = 0.33, show.legend=T, size = 3) +
-        facet_grid(vrbl_name_unlag~cbn_name, scales="free", switch = "y",
+        geom_quasirandom(aes(shape = factor(sig), stroke = as.numeric(factor(regcmd))-0.5),
+                         width = 0.33, show.legend=T, size = 3) +
+        facet_grid(vrbl_name_unlag~ cbn_name + regcmd , scales="free", switch = "y",
                    labeller = labeller(vrbl_name_unlag = vvs$vrbl_lbls)) +
         theme(strip.text.y.left = element_text(angle = 0)) + 
         scale_color_gradient2(low = "blue", mid = "grey", high = "red") +
@@ -321,24 +537,133 @@ gen_plt_best_mdls_wlag <- function(df_best_mdls, vvs) {
 }
 
 gen_plt_mdl_summary <- function(mdl_summary, vvs) {
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
     #' generate the summary plot of the best models 
+
+    mdl_summary2 <- mdl_summary %>% 
+        mutate(time_invariant = ifelse(vrbl_name_unlag %in% vvs$crscn_vars, T, F))
+
     
-    ggplot(mdl_summary, aes(color = factor(sig), y = vrbl_name_unlag)) +
-        geom_point(aes(x = coef, shape = factor(sig)), size = 2.5, alpha = 0.95, show.legend = F) +
-        geom_errorbarh(aes(xmin = min, xmax = max, , height= 0.1), alpha = 0.6, show.legend = F) + 
+    ggplot(mdl_summary2, aes(color = factor(sig), y = as.character(vrbl_name_unlag), group = regcmd)) +
+        geom_point(aes(x = coef, shape = factor(regcmd)), size = 2.5, alpha = 0.95, show.legend = T,
+                   position = position_dodge(width = 0.5)) +
+        geom_errorbarh(aes(xmin = min, xmax = max, , height= 0.1), alpha = 0.6, show.legend = F,
+                       position = position_dodge(width = 0.5)) +
         facet_wrap(~cbn_name) +
+        ## facet_wrap(time_invariant + vrbl_name_unlag  ~ cbn_name, scales = "free_x", ncol = 3,
+        ##            switch = "y", drop = T) +
         geom_vline(xintercept =0, linetype = "dashed") +
         scale_shape_manual(values = c(15,16)) +
-        ## scale_shape_manual(values = c(0,1)) +
-        ## scale_shape_manual(values = c(21,12)) +
         scale_color_manual(values = c("#1C5BA6", "#BD0017")) +
         scale_y_discrete(labels = vvs$vrbl_lbls) +
+        ## coord_cartesian(xlim = c(min(mdl_summary$coef)*0.9, max(mdl_summary$coef)*0.9)) + 
         ## coord_cartesian(xlim=c(-1, 1)) +
         labs(x="coefficient size, 95% CI", y="coefficient")
 
+    ## fx <- c(`>` , `<`)
+    ## filter(mdl_summary2, fx[[1]](se, 0.5))
+    ## plts_scale <- lapply(c(`>=`, `<`), \(x) filter(mdl_summary2, 
+
+
+
+    mdl_summary_split <-  mdl_summary2 %>%
+        group_by(vrbl_name_unlag) %>% 
+        mutate(se_large = ifelse(any(se > 0.4), T, F)) %>%
+        split(.$se_large)
+    plts_scale <- mdl_summary_split %>% lapply(\(x) x %>% 
+                    ggplot(aes(color = factor(sig), y = vrbl_name_unlag, group = regcmd)) +
+                    geom_point(aes(x = coef, shape = factor(regcmd)), size = 2.5, alpha = 0.95, show.legend = T,
+                               position = position_dodge(width = 0.5)) +
+                    geom_errorbarh(aes(xmin = min, xmax = max, , height= 0.1), alpha = 0.6, show.legend = F,
+                                   position = position_dodge(width = 0.5)) +
+                    facet_wrap(~cbn_name) +
+                    geom_vline(xintercept =0, linetype = "dashed") +
+                    scale_shape_manual(values = c(15,16)) +
+                    scale_color_manual(values = c("#1C5BA6", "#BD0017")) +
+                    scale_y_discrete(labels = vvs$vrbl_lbls) +
+                    labs(x="", y="") +
+                    theme(legend.position = "bottom"))
+        
+    ## combine plots with patchwork,
+    ## add some arbitrary scaling for now to make difference between variables more equal
+    plt_cbn <- plts_scale[[1]] / plts_scale[[2]] +
+        plot_layout(heights = c(nrow(mdl_summary_split[[1]]), nrow(mdl_summary_split[[2]])-6))
+
+
+
+    return(plt_cbn)           
+
 }
 
-gen_reg_res_plts <- function(reg_res_objs, vvs) {
+gen_plt_cvrgnc <- function(gof_df_cbn) {
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
+    #' generate plot of convergence: run it only if loop_nbr in gof_df_cbn
+
+    ## formalized test of convergence
+    ## question: do the base lag specs converge to the same gof_value
+    ## group by: vrbl_choice (based on thld_choice), cbn, 
+    ## first: get the top values (values only go up)
+
+    cvrgnc_df_prep <- filter(gof_df_cbn, gof_names == "log_likelihood") %>%
+        select(gof_value, base_lag_spec, loop_nbr, vrbl_optmzd, cbn_name, regcmd) %>%
+        mutate(step_base = 1, loop_nbr = as.numeric(loop_nbr),
+               vrbl_choice = gsub("[1-5]", "0", base_lag_spec))
+
+    ## developing analysis of value-analyzing
+    ## dtx <- data.table(vlu = c(1,1,2, 1,2,2, 2, 2, 1), id = c(rep("a", 3), rep("b", 3), rep("c", 3)))
+    ## dtx[id == "a", paste0(table(vlu), collapse = "")]
+    ## dtx[, paste0(table(vlu), collapse = ""), by="id"]
+
+    cvrgnc_df_test <- cvrgnc_df_prep %>% 
+        group_by(vrbl_choice, base_lag_spec, regcmd, cbn_name) %>% # get top values of each run 
+        ## group_by(vrbl_choice, base_lag_spec, regcmd, cbn_name) %>% # get top values 
+        slice_max(gof_value, n=1, with_ties = F) %>%
+        group_by(cbn_name, vrbl_choice, regcmd) %>% ## group by nbr_specs per thld
+        summarize(n_gof = len(gof_value), n_distinct_gof = n_distinct(gof_value), var_gof = sd(gof_value),
+                  vlu_proc = paste0(table(gof_value), collapse = "")) %>%
+        adt()
+
+    ## generate summary table of how many times the different starting values reached the same/different results
+    print("convergence summary")
+    print(cvrgnc_df_test[, .(nbr = .N, mean_var_gof = mean(var_gof)), by = n_distinct_gof])
+
+    ## generate summary of gof value distribution, focus on non-identical convergence
+    print("convergence summary 2")
+    cvrgnc_df_test[, .(.N, mean_var_gof = mean(var_gof)), vlu_proc] %>%
+        .[, `:=`(ttl = sum(N), prop = 100*N/sum(N))]
+    
+
+    ## progress after each variable
+    ## variables are randomly chosen, so step is different for each base_lag_spec
+    cvrgnc_df_prep2 <- cvrgnc_df_prep %>% 
+        group_by(vrbl_choice, cbn_name, base_lag_spec, loop_nbr, vrbl_optmzd, regcmd) %>%
+        slice_max(gof_value, with_ties = F)
+
+    ## group_vrbls <- c("vrbl_choice", "cbn_name", "base_lag_spec", "loop_nbr", "vrbl_optmzd", "regcmd")
+
+    ## cvrgnc_df_prep2 <- cvrgnc_df_prep %>% adt() %>%
+    ##     .[, .(gof_value = max(gof_value), step_base = 1), by = group_vrbls] %>% atb()
+
+    cvrgnc_df_prep3 <- cvrgnc_df_prep2 %>% 
+        group_by(cbn_name,base_lag_spec,regcmd) %>% 
+        arrange(gof_value) %>%
+        mutate(step = ave(step_base, FUN = cumsum)) 
+
+
+    plt_cvrgnc <- cvrgnc_df_prep3 %>% 
+        ggplot(aes(x=step, y=gof_value, group = interaction(base_lag_spec, regcmd), color = vrbl_choice,
+                   linetype =regcmd)) +
+        geom_line() +
+        facet_wrap(~cbn_name, ncol = 1, scales = "free_y")
+
+    return(plt_cvrgnc)
+}
+
+
+
+
+gen_reg_res_plts <- function(reg_res_objs, vvs, NBR_MDLS) {
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
     #' generate all the plots
     
 
@@ -346,16 +671,32 @@ gen_reg_res_plts <- function(reg_res_objs, vvs) {
     df_anls_within <- reg_res_objs$df_anls_within
     df_best_mdls <- reg_res_objs$df_best_mdls
     mdl_summary <- reg_res_objs$mdl_summary
+
+    plt_cbn_log_likelihoods = gen_plt_cbn_log_likelihoods(gof_df_cbn)
+    plt_reg_res_within = gen_plt_reg_res_within(df_anls_within, vvs, NBR_MDLS)
+    plt_reg_res_all = gen_plt_reg_res_all(df_anls_within, vvs)
+    plt_best_models_wlag = gen_plt_best_mdls_wlag(df_best_mdls, vvs)
+    plt_lag_cprn <- gen_plt_lag_cprn(df_best_mdls, vvs)
+    plt_best_models_condensed = gen_plt_mdl_summary(mdl_summary, vvs)
+
+    l_plts <- list(plt_cbn_log_likelihoods= plt_cbn_log_likelihoods,
+                   plt_reg_res_within = plt_reg_res_within,
+                   plt_reg_res_all = plt_reg_res_all,
+                   plt_best_models_wlag = plt_best_models_wlag,
+                   plt_lag_cprn = plt_lag_cprn,
+                   plt_best_models_condensed = plt_best_models_condensed)
+
     
-    return(
-        list(
-            cbn_log_likelihoods = gen_plt_cbn_log_likelihoods(gof_df_cbn),
-            reg_res_within = gen_plt_reg_res_within(df_anls_within, vvs),
-            reg_res_all = gen_plt_reg_res_all(df_anls_within, vvs),
-            best_models_wlag = gen_plt_best_mdls_wlag(df_best_mdls, vvs),
-            best_models_condensed = gen_plt_mdl_summary(mdl_summary, vvs)
-        )
-    )
+    ## only generate convergence plot when using optimization
+    if ("loop_nbr" %in% names(gof_df_cbn)) {
+        plt_cvrgnc = gen_plt_cvrgnc(gof_df_cbn)
+
+        l_plts <- c(l_plts, list(plt_cvrgnc = plt_cvrgnc))
+    }
+
+
+    return(l_plts)
+
 }
 
 
@@ -367,25 +708,43 @@ gen_plt_cfgs <- function() {
     
     return(
         list(
-        cbn_log_likelihoods = list(filename = "cbn_log_likelihoods.pdf", width = 6, height = 3),
-        reg_res_within = list(filename = "reg_res_within.pdf", width = 10, height = 12),
-        reg_res_all = list(filename = "reg_res_all.pdf", width = 8, height = 12),
-        best_models_wlag = list(filename = "best_models_wlag.pdf", width = 8, height = 12),
-        best_models_condensed = list(filename = "best_models_condensed.pdf", width = 7, height = 4)
+            plt_cbn_log_likelihoods = list(filename = "cbn_log_likelihoods.pdf", width = 6, height = 3),
+            plt_reg_res_within = list(filename = "reg_res_within.pdf", width = 12, height = 12),
+            plt_reg_res_all = list(filename = "reg_res_all.pdf", width = 12, height = 12),
+            plt_best_models_wlag = list(filename = "best_models_wlag.pdf", width = 8, height = 12),
+            plt_best_models_condensed = list(filename = "best_models_condensed.pdf", width = 9, height = 8),
+            plt_lag_cprn = list(filename = "lag_cprn.pdf", width = 7, height = 5),
+            plt_cvrgnc = list(filename = "crvgnc.pdf", width = 5, height = 7)
         )
     )
 
 }
 
-plot_reg_res <- function(plt_name, fldr_info) {
+render_all_reg_res_plts <- function(reg_res, batch_version) {
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
+    
+    #' wrapper to comfily render all the plots of a regression results version
+
+    
+    lapply(names(reg_res$plts), \(x)
+           render_reg_res(x, reg_res, reg_res$plt_cfgs, batch_version))
+
+    
+}
+    
+
+
+render_reg_res <- function(plt_name, reg_res, plt_cfgs, batch_version) {
     #' general way to plot regression result to file, also adding batch number
     
     plt <- reg_res$plts[[plt_name]]
+
+    
     ## plt_name <- deparse(substitute(plt)) %>% strsplit("$", fixed = T) %>% unlist() %>% tail(1)
 
     plt_cfg <- reg_res$plt_cfgs[[plt_name]]
 
-    plt_filename <- paste0(FIG_DIR, fldr_info$batch_version, "_", plt_cfg$filename)
+    plt_filename <- paste0(FIG_DIR, "plt_", batch_version, "_", plt_cfg$filename)
     
     pdf(plt_filename,  width = plt_cfg$width, height = plt_cfg$height)
     plot(plt)
@@ -393,30 +752,142 @@ plot_reg_res <- function(plt_name, fldr_info) {
     
 }
 
+cpr_vrsns <- function(reg_res_vsns) {
+    #' compare two versions of regression results
+    #' take best model per cbn, regcmd, vrbl_choice
+
+    #' not fully functionalized: want to add this layer of abstraction (versions) as little as possible
+    #' atm still relies on v48 and v49, and has hard-coded plot call
+    
+    ## get best models
+    dt_cpr_vsns <- imap_dfr(reg_res_vsns, ~ .x$reg_res_objs$gof_df_cbn %>%
+                                              filter(gof_names == "log_likelihood") %>%
+                                              mutate(vrbl_choice = gsub("[1-5]", "0", base_lag_spec)) %>% 
+                                              group_by(cbn_name, regcmd, vrbl_choice) %>% 
+                                              slice_max(gof_value, with_ties = F) %>%
+                                              select(cbn_name, regcmd, gof_value) %>%
+                                              mutate(source = .y))
+    ## some shitty plot
+    dt_cpr_vsns %>% 
+        ggplot(aes(x = gof_value, y=source)) +
+        geom_point() + 
+        facet_wrap(~ regcmd + cbn_name, scales = "free")
+        
+    ## cast best gofs wide -> calculate goff diff
+    dt_cpr_vsns_wide <- adt(dt_cpr_vsns) %>%
+        dcast.data.table(vrbl_choice + cbn_name + regcmd ~ source , value.var = "gof_value") %>%
+        .[, gof_diff := v49- v48]
+
+    ## dt_cpr_vsns_wide$gof_diff %>% hist(breaks = 40)
+
+
+    plt_gof_cpr_vsn <- ggplot(dt_cpr_vsns_wide, aes(x=gof_diff)) +
+        geom_histogram(aes(y=..density..), binwidth = 0.2, color = "black", fill = "grey") +
+        xlim(c(0, 7)) + 
+        scale_x_continuous(breaks = seq(-1,7, 0.5)) +
+        geom_vline(xintercept = 0, linetype = "dashed")
+
+    pdf(paste0(FIG_DIR, "plt_vsns_cprsn.pdf"), height = 4, width = 7)
+    plot(plt_gof_cpr_vsn)
+    dev.off()
+
+}
+
+
+gen_reg_res <- function(fldr_info) {
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
+
+    NBR_MDLS <- 3
+    ## fldr_info <- fldr_info_optmz
+    reg_anls_base <- read_reg_res_files(fldr_info)
+    reg_res_objs <- proc_reg_res_objs(reg_anls_base, vvs, NBR_MDLS)
+
+    reg_res <- list()
+
+    ## generate plots, construct configs
+    reg_res$plts <- gen_reg_res_plts(reg_res_objs, vvs, NBR_MDLS)
+    reg_res$plt_cfgs <- gen_plt_cfgs()
+
+    reg_res$reg_res_objs <- reg_res_objs
+
+    return(reg_res)
+}
+
+
+
+stop("functions done")
 
 ## ** main analysis
-
-## read in stuff, construct objects 
-reg_anls_base <- read_reg_res_files(fldr_info)
-reg_res_objs <- proc_reg_res_objs(reg_anls_base, vvs)
-
+NBR_MDLS <- 3
+## fldr_info <- fldr_info_optmz
+reg_anls_base <- read_reg_res_files(setup_regression_folders_and_files("v49"))
+reg_res_objs <- proc_reg_res_objs(reg_anls_base, vvs, NBR_MDLS)
 
 reg_res <- list()
 
 ## generate plots, construct configs
-reg_res$plts <- gen_reg_res_plts(reg_res_objs, vvs)
+reg_res$plts <- gen_reg_res_plts(reg_res_objs, vvs, NBR_MDLS)
 reg_res$plt_cfgs <- gen_plt_cfgs()
 
 ## render all plots to file
-lapply(names(reg_res$plts), \(x) plot_reg_res(x, fldr_info))
+## lapply(names(reg_res$plts), \(x) render_reg_res(x, fldr_info))
 
 
-## plot_reg_res(reg_res$plts$cbn_log_likelihoods, fldr_info)
-## plot_reg_res(reg_res$plts$best_models_condensed, fldr_info)
+## ** version comparison 
+## read in stuff, construct objects
+
+reg_res_v48 <- gen_reg_res(setup_regression_folders_and_files("v48"))
+reg_res_v49 <- gen_reg_res(setup_regression_folders_and_files("v49"))
+
+setdiff(names(reg_res_v48$plt_cfgs), names(reg_res_v48$plts))
+
+## reg_res_v48$plt_cfgs <- gen_plt_cfgs()
+## reg_res_v48$plts <- gen_reg_res_plts(reg_res_v48$reg_res_objs, vvs, NBR_MDLS)
+## render_reg_
+render_all_reg_res_plts(reg_res_v48, "v48")
+render_all_reg_res_plts(reg_res_v49, "v49")
+
+
+reg_res_vsns <- list(v48 = reg_res_v48, v49=reg_res_v49)
+cpr_vrsns(reg_res_vsns)
+
+
+
+## filter(reg_res_objs$gof_df_cbn, gof_names == "log_likelihood") %>% 
+
+
+
+
+## reg_anls_base$df_reg_anls_cfgs_wide$loop_nbr %>% table()
+
+
+## render_reg_res(reg_res$plts$cbn_log_likelihoods, fldr_info)
+## render_reg_res(reg_res$plts$best_models_condensed, fldr_info)
+## ** evaluate model convergence consistency
+
+reg_res_objs$gof_df_cbn %>% filter(gof_names == "log_likelihood") %>%
+    group_by(regcmd, cbn_name, lag_spec) %>%
+    summarize(nbr_mdls = len(mdl_id), nbr_unq_gof = n_distinct(gof_value)) %>%
+    pull(nbr_unq_gof) %>% table()
+
+## ** evaluate possible savings of better model caching 
+
+reg_res_objs$gof_df_cbn %>% filter(gof_names == "log_likelihood") %>%
+    mutate(vrbl_choice = gsub("[1-5]", "0", base_lag_spec)) %>% 
+    group_by(regcmd, cbn_name, vrbl_choice) %>%
+    summarize(nbr_mdls = len(vrbl_choice), nbr_unq_mdls = n_distinct(lag_spec)) %>%
+    ungroup() %>%
+    summarize(sum(nbr_mdls), sum(nbr_unq_mdls))
+
+
+
+
+
    
 ## ** step-wise optimization starts here 
 
 plot_stacker <- function(dfx, ystack, xstack, shape_clm = NULL, color_clm="lag") {
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
     #' stack coef results vertically
     #' assumes: lag (points get colored by), coef, min, max, sig, vrbl_name_unlag
 
@@ -437,6 +908,8 @@ plot_stacker <- function(dfx, ystack, xstack, shape_clm = NULL, color_clm="lag")
         class(point_aes) <- "uneval"
     }
     
+    ## setdiff(unique(dfx$vrbl_name_unlag), names(vvs$vrbl_lbls))
+
     dfx$vrbl_name_unlag <- factor(dfx$vrbl_name_unlag, levels = names(vvs$vrbl_lbls))
 
     ## actual plotting 
@@ -444,7 +917,7 @@ plot_stacker <- function(dfx, ystack, xstack, shape_clm = NULL, color_clm="lag")
         geom_errorbarh(aes(xmin = min, xmax = max, height= 0.2, linetype = factor(sig), size = factor(sig)),
                        alpha = 0.8, show.legend = T)  +
         geom_point(point_aes, size = 2.5,  show.legend = T) +
-        facet_grid(vrbl_name_unlag ~ get(xstack), switch = "y",
+        facet_grid(vrbl_name_unlag ~ get(xstack), switch = "y", 
                    labeller = labeller(vrbl_name_unlag = rev(vvs$vrbl_lbls))) +
         theme(strip.text.y.left = element_text(angle = 0),
               axis.text.y = element_blank(),
@@ -452,29 +925,31 @@ plot_stacker <- function(dfx, ystack, xstack, shape_clm = NULL, color_clm="lag")
         geom_vline(xintercept = 0, linetype = "dashed") +
         scale_linetype_manual(values = c(2, 1)) + # setting errorbar linetype
         scale_size_manual(values=c(0.4, 0.7)) + ## setting errorbar size
-        theme(panel.spacing.y = unit(0.3, "lines"),
+        theme(panel.spacing.y = unit(0.1, "lines"),
               legend.position = "bottom",
-              legend.justification = "left") + 
+              legend.justification = "left",
+              panel.background = element_rect(fill = NA, color = "black")) +
         guides(shape = guide_legend(order=1, label.position = "right", direction = "vertical"),
                color = guide_colorbar(order=2),
                size = "none", ## remove the supid sig() legend
                linetype = "none") +
         labs(y=ystack)
     
-    
 }
 
 ## *** optimized functions end here 
 
 reg_anls_base_optmz <- read_reg_res_files(fldr_info_cvrg)
+reg_anls_base_optmz <- read_reg_res_files(fldr_info_optmz)
 
 ## best result per base_spec after each loop of optimization
-filter(reg_anls_base_optmz$gof_df_cbn, gof_names == "log_likelihood") %>%
-    group_by(loop_nbr, base_lag_spec, cbn_name) %>%
-    slice_max(gof_value) %>% 
-    ggplot(aes(x=loop_nbr, y=gof_value, group = interaction(base_lag_spec, cbn_name))) +
-    geom_line() +
-    facet_wrap(~cbn_name, ncol = 1, scales = "free_y")
+## uglyl af -> uncomment
+## filter(reg_anls_base_optmz$gof_df_cbn, gof_names == "log_likelihood") %>%
+##     group_by(loop_nbr, base_lag_spec, cbn_name) %>%
+##     slice_max(gof_value) %>% 
+##     ggplot(aes(x=loop_nbr, y=gof_value, group = interaction(base_lag_spec, cbn_name))) +
+##     geom_line() +
+##     facet_wrap(~cbn_name, ncol = 1, scales = "free_y")
 
 
 
@@ -486,30 +961,21 @@ filter(reg_anls_base_optmz$gof_df_cbn, gof_names == "log_likelihood") %>%
 
 
 
-## progress after each variable
-## variables are randomly chosen, so step is different for each base_lag_spec
-filter(reg_anls_base_optmz$gof_df_cbn, gof_names == "log_likelihood") %>% 
-    select(gof_value, base_lag_spec, loop_nbr, vrbl_optmzd, cbn_name) %>%
-    mutate(step_base = 1, loop_nbr = as.numeric(loop_nbr),
-           vrbl_choice = gsub("[1-5]", "0", base_lag_spec)) %>%
-    group_by(vrbl_choice, cbn_name, base_lag_spec, loop_nbr, vrbl_optmzd) %>%
-    slice_max(gof_value) %>% 
-    group_by(cbn_name,base_lag_spec) %>% 
-    arrange(gof_value) %>%
-    mutate(step = ave(step_base, FUN = cumsum)) %>% 
-    ggplot(aes(x=step, y=gof_value, group = base_lag_spec, color = vrbl_choice)) +
-    geom_line() +
-    facet_wrap(~cbn_name, ncol = 1, scales = "free_y")
+
+
+
+
+
 
 
 ## see if different starting coefs of same vrbl_choice lead to same results
 best_mdls_optmzd <- filter(reg_anls_base_optmz$gof_df_cbn, gof_names == "log_likelihood") %>% 
     ## select(mdl_id, gof_value, base_lag_spec, loop_nbr, vrbl_optmzd, cbn_name) %>%
-    select(mdl_id, gof_value, base_lag_spec, loop_nbr, vrbl_optmzd, cbn_name, technique_str, difficulty) %>%
+    select(mdl_id, gof_value, base_lag_spec, loop_nbr, vrbl_optmzd, cbn_name, technique_str, difficulty, regcmd) %>%
     mutate(step_base = 1, loop_nbr = as.numeric(loop_nbr),
            vrbl_choice = gsub("[1-5]", "0", base_lag_spec)) %>%
     ## group_by(cbn_name, vrbl_choice, base_lag_spec) %>%
-    group_by(cbn_name, vrbl_choice, base_lag_spec, technique_str, difficulty) %>%
+    group_by(cbn_name, vrbl_choice, base_lag_spec, technique_str, difficulty, regcmd) %>%
     slice_max(gof_value, n=1) %>% 
     slice_sample(n=1)
 
@@ -526,7 +992,7 @@ df_anls_base_optmzd <- add_coef_sig(reg_anls_base_optmz$coef_df, reg_anls_base_o
 
 best_mdls_optmzd_coefs <- merge(df_anls_base_optmzd, best_mdls_optmzd) %>% atb() %>%
     mutate(min = coef - 1.96*se, max = coef + 1.96*se) %>% 
-    filter(vrbl_name_unlag %!in% c("ln_s", "cons", "ln_r"))
+    filter(vrbl_name_unlag %!in% c("ln_s", "cons", "ln_r", "alpha", "intcpt_var", "(Intercept)"))
     
 
 ## condense the ystack to be able to save vertical space when expanding the xstack
@@ -550,7 +1016,7 @@ plot_stacker(best_mdls_optmzd_coefs, xstack = "vrbl_choice", ystack = "cbn_name"
 ## even more effective way to show that reg_specs with same variable choice converge to same results
 ## these 2 only make sense for having only one combination: would need more detailed ystacking
 plot_stacker(best_mdls_optmzd_coefs, ystack = "vrbl_choice_factor", xstack = "vrbl_choice",
-             shape_clm = "vrbl_choice", color_clm = "lag")
+             shape_clm = "cbn_name", color_clm = "lag")
 
 
 ## similar to first coef visualization (one model per column)
@@ -560,7 +1026,7 @@ plot_stacker(best_mdls_optmzd_coefs, ystack = "just_one", xstack = "base_lag_spe
 
 ## **** convergence tests
 ## compare difficulty within technique strs 
-plot_stacker(best_mdls_optmzd_coefs, xstack = "technique_str", ystack = "difficulty",
+plot_stacker(best_mdls_optmzd_coefs, xstack = "technique_str", ystack = "cbn_name",
              shape_clm = "cbn_name", color_clm = "lag")
 
 ## compare techniques within difficulty 
@@ -572,14 +1038,18 @@ plot_stacker(best_mdls_optmzd_coefs, ystack = "tec_base_interact", xstack = "dif
              shape_clm = "technique_str", color_clm = "lag")
 
 ## compare difficulty within tec_base_interact
-plot_stacker(best_mdls_optmzd_coefs, xstack = "tec_base_interact", ystack = "difficulty",
+plot_stacker(best_mdls_optmzd_coefs, xstack = "tec_base_interact", ystack = "cbn_name",
              shape_clm = "technique_str", color_clm = "lag")
+
+plot_stacker(best_mdls_optmzd_coefs, xstack = "cbn_name", ystack = "regcmd",
+             shape_clm = "vrbl_choice", color_clm = "lag")
+
 
 
 
 ## "formal" test: all gof_values of best-fitting models are the same 
 best_mdls_optmzd_coefs %>%
-    group_by(vrbl_name_unlag, difficulty, technique_str) %>%
+    group_by(vrbl_name_unlag, difficulty, technique_str, regcmd) %>%
     slice_max(gof_value) %>%
     select(vrbl_name_unlag, difficulty, technique_str, gof_value) %>%
     ## pull(technique_strs) %>%
@@ -771,7 +1241,7 @@ y <- plotreg(x, type = "facet")
 
 
 
-createTexreg(coef.names = mdl_summary$vrbl_name_unlag, coef = 
+createTexreg(coef.names = mdl_summary$vrbl_name_unlag, coef = )
 
 
 ## *** LL lines
