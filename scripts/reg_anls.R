@@ -609,19 +609,28 @@ gen_plt_cvrgnc <- function(gof_df_cbn) {
         mutate(step_base = 1, loop_nbr = as.numeric(loop_nbr),
                vrbl_choice = gsub("[1-5]", "0", base_lag_spec))
 
+    ## developing analysis of value-analyzing
+    ## dtx <- data.table(vlu = c(1,1,2, 1,2,2, 2, 2, 1), id = c(rep("a", 3), rep("b", 3), rep("c", 3)))
+    ## dtx[id == "a", paste0(table(vlu), collapse = "")]
+    ## dtx[, paste0(table(vlu), collapse = ""), by="id"]
+
     cvrgnc_df_test <- cvrgnc_df_prep %>% 
         group_by(vrbl_choice, base_lag_spec, regcmd, cbn_name) %>% # get top values of each run 
         ## group_by(vrbl_choice, base_lag_spec, regcmd, cbn_name) %>% # get top values 
         slice_max(gof_value, n=1, with_ties = F) %>%
         group_by(cbn_name, vrbl_choice, regcmd) %>% ## group by nbr_specs per thld
-        summarize(n_gof = len(gof_value), n_distinct_gof = n_distinct(gof_value), var_gof = sd(gof_value)) %>%
+        summarize(n_gof = len(gof_value), n_distinct_gof = n_distinct(gof_value), var_gof = sd(gof_value),
+                  vlu_proc = paste0(table(gof_value), collapse = "")) %>%
         adt()
 
     ## generate summary table of how many times the different starting values reached the same/different results
     print("convergence summary")
     print(cvrgnc_df_test[, .(nbr = .N, mean_var_gof = mean(var_gof)), by = n_distinct_gof])
 
-
+    ## generate summary of gof value distribution, focus on non-identical convergence
+    print("convergence summary 2")
+    cvrgnc_df_test[, .(.N, mean_var_gof = mean(var_gof)), vlu_proc] %>%
+        .[, `:=`(ttl = sum(N), prop = 100*N/sum(N))]
     
 
     ## progress after each variable
