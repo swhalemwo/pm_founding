@@ -863,6 +863,26 @@ cpr_vrsns(reg_res_vsns)
 
 ## render_reg_res(reg_res$plts$cbn_log_likelihoods, fldr_info)
 ## render_reg_res(reg_res$plts$best_models_condensed, fldr_info)
+## ** evaluate model convergence consistency
+
+reg_res_objs$gof_df_cbn %>% filter(gof_names == "log_likelihood") %>%
+    group_by(regcmd, cbn_name, lag_spec) %>%
+    summarize(nbr_mdls = len(mdl_id), nbr_unq_gof = n_distinct(gof_value)) %>%
+    pull(nbr_unq_gof) %>% table()
+
+## ** evaluate possible savings of better model caching 
+
+reg_res_objs$gof_df_cbn %>% filter(gof_names == "log_likelihood") %>%
+    mutate(vrbl_choice = gsub("[1-5]", "0", base_lag_spec)) %>% 
+    group_by(regcmd, cbn_name, vrbl_choice) %>%
+    summarize(nbr_mdls = len(vrbl_choice), nbr_unq_mdls = n_distinct(lag_spec)) %>%
+    ungroup() %>%
+    summarize(sum(nbr_mdls), sum(nbr_unq_mdls))
+
+
+
+
+
    
 ## ** step-wise optimization starts here 
 

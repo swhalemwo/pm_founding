@@ -61,6 +61,8 @@ reg_settings_optmz_v48 <- list(
     mdls_to_include = c("full")
 )
 
+reg_settings_optmz <- reg_settings_optmz_v48
+
 ## ** v49: optimize run on all thresholds; why it takes so long :(((
 
 reg_settings_optmz_v49 <- list(
