@@ -640,6 +640,7 @@ sumrz_clusters <- function(df_reg_clstrd, mean_vrbls, sum_vrbls, sum_vrbls_pure)
 
 
 render_cluster_means <- function() {
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
     #' generate and plot with rollmean_custom some cluster means/medians
     #' should be split up later into separate functions tho:
     #' - clustering
@@ -702,7 +703,7 @@ render_cluster_means()
 ##     geom_line()
 
 
-## ** xtsum based descriptives
+## * xtsum based descriptives
 
 ## finding out the weird internal workings of xtsum
 ## x <- xtsum(df_reg, nbr_opened, iso3c)
@@ -721,6 +722,7 @@ render_cluster_means()
 
 
 proc_xtsum <- function(dfx, vrbl, id_vrbl) {
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
     #' run xtsum on vrbl with id_vrbl, get the overall, between, within sds
 
     sdx <- xtsum_res <- xtsum(dfx, get(vrbl), get(id_vrbl))$sd
@@ -774,3 +776,7 @@ render_xtsum_prop_plt <- function() {
 }
 
 render_xtsum_prop_plt()
+
+## * descriptives per combination
+
+
