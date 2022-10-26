@@ -779,4 +779,118 @@ render_xtsum_prop_plt()
 
 ## * descriptives per combination
 
+get_vlus_long <- function(cbn_dfs, df_reg, cbnx) {
 
+    dt_cys <- cbn_dfs[[cbnx]] %>% select(iso3c, year) %>% adt()
+
+    dtx <- df_reg %>% adt() %>% .[on=dt_cys]
+
+
+    dtx_mlt <- dtx[, c("iso3c", "year", vvs$all_rel_vars), with = F] %>%
+        melt(id.vars = c("iso3c", "year")) %>%
+        .[, cbn_name := cbnx]
+
+    return(dtx_mlt)
+}
+
+dtx_cbn <- lapply(names(cbn_dfs)[1:3], \(x) get_vlus_long(cbn_dfs, df_reg, x)) %>%
+    Reduce(\(x,y) rbind(x,y), .)
+
+
+dtx_mlt[, .(meanx = mean(value), minx = min(value), maxx = max(value), sdx=sd(value)), variable] %>% adf()
+
+
+
+dtx_cbn %>%
+    ggplot(aes(x=value, y=..density.., group = interaction(variable, cbn_name), color = cbn_name)) +
+    ## geom_histogram(color = "black", fill = "lightgrey", lwd = 0.2, bins = 30) +
+    geom_density(position = "identity") + 
+    facet_wrap(~variable , scales = "free", ncol = 3, strip.position = "left")
+
+## first calculate the kernel multipliers
+krnl_mltplrs <- dtx_cbn %>% .[, .(hist_counts = hist(value, plot = F, breaks = 1)$counts[1],
+                  hist_densty = hist(value, plot = F, breaks = 1)$density[1]), by=c("cbn_name", "variable")] %>%
+    .[, mltplr := hist_counts/hist_densty] %>% 
+    .[, .(cbn_name, variable, mltplr)]
+
+## then calculate the kernels (with density), then scale them with joined-on multipliers
+krnl_prep <- dtx_cbn %>%
+    .[, .(krnl_x = density(value, na.rm = T, from = min(value, na.rm = T), to = max(value, na.rm = T))$x,
+          vlu_krnl = density(value, na.rm = T, from = min(value, na.rm = T), to = max(value, na.rm = T))$y),
+      by=c("cbn_name", "variable")]
+
+krnl_mltpld <- krnl_prep %>% 
+    krnl_mltplrs[on=.] %>%
+    .[, vlu_mltpld := vlu_krnl * mltplr]
+
+
+## original kernels
+krnl_prep %>%
+    ggplot(aes(x=krnl_x, y = vlu_krnl, color = cbn_name)) +
+    geom_line(show.legend = F) +
+    facet_wrap(~variable, scales = "free")
+
+
+
+## kernels corresponding to counts (probably don't)
+krnl_mltpld %>%
+    ggplot(aes(x=krnl_x, y=vlu_mltpld, color = cbn_name)) +
+    geom_line(show.legend = F) +
+    facet_wrap(~variable, scales = "free")
+
+
+cbn_dtn <- lapply(names(cbn_dfs)[1:3], \(x) list(cbn_name =x, cbn_n = nrow(cbn_dfs[[x]]))) %>% rbindlist()
+
+krnl_n_scaled <- cbn_dtn[on=krnl_mltpld] %>%
+    .[, vlu_n_scaled := vlu_mltpld/cbn_n]
+
+## kernels corresponding to ratio (probably don't)
+krnl_n_scaled %>%
+    ggplot(aes(x=krnl_x, y=vlu_n_scaled, color = cbn_name)) +
+    geom_line(show.legend = F) +
+    facet_wrap(~variable, scales = "free")
+
+## check whether kernel values add up properly across combinations -> THEY DON'T!!!!!
+## neither original nor n-rescaled ones
+krnl_prep[order(variable) ,sum(vlu_krnl), by=.(variable, cbn_name)] %>% adf()
+krnl_n_scaled[order(variable) ,sum(vlu_n_scaled), by=.(variable, cbn_name)] %>% adf()
+
+
+filter(krnl_prep, variable == "sptinc992j_p99p100") %>%
+    ggplot(aes(x=krnl_x, y=vlu_krnl, color = cbn_name)) +
+    geom_line(show.legend = F) +
+    facet_wrap(~variable, scales = "free")
+
+
+## gptinc992j
+
+filter(dtx_mlt, variable == "hnwi_nbr_1M") %>% ungroup() %>% 
+    ggplot(aes(x=value)) +
+    ## geom_histogram(aes(y=..count..), color = "black", fill = "lightgrey") +
+    geom_density(aes(y=..count..), bw = "nrd0", n=10, trim=T)
+
+x <- stats::density(filter(dtx_mlt, variable == "hnwi_nbr_1M")$value, from = 0, bw = 0.1)
+tv <- c(1e8, 2e8, 3e8, 1e7, 1e6)
+tv <- c(1e3, 2e3, 3e3, 1e2, 1e1)
+tv <- c(1e-2, 2e-2, 3e-2, 1e-3, 1e-4)
+x <- stats::density(tv, from = 0)
+plot(x[["x"]], x[["y"]], type = "l")
+hist(tv, breaks = 100)
+
+
+
+    geom_density((), color = "red")
+    ## geom_histogram(aes(y=..density..), color = "black", fill = "lightgrey") +
+    ## geom_density(aes(y=..density..), color = "red") 
+
+myhist <- hist(mtcars$mpg)
+multiplier <- myhist$counts / myhist$density
+mydensity <- density(mtcars$mpg)
+mydensity$y <- mydensity$y * multiplier[1]
+
+plot(myhist)
+lines(mydensity)
+
+ggplot(mtcars, aes(x=mpg, y=..count..)) +
+    geom_histogram(bins=10) +
+    geom_density()
