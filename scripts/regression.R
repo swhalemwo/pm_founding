@@ -242,7 +242,7 @@ gen_cbn_dfs <- function(lngtd_vars, crscn_vars, vrbl_cnbs, base_vars) {
     
 
     cvrg_lags <- lapply(lngtd_vars, \(x)
-                        lapply(seq(1,5), \(i)
+                        lapply(seq(0,5), \(i)
                                gen_lag(vrbl=x, lag=i) %>%
                                select(iso3c, year, value =paste0(x, "_lag", i)) %>%
                                mutate(lag=i, vrbl = x, lag_col = "_lag")) %>%
