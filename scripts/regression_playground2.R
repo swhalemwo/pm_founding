@@ -109,29 +109,44 @@ cbn_all_offset <- select(df_reg, iso3c, year, SP.POP.TOTLm) %>%
 
 
 
-r_offset <- glmmTMB(nbr_opened ~ hnwi_nbr_1M_lag1 + sptinc992j_p90p100_lag1 + shweal992j_p90p100_lag1 + tmitr_approx_linear20step_lag1 + smorc_dollar_fxm_lag1 + smorc_dollar_fxm_sqrd_lag1+ NY.GDP.PCAP.CDk_lag1 + clctr_cnt_cpaer_lag1 + nbr_opened_cum_lag1+ nbr_opened_cum_sqrd_lag1 + Ind.tax.incentives+ NPO.tax.exemption + cnt_contemp_1995 + cnt_contemp_1995_squared + ti_tmitr_interact_lag1 + SP.POP.TOTLm_org + offset(log(SP.POP.TOTLm_org)) + (1|iso3c),
+r_offset <- glmmTMB(nbr_opened ~ hnwi_nbr_1M_lag1 + sptinc992j_p90p100_lag1 + shweal992j_p90p100_lag1 + tmitr_approx_linear20step_lag1 + smorc_dollar_fxm_lag1 + smorc_dollar_fxm_sqrd_lag1+ NY.GDP.PCAP.CDk_lag1 + clctr_cnt_cpaer_lag1 + nbr_opened_cum_lag1+ nbr_opened_cum_sqrd_lag1 + Ind.tax.incentives+ NPO.tax.exemption + cnt_contemp_1995 + cnt_contemp_1995_squared + ti_tmitr_interact_lag1 + offset(log(SP.POP.TOTLm_org)) + (1|iso3c),
                     data=cbn_all_offset,
                     family = nbinom2)
 
+## actually run offset/log(pop) with proper per capita variables
+cbn_all_offset2 <- df_reg %>%
+    mutate(hnwi_nbr_1M = hnwi_nbr_1M/SP.POP.TOTLm,
+           smorc_dollar_fxm = smorc_dollar_fxm/SP.POP.TOTLm,
+           smorc_dollar_fxm_sqrd = smorc_dollar_fxm_sqrd/SP.POP.TOTLm,
+           clctr_cnt_cpaer = clctr_cnt_cpaer/SP.POP.TOTLm,
+           nbr_opened_cum = nbr_opened_cum/SP.POP.TOTLm,
+           nbr_opened_cum_sqrd = nbr_opened_cum_sqrd/SP.POP.TOTLm,
+           cnt_contemp_1995_1 = cnt_contemp_1995/SP.POP.TOTLm,
+           cnt_contemp_1995_squared_1 = cnt_contemp_1995_squared/SP.POP.TOTLm) %>%
+    inner_join(select(cbn_dfs$cbn_all, iso3c, year))
 
 
-screenreg(list(r_nooffset, r_nooffset_log, r_offset))
-stargazer(r_offset)
 
-library(sjPlot)
+r_offset_pcap <- glmmTMB(nbr_opened ~ scale(hnwi_nbr_1M) + scale(sptinc992j_p90p100) + scale(shweal992j_p90p100) + scale(tmitr_approx_linear20step) + scale(smorc_dollar_fxm) + scale(smorc_dollar_fxm_sqrd) + scale(NY.GDP.PCAP.CDk) + scale(clctr_cnt_cpaer) + scale(nbr_opened_cum) + scale(nbr_opened_cum_sqrd) + Ind.tax.incentives+ NPO.tax.exemption + ti_tmitr_interact + offset(log(SP.POP.TOTLm)) + (1|iso3c), #
+                         data=cbn_all_offset2,
+                         family = nbinom2)
 
-coef(summary(r_offset))
+## scale terms everywhere
+r_offset_pcap2 <- glmmTMB(nbr_opened ~ hnwi_nbr_1M + sptinc992j_p90p100 + shweal992j_p90p100 + tmitr_approx_linear20step + scale(smorc_dollar_fxm) + scale(smorc_dollar_fxm_sqrd) + NY.GDP.PCAP.CDk + clctr_cnt_cpaer + nbr_opened_cum + nbr_opened_cum_sqrd + Ind.tax.incentives+ NPO.tax.exemption + ti_tmitr_interact +  scale(cnt_contemp_1995_1) + scale(cnt_contemp_1995_squared_1) + offset(log(SP.POP.TOTLm)) + (1|iso3c),
+                         data=cbn_all_offset2,
+                         family = nbinom2)
+screenreg(r_offset_pcap)
+screenreg(list(r_offset_pcap, r_offset_pcap2))
+
+mdl_names = c("r_nooffset", "r_nooffset_log", "r_offset")
+mdl_list <- lapply(mdl_names, get)
+
+screenreg(mdl_list, custom.model.names = mdl_names)
+screenreg(r_offset)
 
 
-tdt <- data.table(id = c("a", "b"), pm = c(5,5), pop = c(50,500), hnwi = c(10,100))
 
-tdt[, hnwi_pcap := hnwi/pop]
-
-r_nfst <- glmmTMB(pm ~ pop + hnwi, tdt, family = nbinom2)
-r_nfst2 <- glmmTMB(pm ~ hnwi + log(pop), tdt, family = nbinom2)
-r_ofst <- glmmTMB(pm ~ hnwi + offset(log(pop)), tdt, family = nbinom2)
-
-glmmTMB(pm ~ hnwi_pcap + log(pop), tdt, family = nbinom2)
+## ** simplified offset testing 
 
 screenreg(list(r_nfst, r_ofst))
 
@@ -142,17 +157,28 @@ dtt <- filter(df_reg, countrycode(iso3c, "iso3c", "un.region.name") == "Europe",
     mutate(nbr_opened_pcapm = nbr_opened/SP.POP.TOTLm,
            hnwi_nbr_30M_pcapm = hnwi_nbr_30M/SP.POP.TOTLm) %>% adt()
 
-
+## base models: no offset, log(pop), offset(log(pop))
 r_nofst <- glm.nb(nbr_opened ~ hnwi_nbr_30M + SP.POP.TOTLm + gptinc992j, dtt)
 r_nofst2 <- glm.nb(nbr_opened ~ hnwi_nbr_30M + log(SP.POP.TOTLm) + gptinc992j, dtt)
 r_ofst <- glm.nb(nbr_opened ~ hnwi_nbr_30M + offset(log(SP.POP.TOTLm)) + gptinc992j, dtt)
 
-## using other rates 
-r_nofst3 <- glm.nb(nbr_opened ~ hnwi_nbr_30M + log(SP.POP.TOTLm) + gptinc992j, dtt)
+## using other rates: doesn't work: hnwis have 0 values, and 0/0 is undefined 
+## r_nofst3 <- glm.nb(nbr_opened ~ hnwi_nbr_30M + log(SP.POP.TOTLm) + gptinc992j, dtt)
 
-mdl_names <- c("r_nofst", "r_nofst2", "r_ofst")
+## use rate of hnwis: only makes sense with some kind of offset
+r_nofst3 <- glm.nb(nbr_opened ~ hnwi_nbr_30M_pcapm + log(SP.POP.TOTLm) + gptinc992j, dtt)
+r_ofst2 <- glm.nb(nbr_opened ~ hnwi_nbr_30M_pcapm + offset(log(SP.POP.TOTLm)) + gptinc992j, dtt)
+
+## add some scaling: to be compared with model r_nofst3
+r_scld <- glm.nb(nbr_opened ~ scale(hnwi_nbr_30M_pcapm) + log(SP.POP.TOTLm) + scale(gptinc992j), dtt)
+## yup identical fit
+
+## find same model
+r_repl <- glm.nb((nbr_opened/SP.POP.TOTLm) ~ hnwi_nbr_30M_pcapm + gptinc992j, dtt)
+screenreg(r_repl)
+
+mdl_names <- c("r_nofst", "r_nofst2", "r_ofst", "r_nofst3", "r_ofst2", "r_scld", "r_repl")
 mdl_list <- lapply(mdl_names, get)
-     
 screenreg(mdl_list, digits = 5, custom.model.names = mdl_names)
 
 
