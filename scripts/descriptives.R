@@ -800,12 +800,12 @@ dtx_cbn <- lapply(names(cbn_dfs)[1:3], \(x) get_vlus_long(cbn_dfs, df_reg, x)) %
 dtx_mlt[, .(meanx = mean(value), minx = min(value), maxx = max(value), sdx=sd(value)), variable] %>% adf()
 
 
-
+## raw kernels? 
 dtx_cbn %>%
     ggplot(aes(x=value, y=..density.., group = interaction(variable, cbn_name), color = cbn_name)) +
     ## geom_histogram(color = "black", fill = "lightgrey", lwd = 0.2, bins = 30) +
-    geom_density(position = "identity") + 
-    facet_wrap(~variable , scales = "free", ncol = 3, strip.position = "left")
+    geom_density(position = "identity", show.legend = F) + 
+    facet_wrap(~variable , scales = "free")
 
 ## first calculate the kernel multipliers
 krnl_mltplrs <- dtx_cbn %>% .[, .(hist_counts = hist(value, plot = F, breaks = 1)$counts[1],
