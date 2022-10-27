@@ -1011,7 +1011,7 @@ gen_vrbl_vectors <- function() {
 
     base_vars <- c("iso3c", "year")
     ## crscn_vars <- c("sum_core", "cnt_contemp_1995")
-    crscn_vars <- c("Ind.tax.incentives", "NPO.tax.exemption", "cnt_contemp_1995", "cnt_contemp_1995_squared")
+    crscn_vars <- c("Ind.tax.incentives", "NPO.tax.exemption", "cnt_contemp_1990", "cnt_contemp_1990_squared")
 
     ## for now manually exclude the 1B threshold
 
@@ -1024,8 +1024,8 @@ gen_vrbl_vectors <- function() {
 
     ## non_thld_lngtd_vars <- c("tmitr_approx_linear20step", "ti_tmitr_interact", "smorc_dollar_fxm", "NY.GDP.PCAP.CDk", "SP.POP.TOTLm", "clctr_cnt_cpaer")
 
-    ctrl_vars <- c("NY.GDP.PCAP.CDk", "SP.POP.TOTLm", "clctr_cnt_cpaer", "cnt_contemp_1995",
-                   "cnt_contemp_1995_squared")
+    ctrl_vars <- c("NY.GDP.PCAP.CDk", "SP.POP.TOTLm", "clctr_cnt_cpaer", "cnt_contemp_1990",
+                   "cnt_contemp_1990_squared")
     ctrl_vars_lngtd <- ctrl_vars[ctrl_vars %!in% crscn_vars]
     ti_vars <- c("tmitr_approx_linear20step", "ti_tmitr_interact")
     cult_spending_vars <- c("smorc_dollar_fxm", "smorc_dollar_fxm_sqrd")
@@ -1060,6 +1060,8 @@ gen_vrbl_vectors <- function() {
                    "cnt_contemp_1985" = "# Museums of contemporary art in 1985",
                    "cnt_contemp_1995" = "# of modern/contemp. art museums in 1995",
                    "cnt_contemp_1995_squared" = "# of contemp. art museums (1995) (sqrd)",
+                   "cnt_contemp_1990" = "# of modern/contemp. art museums in 1990",
+                   "cnt_contemp_1990_squared" = "# of contemp. art museums (1990) (sqrd)",
                    "clctr_cnt_cpaer" = "# Collectors in Artnews collector list",
                    "nbr_opened_cum" = "cumulative openings (legitimacy)",
                    "nbr_opened_cum_sqrd" = "cumulative openings squared (competition)",
