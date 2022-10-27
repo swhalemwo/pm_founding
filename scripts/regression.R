@@ -234,7 +234,7 @@ gen_cbn_models <- function(cbn_vars, base_vars, ctrl_vars) {
 
 
     
-gen_cbn_dfs <- function(lngtd_vars, crscn_vars, vrbl_cnbs, base_vars) {
+gen_cbn_dfs <- function(df_reg, lngtd_vars, crscn_vars, vrbl_cnbs, base_vars) {
     #' generate the dfs that correspond to variable combinations
     #' checks whether a country-year has coverage for all the lags for all the variables required by combination
     #' needs lngtd_vars and crscn_vars to set which to variables need to be named as lag
@@ -1416,17 +1416,20 @@ optmz_reg_spec <- function(reg_spec, fldr_info, reg_settings) {
 
 vvs <- gen_vrbl_vectors()
 vrbl_cbns <- gen_cbns(vvs$all_rel_vars, vvs$base_vars)
-cbn_dfs <- gen_cbn_dfs(vvs$lngtd_vars, vvs$crscn, vrbl_cbns, vvs$base_vars)
+cbn_dfs <- gen_cbn_dfs(df_reg, vvs$lngtd_vars, vvs$crscn, vrbl_cbns, vvs$base_vars)
+cbn_dfs_rts <- gen_cbn_dfs(df_reg_rts, vvs$lngtd_vars, vvs$crscn, vrbl_cbns, vvs$base_vars)
+
 vrbl_thld_choices <- gen_vrbl_thld_choices(vvs$hnwi_vars, vvs$inc_ineq_vars, vvs$weal_ineq_vars)
 
 
 
-vrbl_thld_choices_optmz <- slice_sample(vrbl_thld_choices, n=36)
+vrbl_thld_choices_optmz <- slice_sample(vrbl_thld_choices, n=2)
 
 
 reg_settings_optmz <- list(
-    nbr_specs_per_thld = 3,
-    batch_nbr = "v49",
+    nbr_specs_per_thld = 2,
+    dvfmt = "rates", # can also be counts
+    batch_nbr = "v50",
     vary_vrbl_lag = F,
     technique_strs = c("nr"),
     difficulty_switches = T,
