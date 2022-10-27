@@ -132,11 +132,15 @@ r_offset_pcap <- glmmTMB(nbr_opened ~ scale(hnwi_nbr_1M) + scale(sptinc992j_p90p
                          family = nbinom2)
 
 ## scale terms everywhere
-r_offset_pcap2 <- glmmTMB(nbr_opened ~ hnwi_nbr_1M + sptinc992j_p90p100 + shweal992j_p90p100 + tmitr_approx_linear20step + scale(smorc_dollar_fxm) + scale(smorc_dollar_fxm_sqrd) + NY.GDP.PCAP.CDk + clctr_cnt_cpaer + nbr_opened_cum + nbr_opened_cum_sqrd + Ind.tax.incentives+ NPO.tax.exemption + ti_tmitr_interact +  scale(cnt_contemp_1995_1) + scale(cnt_contemp_1995_squared_1) + offset(log(SP.POP.TOTLm)) + (1|iso3c),
+r_offset_pcap2 <- glmmTMB(nbr_opened ~ hnwi_nbr_1M + sptinc992j_p90p100 + shweal992j_p90p100 + tmitr_approx_linear20step + scale(smorc_dollar_fxm) + scale(smorc_dollar_fxm_sqrd) + NY.GDP.PCAP.CDk + clctr_cnt_cpaer + nbr_opened_cum + nbr_opened_cum_sqrd + Ind.tax.incentives+ NPO.tax.exemption + ti_tmitr_interact + offset(log(SP.POP.TOTLm)) + (1|iso3c),
+                         data=cbn_all_offset2,
+                         family = nbinom2)
+
+r_offset_pcap3 <- glmmTMB(nbr_opened ~ hnwi_nbr_1M + sptinc992j_p90p100 + shweal992j_p90p100 + tmitr_approx_linear20step + scale(smorc_dollar_fxm) + scale(smorc_dollar_fxm_sqrd) + NY.GDP.PCAP.CDk + clctr_cnt_cpaer + nbr_opened_cum + nbr_opened_cum_sqrd + Ind.tax.incentives+ NPO.tax.exemption + ti_tmitr_interact +  scale(cnt_contemp_1995_1) + scale(cnt_contemp_1995_squared_1) + offset(log(SP.POP.TOTLm)) + (1|iso3c),
                          data=cbn_all_offset2,
                          family = nbinom2)
 screenreg(r_offset_pcap)
-screenreg(list(r_offset_pcap, r_offset_pcap2))
+screenreg(list(r_offset_pcap2 , r_offset_pcap3))
 
 mdl_names = c("r_nooffset", "r_nooffset_log", "r_offset")
 mdl_list <- lapply(mdl_names, get)
