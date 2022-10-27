@@ -639,7 +639,7 @@ sumrz_clusters <- function(df_reg_clstrd, mean_vrbls, sum_vrbls, sum_vrbls_pure)
 }
 
 
-render_cluster_means <- function() {
+render_cluster_means <- function(df_reg, rates) {
     if (as.character(match.call()[[1]]) %in% fstd){browser()}
     #' generate and plot with rollmean_custom some cluster means/medians
     #' should be split up later into separate functions tho:
@@ -647,10 +647,27 @@ render_cluster_means <- function() {
     #' - summarizing (kinda own function, but variable specification should be argument)
     #' - plotting
 
-    sum_vrbls <- c("nbr_opened", "clctr_cnt_cpaer", "cnt_contemp", "smorc_dollar_fxm", "NY.GDP.TTL", "hnwi_nbr_30M")
-    sum_vrbls_pure <- c("SP.POP.TOTL", "nbr_opened", "hnwi_nbr_30M")
-    mean_vrbls <- c("NY.GDP.PCAP.CD", "gptinc992j", "ghweal992j", "hdi", 
-                    "tmitr_approx_linear20step")
+    if (!rates) {
+        sum_vrbls <- c("nbr_opened", "clctr_cnt_cpaer", "cnt_contemp", "smorc_dollar_fxm", "NY.GDP.TTL",
+                       "hnwi_nbr_30M")
+        sum_vrbls_pure <- c("SP.POP.TOTLm", "nbr_opened", "hnwi_nbr_30M")
+        mean_vrbls <- c("NY.GDP.PCAP.CD", "gptinc992j", "ghweal992j", "hdi", 
+                        "tmitr_approx_linear20step")
+
+    } else if (rates) {
+        sum_vrbls <- c("nbr_opened", "NY.GDP.TTL")
+        sum_vrbls_pure <- c("SP.POP.TOTL", "nbr_opened")
+        mean_vrbls <- c("NY.GDP.PCAP.CD", "gptinc992j", "ghweal992j", "hdi", 
+                        "tmitr_approx_linear20step", "clctr_cnt_cpaer", "cnt_contemp", "smorc_dollar_fxm",
+                        "hnwi_nbr_30M")
+
+    }
+    
+    
+    ## slice_max(df_reg_rts, order_by = clctr_cnt_cpaer, n=50) %>% select(iso3c, year, clctr_cnt_cpaer) %>%
+    ##     left_join(df_reg_clstrd %>% select(iso3c, cluster)) %>% adf()
+    
+
 
     df_reg_clstrd <- get_df_clust_lame(df_reg) %>%
         select(iso3c, cluster) %>%
@@ -686,7 +703,7 @@ render_cluster_means <- function() {
     dev.off()
 }
 
-render_cluster_means()
+render_cluster_means(df_reg_rts, rates = T)
 
 
 ## ## compare difference between median and mean (for interval variables)
@@ -736,7 +753,7 @@ proc_xtsum <- function(dfx, vrbl, id_vrbl) {
 
 
 
-render_xtsum_prop_plt <- function() {
+render_xtsum_prop_plt <- function(df_reg) {
     if (as.character(match.call()[[1]]) %in% fstd){browser()}
     #' generate plot of proportion of within and between country-variation
     
@@ -775,7 +792,7 @@ render_xtsum_prop_plt <- function() {
     dev.off()
 }
 
-render_xtsum_prop_plt()
+render_xtsum_prop_plt(df_reg_rts)
 
 ## * descriptives per combination
 

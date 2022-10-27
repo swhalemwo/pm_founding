@@ -148,7 +148,7 @@ gen_df_reg_rts <- function(df_reg) {
 
 }
 
-df_reg_rts <- gen_df_reg_rts(df_reg)
+
 
 ## hist(df_reg_rts$hnwi_nbr_1M, breaks = 100)
 ## hist(df_reg$hnwi_nbr_1M, breaks = 100)
