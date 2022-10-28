@@ -446,21 +446,27 @@ prep_and_set_pid_fldr <- function(fldr_info) {
     
 }
 
-gen_stata_code_xtnbreg <- function(iv_vars, gof_names, stata_output_vars, difficult_str, technique_str) {
+gen_stata_code_xtnbreg <- function(iv_vars, dvfmt, gof_names, stata_output_vars, difficult_str, technique_str) {
     if (as.character(match.call()[[1]]) %in% fstd){browser()}
     #' generate the code for xtnbreg
 
     iv_vars_stata <- gsub("\\.", "_", iv_vars)
-
     res_names <- paste0("r", seq(len(stata_output_vars)*2 + len(gof_names)))
-
     maxiter <- 100
+
+    if (dvfmt == "rates") {
+        exposure_cmd = "exposure(SP_POP_TOTLm_lag0_uscld) "
+    } else {
+        exposure_cmd = ""
+    }
+
 
     ## xtnbreg
     stata_code = list(
         panel_setup = "xtset iso3c_num year",
         cvrgd_setup = sprintf("set maxiter %s", maxiter),
-        reg_cmd = paste0("capture xtnbreg nbr_opened ", paste(iv_vars_stata, collapse = " "), ", re ", difficult_str, " technique(", technique_str, ")"),
+        reg_cmd = paste0("capture xtnbreg nbr_opened ", paste(iv_vars_stata, collapse = " "),
+                         ", re ", exposure_cmd, difficult_str, " technique(", technique_str, ")"),
         ## cvrg_check= paste0(c("local nbr_itr = e(ic)", sprintf("if `nbr_itr' < %s {", maxiter)), collapse = "\n"),
         cvrg_check = paste0(c("if _rc == 0 {")),
         coef_cmd = "mata: b=st_matrix(\"e(b)\")' \n mata: st_matrix(\"b_stata\", b)",
@@ -482,10 +488,9 @@ gen_stata_code_xtnbreg <- function(iv_vars, gof_names, stata_output_vars, diffic
 
 }
 
-## gen_stata_code_xtnbreg(c("aaa", "bb"), c("jj", "kk"), c("asdf", "bbbbb", "ccc"), "difficult", "technique") %>% cat()
 
 
-run_xtnbreg <- function(iv_vars, gof_names, dfx, technique_str, difficult_str, fldr_info, verbose) {
+run_xtnbreg <- function(iv_vars, dvfmt, gof_names, dfx, technique_str, difficult_str, fldr_info, verbose) {
     if (as.character(match.call()[[1]]) %in% fstd){browser()}
     #' run xtnbreg command
 
@@ -493,12 +498,7 @@ run_xtnbreg <- function(iv_vars, gof_names, dfx, technique_str, difficult_str, f
     
     pid = prep_and_set_pid_fldr(fldr_info)
 
-    ## local nbr_itr = e(ic)\
-    ## matrix krappa = (`nbr_itr')\nsvmat krappa\nkeep krappa*\ndrop if missing(krappa1)"
-
-    ## fwrite(dfx, "/home/johannes/Dropbox/phd/papers/org_pop/data/processed/dfx_ncvrgd.csv")
-
-    stata_code_xtnbreg <- gen_stata_code_xtnbreg(iv_vars, gof_names, xtnbreg_output_vars,
+    stata_code_xtnbreg <- gen_stata_code_xtnbreg(iv_vars, dvfmt, gof_names, xtnbreg_output_vars,
                                                  difficult_str, technique_str)
     
     xtnbreg_res_raw <- stata(stata_code_xtnbreg, data.in = dfx, data.out = T, stata.echo = verbose) %>% atb()
@@ -531,21 +531,14 @@ gen_stata_code_menbreg <- function(iv_vars, dvfmt, gof_names, stata_output_vars)
     
     iv_vars_stata <- gsub("\\.", "_", iv_vars)
 
-    ## if format of DV is rates: yeet the population variable from iv_vars, generate exposure command,
-    ## and adjust the number of results that are returned: -2 because 2 SP.POP.TOTLm are passed, but none used
+    ## if format of DV is rates: generate exposure command,
     res_names <- paste0("r", seq(len(stata_output_vars)*2 + len(gof_names)))
 
     if (dvfmt == "rates") {
-        ## iv_vars_stata2 <- keep(iv_vars_stata, ~!grepl("^SP_POP_TOTLm", .x))
         exposure_cmd = ", exposure(SP_POP_TOTLm_lag0_uscld)"
-        ## res_names <- paste0("r", seq((len(stata_output_vars)-2)*2 + len(gof_names)))
     } else {
-        ## iv_vars_stata2 <- iv_vars_stata2
-        exposure_cmd == ""
-
+        exposure_cmd = ""
     }
-    
-    
 
     maxiter <- 100
 
@@ -750,11 +743,12 @@ run_vrbl_mdl_vars <- function(reg_spec, vvs, fldr_info, return_objs = c("converg
     dvfmt <- reg_spec$cfg$dvfmt
     iv_vars <- reg_spec$mdl_vars[reg_spec$mdl_vars %!in% vvs$base_vars]
 
-    ## if looking at rates: yeet the population variable (add it later on)
+    ## if looking at rates: yeet the population variable (add always the unscaled one)
     if (dvfmt == "rates") {
         iv_vars <-  keep(iv_vars, ~!grepl("^SP\\.POP\\.TOTLm", .x))
     }
     
+    ## always have SP_POP_TOTLm_lag0_uscld so that dvfmt = "rates" can easily add it as offset
     dfx <- select(df_cbn, all_of(c(vvs$base_vars, "iso3c_num", "nbr_opened",iv_vars, "SP_POP_TOTLm_lag0_uscld")))
 
     ## saving reg spec information to debug later 
@@ -1486,12 +1480,12 @@ vrbl_thld_choices_optmz <- slice_sample(vrbl_thld_choices, n=2)
 
 reg_settings_optmz <- list(
     nbr_specs_per_thld = 2,
-    dvfmts = "rates", # can also be counts
+    dvfmts = c("rates"), # should also be counts, but multiple dvfmts not yet supported by reg_anls
     batch_nbr = "v50",
     vary_vrbl_lag = F,
     technique_strs = c("nr"),
     difficulty_switches = T,
-    regcmds = c("menbreg"),
+    regcmds = c("menbreg", "xtnbreg"),
     ## cbns_to_include = c("cbn_all"),
     cbns_to_include = names(cbn_dfs_counts)[1:3],
     mdls_to_include = c("full")
@@ -1505,7 +1499,7 @@ print(len(reg_spec_mdls_optmz))
 fldr_info_optmz <- setup_regression_folders_and_files(reg_settings_optmz$batch_nbr)
 
 pbmclapply(reg_spec_mdls_optmz, \(x) optmz_reg_spec(x, fldr_info_optmz, reg_settings_optmz),
-         mc.cores = 6)
+         mc.cores = 4)
 
 ## mclapply(reg_spec_mdls_optmz, \(x) run_vrbl_mdl_vars(x, vvs, fldr_info_optmz), mc.cores = 6)
 
@@ -1523,8 +1517,10 @@ regspec_x <- reg_spec_mdls_optmz[[1]]
 
 optmz_reg_spec(reg_spec_mdls_optmz[[1]], fldr_info_optmz, reg_settings_optmz)
 
-x <- reg_spec_mdls_optmz[[1]]
-## x$regcmd <- "xtnbreg"
+x <- reg_spec_mdls_optmz[[2]]
+
+x$cfg$dvfmt <- "counts"
+x$cfg$regcmd <- "menbreg"
 
 run_vrbl_mdl_vars(x, vvs, fldr_info_optmz, verbose = F)
 
