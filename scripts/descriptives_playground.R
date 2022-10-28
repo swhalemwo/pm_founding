@@ -66,17 +66,52 @@ print(var_xtbl, file = paste0(TABLE_DIR, "var_desc.tex"), include.rownames = T, 
 
 ## https://stats.stackexchange.com/questions/522275/controlling-for-population-size-using-per-capita-or-including-a-variable-for-po
 
-test_df <- data.table(name = c("nebraska", "kansas", "idaho"), mort = c(5, 1, 3), sales = c(100,100, 50), pop = c(1000, 100, 500)) %>%
+test_df <- data.table(name = c("nebraska", "kansas", "idaho"), mort = c(5, 1, 3), sales = c(10,10, 5), pop = c(10, 1, 5)) %>%
     .[, `:=`(mort_pcap = mort/pop,
              sales_pcap = sales/pop)]
 
-lm(mort ~ sales + pop, test_df)
-lm(mort_pcap ~ sales_pcap, test_df)
-lm(mort ~ sales_pcap, test_df)
+
+lm(mort ~ sales + pop, test_df[1:2])
+lm(mort_pcap ~ sales_pcap, test_df[1:2])
+lm(mort ~ sales_pcap, test_df[1:2])
 
 
 ggplot(test_df, aes(x=sales_pcap, y=mort_pcap)) + geom_point()
 ggplot(test_df, aes(x=sales, y=mort, size = pop)) + geom_point()
+
+set.seed(5)
+# create the variance covariance matrix
+sigma<-rbind(c(1,-0.8,-0.7), c(-0.8,1, 0.4), c(-0.7,0.4,1))
+# create the mean vector
+mu<-c(10, 5, 2) 
+# generate the multivariate normal distribution
+dfx <- as.data.frame(mvrnorm(n=1000, mu=mu, Sigma=sigma)) %>% adt()
+names(dfx) <- c("whatever", "dvx", "ivx")
+## generate population 
+dfx$pop <- rnorm(n=1000, mean = 50, sd = 10)
+
+cor(dfx$ivx, dfx$dvx)
+cor(dfx$pop, dfx$dvx)
+cor(dfx$pop, dfx$ivx)
+
+dfx[, `:=`(iv_cnts = ivx * pop, dv_cnts = dvx * pop)]
+
+cor(dfx$iv_cnts, dfx$dv_cnts)
+
+r_rts <- lm(dvx ~ ivx, dfx)
+r_cnt <- lm(dv_cnts ~ iv_cnts + pop, dfx)
+
+r_rts_scld <- lm(scale(dvx) ~ scale(ivx), dfx)
+r_cnt_scld <- lm(scale(dv_cnts) ~ scale(iv_cnts) + scale(pop), dfx)
+
+r_rts_pop <- lm(dvx ~ ivx + pop, dfx)
+
+r_rts_scld_pop <- lm(scale(dvx) ~ scale(ivx) + scale(pop), dfx)
+
+screenreg(list(r_rts, r_cnt, r_rts_scld, r_cnt_scld, r_rts_scld_pop, r_rts_pop), digits = 4)
+
+predict(r_rts)
+
 
 
 ## ** debugging lack of private museum openings even in cluster 4 (developed countries)
