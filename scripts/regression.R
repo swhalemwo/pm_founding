@@ -1464,7 +1464,9 @@ optmz_reg_spec <- function(reg_spec, fldr_info, reg_settings) {
 
 ## ** running 
 
-## stop("functions are DONE")
+if (is.null(args[[1]])) {
+    stop("functions are DONE")
+}
 
 vvs <- gen_vrbl_vectors()
 vrbl_cbns <- gen_cbns(vvs$all_rel_vars, vvs$base_vars)

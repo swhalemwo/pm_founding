@@ -1,3 +1,5 @@
+args <- commandArgs(trailingOnly = T)
+
 
 ## * source other files
 PROJECT_DIR <- "/home/johannes/Dropbox/phd/papers/org_pop/"
