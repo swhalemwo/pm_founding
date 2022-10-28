@@ -34,6 +34,7 @@ library(DescTools)
 library(testthat)
 library(stringr)
 library(pbmcapply)
+library(purrr)
 
 
 filter <- dplyr::filter

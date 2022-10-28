@@ -233,8 +233,10 @@ gen_cbn_models <- function(cbn_vars, base_vars, ctrl_vars) {
 
 
 
+
     
 gen_cbn_dfs <- function(df_reg, lngtd_vars, crscn_vars, vrbl_cnbs, base_vars) {
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
     #' generate the dfs that correspond to variable combinations
     #' checks whether a country-year has coverage for all the lags for all the variables required by combination
     #' needs lngtd_vars and crscn_vars to set which to variables need to be named as lag
@@ -280,10 +282,15 @@ gen_cbn_dfs <- function(df_reg, lngtd_vars, crscn_vars, vrbl_cnbs, base_vars) {
     ## split up? 
     cbn_dfs <- lapply(cbn_cvrg, \(x) atb(merge(select(all_of(x), iso3c, year), df_all_lags)))
 
-    ## scale variables
-    vrbls_to_not_scale <- c("Ind.tax.incentives", "NPO.tax.exemption")
     
-    cbn_dfs <- lapply(cbn_dfs, \(x) mutate(x,
+    ## add unscaled Population at lag 0: needed for rates/exposures(use Stata naming scheme)
+    cbn_dfs2 <- lapply(cbn_dfs, \(x) mutate(x, SP_POP_TOTLm_lag0_uscld = SP.POP.TOTLm_lag0))
+           
+    ## scale variables
+
+    vrbls_to_not_scale <- c("Ind.tax.incentives", "NPO.tax.exemption", "SP_POP_TOTLm_lag0_uscld")
+    
+    cbn_dfs3 <- lapply(cbn_dfs2, \(x) mutate(x,
                                            across(all_of(setdiff(names(x), c(vrbls_to_not_scale, base_vars))),
                                                   scale_wo_attr)) %>%
                                     mutate(iso3c_num = as.numeric(factor(iso3c))))
@@ -299,7 +306,7 @@ gen_cbn_dfs <- function(df_reg, lngtd_vars, crscn_vars, vrbl_cnbs, base_vars) {
 
     ## first calculate interaction values
 
-    ti_tmitr_interactions <- lapply(cbn_dfs, \(x)
+    ti_tmitr_interactions <- lapply(cbn_dfs3, \(x)
            lapply(seq(1,5), \(lagx)
                   x %>% 
                   mutate(!!paste0("ti_tmitr_interact_lag", lagx) :=
@@ -309,11 +316,11 @@ gen_cbn_dfs <- function(df_reg, lngtd_vars, crscn_vars, vrbl_cnbs, base_vars) {
            
     ## then replace old and with new interaction values
 
-    cbn_dfs_names <- names(cbn_dfs)
+    cbn_dfs_names <- names(cbn_dfs3)
     names(cbn_dfs_names) <- cbn_dfs_names
 
-    cbn_dfs <- lapply(cbn_dfs_names, \(x) 
-           cbind(cbn_dfs[[x]] %>% select(-all_of(names(ti_tmitr_interactions[[x]]))),
+    cbn_dfs4 <- lapply(cbn_dfs_names, \(x) 
+           cbind(cbn_dfs3[[x]] %>% select(-all_of(names(ti_tmitr_interactions[[x]]))),
                  ti_tmitr_interactions[[x]]) %>% atb())
 
 
@@ -322,10 +329,10 @@ gen_cbn_dfs <- function(df_reg, lngtd_vars, crscn_vars, vrbl_cnbs, base_vars) {
     ## cbn_dfs <- lapply(cbn_dfs, \(x) mutate(x, iso3c_num = as.numeric(factor(iso3c))))
 
     ## add nbr_opened
-    cbn_dfs <- lapply(cbn_dfs, \(x) merge(x, select(df_reg, iso3c, year, nbr_opened), all.x = T) %>% atb())
+    cbn_dfs5 <- lapply(cbn_dfs4, \(x) merge(x, select(df_reg, iso3c, year, nbr_opened), all.x = T) %>% atb())
 
     
-    return(cbn_dfs)
+    return(cbn_dfs5)
 }
 
 gen_lag_id <- function(reg_spec, vvs) {
@@ -518,20 +525,37 @@ run_xtnbreg <- function(iv_vars, gof_names, dfx, technique_str, difficult_str, f
     return(ret_obj)
 }
 
-gen_stata_code_menbreg <- function(iv_vars, gof_names, stata_output_vars) {
+gen_stata_code_menbreg <- function(iv_vars, dvfmt, gof_names, stata_output_vars) {
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
     #' generate the stata code for menbreg
     
     iv_vars_stata <- gsub("\\.", "_", iv_vars)
 
+    ## if format of DV is rates: yeet the population variable from iv_vars, generate exposure command,
+    ## and adjust the number of results that are returned: -2 because 2 SP.POP.TOTLm are passed, but none used
     res_names <- paste0("r", seq(len(stata_output_vars)*2 + len(gof_names)))
+
+    if (dvfmt == "rates") {
+        ## iv_vars_stata2 <- keep(iv_vars_stata, ~!grepl("^SP_POP_TOTLm", .x))
+        exposure_cmd = ", exposure(SP_POP_TOTLm_lag0_uscld)"
+        ## res_names <- paste0("r", seq((len(stata_output_vars)-2)*2 + len(gof_names)))
+    } else {
+        ## iv_vars_stata2 <- iv_vars_stata2
+        exposure_cmd == ""
+
+    }
+    
+    
 
     maxiter <- 100
 
 
     ## menbreg
     stata_code = list(
+        ## sleep_cmd = "sleep 10000", 
         cvrgd_setup = sprintf("set maxiter %s", maxiter),
-        reg_cmd = paste0("capture menbreg nbr_opened ", paste(iv_vars_stata, collapse = " "), " || iso3c_num:"),
+        reg_cmd = paste0("capture menbreg nbr_opened ", paste(iv_vars_stata, collapse = " "),
+                         exposure_cmd, " || iso3c_num:"),
         ## cvrg_check= paste0(c("local nbr_itr = e(ic)", sprintf("if `nbr_itr' < %s {", maxiter)), collapse = "\n"),
         cvrg_check = paste0(c("if _rc == 0 {")),
         coef_cmd = "mata: b=st_matrix(\"e(b)\")' \n mata: st_matrix(\"b_stata\", b)",
@@ -555,7 +579,7 @@ gen_stata_code_menbreg <- function(iv_vars, gof_names, stata_output_vars) {
 }
     
 
-run_menbreg <- function(iv_vars, gof_names, dfx, fldr_info, verbose) {
+run_menbreg <- function(iv_vars, dvfmt, gof_names, dfx, fldr_info, verbose) {
     if (as.character(match.call()[[1]]) %in% fstd){browser()}
     #' run menbreg command
 
@@ -563,7 +587,7 @@ run_menbreg <- function(iv_vars, gof_names, dfx, fldr_info, verbose) {
 
     pid = prep_and_set_pid_fldr(fldr_info)
 
-    stata_code_menbreg <- gen_stata_code_menbreg(iv_vars, gof_names, menbreg_output_vars)
+    stata_code_menbreg <- gen_stata_code_menbreg(iv_vars, dvfmt, gof_names, menbreg_output_vars)
     
     menbreg_res_raw <- stata(stata_code_menbreg, data.in = dfx, data.out = T, stata.echo = verbose) %>% atb()
 
@@ -678,7 +702,7 @@ run_glmmtmb <- function(dfx, r_vars, verbose) {
 }
 
 
-reg_spec_run_dispatch <- function(iv_vars, dfx, regcmd, fldr_info, technique_str, difficult_str, verbose) {
+reg_spec_run_dispatch <- function(iv_vars, dfx, regcmd, dvfmt, fldr_info, technique_str, difficult_str, verbose) {
     if (as.character(match.call()[[1]]) %in% fstd){browser()}
     #' run regression with reg_cmd (one of xtnbreg, menbreg or glmmTMB): facilitates time comparison
     #' iv_vars: independent variables
@@ -691,18 +715,18 @@ reg_spec_run_dispatch <- function(iv_vars, dfx, regcmd, fldr_info, technique_str
        
         gof_names <- c("N", "log_likelihood", "N_g", "Chi2", "p", "df")
 
-        r_regspec <- run_xtnbreg(iv_vars, gof_names, dfx, technique_str, difficult_str, fldr_info, verbose)
+        r_regspec <- run_xtnbreg(iv_vars, dvfmt, gof_names, dfx, technique_str, difficult_str, fldr_info, verbose)
            
     } else if (regcmd == "menbreg") {
         ## separate command for menbreg
         
         gof_names <- c("N", "log_likelihood", "N_g", "Chi2", "p", "df")
 
-        r_regspec <- run_menbreg(iv_vars, gof_names, dfx, fldr_info, verbose)
+        r_regspec <- run_menbreg(iv_vars, dvfmt, gof_names, dfx, fldr_info, verbose)
 
     } else if (regcmd == "glmmTMB") {
         
-        r_regspec <- run_glmmtmb(dfx, iv_vars, verbose)
+        r_regspec <- run_glmmtmb(dfx, dvfmt, iv_vars, verbose)
 
     }
 
@@ -715,15 +739,23 @@ reg_spec_run_dispatch <- function(iv_vars, dfx, regcmd, fldr_info, technique_str
 run_vrbl_mdl_vars <- function(reg_spec, vvs, fldr_info, return_objs = c("converged"), verbose = F) {
     if (as.character(match.call()[[1]]) %in% fstd){browser()}
     #' run one regression given the model vars
-        
-    df_cbn <- cbn_dfs[[reg_spec$cfg$cbn_name]]
-
+    
+    ## df_cbn <- cbn_df_dict[[reg_spec$cfg$dvfmt]][[reg_spec$cfg$cbn_name]]
+    df_cbn <- get(reg_spec$cfg$dvfmt, cbn_df_dict) %>% get(reg_spec$cfg$cbn_name, .)
+    
     df_idx <- reg_spec$df_idx
     other_cfgs <- reg_spec$other_cfgs
     file_id <- reg_spec$mdl_id
-    
+
+    dvfmt <- reg_spec$cfg$dvfmt
     iv_vars <- reg_spec$mdl_vars[reg_spec$mdl_vars %!in% vvs$base_vars]
-    dfx <- select(df_cbn, all_of(c(vvs$base_vars, "iso3c_num", "nbr_opened",iv_vars)))
+
+    ## if looking at rates: yeet the population variable (add it later on)
+    if (dvfmt == "rates") {
+        iv_vars <-  keep(iv_vars, ~!grepl("^SP\\.POP\\.TOTLm", .x))
+    }
+    
+    dfx <- select(df_cbn, all_of(c(vvs$base_vars, "iso3c_num", "nbr_opened",iv_vars, "SP_POP_TOTLm_lag0_uscld")))
 
     ## saving reg spec information to debug later 
     saveRDS(reg_spec, file = paste0(fldr_info$REG_SPEC_DIR, file_id))
@@ -737,7 +769,8 @@ run_vrbl_mdl_vars <- function(reg_spec, vvs, fldr_info, return_objs = c("converg
 
     t1 <- Sys.time()
     
-    r_regspec <- reg_spec_run_dispatch(iv_vars, dfx, regcmd, fldr_info, technique_str, difficult_str, verbose)
+    r_regspec <- reg_spec_run_dispatch(iv_vars, dfx, regcmd, dvfmt, fldr_info, technique_str, difficult_str,
+                                       verbose)
     
     t2 <- Sys.time()
     t_diff <- t2-t1
@@ -869,6 +902,21 @@ gen_spec_regcmd_info <- function(reg_spec, regcmds) {
     reg_spec_regcmd_added <- lapply(regcmds, \(x) proc_mdl_regcmd_addgns(reg_spec, x))
     return(reg_spec_regcmd_added)
 }
+
+proc_mdl_dvfmt_addgns <- function(reg_spec, dvfmt) {
+    #' add the dependent variable format to model 
+    reg_spec$cfg <- c(reg_spec$cfg,
+                      list(dvfmt = dvfmt))
+    return(reg_spec)
+}
+
+gen_spec_dvfmt_info <- function(reg_spec, dvfmts) {
+    #' add dependent variable format to model spec
+
+    reg_spec_dvfmt_added <- lapply(dvfmts, \(x) proc_mdl_dvfmt_addgns(reg_spec, x))
+    return(reg_spec_dvfmt_added)
+}
+
 
 
 gen_spec_id_info <- function(reg_spec, vvs) {
@@ -1214,8 +1262,12 @@ vary_batch_reg_spec <- function(reg_specs, reg_settings, vvs) {
                                  gen_spec_regcmd_info(x, reg_settings$regcmds),
                                  mc.cores = 6) %>% flatten()
 
+    reg_spec_dvfmts <- mclapply(reg_spec_regcmds, \(x)
+                                gen_spec_dvfmt_info(x, reg_settings$dvfmts),
+                                mc.cores = 6) %>% flatten()
 
-    return(reg_spec_regcmds)
+
+    return(reg_spec_dvfmts)
 
 }
     
@@ -1416,8 +1468,12 @@ optmz_reg_spec <- function(reg_spec, fldr_info, reg_settings) {
 
 vvs <- gen_vrbl_vectors()
 vrbl_cbns <- gen_cbns(vvs$all_rel_vars, vvs$base_vars)
-cbn_dfs <- gen_cbn_dfs(df_reg, vvs$lngtd_vars, vvs$crscn, vrbl_cbns, vvs$base_vars)
-cbn_dfs_rts <- gen_cbn_dfs(df_reg_rts, vvs$lngtd_vars, vvs$crscn, vrbl_cbns, vvs$base_vars)
+cbn_dfs_counts <- gen_cbn_dfs(df_reg, vvs$lngtd_vars, vvs$crscn, vrbl_cbns, vvs$base_vars)
+cbn_dfs_rates <- gen_cbn_dfs(df_reg_rts, vvs$lngtd_vars, vvs$crscn, vrbl_cbns, vvs$base_vars)
+
+cbn_df_dict <- list(counts = cbn_dfs_counts,
+                    rates = cbn_dfs_rates)
+                    
 
 vrbl_thld_choices <- gen_vrbl_thld_choices(vvs$hnwi_vars, vvs$inc_ineq_vars, vvs$weal_ineq_vars)
 
@@ -1428,14 +1484,14 @@ vrbl_thld_choices_optmz <- slice_sample(vrbl_thld_choices, n=2)
 
 reg_settings_optmz <- list(
     nbr_specs_per_thld = 2,
-    dvfmt = "rates", # can also be counts
+    dvfmts = "rates", # can also be counts
     batch_nbr = "v50",
     vary_vrbl_lag = F,
     technique_strs = c("nr"),
     difficulty_switches = T,
-    regcmds = c("menbreg", "xtnbreg"),
+    regcmds = c("menbreg"),
     ## cbns_to_include = c("cbn_all"),
-    cbns_to_include = names(cbn_dfs)[1:3],
+    cbns_to_include = names(cbn_dfs_counts)[1:3],
     mdls_to_include = c("full")
 )
 
@@ -1451,12 +1507,13 @@ pbmclapply(reg_spec_mdls_optmz, \(x) optmz_reg_spec(x, fldr_info_optmz, reg_sett
 
 ## mclapply(reg_spec_mdls_optmz, \(x) run_vrbl_mdl_vars(x, vvs, fldr_info_optmz), mc.cores = 6)
 
+## this stop should never be commented out 
 stop("models are DONE")
 
 
 
 
-
+## ** garage for inspection
 
 
 
@@ -1464,10 +1521,10 @@ regspec_x <- reg_spec_mdls_optmz[[1]]
 
 optmz_reg_spec(reg_spec_mdls_optmz[[1]], fldr_info_optmz, reg_settings_optmz)
 
-## x <- reg_spec_mdls_optmz[[1]]
+x <- reg_spec_mdls_optmz[[1]]
 ## x$regcmd <- "xtnbreg"
 
-## run_vrbl_mdl_vars(x, vvs, fldr_info_optmz, verbose = F)
+run_vrbl_mdl_vars(x, vvs, fldr_info_optmz, verbose = F)
 
 ## ** debugging lack of convergence
 

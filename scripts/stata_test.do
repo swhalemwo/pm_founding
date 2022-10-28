@@ -504,3 +504,34 @@ svmat stata_return
 display `stata_return'
 
 list in 1
+
+
+/* testing exposure in stata */
+clear
+import delimited /home/johannes/Dropbox/phd/papers/org_pop/data/processed/df_reg2.csv
+/* xtset iso3c_num year */
+/* xtsum nbr_opened */
+/* menbreg nbr_opened indtaxincentives npotaxexemption gptinc992j ghweal992j nygdppcapcdk sppoptotlm || iso3c_num: */
+/* estimates store r_counts */
+menbreg nbr_opened indtaxincentives npotaxexemption gptinc992j ghweal992j nygdppcapcdk, exposure(sppoptotlm) || iso3c_num:
+mata: b=st_matrix("e(b)")' 
+ mata: st_matrix("b_stata", b)
+matrix gof = ( e(N), e(ll), e(N_g), e(chi2), e(p), e(df_m))'
+mata: se=sqrt(diagonal(st_matrix("e(V)"))) 
+ mata: st_matrix("se_stata", se)
+matrix stata_return = (b_stata', se_stata', gof')
+matrix colnames stata_return = r1 r2 r3 r4 r5 r6 r7 r8 r9 r10 r11 r12 r13 r14 r15 r16 r17 r18 r19 r20 r21 r22 r23 r24
+svmat stata_return 
+ keep stata_return*
+ drop if missing(stata_return1)
+list in 1
+
+
+
+
+menbreg nbr_opened indtaxincentives npotaxexemption gptinc992j ghweal992j nygdppcapcdk, exposure(sppoptotlm) || iso3c_num:
+estimates store r_rates
+
+estimates table r_counts r_rates
+estimates table r_rates
+
