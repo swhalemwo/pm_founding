@@ -810,19 +810,42 @@ get_vlus_long <- function(cbn_dfs, df_reg, cbnx) {
     return(dtx_mlt)
 }
 
-dtx_cbn <- lapply(names(cbn_dfs)[1:3], \(x) get_vlus_long(cbn_dfs, df_reg, x)) %>%
+dtx_cbn <- lapply(names(cbn_dfs_rts)[1:3], \(x) get_vlus_long(cbn_dfs_rates, df_reg_rts, x)) %>%
     Reduce(\(x,y) rbind(x,y), .)
 
+dtx_cbn[, .(meanx = mean(value), minx = min(value),
+            maxx = max(value), sdx=sd(value)), by = .(vrbl = variable, cbn_name)] %>%
+    melt(id.vars = c("vrbl", "cbn_name"), variable.name = "statx") %>%
+    .[order(vrbl, statx, cbn_name)] %>%
+    dcast.data.table(vrbl + statx ~ cbn_name) %>% print(n=40)
+    
 
-dtx_mlt[, .(meanx = mean(value), minx = min(value), maxx = max(value), sdx=sd(value)), variable] %>% adf()
+
+vrbls_to_log <- c("hnwi_nbr_1M", "hnwi_nbr_5M", "hnwi_nbr_30M", "hnwi_nbr_200M",
+                  "smorc_dollar_fxm", "smorc_dollar_fxm_sqrd", "NY.GDP.PCAP.CDk",
+                  "SP.POP.TOTLm", "clctr_cnt_cpaer", "nbr_opened_cum", "nbr_opened_cum_sqrd",
+                  "cnt_contemp_1990", "cnt_contemp_1990_squared")
+
+## test all kind of data transformations that make 
+dtx_cbn2 <- dtx_cbn %>% copy() %>% 
+    ## .[, z := scale_wo_attr(value), by = .(variable, cbn_name)] %>%
+    ## .[z > - & z < 2 & value != 0] %>% ## yeet outliers
+    .[variable %in% vrbls_to_log, value := log(value+0)]
+
+
+
+dtx_cbn2[is.na(value), .N, variable]
+dtx_cbn[is.na(value), .N, variable]
+
 
 
 ## raw kernels? 
-dtx_cbn %>%
+dtx_cbn2 %>%
     ggplot(aes(x=value, y=..density.., group = interaction(variable, cbn_name), color = cbn_name)) +
     ## geom_histogram(color = "black", fill = "lightgrey", lwd = 0.2, bins = 30) +
     geom_density(position = "identity", show.legend = F) + 
-    facet_wrap(~variable , scales = "free")
+    facet_wrap(~variable , scales = "free") +
+    theme(axis.ticks.y = element_blank(), axis.text.y = element_blank())
 
 ## first calculate the kernel multipliers
 krnl_mltplrs <- dtx_cbn %>% .[, .(hist_counts = hist(value, plot = F, breaks = 1)$counts[1],
