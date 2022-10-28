@@ -964,6 +964,7 @@ inf.omit <- function(vec) {
 
 
 select_proper_tlycg_series <- function(df_cult_cbn) {
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
     #' impute tlycg where necessary, pick the highest-quality series for each CY
     
     ## get the countries with overlapping series -> mean for all 
@@ -992,8 +993,17 @@ select_proper_tlycg_series <- function(df_cult_cbn) {
     ## add the country-level scalar of those countries that have them 
     df_cult_sclr_cbn <- merge(df_cult_sclr, crys_ovlp_scaler, all.x = T) %>% atb()
 
+
+
+    ## filter(df_cult_sclr_cbn, p3cg < 0) %>% pull(p3cg) %>% hist()
+    ## filter(df_cult_sclr_cbn, iso3c == "YEM") %>% adf()
+    ## yeet CYs with negative cultural spending
+    df_cult_sclr_cbn1 <- df_cult_sclr_cbn %>% mutate(p3cg = ifelse(p3cg < 0, NA, p3cg))
+
+    
+
     ## compute the different tlycg values 
-    df_cult_sclr_cbn2 <- df_cult_sclr_cbn %>%
+    df_cult_sclr_cbn2 <- df_cult_sclr_cbn1 %>%
         filter(measure == "constant_usd") %>% 
         select(iso3c, year, p3cg, tlycg, scaler_cry) %>%
         mutate(scaler_med = med_scaler_vlu,
@@ -1018,6 +1028,7 @@ select_proper_tlycg_series <- function(df_cult_cbn) {
 }
 
 gen_cult_spending_imptd <- function() {
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
     #' wrapper function for combining and imputing different tlycg/p3cg series
 
     df_cprn <- gen_cult_spending_source_df()
