@@ -590,7 +590,8 @@ gen_plt_mdl_summary <- function(mdl_summary, vvs) {
     plt_cbn <- plts_scale[[1]] / plts_scale[[2]] +
         plot_layout(heights = c(len(unique(mdl_summary_split[[1]]$vrbl_name_unlag)),
                                 len(unique(mdl_summary_split[[2]]$vrbl_name_unlag))),
-                    guides = "collect")
+                    guides = "collect") &
+        theme(legend.position = 'bottom')
 
 
 
