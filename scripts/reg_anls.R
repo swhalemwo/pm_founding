@@ -489,6 +489,7 @@ gen_plt_reg_res_all <- function(df_anls_all, vvs) {
 }
 
 gen_plt_lag_cprn <- function(df_best_mdls, vvs) {
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
     #' generate plot that allows easy comparison of lags chosen across combinations and models 
     
     
@@ -587,7 +588,9 @@ gen_plt_mdl_summary <- function(mdl_summary, vvs) {
     ## combine plots with patchwork,
     ## add some arbitrary scaling for now to make difference between variables more equal
     plt_cbn <- plts_scale[[1]] / plts_scale[[2]] +
-        plot_layout(heights = c(nrow(mdl_summary_split[[1]]), nrow(mdl_summary_split[[2]])-6))
+        plot_layout(heights = c(len(unique(mdl_summary_split[[1]]$vrbl_name_unlag)),
+                                len(unique(mdl_summary_split[[2]]$vrbl_name_unlag))),
+                    guides = "collect")
 
 
 
@@ -820,7 +823,7 @@ stop("functions done")
 ## ** main analysis
 NBR_MDLS <- 3
 ## fldr_info <- fldr_info_optmz
-reg_anls_base <- read_reg_res_files(setup_regression_folders_and_files("v49"))
+reg_anls_base <- read_reg_res_files(setup_regression_folders_and_files("v50"))
 reg_res_objs <- proc_reg_res_objs(reg_anls_base, vvs, NBR_MDLS)
 
 reg_res <- list()

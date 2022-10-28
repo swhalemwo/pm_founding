@@ -77,24 +77,25 @@ reg_settings_optmz_v49 <- list(
     mdls_to_include = c("full")
 )
 
-## ** v50: try rates
+## ** v50: try rates: only menbreg code adjusted yet
 
 vrbl_thld_choices_optmz <- slice_sample(vrbl_thld_choices, n=2)
 
-reg_settings_optmz <- list(
+reg_settings_optmz_v50 <- list(
     nbr_specs_per_thld = 2,
-    rates = T,
+    dvfmts = "rates", # can also be counts
     batch_nbr = "v50",
     vary_vrbl_lag = F,
     technique_strs = c("nr"),
     difficulty_switches = T,
-    regcmds = c("menbreg", "xtnbreg"),
+    regcmds = c("menbreg"),
     ## cbns_to_include = c("cbn_all"),
-    cbns_to_include = names(cbn_dfs)[1:3],
+    cbns_to_include = names(cbn_dfs_counts)[1:3],
     mdls_to_include = c("full")
 )
 
-## need to edit code
+
+
 
 
 ## * read settings back in 
