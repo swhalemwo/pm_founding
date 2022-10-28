@@ -488,6 +488,7 @@ get_inc_ineq <- function(pctl, varx){
 
 
 get_ginis <- function() {
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
     #' getting the gini data from WID
     #' and putting them into wide format
     
@@ -495,7 +496,10 @@ get_ginis <- function() {
 
     gini_long <- as_tibble(dbGetQuery(con, gini_cmnd))
 
-    gini_df <- as_tibble(reshape2::dcast(gini_long, iso3c + year ~ variable))
+    ## "correct" ginis > 0.99 by restricting them to 0.99
+    gini_long2 <- gini_long %>% mutate(value = ifelse(value > 0.99, 0.99, value))
+
+    gini_df <- as_tibble(reshape2::dcast(gini_long2, iso3c + year ~ variable))
     
 }
 
