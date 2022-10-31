@@ -115,7 +115,7 @@ save_parsed_res <- function(res_list, idx, fldr_info) {
 }
 
 
-gen_lag <- function(vrbl, lag) {
+gen_lag <- function(dfx, vrbl, lag) {
 
     
     #' lag vrbl by lag years
@@ -123,7 +123,7 @@ gen_lag <- function(vrbl, lag) {
     lag <- as.numeric(lag)
     lag_name <- paste0(vrbl, "_lag", lag)
 
-    df_lag <- df_reg %>% select(iso3c, year, !!vrbl) %>%
+    df_lag <- dfx %>% select(iso3c, year, !!vrbl) %>%
         group_by(iso3c) %>%
         mutate(!!lag_name := lag(get(vrbl), lag)) %>%
         select(iso3c, year, !!lag_name)
@@ -235,7 +235,7 @@ gen_cbn_models <- function(cbn_vars, base_vars, ctrl_vars) {
 
 
     
-gen_cbn_dfs <- function(df_reg, lngtd_vars, crscn_vars, vrbl_cnbs, base_vars) {
+gen_cbn_dfs <- function(df_regx, lngtd_vars, crscn_vars, vrbl_cnbs, base_vars) {
     if (as.character(match.call()[[1]]) %in% fstd){browser()}
     #' generate the dfs that correspond to variable combinations
     #' checks whether a country-year has coverage for all the lags for all the variables required by combination
@@ -245,15 +245,15 @@ gen_cbn_dfs <- function(df_reg, lngtd_vars, crscn_vars, vrbl_cnbs, base_vars) {
 
     cvrg_lags <- lapply(lngtd_vars, \(x)
                         lapply(seq(0,5), \(i)
-                               gen_lag(vrbl=x, lag=i) %>%
+                               gen_lag(dfx = df_regx, vrbl=x, lag=i) %>%
                                select(iso3c, year, value =paste0(x, "_lag", i)) %>%
                                mutate(lag=i, vrbl = x, lag_col = "_lag")) %>%
                         Reduce(\(x,y) rbind(x,y), .)) %>%
         Reduce(\(x,y) rbind(x,y), .)
 
+    ## filter(cvrg_lags, iso3c %in% c("CHE", "USA"), vrbl == "hnwi_nbr_5M", lag == 0) %>% adf()
 
-
-    cvrg_crscn <- lapply(crscn_vars, \(x) select(df_reg, iso3c, year, value = all_of(x)) %>%
+    cvrg_crscn <- lapply(crscn_vars, \(x) select(df_regx, iso3c, year, value = all_of(x)) %>%
                                       mutate(vrbl = x, lag_col = "", lag=""))
 
     ## convert lag to string to allow having empty string for lag of cross-sectional variables
@@ -323,13 +323,11 @@ gen_cbn_dfs <- function(df_reg, lngtd_vars, crscn_vars, vrbl_cnbs, base_vars) {
            cbind(cbn_dfs3[[x]] %>% select(-all_of(names(ti_tmitr_interactions[[x]]))),
                  ti_tmitr_interactions[[x]]) %>% atb())
 
-
-
     ## add iso3c_num to make stata happy 
     ## cbn_dfs <- lapply(cbn_dfs, \(x) mutate(x, iso3c_num = as.numeric(factor(iso3c))))
 
     ## add nbr_opened
-    cbn_dfs5 <- lapply(cbn_dfs4, \(x) merge(x, select(df_reg, iso3c, year, nbr_opened), all.x = T) %>% atb())
+    cbn_dfs5 <- lapply(cbn_dfs4, \(x) merge(x, select(df_regx, iso3c, year, nbr_opened), all.x = T) %>% atb())
 
     
     return(cbn_dfs5)
