@@ -159,4 +159,8 @@ filter(cbn_dfs_rates$cbn_all, iso3c == "CHE")$hnwi_nbr_5M_lag0
 ## , facets = "region")
 
 
+## ** ti tmitr interaction
 
+sd(cbn_dfs_counts$cbn_all$ti_tmitr_interact_lag0)
+sd(cbn_dfs_counts$cbn_all$Ind.tax.incentives)
+sd(cbn_dfs_counts$cbn_all$tmitr_approx_linear20step_lag3)

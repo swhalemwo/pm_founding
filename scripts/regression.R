@@ -307,7 +307,7 @@ gen_cbn_dfs <- function(df_regx, lngtd_vars, crscn_vars, vrbl_cnbs, base_vars) {
     ## first calculate interaction values
 
     ti_tmitr_interactions <- lapply(cbn_dfs3, \(x)
-           lapply(seq(1,5), \(lagx)
+           lapply(seq(0,5), \(lagx)
                   x %>% 
                   mutate(!!paste0("ti_tmitr_interact_lag", lagx) :=
                              get(paste0("tmitr_approx_linear20step_lag", lagx)) * Ind.tax.incentives) %>% 
