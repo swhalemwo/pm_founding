@@ -135,3 +135,28 @@ ggplot(t_dtx, aes(x=timex2)) +
     
 
 
+## ** debug error of rates not being properly lagged
+cbn_df_dict$rates$cbn_all %>%
+    viz_lines(y="clctr_cnt_cpaer_lag0")
+
+
+cbn_dfs_rates$cbn_all %>%
+    mutate(nbr_opened_prop = nbr_opened/SP_POP_TOTLm_lag0_uscld) %>%
+    viz_lines(y="nbr_opened_prop", duration = 0)
+
+cbn_dfs_rates$cbn_all$nbr_opened
+
+
+
+viz_lines(df_reg_rts, y="clctr_cnt_cpaer")
+viz_lines(cbn_dfs_rates$cbn_controls, y="hnwi_nbr_5M_lag0")
+viz_lines(cbn_dfs_counts$cbn_all, y="hnwi_nbr_5M_lag0")
+
+filter(cbn_dfs_counts$cbn_all, iso3c == "CHE")$hnwi_nbr_5M_lag0
+filter(cbn_dfs_rates$cbn_all, iso3c == "CHE")$hnwi_nbr_5M_lag0
+
+
+## , facets = "region")
+
+
+
