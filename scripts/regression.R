@@ -1475,13 +1475,13 @@ vrbl_thld_choices <- gen_vrbl_thld_choices(vvs$hnwi_vars, vvs$inc_ineq_vars, vvs
 
 
 
-vrbl_thld_choices_optmz <- slice_sample(vrbl_thld_choices, n=2)
+vrbl_thld_choices_optmz <- slice_sample(vrbl_thld_choices, n=12)
 
 
 reg_settings_optmz <- list(
-    nbr_specs_per_thld = 2,
+    nbr_specs_per_thld = 3,
     dvfmts = c("rates"), # should also be counts, but multiple dvfmts not yet supported by reg_anls
-    batch_nbr = "v50",
+    batch_nbr = "v51",
     vary_vrbl_lag = F,
     technique_strs = c("nr"),
     difficulty_switches = T,
@@ -1499,7 +1499,7 @@ print(len(reg_spec_mdls_optmz))
 fldr_info_optmz <- setup_regression_folders_and_files(reg_settings_optmz$batch_nbr)
 
 pbmclapply(reg_spec_mdls_optmz, \(x) optmz_reg_spec(x, fldr_info_optmz, reg_settings_optmz),
-         mc.cores = 4)
+         mc.cores = 5)
 
 ## mclapply(reg_spec_mdls_optmz, \(x) run_vrbl_mdl_vars(x, vvs, fldr_info_optmz), mc.cores = 6)
 
