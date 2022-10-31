@@ -132,9 +132,9 @@ create_anls_df <- function(df_wb, df_open) {
                     pm_density = nbr_opened_cum - nbr_closed_cum,
                     pm_density_sqrd = pm_density^2) %>%
         group_by(year) %>%
-        mutate(pm_opened_cum_glbl = sum(nbr_opened_cum),
-               pm_closed_cum_glbl = sum(nbr_closed_cum),
-               pm_density_global = pm_opened_cum_glbl - pm_closed_cum_glbl,
+        mutate(nbr_opened_cum_global = sum(nbr_opened_cum),
+               nbr_closed_cum_global = sum(nbr_closed_cum),
+               pm_density_global = nbr_opened_cum_global - nbr_closed_cum_global,
                pm_density_global_sqrd = pm_density_global^2)
 
     ## df_anls2 %>% select(pm_closed_cum_glbl) %>% print(n=40)

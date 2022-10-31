@@ -1058,8 +1058,9 @@ gen_vrbl_vectors <- function() {
     hnwi_vars <- sapply(hnwi_cutoff_vlus[1:4], \(x) paste0("hnwi_nbr_", sanitize_number(x)))
     inc_ineq_vars <- c("sptinc992j_p90p100", "sptinc992j_p99p100", "gptinc992j")
     weal_ineq_vars <- c("shweal992j_p90p100", "shweal992j_p99p100", "ghweal992j")
-    density_vars <- c("nbr_opened_cum", "nbr_opened_cum_sqrd")
-
+    ## density_vars <- c("nbr_opened_cum", "nbr_opened_cum_sqrd")
+    density_vars <- c("pm_density", "pm_density_sqrd", "nbr_closed_cum",
+                      "pm_density_global", "pm_density_global_sqrd", "nbr_closed_cum_global")
 
 
     ## non_thld_lngtd_vars <- c("tmitr_approx_linear20step", "ti_tmitr_interact", "smorc_dollar_fxm", "NY.GDP.PCAP.CDk", "SP.POP.TOTLm", "clctr_cnt_cpaer")
@@ -1105,6 +1106,12 @@ gen_vrbl_vectors <- function() {
                    "clctr_cnt_cpaer" = "# Collectors in Artnews collector list",
                    "nbr_opened_cum" = "cumulative openings (legitimacy)",
                    "nbr_opened_cum_sqrd" = "cumulative openings squared (competition)",
+                   "pm_density" = "PM density (country)",
+                   "pm_density_sqrd" = "PM density squared (country)", 
+                   "nbr_closed_cum" = "# PM closings (country)",
+                   "pm_density_global" =  "PM density (global)",
+                   "pm_density_global_sqrd" = "PM density squared (global)", 
+                   "nbr_closed_cum_global" = "# PM closings (global)",
                    "ln_s" = "ln(s)",
                    "cons" = "cons",
                    "ln_r" = "ln(r)"
@@ -1473,13 +1480,13 @@ vrbl_thld_choices <- gen_vrbl_thld_choices(vvs$hnwi_vars, vvs$inc_ineq_vars, vvs
 
 
 
-vrbl_thld_choices_optmz <- slice_sample(vrbl_thld_choices, n=2)
+vrbl_thld_choices_optmz <- slice_sample(vrbl_thld_choices, n=6)
 
 
 reg_settings_optmz <- list(
     nbr_specs_per_thld = 2,
     dvfmts = c("rates"), # should also be counts, but multiple dvfmts not yet supported by reg_anls
-    batch_nbr = "v52",
+    batch_nbr = "v53",
     vary_vrbl_lag = F,
     technique_strs = c("nr"),
     difficulty_switches = T,
@@ -1497,7 +1504,7 @@ print(len(reg_spec_mdls_optmz))
 fldr_info_optmz <- setup_regression_folders_and_files(reg_settings_optmz$batch_nbr)
 
 pbmclapply(reg_spec_mdls_optmz, \(x) optmz_reg_spec(x, fldr_info_optmz, reg_settings_optmz),
-         mc.cores = 5)
+         mc.cores = 6)
 
 ## mclapply(reg_spec_mdls_optmz, \(x) run_vrbl_mdl_vars(x, vvs, fldr_info_optmz), mc.cores = 6)
 
@@ -1515,10 +1522,11 @@ regspec_x <- reg_spec_mdls_optmz[[1]]
 
 optmz_reg_spec(reg_spec_mdls_optmz[[1]], fldr_info_optmz, reg_settings_optmz)
 
-x <- reg_spec_mdls_optmz[[2]]
+## reg_spec_mdls_optmz[[10]]$df_idx %>% print(n=30)
+x <- reg_spec_mdls_optmz[[3]]
 
-x$cfg$dvfmt <- "counts"
-x$cfg$regcmd <- "menbreg"
+## x$cfg$dvfmt <- "counts"
+## x$cfg$regcmd <- "menbreg"
 
 run_vrbl_mdl_vars(x, vvs, fldr_info_optmz, verbose = F)
 
