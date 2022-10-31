@@ -634,7 +634,7 @@ gen_plt_cvrgnc <- function(gof_df_cbn) {
     ## generate summary of gof value distribution, focus on non-identical convergence
     print("convergence summary 2")
     cvrgnc_df_test[, .(.N, mean_var_gof = mean(var_gof)), vlu_proc] %>%
-        .[, `:=`(ttl = sum(N), prop = 100*N/sum(N))]
+        .[, `:=`(ttl = sum(N), prop = 100*N/sum(N))] %>% print()
     
 
     ## progress after each variable
@@ -824,7 +824,7 @@ stop("functions done")
 ## ** main analysis
 NBR_MDLS <- 3
 ## fldr_info <- fldr_info_optmz
-reg_anls_base <- read_reg_res_files(setup_regression_folders_and_files("v50"))
+reg_anls_base <- read_reg_res_files(setup_regression_folders_and_files("v51"))
 reg_res_objs <- proc_reg_res_objs(reg_anls_base, vvs, NBR_MDLS)
 
 reg_res <- list()
