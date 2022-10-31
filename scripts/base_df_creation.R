@@ -80,19 +80,33 @@ create_excel_df_diagnose <- function(df, verbose = 0){
 
 
 aggregate_openings <- function(df_excl) {
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
     #' aggregate excel df into country-year openings
 
-    df_excl <- na.omit(df_excl[,c("name", "country", "countrycode", "year_opened_int")])
+    df_excl2 <- select(df_excl, name, country, countrycode, year_opened_int) %>% 
+        na.omit()
     ## excel-based df
 
-    df_excl$ctr <- 1
-    df_open_cnt <- as_tibble(aggregate(ctr ~ countrycode + year_opened_int, df_excl, FUN = sum))
+    ## apply(df_excl2, 2, \(x) sum(is.na(x)))
+    
+    ## generate count of closed 
+    df_clsd <- select(df_excl, name, iso3c = countrycode, year = year_closed) %>% na.omit() %>%
+        group_by(iso3c, year) %>% 
+        summarize(nbr_closed = n())
+    
+
+    df_excl2$ctr <- 1
+    df_open_cnt <- as_tibble(aggregate(ctr ~ countrycode + year_opened_int, df_excl2, FUN = sum))
     names(df_open_cnt) <- c('iso3c', 'year', 'nbr_opened')
 
-    df_open_names <- df_excl %>% group_by(countrycode, year_opened_int) %>% summarise(name = list(name))
+    df_open_names <- df_excl2 %>% group_by(countrycode, year_opened_int) %>% summarise(name = list(name))
     names(df_open_names) <- c("iso3c", "year", "name")
 
-    df_open <- as_tibble(merge(df_open_cnt, df_open_names))
+    ## df_open <- as_tibble(merge(df_open_cnt, df_open_names))
+
+    df_open <- Reduce(\(x,y) left_join(x,y), list(df_open_cnt, df_open_names, df_clsd))
+
+    
     return(df_open)
 }
 
@@ -102,20 +116,43 @@ aggregate_openings <- function(df_excl) {
 
 
 create_anls_df <- function(df_wb, df_open) {
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
+    
     #' merge the aggregated excel df to the WB df (as complete country-year structure)
     df_anls <- as_tibble(merge(df_wb, df_open,
                                by=c("iso3c", "year"),
                                all.x = TRUE))
 
-    df_anls$nbr_opened[which(is.na(df_anls$nbr_opened))] <- 0
+    df_anls2 <- df_anls %>% mutate(
+                    region = countrycode(iso3c, "iso3c", "un.region.name"),
+                    nbr_opened = ifelse(is.na(nbr_opened), 0, nbr_opened),
+                    nbr_closed = ifelse(is.na(nbr_closed), 0, nbr_closed),
+                    nbr_opened_cum = ave(nbr_opened, iso3c, FUN= cumsum),
+                    nbr_closed_cum = ave(nbr_closed, iso3c, FUN= cumsum),
+                    pm_density = nbr_opened_cum - nbr_closed_cum,
+                    pm_density_sqrd = pm_density^2) %>%
+        group_by(year) %>%
+        mutate(pm_opened_cum_glbl = sum(nbr_opened_cum),
+               pm_closed_cum_glbl = sum(nbr_closed_cum),
+               pm_density_global = pm_opened_cum_glbl - pm_closed_cum_glbl,
+               pm_density_global_sqrd = pm_density_global^2)
 
-    df_anls$region <- countrycode(df_anls$iso3c, "iso3c", "un.region.name")
+    ## df_anls2 %>% select(pm_closed_cum_glbl) %>% print(n=40)
+    
+
+
+    
+
+    ## filter(df_anls,  iso3c == "DEU") %>% select(year, nbr_opened, nbr_closed, nbr_opened_cum, nbr_closed_cum,
+    ##                                             pm_density) %>% print(n=40)
+    
+    ## df_anls$region <- countrycode(df_anls$iso3c, "iso3c", "un.region.name")
 
     ## maybe move these things somewhere proper 
     ## df_anls$wv <- 0
     ## df_anls$nbr_opened_cum <- ave(df_anls$nbr_opened, df_anls$iso3c, FUN = cumsum)
 
-    return(df_anls)
+    return(df_anls2)
 }
 
 

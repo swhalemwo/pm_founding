@@ -43,10 +43,10 @@ get_df_reg <- function(df_anls) {
     df_anls$SP.POP.TOTLm <- df_anls$SP.POP.TOTL/1e6
 
     ## cumulative number of opened
-    df_anls$nbr_opened_cum <- ave(df_anls$nbr_opened, df_anls$iso3c, FUN = cumsum)
+    ## df_anls$nbr_opened_cum <- ave(df_anls$nbr_opened, df_anls$iso3c, FUN = cumsum)
 
 
-    df_anls$nbr_opened_cum_sqrd <- (df_anls$nbr_opened_cum^2)/100
+    ## df_anls$nbr_opened_cum_sqrd <- (df_anls$nbr_opened_cum^2)/100
     ## have to divide by 100 otherwise R glmer.nb complains
 
     ## PMs opened per 1m people -> rate
