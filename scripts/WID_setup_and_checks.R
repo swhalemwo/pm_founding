@@ -373,17 +373,23 @@ wealth_cutoff <- function(x,y,cutoff_amt, iso3c, year) {
 
 ## j <- wealth_cutoff(wealth_data$pct_lo, wealth_data$value, cutoff=5e+6)
 
-get_wealth_df <- function() {
-    #' get the basic wealth df (in USD PPP)
+get_wealth_df <- function(wid_vx) {
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
+    #' get the basic wealth df (in USD FX)
     #' store as global so I don't have to reload everything from CH if I want to change cutoff
     #' use threshold for now (easiest)
 
     
     ## getting wealth df
-    wealth_cmd_all <- paste0("select iso3c, variable, percentile, year, value from wid_v2 where variable='thweal992j' and year >=", STARTING_YEAR)
-    wealth_df <- as_tibble(dbGetQuery(con, wealth_cmd_all))
+    wealth_cmd_all <- sprintf("select iso3c, variable, percentile, year, value from %s where variable='thweal992j' and year >=%s", wid_vx, STARTING_YEAR)
 
-    wealth_cur_df <- as_tibble(merge(wealth_df, cur_df, all.x = T))
+    wealth_df <- atb(dbGetQuery(con, wealth_cmd_all))
+
+    ## adt(cur_df)[wealth_df, on = c("iso3c", "year")]
+    ## wealth_cur_df <- as_tibble(merge(wealth_df, cur_df, all.x = T))
+
+    wealth_cur_df <- left_join(wealth_df, cur_df)
+
 
     ## converting to comparable dollar amounts 
      wealth_cur_df <- wealth_cur_df %>%
@@ -413,11 +419,12 @@ get_wealth_cutoff_pct <- function(wealth_cur_df, cutoff) {
     return(df_wealth)
 }
 
-get_hnwi_pcts <- function(diag=FALSE) {
+get_hnwi_pcts <- function(wid_vx, diag=FALSE) {
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
     #' more general wrapper function for getting hnwi data
     #' return diagnostics if requested
     
-    wealth_cur_df <- get_wealth_df()
+    wealth_cur_df <- get_wealth_df(wid_vx)
 
     ## HNWIs
     ## df_wealth <- get_wealth_cutoff_pct(wealth_cur_df, 5e+06)
@@ -467,20 +474,22 @@ get_hnwi_pcts <- function(diag=FALSE) {
 
 
 
-get_wealth_ineq <- function(pctl){
+get_wealth_ineq <- function(pctl, wid_vx){
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
     #' get the wealth inequality df given the percentile 
 
-    wealth_ineq_cmd <- paste0("select year, iso3c, value from wid_v2 where variable='shweal992j' and percentile='", pctl, "' and year>", STARTING_YEAR)
+    wealth_ineq_cmd <- sprintf("select year, iso3c, value from %s where variable='shweal992j' and percentile='%s' and year> %s", wid_vx, pctl, STARTING_YEAR)
 
     wealth_ineq_df <- as_tibble(dbGetQuery(con, wealth_ineq_cmd))
     names(wealth_ineq_df)[3] <- paste0("shweal992j_", pctl)
     return(wealth_ineq_df)
 }
 
-get_inc_ineq <- function(pctl, varx){
+get_inc_ineq <- function(pctl, varx, wid_vx){
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
     #' get the income inequality df given the percentile 
 
-    wealth_ineq_cmd <- paste0("select year, iso3c, value from wid_v2 where variable='", varx, "' and percentile='", pctl, "' and year>", STARTING_YEAR)
+    wealth_ineq_cmd <- sprintf("select year, iso3c, value from %s where variable='%s' and percentile='%s' and year>%s", wid_vx, varx, pctl, STARTING_YEAR)
 
     wealth_ineq_df <- as_tibble(dbGetQuery(con, wealth_ineq_cmd))
     names(wealth_ineq_df)[3] <- paste0(varx, "_", pctl)
@@ -488,14 +497,16 @@ get_inc_ineq <- function(pctl, varx){
 }
 
 
-get_ginis <- function() {
+get_ginis <- function(wid_vx) {
     if (as.character(match.call()[[1]]) %in% fstd){browser()}
     #' getting the gini data from WID
     #' and putting them into wide format
     
-    gini_cmnd <- paste0("select year, iso3c, value, variable from wid_v2 where variable in ['gptinc992j', 'ghweal992j'] and year >='", STARTING_YEAR, "'")
+    gini_cmnd <- sprintf("select year, iso3c, value, variable from %s where variable in ['gptinc992j', 'ghweal992j'] and year >= '%s'", wid_vx, STARTING_YEAR)
 
     gini_long <- as_tibble(dbGetQuery(con, gini_cmnd))
+
+    ## filter(gini_long, value > 0.99)
 
     ## "correct" ginis > 0.99 by restricting them to 0.99
     gini_long2 <- gini_long %>% mutate(value = ifelse(value > 0.99, 0.99, value))
@@ -505,22 +516,23 @@ get_ginis <- function() {
 }
 
 
-get_all_ineqs <- function() {
+get_all_ineqs <- function(wid_vx) {
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
     #' get wealth/income top percentile shares and ginis
 
     pctls <- c("p50p100", "p90p100", "p95p100", "p99p100", "p99.9p100", "p99.99p100")
 
-    wealth_ineq_list <- lapply(pctls, get_wealth_ineq)
+    wealth_ineq_list <- lapply(pctls, get_wealth_ineq, wid_vx)
     wealth_ineq_df <- as_tibble(Reduce(function(x,y,...) merge(x,y), wealth_ineq_list))
 
     ## income inequality allows specification of variable since more choices there,
     ## but only sptinc992j has good coverage 
-    inc_ineq_dfs <- lapply(pctls, function(x) get_inc_ineq(pctl = x, varx = "sptinc992j"))
+    inc_ineq_dfs <- lapply(pctls, function(x) get_inc_ineq(pctl = x, varx = "sptinc992j", wid_vx))
     inc_ineq_df <- as_tibble(Reduce(function(x,y,...) merge(x,y), inc_ineq_dfs))
 
     
-    gini_df <- get_ginis()
-    all_ineqs <- as_tibble(Reduce(function(x,y,...) merge(x,y, all = T), list(wealth_ineq_df, inc_ineq_df, gini_df)))
+    gini_df <- get_ginis(wid_vx)
+    all_ineqs <- as_tibble(Reduce(\(x,y,...) merge(x,y, all = T), list(wealth_ineq_df, inc_ineq_df, gini_df)))
 
     all_ineqs[,3:ncol(all_ineqs)] <- all_ineqs[,3:ncol(all_ineqs)]*100
 

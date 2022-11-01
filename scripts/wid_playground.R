@@ -881,3 +881,75 @@ if (REDO_WID_WEALTH_CHECKS){
 ##     geom_bar(position = "dodge", stat="identity")
 
 ## ## most countries have just 35 observations, differences is only for the countries that have more: more shares than ratios
+
+## ** compare inequality data after implementing version change
+
+all_ineqs_v2 <- get_all_ineqs("wid_v2")
+all_ineqs_v3 <- get_all_ineqs("wid_v3")
+
+rbind(
+    adt(mutate(all_ineqs_v2, source = "v2")),
+    adt(mutate(all_ineqs_v3, source = "v3"))) %>%
+    melt(id.vars = c("iso3c", "year", "source")) %>%
+    dcast.data.table(iso3c + year + variable ~ source) %>%
+    .[, diff := v2-v3] %>%
+    .[!is.na(diff) & (diff >0.05 | diff < -0.05) ] %>%
+    ggplot(aes(x=diff)) +
+    ## geom_histogram() +
+    geom_density(aes(y=..density..)) + 
+    facet_wrap(~variable, scales = "free")
+
+## ** hwni cutoff comparison
+
+hnwi_pcts_v2 <- get_hnwi_pcts("wid_v2")
+hnwi_pcts_v3 <- get_hnwi_pcts("wid_v3")
+
+rbind(
+    adt(mutate(hnwi_pcts_v2, source = "v2")),
+    adt(mutate(hnwi_pcts_v3, source = "v3"))) %>%
+    melt(id.vars = c("iso3c", "year", "source")) %>%
+    dcast.data.table(iso3c + year + variable ~ source) %>%
+    ## .[, .N, by=.(iso3c, year)]
+    .[, `:=`(diff_minus = v2-v3, diff_dvide =v2/v3)] %>% 
+    .[diff_dvide > 1.1 | diff_dvide < 0.9] %>% .[, N:=.N, iso3c] %>% .[order(-N)] %>%
+    .[diff_dvide > 5 & diff_dvide < 1000]
+
+
+ %>% 
+    ggplot(aes(x=diff_dvide)) +
+    geom_density() +
+    facet_wrap(~variable, scales = "free")
+    ## print(n=200)
+    ## .[diff_minus > 0.5 | diff_minus < -0.5]
+    ## .[, .N, variable]
+    ## .[, .N, iso3c] %>% .[order(-N)]
+    ## .[!is.na(diff) & (diff > 0.01 | diff < -0.01)] %$% hist(diff, breaks = 50)
+
+
+## ** wealth df comparison
+wealth_df_v2 <- get_wealth_df("wid_v2") %>% select(iso3c, year, pct_lo, value) %>% unique()
+wealth_df_v3 <- get_wealth_df("wid_v3") %>% select(iso3c, year, pct_lo, value) %>% unique()
+
+rbind(
+    adt(mutate(wealth_df_v2, source = "v2")),
+    adt(mutate(wealth_df_v3, source = "v3"))) %>%
+    melt(id.vars = c("iso3c", "year", "pct_lo", "source")) %>% .[, variable:=NULL] %>%
+    .[iso3c != "ESP"] %>% 
+    dcast.data.table(iso3c + year + pct_lo ~ source, value.var = "value") %>%
+    .[, `:=`(diff_minus = v2 -v3, diff_dvide = v2/v3)] %>%
+    .[diff_minus > 1000 | diff_minus < -1000]
+    
+    
+    
+
+
+
+
+
+x[v2 != 1 | v3 != 1][, .N, v2]
+x[v2 ==2][, .N, iso3c]
+
+
+ %>%
+    .[, diff := v2-v3] %>%
+    .[!is.na(diff) & diff != 0]

@@ -57,7 +57,7 @@ get_df_reg <- function(df_anls) {
 
 
     ## inequalities
-    df_ineq <- get_all_ineqs()
+    df_ineq <- get_all_ineqs(WID_VX)
 
     ## tax incentives
     df_taxinc <- get_taxinc_dfs()
@@ -82,7 +82,7 @@ get_df_reg <- function(df_anls) {
     df_cult <- gen_cult_spending_imptd()
     
     
-    df_hnwi <- get_hnwi_pcts()
+    df_hnwi <- get_hnwi_pcts(WID_VX)
 
     df_hdi <- get_hdi()
 

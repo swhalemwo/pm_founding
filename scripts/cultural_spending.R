@@ -43,9 +43,6 @@ gen_cur_df <- function(wid_vx) {
     if (as.character(match.call()[[1]]) %in% fstd){browser()}
     #' generate currency converter df for all kinds of purposes
 
-    ## wid_vx <- "wid_v2"
-    ## wid_vx <- "wid_v3"
-
     currency_cmd <- sprintf("select iso3c, year, variable, value from %s where (variable='xlcusx999i' or variable='inyixx999i' or variable='xlcusp999i') and year>= %s", wid_vx, STARTING_YEAR)
 
     cur_df_raw <- as_tibble(dbGetQuery(con, currency_cmd))

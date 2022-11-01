@@ -64,13 +64,13 @@ cpr_gdp_sources <- function(gdp_cvrtd, wid_gdp_cvrtd) {
     
 }
     
-get_wid_gdp <- function() {
+get_wid_gdp <- function(wid_vx) {
     #' get the gdp per capita values from WID 
 
     ## use agdpro999i: constant LCU per capita
     wid_gdp_cmd <-sprintf(
-        "select iso3c, year, variable, value from wid_v2 where variable = 'agdpro999i' AND year >= %s",
-        STARTING_YEAR)
+        "select iso3c, year, variable, value from %s where variable = 'agdpro999i' AND year >= %s",
+        wid_vx, STARTING_YEAR)
 
     wid_gdp_tb <- atb(dbGetQuery(con, wid_gdp_cmd))
     names(wid_gdp_tb) <- c("iso3c", "year", "gdp_var", "gdp_vlu")
