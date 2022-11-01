@@ -164,3 +164,21 @@ filter(cbn_dfs_rates$cbn_all, iso3c == "CHE")$hnwi_nbr_5M_lag0
 sd(cbn_dfs_counts$cbn_all$ti_tmitr_interact_lag0)
 sd(cbn_dfs_counts$cbn_all$Ind.tax.incentives)
 sd(cbn_dfs_counts$cbn_all$tmitr_approx_linear20step_lag3)
+
+## ** checking scaling, looks good
+
+par(mfrow = c(2,1))
+hist(df_reg_rts$nbr_closed_cum_global)
+hist(cbn_dfs_rates$cbn_controls$nbr_closed_cum_global_lag0)
+
+library(magrittr)
+
+
+right_join(
+    select(df_reg_rts, iso3c, year, pm_density_global),
+    select(cbn_dfs_rates$cbn_controls, iso3c, year, pm_density_global_lag0)) %$%
+    cor(pm_density_global, pm_density_global_lag0)
+
+
+    ggplot(aes(x=nbr_closed_cum_global, y=nbr_closed_cum_global_lag0)) +
+    geom_jitter(width = 3, height = 0.5)

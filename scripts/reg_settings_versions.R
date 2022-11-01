@@ -129,7 +129,39 @@ reg_settings_optmz_v52 <- list(
     mdls_to_include = c("full")
 )
 
+## ** v53: add more density variables, seems like there are convergence issues
 
+vrbl_thld_choices_optmz <- slice_sample(vrbl_thld_choices, n=6)
+
+
+reg_settings_optmz <- list(
+    nbr_specs_per_thld = 2,
+    dvfmts = c("rates"), # should also be counts, but multiple dvfmts not yet supported by reg_anls
+    batch_nbr = "v53",
+    vary_vrbl_lag = F,
+    technique_strs = c("nr"),
+    difficulty_switches = T,
+    regcmds = c("menbreg", "xtnbreg"),
+    ## cbns_to_include = c("cbn_all"),
+    cbns_to_include = names(cbn_dfs_counts)[1:3],
+    mdls_to_include = c("full")
+)
+
+## ** v54 more thorough test with more density variables, forget to plug in power -> laptop crashed after less than an hour
+
+vrbl_thld_choices_optmz <- slice_sample(vrbl_thld_choices, n=12)
+reg_settings_optmz <- list(
+    nbr_specs_per_thld = 3,
+    dvfmts = c("rates"), # should also be counts, but multiple dvfmts not yet supported by reg_anls
+    batch_nbr = "v54",
+    vary_vrbl_lag = F,
+    technique_strs = c("nr"),
+    difficulty_switches = T,
+    regcmds = c("menbreg", "xtnbreg"),
+    ## cbns_to_include = c("cbn_all"),
+    cbns_to_include = names(cbn_dfs_counts)[1:3],
+    mdls_to_include = c("full")
+)
 
 
 

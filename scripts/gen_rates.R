@@ -61,12 +61,11 @@ gen_df_reg_rts <- function(df_reg) {
 
     ## list the count variables manually... i love getting into tech debt
     cnt_vrbls1 <- c("pm_density", "pm_density_sqrd", "nbr_closed_cum",
-                    "pm_density_global", "pm_density_global_sqrd", "nbr_closed_cum_global", 
+                    ## "pm_density_global", "pm_density_global_sqrd", "nbr_closed_cum_global", 
                     "cnt_contemp", "cnt_art", "cnt_all",
                     "clctr_cnt_cpaer", "clctr_cnt_all", "smorc_dollar_fxm", "smorc_dollar_fxm_sqrd",
                     "hnwi_nbr_1M", "hnwi_nbr_5M", "hnwi_nbr_30M", "hnwi_nbr_200M", "hnwi_nbr_1B")
-    
-    
+        
         
     
     x_rt <- adt(df_reg) %>%
@@ -82,10 +81,8 @@ gen_df_reg_rts <- function(df_reg) {
 
     rt_names <- setdiff(names(rts_cbn), c("iso3c", "year"))
 
-    
-
-    df_reg_rts <- df_reg %>% select(-rt_names) %>%
-        inner_join(atb(rts_cbn), on = c(iso3c, year))
+        df_reg_rts <- df_reg %>% select(-rt_names) %>% # get the non-population scaled variables 
+        inner_join(atb(rts_cbn), on = c(iso3c, year)) ## combine them with the population scaled vrbls
     
     ## check that all columns in df_reg are also in df_reg_rts
     if (len(intersect(names(df_reg_rts), names(df_reg))) != len(names(df_reg))) {

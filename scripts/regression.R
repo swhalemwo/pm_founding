@@ -1480,13 +1480,13 @@ vrbl_thld_choices <- gen_vrbl_thld_choices(vvs$hnwi_vars, vvs$inc_ineq_vars, vvs
 
 
 
-vrbl_thld_choices_optmz <- slice_sample(vrbl_thld_choices, n=6)
+vrbl_thld_choices_optmz <- slice_sample(vrbl_thld_choices, n=1)
 
 
 reg_settings_optmz <- list(
     nbr_specs_per_thld = 2,
     dvfmts = c("rates"), # should also be counts, but multiple dvfmts not yet supported by reg_anls
-    batch_nbr = "v53",
+    batch_nbr = "v55",
     vary_vrbl_lag = F,
     technique_strs = c("nr"),
     difficulty_switches = T,
