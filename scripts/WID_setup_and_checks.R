@@ -37,6 +37,7 @@ compare_WID_WB_countrycodes <- function(df_wb, wid_dir) {
 
 compare_WID_WB_countrycodes(df_gdp, WID_DIR_v1)
 compare_WID_WB_countrycodes(df_gdp, WID_DIR_v2)
+compare_WID_WB_countrycodes(df_gdp, WID_DIR_v3)
 
 ## *** read into CH
 
@@ -95,7 +96,7 @@ ORDER BY tuple()", db_name) ## use proper MergeTree tables rather than default t
 
 ## read_WID_into_CH(countrycodes3c, "wid_v1", WID_DIR_v1)
 ## read_WID_into_CH(countrycodes3c, "wid_v2", WID_DIR_v2)
-
+## read_WID_into_CH(countrycodes3c, "wid_v3", WID_DIR_v3)
 
 
 ## ** completeness tests

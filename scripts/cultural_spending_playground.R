@@ -1740,3 +1740,33 @@ max(df_p3cg_cpr$diff)
 ##     summarize(x=1)
 ## df_p3cg_source_choice %>% group_by(iso3c, year) %>%
 ##     summarize(x=1)
+
+## ** compare cur_df across WID versions
+cur_df_v2 <- gen_cur_df("wid_v2")
+cur_df_v3 <- gen_cur_df("wid_v3")
+
+filter(cur_df_v2, iso3c == "CUB")
+filter(cur_df_v3, iso3c == "CUB")
+       
+cur_cprn <- rbind(adt(cur_df_v2)[,source := "v2"],
+                  adt(cur_df_v3)[,source := "v3"]) %>%
+    melt(id.vars = c("iso3c", "year", "source")) %>%
+    dcast.data.table(iso3c + year + variable~ source)
+
+cur_cprn %>% copy() %>% .[, diff := v2/v3] %>% 
+    ## hist(diff, breaks = 50)
+    .[diff > 1.2 | diff <  0.8] %>%
+    .[,region := countrycode(iso3c, "iso3c", "un.regionsub.name")] %>%
+    .[, .N, region] %>% .[order(-N)]
+    
+x <- rbind(
+    adt(cur_df_v2)[, .N, iso3c][, source := "v2"],
+    adt(cur_df_v3)[, .N, iso3c][, source := "v3"]) %>%
+    dcast.data.table(iso3c ~ source, value.var = "N")
+    
+x[is.na(x)] <- 0
+
+x[, diff := v2-v3] %>%
+    .[diff != 0]
+
+

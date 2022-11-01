@@ -39,14 +39,21 @@ gen_ilo_df <- function() {
 
 ## *** WID currency converter
 
-gen_cur_df <- function() {
+gen_cur_df <- function(wid_vx) {
     if (as.character(match.call()[[1]]) %in% fstd){browser()}
     #' generate currency converter df for all kinds of purposes
 
-    currency_cmd <- paste0("select iso3c, year, variable, value from wid_v2 where (variable='xlcusx999i' or variable='inyixx999i' or variable='xlcusp999i') and year>=", STARTING_YEAR)
+    ## wid_vx <- "wid_v2"
+    ## wid_vx <- "wid_v3"
+
+    currency_cmd <- sprintf("select iso3c, year, variable, value from %s where (variable='xlcusx999i' or variable='inyixx999i' or variable='xlcusp999i') and year>= %s", wid_vx, STARTING_YEAR)
 
     cur_df_raw <- as_tibble(dbGetQuery(con, currency_cmd))
     ## add fx rate for cuba for 2021, 1 according to fxtop
+    ## filter(cur_df_raw, iso3c == "CUB", variable == "xlcusx999i")
+
+    ## adt(cur_df_raw)[, .N, variable]
+    
     cur_df_raw[nrow(cur_df_raw)+1,] <- list("CUB", 2021, "xlcusx999i", 1)
 
     oecd_cur_df <- as_tibble(read.csv(paste0(PROJECT_DIR, "data/OECD/fx_rates.csv"))) %>% 
@@ -71,6 +78,7 @@ gen_cur_df <- function() {
 
     ## add meme countries
     ## Faroe Islands (uses same as DNK)
+    ## does nothing in v3 since no FRO entries whatsoever
 
     fro_cpi <- read_excel(paste0(PROJECT_DIR, "data/fro_cpi/IP02050_PRIS_ARSMID_20220602-091544.xlsx"), skip = 2)[seq(82),]
     names(fro_cpi) <- c("year", "value")
