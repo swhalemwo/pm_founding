@@ -411,7 +411,7 @@ get_wealth_cutoff_pct <- function(wealth_cur_df, cutoff) {
 
     
     df_wealth <- wealth_cur_df %>%
-        filter(iso3c != "ESP") %>% ## filter out crappy Spain data 
+        ## filter(iso3c != "ESP") %>% ## filter out crappy Spain data 
         group_by(iso3c, year) %>%
         do(wealth_cutoff(.$pct_lo, .$wealth_usd21, cutoff_amt =cutoff, iso3c = .$iso3c, year= .$year))
 

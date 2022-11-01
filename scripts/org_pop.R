@@ -21,7 +21,7 @@ fstd <- ""
 source(paste0(SCRIPT_DIR, "startup_org_pop.R")) ## startup: libraries, global vars
 source(paste0(SCRIPT_DIR, "cultural_spending.R"))
 source(paste0(SCRIPT_DIR, "custom_funcs.R")) # random utils
-cur_df <- gen_cur_df()
+cur_df <- gen_cur_df(WID_VX)
 source(paste0(SCRIPT_DIR, "wb_api.R")) ## World Bank data, has to be run before sourcing base_df_creationn since it provides the country-year structure
 source(paste0(SCRIPT_DIR, "base_df_creation.R")) # function to read in excel data
 source(paste0(SCRIPT_DIR, "WID_setup_and_checks.R"))

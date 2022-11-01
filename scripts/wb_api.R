@@ -108,7 +108,7 @@ cvrt_ny.gdp.pcap.cd <- function(df_wb_new) {
     ## hmm Venezuela is bs, rest could be plausible? idk
 
     ## use WID data
-    wid_gdp_cvrtd <- get_wid_gdp()
+    wid_gdp_cvrtd <- get_wid_gdp(WID_VX)
     
     ## convert gdp of WB and WID if necessary; atm doesn't seem like big difference
     if (CPR_GDP_SOURCES) {cpr_gdp_sources(gdp_cvrtd, wid_gdp_cvrtd)}
