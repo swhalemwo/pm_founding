@@ -1587,3 +1587,19 @@ error_spec <- get_reg_spec_from_id(
     started[!finished, on = "mdl_id"][c(3)], fldr_info_optmz)
 
 run_vrbl_mdl_vars(error_spec, vvs, fldr_info_optmz, verbose = T)
+
+## ** test mc.preschedule = F
+
+testx <- function() {
+    print(Sys.getpid())
+    Sys.sleep(runif(1, 0, 5))}
+
+nbr_cores <- 3
+t1 = Sys.time()
+mclapply(seq(1, nbr_cores* 5), \(x) testx(), mc.cores = nbr_cores)
+t2 = Sys.time()
+mclapply(seq(1, nbr_cores* 5), \(x) testx(), mc.cores = nbr_cores, mc.preschedule = F)
+t3 = Sys.time()
+
+print(t3-t2)
+print(t2-t1)
