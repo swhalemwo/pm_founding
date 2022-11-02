@@ -934,3 +934,112 @@ lines(mydensity)
 ggplot(mtcars, aes(x=mpg, y=..count..)) +
     geom_histogram(bins=10) +
     geom_density()
+
+## ** yeet outliers
+## *** global
+## **** hnwi 
+vvs$all_rel_vars
+
+
+hist(df_reg_rts$hnwi_nbr_5M)
+max(df_reg_rts$hnwi_nbr_5M, na.rm = T)
+
+meanx <- mean(df_reg_rts$hnwi_nbr_5M, na.rm = T)
+medx <- median(df_reg_rts$hnwi_nbr_5M, na.rm = T)
+sdx <- sd(df_reg_rts$hnwi_nbr_5M, na.rm = T)
+
+cix_hi <- meanx + 4*sdx
+cix_lo <- meanx - 4*sdx
+
+lapply(seq(3,6), \(x)
+       filter(df_reg_rts, hnwi_nbr_5M > (meanx + x*sdx) | hnwi_nbr_5M < (meanx - x*sdx)) %>% adt() %>%
+       .[, .N, iso3c] %>% .[, src := paste0("sd", x)]) %>% rbindlist() %>%
+    dcast.data.table(iso3c ~ src, value.var = "N", drop=F) %>%
+    .[order(-sd6, -sd5, -sd4, -sd3)]
+
+filter(df_reg_rts, hnwi_nbr_5M > (meanx + x*sdx) | hnwi_nbr_5M < (meanx - x*sdx), iso3c == "ARE") %>% sel
+
+
+check_outliers <- function(dfx, vrbl, ret_obj) {
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
+    #' generate summary of which countries have how many outliers at 3-6 SD
+
+    print(vrbl)
+    dtx <- adt(dfx)
+    ## vrbl <- "hnwi_nbr_5M"
+    
+    meanx <- mean(dtx[[vrbl]], na.rm = T)
+    sdx <- sd(dtx[[vrbl]], na.rm = T)
+
+    
+    ## x <- adt(mtcars) %>% .[, lapply(.SD, mean), .SDcols = vrbl, drop = F]
+
+    ## meanx <- dtx[, mean(get(vrbl), na.rm = T)]
+    ## sdx <- dtx[, mean(get(vrbl), na.rm = T)]
+
+    ## adt(mtcars) %>% .[disp == 160, disp := NA] %>% .[, mean(disp, na.rm = T)]
+
+    sd_cols <- paste0("sd", seq(6,3))
+
+
+    outlier_sumry_up <- map_dfr(seq(3,6), ~dtx[get(vrbl) > (meanx + .x*sdx)] %>% .[, .N, iso3c] %>%
+                                              .[, `:=`(src = paste0("sd", .x), dir ="up")])
+
+    outlier_sumry_down <- map_dfr(seq(3,6), ~dtx[get(vrbl) < (meanx - .x*sdx)] %>% .[, .N, iso3c] %>%
+                                                .[, `:=`(src = paste0("sd", .x), dir = "down")])
+    
+    outlier_sumry <- rbind(outlier_sumry_up, outlier_sumry_down)
+    outlier_sumry$vrbl <- vrbl
+    
+
+    ## generating outlier summary visual: look at where the outliers are, in wide format
+
+    if (nrow(outlier_sumry) > 0) {
+        outlier_sumry_vis <- dcast.data.table(outlier_sumry, iso3c ~ src, value.var = "N", drop = F)
+        
+        outlier_sumry_vis[,setdiff(sd_cols, names(outlier_sumry_vis))] <- NA
+        setorderv(outlier_sumry_vis, cols = sd_cols, order = -1, na.last = T)
+        outlier_sumry_vis$vrbl <- vrbl
+        
+    } else {
+
+        outlier_sumry_vis <- NULL
+    }
+
+    ## get actual data with outlier values
+    vrbl_cols <- c("iso3c", "year", vrbl, "src")
+    outlier_vlus <- map_dfr(seq(3,6), ~dtx[get(vrbl) > (meanx + .x*sdx) | get(vrbl) < (meanx - .x*sdx)] %>%
+                                          .[, src := paste0("sd", .x)] %>% .[, ..vrbl_cols]) %>% 
+        .[, paste0(src, collapse = ","), by=c("iso3c", "year", vrbl)]
+    
+    return(get(ret_obj))
+}
+
+check_outliers(df_reg_rts, "hnwi_nbr_5M", ret_obj = "outlier_sumry")
+check_outliers(df_reg_rts, "pm_density_global", ret_obj = "outlier_sumry")
+
+outlier_vars_to_check <- setdiff(vvs$all_rel_vars, "NPO.tax.exemption")
+
+
+outlier_sumry <- map_dfr(outlier_vars_to_check, ~check_outliers(df_reg_rts, .x, ret_obj = "outlier_sumry"))
+outlier_sumry[dir=="down", N:= -N] # make the ones where the outlier is to the bottom negative
+
+outlier_sumry[, .(cnt = sum(N)), iso3c][order(-cnt)] %>%
+    .[, country_name := countrycode(iso3c, "iso3c", "country.name")] %>% print(n=
+
+outlier_sumry %>% copy() %>% 
+    .[countrycode(iso3c, "iso3c", "un.region.name") != ("Europe")] %>% 
+    ggplot(aes(x=N, y=iso3c, fill = src)) +
+    geom_bar(stat="identity") +
+    facet_wrap(~vrbl, scales = "free")
+
+## check cases on country-variable basis
+## check_outliers(df_reg_rts, "ghweal992j", ret_obj = "outlier_vlus") %>% print(n=100)
+check_outliers(df_reg_rts, "ghweal992j", ret_obj = "outlier_vlus") %>% print(n=100)
+
+
+
+df_reg_rts %>% mutate(region = countrycode(iso3c, "iso3c", "un.region.name")) %>% 
+viz_lines(y="ghweal992j", facets = "region")
+
+
