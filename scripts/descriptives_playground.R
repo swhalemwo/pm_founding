@@ -112,6 +112,56 @@ screenreg(list(r_rts, r_cnt, r_rts_scld, r_cnt_scld, r_rts_scld_pop, r_rts_pop),
 
 predict(r_rts)
 
+## ** try some poisson data
+library(texreg)
+library(glmmTMB)
+library(ggplot2)
+cor(rpois(1000, lambda = 1), rpois(1000, lambda = 1))
+library(RNGforGPD)
+
+cor_mat <- rbind(c(1,0.7, 0.3),c(0.7,1, 0), c(0.3, 0, 1))
+x <- GenMVGpois(sample.size = 1000, theta.vec = c(1,1,1), no.gpois = 3, lambda.vec = c(0.5, 0.5, 0.5), cmat.star = cor_mat)
+poi_dt <- adt(x$data)
+setnames(poi_dt, c("dv_rt", "iv1_rt", "iv2_rt"))
+cor(poi_dt$dv_rt, poi_dt$iv1_rt)
+
+ggplot(poi_dt, aes(x=iv1_rt, y=dv_rt)) +
+    geom_jitter()
+
+poi_dt2 <- poi_dt %>% copy() %>%
+    .[, pop := sample(1:10, .N, replace = T)] %>%
+    .[, `:=`(dv_cnt = dv_rt*pop, iv1_cnt = iv1_rt*pop, iv2_cnt = iv2_rt*pop)]
+    
+poi_dt2_scld <- poi_dt2[, c("dv_cnt", lapply(.SD, scale_wo_attr)),
+                        .SDcols = c("iv1_cnt", "iv2_cnt", "pop", "iv1_rt", "iv2_rt")]
+poi_dt2_scld$dv_cnt <- poi_dt2$dv_cnt
+poi_dt2_scld$pop_uscld <- poi_dt2$pop
+
+
+r_cnts <- glm(dv_cnt ~ iv1_cnt + iv2_cnt + pop, poi_dt2, family = poisson)
+r_rts <- glm(dv_cnt ~ iv1_rt + iv2_rt + offset(pop), poi_dt2, family = poisson)
+
+
+r_cnts_scld <- glm(dv_cnt ~ iv1_cnt + iv2_cnt + pop, adf(poi_dt2_scld), family = poisson)
+r_rts_scld <- glm(dv_cnt ~ iv1_rt + iv2_rt + offset(pop_uscld), poi_dt2_scld, family = poisson)
+
+mdl_names <- c("r_cnts", "r_rts", "r_cnts_scld", "r_rts_scld")
+mdl_list <- lapply(mdl_names, get)
+
+screenreg(mdl_list, custom.model.names = mdl_names)
+
+
+
+chart.Correlation(poi_dt2)
+
+library(texreg)
+screenreg(r_rts)
+summary(r_cnts)
+summary(r_rts)
+
+
+
+           
 
 
 ## ** debugging lack of private museum openings even in cluster 4 (developed countries)
