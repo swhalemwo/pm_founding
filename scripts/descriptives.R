@@ -1080,7 +1080,24 @@ df_reg_rts %>% mutate(region = countrycode(iso3c, "iso3c", "un.region.name")) %>
 viz_lines(y="ghweal992j", facets = "region")
 
 
+## **** check squared weirdness
+filter(df_reg_rts, iso3c == "KOR") %>% select(iso3c, year, pm_density, pm_density_sqrd, SP.POP.TOTLm) %>%
+    arrange(-year)
+
+filter(df_reg, iso3c == "KOR") %>% select(iso3c, year, pm_density, pm_density_sqrd, SP.POP.TOTLm) %>%
+    arrange(-year)
+
+filter(df_reg_rts, iso3c == "DEU") %>% select(iso3c, year, pm_density, pm_density_sqrd, SP.POP.TOTLm) %>%
+    arrange(-year)
+
+filter(df_reg, iso3c == "DEU") %>% select(iso3c, year, pm_density, pm_density_sqrd, SP.POP.TOTLm) %>%
+    arrange(-year)
+
+
+
 
 ## *** within
 
+df_reg_rts %>% adt() %>%
+    melt(id.vars = c("iso3c", "year"), measure.vars = all_rel_)
 

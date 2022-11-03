@@ -55,29 +55,46 @@ proc_csnt_cnts_to_rts <- function(df_reg) {
 }
 
 
+
 gen_df_reg_rts <- function(df_reg) {
     if (as.character(match.call()[[1]]) %in% fstd){browser()}
     #' generate the df_reg with rates instead of counts
 
     ## list the count variables manually... i love getting into tech debt
-    cnt_vrbls1 <- c("pm_density", "pm_density_sqrd", "nbr_closed_cum",
+    cnt_vrbls1 <- c("pm_density", "nbr_closed_cum",
                     ## "pm_density_global", "pm_density_global_sqrd", "nbr_closed_cum_global", 
                     "cnt_contemp", "cnt_art", "cnt_all",
-                    "clctr_cnt_cpaer", "clctr_cnt_all", "smorc_dollar_fxm", "smorc_dollar_fxm_sqrd",
+                    "clctr_cnt_cpaer", "clctr_cnt_all", "smorc_dollar_fxm",
                     "hnwi_nbr_1M", "hnwi_nbr_5M", "hnwi_nbr_30M", "hnwi_nbr_200M", "hnwi_nbr_1B")
         
-        
-    
     x_rt <- adt(df_reg) %>%
         .[, lapply(.SD, \(x) x/SP.POP.TOTLm), by = .(iso3c, year),
           .SDcols = cnt_vrbls1]
+
+    # generate squared variables (square the rates), 
+    sqrd_vrbls <- c("pm_density_sqrd", "smorc_dollar_fxm_sqrd")
+    dt_sqrd <- x_rt %>% copy() %>% .[, lapply(.SD, \(x) x^2), by=c("iso3c","year"),
+                                     .SDcols = gsub("_sqrd", "", sqrd_vrbls)]
+    names(dt_sqrd) <- c("iso3c", "year", sqrd_vrbls) # need to set names manually
+
+    ## first merge the count and squared variables
+    dt_cbn <- x_rt[on=dt_sqrd]
     
+    ## viz_lines(filter(atb(dt_cbn), iso3c %!in% c("MCO", "LIE")), y="pm_density")
+    ## map(cbn_dfs_rates, ~filter(.x, iso3c=="ISL") %>% nrow())'
+    ## map(cbn_dfs_rates, ~filter(.x, iso3c=="ISL")$nbr_opened %>% sum())
+    
+
     mow_rts <- proc_csnt_cnts_to_rts(df_reg)
 
-    check_df_name_unqns(list(x_rt, mow_rts), skip_var_names = c("iso3c", "year"))
+    check_df_name_unqns(list(x_rt, mow_rts, dt_sqrd), skip_var_names = c("iso3c", "year"))
 
-    rts_cbn <- mow_rts[x_rt, on = "iso3c"]
+    ## then merge count+sqrd coutns + mow constant rates
+    rts_cbn <- mow_rts[dt_cbn, on = "iso3c"]
     ## rts_cbn[, .N, is.na(cnt_contemp_1990)]
+    
+    ## rts_cbn[iso3c %in% c("DEU", "KOR") & year == 2020, .(iso3c, pm_density, pm_density_sqrd)]
+    
 
     rt_names <- setdiff(names(rts_cbn), c("iso3c", "year"))
 
