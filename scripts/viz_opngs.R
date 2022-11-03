@@ -278,12 +278,13 @@ viz_opngs <- function(df_plt, time_level, duration, geo_level, extra=FALSE, max_
 
 
 actually_plot <- function(df_plt, max_lines, facets, grp) {
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
     #' filters the df for plotting, and plots it
 
 
     if (facets == "facetcol") {
         ## reduce df_plt to max_lines grps if facets aren't used
-        grp_cnt <- aggregate(y_bu ~ grp, df_plt, sum)
+        grp_cnt <- aggregate(y_bu ~ grp, df_plt, max)
         max_grps <- grp_cnt[rev(order(grp_cnt$y_bu))[1:min(max_lines, nrow(grp_cnt))],"grp"]
 
         df_plt <- filter(df_plt, grp %in% max_grps)
