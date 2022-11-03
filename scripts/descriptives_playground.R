@@ -159,9 +159,37 @@ screenreg(r_rts)
 summary(r_cnts)
 summary(r_rts)
 
+## ** see what happens with rates
+poi_dt3 <- poi_dt2
+
+## poi_dt4 <- 
+
+poi_dt4 <- poi_dt3 %>% copy() %>% .[, iv1_rt_sml := iv1_rt/5] %>% # add small rate
+    .[, `:=`(iv1_rt_sml_sqrd = iv1_rt_sml^2, iv1_rt_sqrd = iv1_rt^2)] # add small and normal rate squared
+    
+
+poi_dt4_scld <- poi_dt4[, lapply(.SD, scale_wo_attr),
+                        .SDcols = c("iv1_rt", "iv1_rt_sqrd", "iv1_rt_sml", "iv1_rt_sml_sqrd")] %>%
+    cbind(poi_dt4[, .(pop, dv_cnt)])
 
 
-           
+
+r_rt_nol <- glm(dv_cnt ~ iv1_rt + iv1_rt_sqrd + offset(pop), poi_dt4, family = poisson) # normal rate
+r_rt_sml <- glm(dv_cnt ~ iv1_rt_sml + iv1_rt_sml_sqrd + offset(pop), poi_dt4, family = poisson) # small rate
+
+r_rt_nol_scld <- glm(dv_cnt ~ iv1_rt + iv1_rt_sqrd + offset(pop), poi_dt4_scld, family = poisson) # normal rate
+r_rt_sml_scld <- glm(dv_cnt ~ iv1_rt_sml + iv1_rt_sml_sqrd + offset(pop), poi_dt4_scld, family = poisson) # small rate
+
+mdl_names <- c("r_rt_normal", "r_rt_sml")
+lapply(mdl_names, get)
+
+mdl_list <- c(get("r_rt_nol"), get("r_rt_sml"))
+
+
+screenreg(list(r_rt_nol, r_rt_sml, r_rt_nol_scld, r_rt_sml_scld))
+
+
+
 
 
 ## ** debugging lack of private museum openings even in cluster 4 (developed countries)

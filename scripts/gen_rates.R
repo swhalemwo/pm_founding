@@ -1,4 +1,5 @@
 proc_csnt_cnts_to_rts <- function(df_reg) {
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
     #' process the constant count variables (for now only MOW museum counts at some year) to rates
     #' rates are calculated with the corresponding MOW year 
     #' then rates stays constant across years for every country:
@@ -6,6 +7,7 @@ proc_csnt_cnts_to_rts <- function(df_reg) {
 
     
     ## get constant count variables: first check if they start with cnt, then if they have a number
+    ## relies on !current! naming format of MOW variables: e.g. cnt_contemp_2020
     cstnt_cnt_vrbls <- keep(names(df_reg), ~ grepl("^cnt_", .x)) %>% keep(~grepl("\\d", .x))
 
     ## make separate df to not fuck up too much 
@@ -36,7 +38,12 @@ proc_csnt_cnts_to_rts <- function(df_reg) {
 
     ## fill up CYs that have no POP data but have 0 museums with muem_rt = 0
     pop_cbn_fld <- pop_cbn %>% copy() %>% .[, muem_rt := muem_cnt/SP.POP.TOTLm] %>%
-        .[is.na(SP.POP.TOTLm) & muem_cnt == 0, muem_rt := 0]
+        .[is.na(SP.POP.TOTLm) & muem_cnt == 0, muem_rt := 0] %>%
+        ## update squared rate: first un-square (taking square root) of cnt, then re-calc rate, then square
+        .[grepl("_squared", variable), muem_rt := (sqrt(muem_cnt)/SP.POP.TOTLm)^2]
+    
+        
+    ## pop_cbn_fld[iso3c %in% c("KOR", "DEU") & grepl("cnt_contemp_2010", variable)]
 
     ## armenia 1985 still gone but around 200 are not, and none in 1995 contemporary
 
