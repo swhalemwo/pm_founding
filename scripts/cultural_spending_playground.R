@@ -1745,8 +1745,8 @@ max(df_p3cg_cpr$diff)
 cur_df_v2 <- gen_cur_df("wid_v2")
 cur_df_v3 <- gen_cur_df("wid_v3")
 
-filter(cur_df_v2, iso3c == "CUB")
-filter(cur_df_v3, iso3c == "CUB")
+filter(cur_df_v2, iso3c == "ZWE")
+filter(cur_df_v3, iso3c == "ZWE")
        
 cur_cprn <- rbind(adt(cur_df_v2)[,source := "v2"],
                   adt(cur_df_v3)[,source := "v3"]) %>%
@@ -1768,5 +1768,32 @@ x[is.na(x)] <- 0
 
 x[, diff := v2-v3] %>%
     .[diff != 0]
+
+## *** some more inspection of the meme country that is zimbabwe
+
+cur_cprn[iso3c == "ZWE"] %>% copy() %>%
+    .[, `:=`(diff_minus = v2-v3, diff_dvide = v2/v3)] %>%
+    .[order(variable, year)] %>% print(n=200)
+
+filter(cur_df, iso3c == "ECU") %>% print(n=50)
+
+imap(cbn_dfs_counts, ~filter(.x, iso3c=="ZWE") %>% nrow())
+
+wealth_df_v3 <- get_wealth_df("wid_v3")
+wealth_df_v2 <- get_wealth_df("wid_v2")
+
+
+filter(wealth_df_v3, iso3c == "ZWE", percentile == "p90p100")  %>%
+    select(iso3c, year, value, inyixx999i, xlcusp999i, xlcusx999i, wealth_usd21) %>% print(n=60)
+
+filter(wealth_df_v2, iso3c == "ZWE", percentile == "p90p100")  %>%
+    select(iso3c, year, value, inyixx999i, xlcusp999i, xlcusx999i, wealth_usd21) %>% print(n=60)
+
+rbind(filter(wealth_df_v2, iso3c == "ZWE") %>% mutate(source = "v2"),
+      filter(wealth_df_v3, iso3c == "ZWE") %>% mutate(source = "v3")) %>% 
+    ggplot(aes(x=year, y=value, group = percentile)) +
+    geom_line() +
+    facet_wrap(~source)
+    ## facet_wrap(~source, scales = "free")
 
 

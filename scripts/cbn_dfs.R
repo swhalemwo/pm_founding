@@ -112,13 +112,17 @@ get_df_reg <- function(df_anls) {
     names(hnwi_cnts) <- gsub("pct_cutoff", "hnwi_nbr", hnwi_names)
     df_reg <- as_tibble(cbind(df_reg, hnwi_cnts))
 
-    
+        
     ## generate interaction
     df_reg$ti_tmitr_interact <- df_reg$Ind.tax.incentives * df_reg$tmitr_approx_linear20step
 
     df_reg$SP.POP.TOTL <- df_reg$SP.POP.TOTL/1
 
-    return(df_reg)
+    ## filter out 
+    meme_countries <- c("ZWE") # ZWE: cur_df has weird values -> virtually everything affected
+    df_reg2 <- filter(df_reg, iso3c %in% meme_countries)
+
+    return(df_reg2)
 
     
 }
