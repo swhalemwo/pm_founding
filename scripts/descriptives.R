@@ -937,7 +937,7 @@ ggplot(mtcars, aes(x=mpg, y=..count..)) +
 
 ## ** yeet outliers
 ## *** global
-## **** hnwi 
+
 vvs$all_rel_vars
 
 
@@ -1035,12 +1035,20 @@ outlier_sumry %>% copy() %>%
 
 
 
-
 ## check cases on country-variable basis
 ## check_outliers(df_reg_rts, "ghweal992j", ret_obj = "outlier_vlus") %>% print(n=100)
+check_outliers(df_reg_rts, "hnwi_nbr_30M", ret_obj = "outlier_vlus") %>% print(n=100)
+viz_lines(df_reg_rts, y="hnwi_nbr_1M")
+viz_lines(df_reg_rts, y="hnwi_nbr_5M")
+viz_lines(df_reg_rts, y="hnwi_nbr_30M")
+viz_lines(df_reg_rts, y="hnwi_nbr_200M")
+viz_lines(df_reg_rts, y="hnwi_nbr_1B") ## doesn't make sense to use, too many zeroes even in richest ones
+
+
+
+
 check_outliers(df_reg_rts, "ghweal992j", ret_obj = "outlier_vlus") %>% print(n=100)
 
-##
 check_outliers(df_reg_rts, "shweal992j_p90p100", ret_obj = "outlier_vlus") %>% print(n=100)
 check_outliers(df_reg_rts, "shweal992j_p99p100", ret_obj = "outlier_vlus") %>% print(n=100)
 
@@ -1053,6 +1061,8 @@ viz_lines(df_reg_rts, y="smorc_dollar_fxm", duration = 2, time_level = "cuts")
 filter(df_reg_rts, smorc_dollar_fxm > 1500) %>% select(iso3c, year, smorc_dollar_fxm) %>% print(n=50)
 filter(df_reg, iso3c == "QAT") %>% select(iso3c, year, smorc_dollar_fxm, nbr_opened) %>% print(n=50)
 check_outliers(cbn_dfs_rates$cbn_all, "smorc_dollar_fxm_lag0", ret_obj = "outlier_vlus") %>% print(n=50)
+map(cbn_dfs_counts, ~filter(.x, iso3c == "QAT") %>% nrow()) # check how many CYs affected
+
 
 check_outliers(df_reg_rts, "sptinc992j_p90p100", ret_obj = "outlier_vlus")
 viz_lines(df_reg_rts, y="sptinc992j_p90p100")
@@ -1066,9 +1076,11 @@ check_outliers(df_reg_rts, "tmitr_approx_linear20step", ret_obj = "outlier_vlus"
 viz_lines(df_reg_rts, y="tmitr_approx_linear20step", duration = 1)
 
 
-
 df_reg_rts %>% mutate(region = countrycode(iso3c, "iso3c", "un.region.name")) %>% 
 viz_lines(y="ghweal992j", facets = "region")
 
 
-map(cbn_dfs_counts, ~filter(.x, iso3c == "QAT") %>% nrow())
+
+## *** within
+
+
