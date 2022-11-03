@@ -545,32 +545,37 @@ gen_plt_mdl_summary <- function(mdl_summary, vvs) {
         mutate(time_invariant = ifelse(vrbl_name_unlag %in% vvs$crscn_vars, T, F))
 
     
-    ggplot(mdl_summary2, aes(color = factor(sig), y = as.character(vrbl_name_unlag), group = regcmd)) +
-        geom_point(aes(x = coef, shape = factor(regcmd)), size = 2.5, alpha = 0.95, show.legend = T,
-                   position = position_dodge(width = 0.5)) +
-        geom_errorbarh(aes(xmin = min, xmax = max, , height= 0.1), alpha = 0.6, show.legend = F,
-                       position = position_dodge(width = 0.5)) +
-        facet_wrap(~cbn_name) +
-        ## facet_wrap(time_invariant + vrbl_name_unlag  ~ cbn_name, scales = "free_x", ncol = 3,
-        ##            switch = "y", drop = T) +
-        geom_vline(xintercept =0, linetype = "dashed") +
-        scale_shape_manual(values = c(15,16)) +
-        scale_color_manual(values = c("#1C5BA6", "#BD0017")) +
-        scale_y_discrete(labels = vvs$vrbl_lbls) +
-        ## coord_cartesian(xlim = c(min(mdl_summary$coef)*0.9, max(mdl_summary$coef)*0.9)) + 
-        ## coord_cartesian(xlim=c(-1, 1)) +
-        labs(x="coefficient size, 95% CI", y="coefficient")
+    ## ggplot(mdl_summary2, aes(color = factor(sig), y = as.character(vrbl_name_unlag), group = regcmd)) +
+    ##     geom_point(aes(x = coef, shape = factor(regcmd)), size = 2.5, alpha = 0.95, show.legend = T,
+    ##                position = position_dodge(width = 0.5)) +
+    ##     geom_errorbarh(aes(xmin = min, xmax = max, , height= 0.1), alpha = 0.6, show.legend = F,
+    ##                    position = position_dodge(width = 0.5)) +
+    ##     facet_wrap(~cbn_name) +
+    ##     ## facet_wrap(time_invariant + vrbl_name_unlag  ~ cbn_name, scales = "free_x", ncol = 3,
+    ##     ##            switch = "y", drop = T) +
+    ##     geom_vline(xintercept =0, linetype = "dashed") +
+    ##     scale_shape_manual(values = c(15,16)) +
+    ##     scale_color_manual(values = c("#1C5BA6", "#BD0017")) +
+    ##     scale_y_discrete(labels = vvs$vrbl_lbls) +
+    ##     ## coord_cartesian(xlim = c(min(mdl_summary$coef)*0.9, max(mdl_summary$coef)*0.9)) + 
+    ##     ## coord_cartesian(xlim=c(-1, 1)) +
+    ##     labs(x="coefficient size, 95% CI", y="coefficient")
 
     ## fx <- c(`>` , `<`)
     ## filter(mdl_summary2, fx[[1]](se, 0.5))
     ## plts_scale <- lapply(c(`>=`, `<`), \(x) filter(mdl_summary2, 
 
 
+    se_large_thld <- quantile(mdl_summary2$se, probs = 0.7)
+    coef_thld_lo <- quantile(mdl_summary2$coef, probs = 0.15)
+    coef_thld_hi <- quantile(mdl_summary2$coef, probs = 0.85)
 
-    mdl_summary_split <-  mdl_summary2 %>%
+    mdl_summary_split <- mdl_summary2 %>%
         group_by(vrbl_name_unlag) %>% 
-        mutate(se_large = ifelse(any(se > 0.4), T, F)) %>%
-        split(.$se_large)
+        ## mutate(se_large = ifelse(any(se > se_large_thld), T, F)) %>%
+        ## split(.$se_large)
+        mutate(coef_large = ifelse(any(coef > coef_thld_hi | coef < coef_thld_lo), T, F)) %>%
+        split(.$coef_large)
     plts_scale <- mdl_summary_split %>% lapply(\(x) x %>% 
                     ggplot(aes(color = factor(sig), y = vrbl_name_unlag, group = regcmd)) +
                     geom_point(aes(x = coef, shape = factor(regcmd)), size = 2.5, alpha = 0.95, show.legend = T,
@@ -584,7 +589,10 @@ gen_plt_mdl_summary <- function(mdl_summary, vvs) {
                     scale_y_discrete(labels = vvs$vrbl_lbls) +
                     labs(x="", y="") +
                     theme(legend.position = "bottom"))
-        
+
+    plts_scale[[1]] <- plts_scale[[1]] + coord_cartesian(xlim = c(coef_thld_lo, coef_thld_hi))
+    plts_scale[[2]] <- plts_scale[[2]] + coord_cartesian(xlim = c(min(mdl_summary2$coef), max(mdl_summary2$coef)))
+   
     ## combine plots with patchwork,
     ## add some arbitrary scaling for now to make difference between variables more equal
     plt_cbn <- plts_scale[[1]] / plts_scale[[2]] +
