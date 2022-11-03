@@ -120,7 +120,7 @@ get_df_reg <- function(df_anls) {
 
     ## filter out 
     meme_countries <- c("ZWE") # ZWE: cur_df has weird values -> virtually everything affected
-    df_reg2 <- filter(df_reg, iso3c %in% meme_countries)
+    df_reg2 <- filter(df_reg, iso3c %!in% meme_countries)
 
     return(df_reg2)
 
