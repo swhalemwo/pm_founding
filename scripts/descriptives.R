@@ -1025,7 +1025,7 @@ outlier_sumry <- map_dfr(outlier_vars_to_check, ~check_outliers(df_reg_rts, .x, 
 outlier_sumry[dir=="down", N:= -N] # make the ones where the outlier is to the bottom negative
 
 outlier_sumry[, .(cnt = sum(N)), iso3c][order(-cnt)] %>%
-    .[, country_name := countrycode(iso3c, "iso3c", "country.name")] %>% print(n=
+    .[, country_name := countrycode(iso3c, "iso3c", "country.name")] 
 
 outlier_sumry %>% copy() %>% 
     .[countrycode(iso3c, "iso3c", "un.region.name") != ("Europe")] %>% 
@@ -1033,9 +1033,37 @@ outlier_sumry %>% copy() %>%
     geom_bar(stat="identity") +
     facet_wrap(~vrbl, scales = "free")
 
+
+
+
 ## check cases on country-variable basis
 ## check_outliers(df_reg_rts, "ghweal992j", ret_obj = "outlier_vlus") %>% print(n=100)
 check_outliers(df_reg_rts, "ghweal992j", ret_obj = "outlier_vlus") %>% print(n=100)
+
+##
+check_outliers(df_reg_rts, "shweal992j_p90p100", ret_obj = "outlier_vlus") %>% print(n=100)
+check_outliers(df_reg_rts, "shweal992j_p99p100", ret_obj = "outlier_vlus") %>% print(n=100)
+
+filter(df_reg_rts, iso3c %in% c("DEU", "FRA")) %>% select(iso3c, year, smorc_dollar_fxm) %>% print(n=100)
+filter(df_reg_rts, iso3c %in% c("DEU", "QAT")) %>% select(iso3c, year, NY.GDP.PCAP.CDk) %>% print(n=100)
+
+check_outliers(df_reg_rts, "smorc_dollar_fxm", ret_obj = "outlier_vlus") %>% print(n=100)
+viz_lines(df_reg_rts, y="smorc_dollar_fxm", duration = 2, time_level = "cuts")
+
+filter(df_reg_rts, smorc_dollar_fxm > 1500) %>% select(iso3c, year, smorc_dollar_fxm) %>% print(n=50)
+filter(df_reg, iso3c == "QAT") %>% select(iso3c, year, smorc_dollar_fxm, nbr_opened) %>% print(n=50)
+check_outliers(cbn_dfs_rates$cbn_all, "smorc_dollar_fxm_lag0", ret_obj = "outlier_vlus") %>% print(n=50)
+
+check_outliers(df_reg_rts, "sptinc992j_p90p100", ret_obj = "outlier_vlus")
+viz_lines(df_reg_rts, y="sptinc992j_p90p100")
+filter(df_reg_rts, iso3c == "MWI") %>% select(iso3c, year, sptinc992j_p90p100) %>% print(n=50)
+
+check_outliers(df_reg_rts, "sptinc992j_p99p100", ret_obj = "outlier_vlus")
+viz_lines(df_reg_rts, y="sptinc992j_p99p100")
+
+check_outliers(df_reg_rts, "ti_tmitr_interact", ret_obj = "outlier_vlus")
+check_outliers(df_reg_rts, "tmitr_approx_linear20step", ret_obj = "outlier_vlus")
+viz_lines(df_reg_rts, y="tmitr_approx_linear20step", duration = 1)
 
 
 
@@ -1043,3 +1071,4 @@ df_reg_rts %>% mutate(region = countrycode(iso3c, "iso3c", "un.region.name")) %>
 viz_lines(y="ghweal992j", facets = "region")
 
 
+map(cbn_dfs_counts, ~filter(.x, iso3c == "QAT") %>% nrow())
