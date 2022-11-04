@@ -688,21 +688,25 @@ gen_reg_res_plts <- function(reg_res_objs, vvs, NBR_MDLS) {
     plt_reg_res_within = gen_plt_reg_res_within(df_anls_within, vvs, NBR_MDLS)
     plt_reg_res_all = gen_plt_reg_res_all(df_anls_within, vvs)
     plt_best_models_wlag = gen_plt_best_mdls_wlag(df_best_mdls, vvs)
-    plt_lag_cprn <- gen_plt_lag_cprn(df_best_mdls, vvs)
     plt_best_models_condensed = gen_plt_mdl_summary(mdl_summary, vvs)
 
     l_plts <- list(plt_cbn_log_likelihoods= plt_cbn_log_likelihoods,
                    plt_reg_res_within = plt_reg_res_within,
                    plt_reg_res_all = plt_reg_res_all,
                    plt_best_models_wlag = plt_best_models_wlag,
-                   plt_lag_cprn = plt_lag_cprn,
                    plt_best_models_condensed = plt_best_models_condensed)
+
+    
+    ## only generate lag cprn plot if multiple regcmds are used
+    if (all(c("menbreg", "xtnbreg") %in% df_best_mdls$regcmd)) {
+        plt_lag_cprn <- gen_plt_lag_cprn(df_best_mdls, vvs)
+        l_plts <- c(l_plts, list(plt_lag_cprn = plt_lag_cprn))
+    }
 
     
     ## only generate convergence plot when using optimization
     if ("loop_nbr" %in% names(gof_df_cbn)) {
         plt_cvrgnc = gen_plt_cvrgnc(gof_df_cbn)
-
         l_plts <- c(l_plts, list(plt_cvrgnc = plt_cvrgnc))
     }
 
