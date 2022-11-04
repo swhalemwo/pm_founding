@@ -796,7 +796,10 @@ render_xtsum_prop_plt(df_reg_rts)
 
 ## * descriptives per combination
 
+## ** summary table
+
 get_vlus_long <- function(cbn_dfs, df_reg, cbnx) {
+    #' 
 
     dt_cys <- cbn_dfs[[cbnx]] %>% select(iso3c, year) %>% adt()
 
@@ -810,16 +813,48 @@ get_vlus_long <- function(cbn_dfs, df_reg, cbnx) {
     return(dtx_mlt)
 }
 
-dtx_cbn <- lapply(names(cbn_dfs_rts)[1:3], \(x) get_vlus_long(cbn_dfs_rates, df_reg_rts, x)) %>%
+dtx_cbn <- lapply(names(cbn_dfs_rates)[1:3], \(x) get_vlus_long(cbn_dfs_rates, df_reg_rts, x)) %>%
     Reduce(\(x,y) rbind(x,y), .)
 
-dtx_cbn[, .(meanx = mean(value), minx = min(value),
+df_sum_prep <- dtx_cbn[, .(meanx = mean(value), minx = min(value),
             maxx = max(value), sdx=sd(value)), by = .(vrbl = variable, cbn_name)] %>%
     melt(id.vars = c("vrbl", "cbn_name"), variable.name = "statx") %>%
     .[order(vrbl, statx, cbn_name)] %>%
     dcast.data.table(vrbl + statx ~ cbn_name) %>% print(n=40)
     
+library(vtable) ## sumtable not that great
+sumtable(dtx_cbn, group = 'cbn_name')
 
+library(gtsummary)
+tbl_summary(df_reg_rts %>% select(all_of(vvs$all_rel_vars)))
+
+gen_mean_sd <- function(vlu, vrbl_name) {
+    #' generate mean and SD
+    vlu_sum <- sprintf("%s (%s)", round(mean(vlu), 2), round(sd(vlu), 2))
+
+    list(vrbl_name = vrbl_name, stat = "mean_sd", value = vlu_sum)
+    
+}
+
+gen_mean_sd(cbn_dfs_rates$cbn_all[[.x]], .x) # doesn't work because in cbn_dfs variables are already lagged
+## -> need unscaled data
+gen_mean_sd(df_reg_rts[[.x]], .x)
+
+map(vvs$all_rel_vars, ~gen_mean_sd(df_reg_rts[[.x]], .x)) %>% rbindlist()
+
+                                   
+
+
+gen_min_max <- function(vlu) {
+    #' generate min and max
+    sprint("%s, %s", round(min(vlu),2), round(max(vlu),2))
+}
+
+
+
+
+
+## ** kernel 
 
 vrbls_to_log <- c("hnwi_nbr_1M", "hnwi_nbr_5M", "hnwi_nbr_30M", "hnwi_nbr_200M",
                   "smorc_dollar_fxm", "smorc_dollar_fxm_sqrd", "NY.GDP.PCAP.CDk",
