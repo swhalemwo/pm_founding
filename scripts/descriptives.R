@@ -1098,6 +1098,68 @@ filter(df_reg, iso3c == "DEU") %>% select(iso3c, year, pm_density, pm_density_sq
 
 ## *** within
 
-df_reg_rts %>% adt() %>%
-    melt(id.vars = c("iso3c", "year"), measure.vars = all_rel_)
+df_lag <- df_reg_rts %>% adt() %>%
+    melt(id.vars = c("iso3c", "year"), measure.vars = vvs$all_rel_vars) %>%
+    .[order(iso3c, variable, year)] %>%
+    ## .[iso3c == "DEU" & variable %in% c("hnwi_nbr_30M", "gptinc992j")] %>% na.omit() %>% 
+    .[, vlu_lag := shift(value), by=c("iso3c", "variable")]
+    ## .[, x:= shift(value)] %>% 
+    ## print(n=80)
+    
+df_lag[variable == "nbr_closed_cum_global"]
 
+df_lag2 <- df_lag %>% na.omit() %>% copy() %>%
+    .[,`:=`(diff_minus =value - vlu_lag, diff_dvide1 = value/vlu_lag, diff_dvide2 = vlu_lag/value)] %>%
+    .[!is.infinite(diff_dvide1) & !is.infinite(diff_dvide2)] %>% # filter out infinite values
+    .[, max_diff := pmax(diff_dvide1, diff_dvide2)] %>% # pmax: parallelized max: pick which value is larger
+    .[, sd_v := sd(value), by = "variable"] %>% # add vrbl sd to see whether change is large in terms of overall SD
+    .[, sd_c := sd(value), by = c("iso3c", "variable")] %>% ## add country-variable sd sz
+    .[, `:=`(sd_sz_v = diff_minus/sd_v, sd_sz_c = diff_minus/sd_c)]
+    
+
+
+    
+hist(df_lag2$max_diff, breaks = 30)
+
+df_lag2[max_diff > 1.3 & sd_sz_v > 1] %>% print(n=100)
+
+df_lag2[max_diff > 2 & sd_sz_c > 2 & sd_sz_v > 0.4] %>% print(n=100)
+## hmm there seem to be some pretty drastic changes in hnwi in NOR (hnwi_
+## also in smorc, but that's fairly plausible
+
+## inspect HNWI variables, yuuuge fluctuations for ITA
+
+adt(df_reg_rts)[iso3c %in% c("NOR", "ITA", "DEU", "FRA")] %>% atb() %>% 
+    viz_lines(y="hnwi_nbr_30M", duration = 1)
+
+adt(df_reg)[iso3c == "USA", .(year, ghweal992j)] %>% na.omit() %>% plot(type='l')
+
+
+wealth_df <- get_wealth_df("wid_v3")
+
+filter(wealth_df, iso3c == "ITA") %>% select(year, pct_lo, wealth_usd21) %>% unique() %>%
+    ## filter(wealth_usd21 < 27e6 & wealth_usd21 > 25e6) %>%
+    filter(wealth_usd21 < 1e8 & wealth_usd21 > 2e7) %>% 
+    ggplot(aes(x=year, y=wealth_usd21, group = pct_lo)) +
+    geom_line() 
+    ## coord_cartesian(ylim = c(26e6, 27e6), xlim = c(2003,2005))
+
+
+
+    
+df_lag2[max_diff > 1.3 & sd_sz_c > 1 & sd_sz_v > 0.3] %>%
+    ## .[, .N, variable] %>% .[order(-N)]
+    .[variable == "sptinc992j_p99p100", .(iso3c, year, value, vlu_lag, sd_sz_c, sd_sz_v)] %>%
+    .[order(-sd_sz_c, -sd_sz_v)]  %>%
+    ## print(n=25) %>%
+    # just merge those with df_reg_rts to inspect
+    .[, .(iso3c)] %>% unique() %>% adt(df_reg_rts)[., on="iso3c"] %>% atb() %>% 
+    viz_lines(y="sptinc992j_p99p100", facets = "iso3c", duration = 1) # 
+    
+    
+
+
+
+    
+
+    
