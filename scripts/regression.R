@@ -1480,20 +1480,20 @@ vrbl_thld_choices <- gen_vrbl_thld_choices(vvs$hnwi_vars, vvs$inc_ineq_vars, vvs
 
 
 
-## vrbl_thld_choices_optmz <- slice_sample(vrbl_thld_choices, n=1)
+vrbl_thld_choices_optmz <- slice_sample(vrbl_thld_choices, n=36)
 
-vrbl_thld_choices_optmz <- filter(vrbl_thld_choices, hnwi_var == "hnwi_nbr_5M",
-                                  inc_ineq_var == "sptinc992j_p99p100", weal_ineq_var == "shweal992j_p99p100")
+## vrbl_thld_choices_optmz <- filter(vrbl_thld_choices, hnwi_var == "hnwi_nbr_5M",
+##                                   inc_ineq_var == "sptinc992j_p99p100", weal_ineq_var == "shweal992j_p99p100")
 
 
 reg_settings_optmz <- list(
-    nbr_specs_per_thld = 2,
+    nbr_specs_per_thld = 3,
     dvfmts = c("rates"), # should also be counts, but multiple dvfmts not yet supported by reg_anls
-    batch_nbr = "v57",
+    batch_nbr = "v59",
     vary_vrbl_lag = F,
     technique_strs = c("nr"),
     difficulty_switches = T,
-    regcmds = c("menbreg", "xtnbreg"),
+    regcmds = c("xtnbreg"),
     ## cbns_to_include = c("cbn_all"),
     cbns_to_include = names(cbn_dfs_counts)[1:3],
     mdls_to_include = c("full")
