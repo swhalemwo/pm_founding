@@ -892,28 +892,54 @@ sumry_cast_long <- dcast.data.table(sumry_rbinded, variable + stat ~  cbn_name)
 ## sumry_cast_wide: stats are in the columns, combinations in vertical "facets"
 sumry_cast_wide <- dcast.data.table(sumry_rbinded, cbn_name + variable ~ stat)
 
+extra_row_rename <- data.table(vrbl_name = names(vvs$vrbl_lbls), vrbl_lbl =  vvs$vrbl_lbls)
+
+## *** wide table 
+## have stats sub-column for each combination column
 
 
-extra_rows = list()
-extra_rows$pos <- list(0,5)
-extra_rows$command <- c("row1\n", "row2\n")
+wide_tbl <- dcast.data.table(sumry_rbinded[stat!="a_placeholder"], variable ~ cbn_name + stat)
+wide_tbl$variable
 
-xt_test <- xtable(adt(mtcars)[1:6, .(mpg, cyl)])
-print(xt_test, add.to.row = extra_rows, tabular.environment = 'longtable', hline.after = c(1),
-      include.colnames = F)
+wide_tbl_lbld <- wide_tbl[extra_row_rename, variable := vrbl_lbl, on = c("variable" = "vrbl_name")]
+
+clm_names <- list()
+clm_names$pos <- list(-1, -1)
+## make the headers: some hacking with hlines
+clm_names$command <- c(
+    paste0(paste0(c("\\hline \n ",
+                    map_chr(names(cbn_dfs_rates)[1:3],
+                            ~sprintf("\\multicolumn{2}{c}{%s}", .x))), collapse = " & "), " \\\\ \n"),
+    paste0(paste0(c("\\hline \n ", rep(stat_dt$stat_lbl, 3)), collapse = " & "), " \\\\ \n"))
+
+
+xtable(wide_tbl_lbld) %>%
+    print(include.rownames = F, include.colnames = F,
+          file = paste0(TABLE_DIR, "summary_stats3.tex"),
+          add.to.row = clm_names,
+          hline.after = c(0))
 
 ## *** long variable names
+
+
+## extra_rows = list()
+## extra_rows$pos <- list(0,5)
+## extra_rows$command <- c("row1\n", "row2\n")
+
+## xt_test <- xtable(adt(mtcars)[1:6, .(mpg, cyl)])
+## print(xt_test, add.to.row = extra_rows, tabular.environment = 'longtable', hline.after = c(1),
+##       include.colnames = F)
 
 dt_sumry_long_names <- sumry_cast_long %>% copy() %>% .[stat != "a_placeholder"]
 
 stat_dt <- data.table(stat_name = c("mean_sd", "min_max"), stat_lbl = c("Mean (SD)", "[Min, Max]"))
-stat_dt <- data.table(stat_name = c("mean_sd", "min_max"), stat_lbl = c("", ""))
+## stat_dt <- data.table(stat_name = c("mean_sd", "min_max"), stat_lbl = c("", ""))
 
 dt_sumry_long_names[stat_dt, stat := paste0("\\hspace{3mm}", stat_lbl), on = c("stat" = "stat_name")]
 
 
 ## update variable labels 
-extra_row_rename <- data.table(vrbl_name = names(vvs$vrbl_lbls), vrbl_lbl =  vvs$vrbl_lbls)
+
 
 vrbl_lbls <- sumry_cast_long[stat == "a_placeholder", .(variable)] %>% 
     .[extra_row_rename, vrbl_lbl := vrbl_lbl, on = c("variable" = "vrbl_name")] %>%
