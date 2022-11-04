@@ -282,7 +282,12 @@ gen_cbn_dfs <- function(df_regx, lngtd_vars, crscn_vars, vrbl_cnbs, base_vars) {
     ## split up? 
     cbn_dfs <- lapply(cbn_cvrg, \(x) atb(merge(select(all_of(x), iso3c, year), df_all_lags)))
 
+    return(cbn_dfs)
+}
     
+scale_cbn_dfs <- function(cbn_dfs, base_vars, df_regx) {
+    #' scale cbn dfs
+
     ## add unscaled Population at lag 0: needed for rates/exposures(use Stata naming scheme)
     cbn_dfs2 <- lapply(cbn_dfs, \(x) mutate(x, SP_POP_TOTLm_lag0_uscld = SP.POP.TOTLm_lag0))
            
@@ -1469,8 +1474,12 @@ if (is.null(args[[1]])) {
 
 vvs <- gen_vrbl_vectors()
 vrbl_cbns <- gen_cbns(vvs$all_rel_vars, vvs$base_vars)
-cbn_dfs_counts <- gen_cbn_dfs(df_reg, vvs$lngtd_vars, vvs$crscn, vrbl_cbns, vvs$base_vars)
-cbn_dfs_rates <- gen_cbn_dfs(df_reg_rts, vvs$lngtd_vars, vvs$crscn, vrbl_cbns, vvs$base_vars)
+cbn_dfs_counts_uscld <- gen_cbn_dfs(df_reg, vvs$lngtd_vars, vvs$crscn, vrbl_cbns, vvs$base_vars)
+cbn_dfs_counts <- scale_cbn_dfs(cbn_dfs_counts_uscld, vvs$base_vars, df_reg)
+
+
+cbn_dfs_rates_uscld <- gen_cbn_dfs(df_reg_rts, vvs$lngtd_vars, vvs$crscn, vrbl_cbns, vvs$base_vars)
+cbn_dfds_rates <- scale_cbn_dfs(cbn_dfs_rates_uscld, vvs$base_vars, df_reg_rts)
 
 cbn_df_dict <- list(counts = cbn_dfs_counts,
                     rates = cbn_dfs_rates)
