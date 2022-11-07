@@ -207,3 +207,181 @@ df_reg_clstrd %>% filter(cluster == 4) %>% select(iso3c, year, nbr_opened, nbr_o
 ##     filter(cluster != 4) %>% head(30) %>% distinct(iso3c)
 
 ## countrycode(c("BRB", "BHS", "CRI"), "iso3c", "country.name")
+
+## ** earlier summary tables
+
+## get_vlus_long <- function(cbn_dfs, df_reg, cbnx) {
+##     #' 
+
+##     dt_cys <- cbn_dfs[[cbnx]] %>% select(iso3c, year) %>% adt()
+
+##     dtx <- df_reg %>% adt() %>% .[on=dt_cys]
+
+
+##     dtx_mlt <- dtx[, c("iso3c", "year", vvs$all_rel_vars), with = F] %>%
+##         melt(id.vars = c("iso3c", "year")) %>%
+##         .[, cbn_name := cbnx]
+
+##     return(dtx_mlt)
+## }
+
+## dtx_cbn <- lapply(names(cbn_dfs_rates)[1:3], \(x) get_vlus_long(cbn_dfs_rates, df_reg_rts, x)) %>%
+##     Reduce(\(x,y) rbind(x,y), .)
+
+## dtx_cbn[!dtx_cbn2, on =.NATURAL]
+
+
+
+
+gen_mean_sd <- function(vlu, variable) {
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
+    #' generate mean and SD
+    ## print(variable)
+    
+    if (any(is.na(vlu))) {
+        vlu_sum <- "--"
+    } else {
+        vlu_sum <- sprintf("%s (%s)", nicely_fmt_number(mean(vlu)), nicely_fmt_number(sd(vlu)))
+    }
+
+    list(stat = "mean_sd", value = vlu_sum)
+    
+}
+
+
+gen_min_max <- function(vlu) {
+    #' generate min and max
+    
+    if (any(is.na(vlu))) {
+        vlu_sum <- "--"
+    } else {
+        vlu_sum <- sprintf("[%s, %s]", nicely_fmt_number(min(vlu)), nicely_fmt_number(max(vlu)))
+    }
+
+    list(stat = "min_max", value = vlu_sum)
+        
+}
+
+gen_placeholder <- function() {
+    #' generate placeholder to keep line empty
+    list(stat = "a_placeholder", value = "")}
+
+
+## rbind the different statistics together 
+sumry_rbinded <- rbind(
+    dtx_cbn[, gen_placeholder(), by = c("variable", "cbn_name")],
+    dtx_cbn[, gen_mean_sd(value), by=c("variable", "cbn_name")],
+    dtx_cbn[, gen_min_max(value), by=c("variable", "cbn_name")])
+
+## sumry_cast_long: columns are the combination
+sumry_cast_long <- dcast.data.table(sumry_rbinded, variable + stat ~  cbn_name)
+
+## sumry_cast_wide: stats are in the columns, combinations in vertical "facets"
+sumry_cast_wide <- dcast.data.table(sumry_rbinded, cbn_name + variable ~ stat)
+
+
+## *** wide table 
+## have stats sub-column for each combination column
+
+
+wide_tbl <- dcast.data.table(sumry_rbinded[stat!="a_placeholder"], variable ~ cbn_name + stat)
+wide_tbl$variable
+
+wide_tbl_lbld <- wide_tbl[dt_vrbl_lbls, variable := vrbl_lbl, on = c("variable" = "vrbl_name")]
+
+clm_names <- list()
+clm_names$pos <- list(-1, -1)
+## make the headers: some hacking with hlines
+clm_names$command <- c(
+    paste0(paste0(c("\\hline \n ",
+                    map_chr(names(cbn_dfs_rates)[1:3],
+                            ~sprintf("\\multicolumn{2}{c}{%s}", .x))), collapse = " & "), " \\\\ \n"),
+    paste0(paste0(c("\\hline \n ", rep(stat_dt$stat_lbl, 3)), collapse = " & "), " \\\\ \n"))
+
+
+xtable(wide_tbl_lbld) %>%
+    print(include.rownames = F, include.colnames = F,
+          file = paste0(TABLE_DIR, "summary_stats3.tex"),
+          add.to.row = clm_names,
+          hline.after = c(0))
+
+
+## *** long variable names
+
+
+## extra_rows = list()
+## extra_rows$pos <- list(0,5)
+## extra_rows$command <- c("row1\n", "row2\n")
+
+## xt_test <- xtable(adt(mtcars)[1:6, .(mpg, cyl)])
+## print(xt_test, add.to.row = extra_rows, tabular.environment = 'longtable', hline.after = c(1),
+##       include.colnames = F)
+
+dt_sumry_long_names <- sumry_cast_long %>% copy() %>% .[stat != "a_placeholder"]
+
+stat_dt <- data.table(stat_name = c("mean_sd", "min_max"), stat_lbl = c("Mean (SD)", "[Min, Max]"))
+## stat_dt <- data.table(stat_name = c("mean_sd", "min_max"), stat_lbl = c("", ""))
+
+dt_sumry_long_names[stat_dt, stat := paste0("\\hspace{3mm}", stat_lbl), on = c("stat" = "stat_name")]
+
+
+## update variable labels 
+
+
+vrbl_lbls <- sumry_cast_long[stat == "a_placeholder", .(variable)] %>% 
+    .[extra_row_rename, vrbl_lbl := vrbl_lbl, on = c("variable" = "vrbl_name")] %>%
+    .[, latexTranslate(vrbl_lbl)] # hope this doesn't break latex now
+
+
+extra_rows <- list()
+extra_rows$pos <- as.list(seq(0, nrow(dt_sumry_long_names)-1, by = 2))
+extra_rows$command <- sprintf("\\multicolumn{4}{l}{%s} \\\\ \n", vrbl_lbls)
+
+
+
+len(extra_rows$pos)
+len(extra_rows$command)
+
+x <- xtable(copy(dt_sumry_long_names)[,variable := NULL])
+
+
+xtable(copy(dt_sumry_long_names)[,variable := NULL]) %>%
+    print(add.to.row = extra_rows, hline.after = NULL,
+          file = paste0(TABLE_DIR, "summary_stats2.tex"),
+          tabular.environment = "longtable", include.rownames = F,
+          sanitize.text.function = identity)
+
+
+
+## *** printing 
+
+## separate row for variable name, as in https://i0.wp.com/thatdatatho.com/wp-content/uploads/2018/08/...
+x_proc1 <- sumry_cast_long %>% copy() %>% .[stat != "a_placeholder", variable := stat] %>%
+    .[, stat := NULL]
+
+## separate columns for variable name and stat
+x_proc2 <- sumry_cast_long %>% copy() %>% .[stat != "a_placeholder"] %>%
+    .[order(variable)] %>% .[stat != "mean_sd", variable := ""]
+
+## try to mimic traditional summary stats layout, not working well 
+x_proc3 <- sumry_cast_wide %>% copy() %>% .[, a_placeholder := NULL] %>% .[order(cbn_name, variable)] %>%
+    .[variable != "Ind.tax.incentives", cbn_name := ""]
+
+
+
+
+footnote <- "\\footnotesize{regular expression processing: \"!\" = NOT, \",\" = OR, \"\\$\" = end of file}"
+
+comment <- list()
+comment$pos <- list()
+comment$pos[[1]] <- nrow(x_proc2)
+comment$command <- c(paste0("\\hline \n \\multicolumn{2}{l}", "{", footnote, "} \n"))
+
+
+print(xtable(x_proc1), 
+      file = paste0(TABLE_DIR, "summary_stats.tex"), include.rownames = F,
+      tabular.environment = 'longtable'
+      )
+
+
+
