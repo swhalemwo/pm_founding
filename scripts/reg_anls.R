@@ -462,7 +462,10 @@ gen_plt_reg_res_within <- function(df_anls_within, vvs, NBR_MDLS) {
         geom_line(aes(linetype = regcmd), show.legend = T, alpha = 1/NBR_MDLS) +
         geom_quasirandom(aes(color = t_value, shape = factor(sig)), size = 2,  width = 0.3, stroke = 1) + 
         facet_grid(vrbl_name_unlag ~ cbn_name + regcmd, scales = "free", switch = "y", 
-                   labeller = labeller(vrbl_name_unlag = vvs$vrbl_lbls)) +
+                   ## labeller = labeller(vrbl_name_unlag = vvs$vrbl_lbls)) +
+                   labeller = as_labeller(c(vvs$vrbl_lbls, vvs$cbn_lbls, vvs$regcmd_lbls),
+                                          default = label_wrap_gen(35))) +
+                   ## labeller = label_wrap_gen(width = 2)) + 
         theme(strip.text.y.left = element_text(angle = 0),
               panel.spacing.y = unit(0.1, "lines"),
               panel.background = element_rect(fill = NA, color = "black")) +

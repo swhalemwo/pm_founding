@@ -1128,23 +1128,23 @@ gen_vrbl_vectors <- function() {
                    "NPO.tax.exemption" = "Tax exemption of non-profits",
                    "Ind.tax.incentives" = "Tax deductibility of donations",
                    "tmitr_approx_linear20step" = "Marginal Income Tax Rate (%)",
-                   "ti_tmitr_interact" = "Marginal Income Tax Rate * Tax deductibility",
+                   "ti_tmitr_interact" = "Marginal Income Tax Rate * Tax deductibility of donations",
                    ## "hnwi_nbr_1M" = "# HNWIs with net worth >= 1M",
                    ## "hnwi_nbr_5M" = "# HNWIs with net worth >= 5M",
                    ## "hnwi_nbr_30M" = "# HNWIs with net worth >= 30M",
                    ## "hnwi_nbr_200M" = "# HNWIs with net worth >= 200M",
                    ## "hnwi_nbr_1B" = "# HNWIs with net worth >= 1B",
                    "hnwi_nbr_1M" = "Nbr. HNWIs (net worth >= 1M) per cap.",
-                   "hnwi_nbr_5M" = "Nbr. HNWIs with net worth >= 5M per cap.",
+                   "hnwi_nbr_5M" = "Nbr. HNWIs (net worth >= 5M) per cap.",
                    "hnwi_nbr_30M" = "Nbr. HNWIs (net worth >= 30M) per cap.",
-                   "hnwi_nbr_200M" = "Nbr. HNWIs (net worth >= 200M) per cap",
+                   "hnwi_nbr_200M" = "Nbr. HNWIs (net worth >= 200M) per cap.",
                    "hnwi_nbr_1B" = "Nbr. HNWIs (net worth >= 1B) per cap.",
                    "sptinc992j_p90p100" = "Income share of top 10%",
                    "sptinc992j_p99p100" = "Income share of top 1%",
                    "gptinc992j" = "Gini of pre-tax income",
-                   "ghweal992j"= "Gini of net wealth",
                    "shweal992j_p90p100" = "Wealth share of top 10%",
                    "shweal992j_p99p100" = "Wealth share of top 1%",
+                   "ghweal992j"= "Gini of net wealth",
                    "smorc_dollar_fxm" = "Gvt cultural spending per cap.",
                    "smorc_dollar_fxm_sqrd" = "Gvt cultural spending (per cap., squared)",
                    "NY.GDP.PCAP.CDk" = "GDP per cap. (thousands)",
@@ -1154,8 +1154,8 @@ gen_vrbl_vectors <- function() {
                    "cnt_contemp_1995" = "Nbr. of modern/contemp. art museums in 1995 per cap.",
                    "cnt_contemp_1995_squared" = "Nbr. of contemp. art museums 1995 per capita (squared)",
                    "cnt_contemp_1990" = "Nbr. modern/contemp. art museums (1990) per 1M pop.",
-                   "cnt_contemp_1990_squared" = "Nbr. contemp. art museums (1990) per 1M pop. (squared)",
-                   "clctr_cnt_cpaer" = "Nbr. Collectors in Artnews top 200 collector list per cap.",
+                   "cnt_contemp_1990_squared" = "Nbr. modern/contemp. art museums (1990) per 1M pop. (squared)",
+                   "clctr_cnt_cpaer" = "Nbr. Collectors in Artnews top 200 collector list per 1M pop.",
                    "nbr_opened_cum" = "Nbr. cumulative openings per 1M pop. (legitimacy)",
                    "nbr_opened_cum_sqrd" = "Nbr. cumulative openings per per 1M pop. squared (competition)",
                    "pm_density" = "PM density (country)",
@@ -1168,6 +1168,15 @@ gen_vrbl_vectors <- function() {
                    "cons" = "cons",
                    "ln_r" = "ln(r)"
                    )
+
+    cbn_lbls <- c("cbn_all" = "DS all IVs",      
+                  "cbn_no_cult_spending" = "DS --CuSp",       
+                  "cbn_no_cult_spending_and_mitr" = "DS --CuSp/TMITR")
+
+
+    regcmd_lbls <- c(xtnbreg = "xtnbreg",
+                     glmmTMB = "glmmTMB",
+                     menbreg = "menbreg")
 
     if (!all(all_rel_vars %in% names(vrbl_lbls))) {
         stop("not all relevant variables have a variable label")
@@ -1189,7 +1198,9 @@ gen_vrbl_vectors <- function() {
         lngtd_vars = lngtd_vars,
         lngtd_vars_df = data.frame(lngtd_vars),
         all_rel_vars = all_rel_vars,
-        vrbl_lbls = vrbl_lbls
+        vrbl_lbls = vrbl_lbls,
+        cbn_lbls = cbn_lbls,
+        regcmd_lbls = regcmd_lbls
     )
     )
 }
