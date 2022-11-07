@@ -792,10 +792,52 @@ render_xtsum_prop_plt <- function(df_reg) {
     dev.off()
 }
 
-   
-
 
 render_xtsum_prop_plt(df_reg_rts)
+
+render_xtsum_plt2 <- function(cbn_dfsx, df_regx) {
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
+    #' generate variability plots for variables and samples
+    1
+    4
+    5
+    65
+    3
+    12
+    23
+    
+    ## get super long data 
+    dt_splong <- gen_dt_splong(cbn_dfsx, df_regx) %>%
+        .[!grepl("_global", variable) & variable %!in% vvs$crscn_vars] ## yeet global and cross-sectional vars
+
+    ## xtsum(dt_splong[cbn_name == "cbn_all" & variable == "nbr_opened"], value, iso3c)
+    ## proc_xtsum(dt_splong[cbn_name == "cbn_all" & variable == "nbr_opened"], "value", "iso3c")
+
+    ## do it per variable and combination
+    dt_xtsum <- dt_splong %>% .[iso3c != "ISL"] %>% 
+        .[, proc_xtsum(.SD, "value", "iso3c"), by = .(cbn_name, variable)] %>%
+        .[, within_overall_prop := within/overall]
+    
+    ## dt_xtsum$within_overall_prop
+
+    dt_xtsum %>% 
+        ## ggplot(aes(x=within_overall_prop, y = variable)) +
+        ggplot(aes(x=within_overall_prop, y = cbn_name)) +
+        geom_bar(stat = "identity") + 
+        ## facet_grid(variable~cbn_name, scales = "free_y")
+        facet_wrap(~variable)
+
+
+    dt_xtsum %>% 
+        ggplot(aes(x=within_overall_prop, y = variable)) +
+        geom_bar(stat = "identity") +
+        facet_wrap(~cbn_name)
+
+
+
+}
+
+render_xtsum_plt2(cbn_dfs_rates_uscld, df_reg_rts)
 
 ## * descriptives per combination
 
