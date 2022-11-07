@@ -119,7 +119,9 @@ get_df_reg <- function(df_anls) {
     df_reg$SP.POP.TOTL <- df_reg$SP.POP.TOTL/1
 
     ## filter out 
-    meme_countries <- c("ZWE") # ZWE: cur_df has weird values -> virtually everything affected
+    meme_countries <- c("ZWE", # ZWE: cur_df has weird values -> virtually everything affected
+                        "ISL", # small population -> high clctr_cnt_cpaer/cnt_contemp_1990
+                        "BHS") # small population -> high clctr_cnt_cpaer
     df_reg2 <- filter(df_reg, iso3c %!in% meme_countries)
 
     return(df_reg2)

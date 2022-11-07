@@ -1171,6 +1171,36 @@ df_reg_rts %>% mutate(region = countrycode(iso3c, "iso3c", "un.region.name")) %>
 viz_lines(y="ghweal992j", facets = "region")
 
 
+## **** some more manual outlier detection, leading to yeeting of ISL and BHS
+## previous outlier detection not global
+
+## requires dt_splong
+
+    dt_splong[variable == "clctr_cnt_cpaer" & cbn_name == "cbn_no_cult_spending_and_mitr"] %>% atb() %>% 
+        viz_lines(y="value", duration = 4)
+
+    filter(df_reg_rts, SP.POP.TOTLm > 5)
+
+    filter(df_reg_rts, SP.POP.TOTLm > 5) %$%
+        hist(SP.POP.TOTLm, breaks = 100)
+
+    plot(map_int(seq(0, 10, 0.1), ~nrow(filter(cbn_dfs_rates$cbn_all, SP_POP_TOTLm_lag0_uscld < .x))), type = 'l')
+
+    viz_lines(cbn_dfs_rates$cbn_no_cult_spending_and_mitr, y = "hnwi_nbr_30M_lag0", duration = 4)
+
+    filter(cbn_dfs_rates$cbn_all, year == 2000) %>% select(iso3c, cnt_contemp_1990) %>%
+        arrange(-cnt_contemp_1990)
+
+    viz_lines(df_reg_rts, y = "cnt_contemp", duration = 4)
+    
+    ## df_reg_rts %>% filter(iso3c %in% c("BHS", "ISL")) %>% group_by(iso3c) %>% summarize(sum(nbr_opened))
+    ## filter(cbn_dfs_rates$cbn_no_cult_spending_and_mitr, iso3c == "ISL", nbr_opened == 1)
+
+    df_reg %>% filter(iso3c %in% c("BHS", "ISL")) %>% select(iso3c, year, clctr_cnt_cpaer) %>% print(n=200)
+
+
+
+
 ## **** check squared weirdness
 filter(df_reg_rts, iso3c == "KOR") %>% select(iso3c, year, pm_density, pm_density_sqrd, SP.POP.TOTLm) %>%
     arrange(-year)
