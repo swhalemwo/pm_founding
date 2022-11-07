@@ -1113,10 +1113,10 @@ gen_vrbl_vectors <- function() {
                    "nbr_opened_cum_sqrd" = "cumulative openings squared (competition)",
                    "pm_density" = "PM density (country)",
                    "pm_density_sqrd" = "PM density squared (country)", 
-                   "nbr_closed_cum" = "# PM closings (country)",
+                   "nbr_closed_cum" = "# PM closings (cumulative, country)",
                    "pm_density_global" =  "PM density (global)",
                    "pm_density_global_sqrd" = "PM density squared (global)", 
-                   "nbr_closed_cum_global" = "# PM closings (global)",
+                   "nbr_closed_cum_global" = "# PM closings (cumulative, global)",
                    "ln_s" = "ln(s)",
                    "cons" = "cons",
                    "ln_r" = "ln(r)"
@@ -1479,7 +1479,7 @@ cbn_dfs_counts <- scale_cbn_dfs(cbn_dfs_counts_uscld, vvs$base_vars, df_reg)
 
 
 cbn_dfs_rates_uscld <- gen_cbn_dfs(df_reg_rts, vvs$lngtd_vars, vvs$crscn, vrbl_cbns, vvs$base_vars)
-cbn_dfds_rates <- scale_cbn_dfs(cbn_dfs_rates_uscld, vvs$base_vars, df_reg_rts)
+cbn_dfs_rates <- scale_cbn_dfs(cbn_dfs_rates_uscld, vvs$base_vars, df_reg_rts)
 
 cbn_df_dict <- list(counts = cbn_dfs_counts,
                     rates = cbn_dfs_rates)
