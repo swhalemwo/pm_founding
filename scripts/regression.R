@@ -455,7 +455,7 @@ gen_stata_code_xtnbreg <- function(iv_vars, dvfmt, gof_names, stata_output_vars,
 
     iv_vars_stata <- gsub("\\.", "_", iv_vars)
     res_names <- paste0("r", seq(len(stata_output_vars)*2 + len(gof_names)))
-    maxiter <- 100
+    maxiter <- 50
 
     if (dvfmt == "rates") {
         exposure_cmd = "exposure(SP_POP_TOTLm_lag0_uscld) "
@@ -543,7 +543,7 @@ gen_stata_code_menbreg <- function(iv_vars, dvfmt, gof_names, stata_output_vars)
         exposure_cmd = ""
     }
 
-    maxiter <- 100
+    maxiter <- 50
 
 
     ## menbreg
@@ -1554,11 +1554,11 @@ vrbl_thld_choices_optmz <- slice_sample(vrbl_thld_choices, n=36)
 reg_settings_optmz <- list(
     nbr_specs_per_thld = 3,
     dvfmts = c("rates"), # should also be counts, but multiple dvfmts not yet supported by reg_anls
-    batch_nbr = "v59",
+    batch_nbr = "v60",
     vary_vrbl_lag = F,
     technique_strs = c("nr"),
     difficulty_switches = T,
-    regcmds = c("xtnbreg"),
+    regcmds = c("xtnbreg", "menbreg"),
     ## cbns_to_include = c("cbn_all"),
     cbns_to_include = names(cbn_dfs_counts)[1:3],
     mdls_to_include = c("full")
