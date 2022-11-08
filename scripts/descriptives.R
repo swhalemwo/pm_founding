@@ -1212,6 +1212,44 @@ viz_lines(df_reg_rts, y="tmitr_approx_linear20step", duration = 1)
 df_reg_rts %>% mutate(region = countrycode(iso3c, "iso3c", "un.region.name")) %>% 
 viz_lines(y="ghweal992j", facets = "region")
 
+## **** outlier detection splong
+
+dt_splong <- gen_dt_splong(cbn_dfs_rates_uscld, df_reg_rts)
+
+## debug 
+dt_splong %>% copy() %>% .[variable == "nbr_opened" & cbn_name == "cbn_all"] %>%
+    .[, max_vlu := max(value), iso3c] %>%
+    .[max_vlu %in% rev(unique(max_vlu))[1:5]] %>% .[, .N, iso3c]
+
+
+## highest value per variable and combination
+## first generate  max value per combination-country-variable,
+## then generate threshold (largest 5), then filter those who surpass threshold
+
+library(plotly)
+
+p <- dt_splong %>% copy() %>%
+    .[!grepl("sqrd", variable) & !grepl("global", variable) & !grepl("squared", variable)] %>%
+    .[variable == "pm_density"] %>% 
+    .[, max_vlu := max(value), by = .(cbn_name, variable, iso3c)] %>%
+    .[, thld := rev(sort(unique(max_vlu)))[8], by = .(cbn_name, variable)] %>%
+    .[max_vlu > thld] %>%
+    ggplot(aes(x=year, y=value, color = iso3c)) +
+    geom_line() +
+    ## facet_grid(variable ~ cbn_name, scales = "free", switch = "y") +
+    facet_wrap(~ variable +cbn_name, scales = "free_x") + 
+    theme(strip.text.y.left = element_text(angle = 0),
+          panel.spacing = unit(0, "lines"))
+p
+    
+
+
+
+ggplotly(p)    
+
+
+dt_splong[, .N, variable]
+
 
 ## **** some more manual outlier detection, leading to yeeting of ISL and BHS
 ## previous outlier detection not global
