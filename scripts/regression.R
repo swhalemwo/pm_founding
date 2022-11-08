@@ -1064,8 +1064,8 @@ gen_vrbl_vectors <- function() {
     inc_ineq_vars <- c("sptinc992j_p90p100", "sptinc992j_p99p100", "gptinc992j")
     weal_ineq_vars <- c("shweal992j_p90p100", "shweal992j_p99p100", "ghweal992j")
     ## density_vars <- c("nbr_opened_cum", "nbr_opened_cum_sqrd")
-    density_vars <- c("pm_density", "pm_density_sqrd", "nbr_closed_cum",
-                      "pm_density_global", "pm_density_global_sqrd", "nbr_closed_cum_global")
+    density_vars <- c("pm_density", "pm_density_sqrd", # "nbr_closed_cum",
+                      "pm_density_global", "pm_density_global_sqrd") # "nbr_closed_cum_global")
 
 
     ## non_thld_lngtd_vars <- c("tmitr_approx_linear20step", "ti_tmitr_interact", "smorc_dollar_fxm", "NY.GDP.PCAP.CDk", "SP.POP.TOTLm", "clctr_cnt_cpaer")
