@@ -74,7 +74,7 @@ get_df_reg <- function(df_anls) {
     df_mtr <- construct_mtrs()
 
     ## artnews '
-    df_artnews <- generate_artnews_data()
+    df_artnews <- generate_artnews_data(yeet_pm_founders = F)
     
 
     ## cultural spending
