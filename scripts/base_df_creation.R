@@ -79,18 +79,28 @@ create_excel_df_diagnose <- function(df, verbose = 0){
 
 
 
-aggregate_openings <- function(df_excl) {
+aggregate_openings <- function(df_excl, yeet_early_closed = F) {
     if (as.character(match.call()[[1]]) %in% fstd){browser()}
     #' aggregate excel df into country-year openings
 
-    df_excl2 <- select(df_excl, name, country, countrycode, year_opened_int) %>% 
-        na.omit()
+    df_excl2 <- select(df_excl, name, country, countrycode, year_opened_int, year_closed) %>%
+        ## na.omit() 
+        filter(!is.na(year_opened_int))
     ## excel-based df
 
-    ## apply(df_excl2, 2, \(x) sum(is.na(x)))
-    
+    ## if yeeting early closed: yeet the museums closed before 2000: atm  4 in US, 1 in NLD
+    ## hopefully creates better closing measurements:
+    ## otherwise huge percentages of PM population closed in those countries 
+    if (yeet_early_closed) {
+        df_excl2 <-  filter(df_excl2, year_closed >= 2000 | is.na(year_closed))
+    }
+
+    ## select(df_excl, name, country, countrycode, year_opened_int, year_closed) %>% adt() %>% 
+        ## .[!complete.cases(.)]
+        ## .[is.na(year_opened_int)]
+        
     ## generate count of closed 
-    df_clsd <- select(df_excl, name, iso3c = countrycode, year = year_closed) %>% na.omit() %>%
+    df_clsd <- select(df_excl2, name, iso3c = countrycode, year = year_closed) %>% na.omit() %>%
         group_by(iso3c, year) %>% 
         summarize(nbr_closed = n())
     
@@ -139,6 +149,8 @@ create_anls_df <- function(df_wb, df_open) {
     if (as.character(match.call()[[1]]) %in% fstd){browser()}
     
     #' merge the aggregated excel df to the WB df (as complete country-year structure)
+
+    
     df_anls <- as_tibble(merge(df_wb, df_open,
                                by=c("iso3c", "year"),
                                all.x = TRUE))
@@ -156,12 +168,58 @@ create_anls_df <- function(df_wb, df_open) {
                nbr_closed_cum_global = sum(nbr_closed_cum),
                pm_density_global = nbr_opened_cum_global - nbr_closed_cum_global,
                pm_density_global_sqrd = pm_density_global^2)
+               ## prop_closed = nbr_closed_cum/nbr_opened_cum)
+
+    ## df_anls2 %>% group_by(iso3c) %>%
+    ##     mutate(any_closed = sum(nbr_closed) > 0) %>%
+    ##     filter(any_closed) %>%
+    ##     ## viz_lines(y="prop_closed", facets = "region", max_lines = 6)
+    ##     ## viz_lines(y="prop_closed")
+    ##     viz_lines(y="nbr_closed", duration = 8)
+
+    
+    ## viz_lines(filter(df_anls2, iso3c %in% c("ARE", "AUT", "ISL", "NLD", "USA", "SWE", "DEU")), y = "prop_closed", duration = 1)
+    ## viz_lines(df_anls2, y = "nbr_closed", duration = 8 )
+
+    ## viz_lines(df_anls2, y="nbr_closed_cum", extra = "rates", div = "SP.POP.TOTL")
+
+    ## ## look at opened per capita again, also skewed but fine
+    ## df_anls2 %>%
+    ##     mutate(opened_pop_prop = nbr_opened_cum/SP.POP.TOTL) %>%
+    ##     filter(iso3c %!in% c("MCO", "LIE", "ISL")) %>% 
+    ##     viz_lines(y = "opened_pop_prop")
+
+    
+    ## ## look again at closed per capita, idk why, i know CHE and ISL are outliers 
+    ## df_anls2 %>%
+    ##     mutate(closed_pop_prop = nbr_closed_cum/SP.POP.TOTL) %>%
+    ##     filter(iso3c %!in% c("ISL", "CHE")) %>% 
+    ##     viz_lines(y = "closed_pop_prop")
+    
+
+
+    ## viz_lines(df_anls2, y="nbr_opened_cum", extra = "rates", div = "SP.POP.TOTL")
+
+    ## cbn_dfs_counts_uscld$cbn_all %>% filter(year == 2010) %>% 
+    ##     ggplot(aes(x=log(SP.POP.TOTLm_lag0), y=smorc_dollar_fxm_lag0)) +
+    ##     geom_point()
+
+
+    ## viz_lines(df_anls2, y = "nbr_closed", duration = 1)
+
+    ## viz_lines(cbn_dfs_counts$cbn_no_cult_spending_and_mitr, y="nbr_opened", duration = 12)
+    ## viz_lines(cbn_dfs_counts$cbn_all, y="nbr_opened", div = "SP_POP_TOTLm_lag0_uscld", extra = "rates")
+
+    ## filter(cbn_dfs_counts_uscld$cbn_all, year < 2000, nbr_closed_cum_lag0 > 0) %>% adt()
+        
+    ## filter(df_excl, year_closed < 2000) %>% select(countrycode, year_opened_int, year_closed)
+    ## filter(df_excl, countrycode == "USA", year_opened_int < 2000) %>% select(year_opened_int, year_closed)
+
+    ## adt(df_excl)[year_closed < 2000, .(...1, year_opened_int, year_closed, countrycode)]
+    ## adt(df_excl)[year_opened_int < 2000, .(...1, year_opened_int, year_closed, countrycode)]
 
     ## df_anls2 %>% select(pm_closed_cum_glbl) %>% print(n=40)
-    
 
-
-    
 
     ## filter(df_anls,  iso3c == "DEU") %>% select(year, nbr_opened, nbr_closed, nbr_opened_cum, nbr_closed_cum,
     ##                                             pm_density) %>% print(n=40)
