@@ -566,7 +566,7 @@ gen_cnt_clctrs <- function(rel_clctrs_loc, artnews_time_df, artnews_loc_df) {
 
 
 
-generate_artnews_data <- function() {
+generate_artnews_data <- function(yeet_pm_founders=F) {
     if (as.character(match.call()[[1]]) %in% fstd){browser()}
     
 
@@ -576,9 +576,14 @@ generate_artnews_data <- function() {
     artnews_collection_df <- artnews_all_res$artnews_collection_df
     ## table(artnews_time_df$year)
 
-
-
-    artnews_time_df_clnd2 <- clean_artnews_time_df(artnews_time_df, nbr_years_around = 2)
+    
+        
+    if (yeet_pm_founders) {
+        artnews_time_df_clnd2 <- clean_artnews_time_df(artnews_time_df, nbr_years_around = 2)
+    } else {
+        artnews_time_df_clnd2 <- artnews_time_df
+    }
+    
 
     artnews_genre_df <- readin_artnews_genre()
 
@@ -612,6 +617,14 @@ generate_artnews_data <- function() {
 
 
 }
+
+## xt <- generate_artnews_data(yeet_pm_founders = T) %>% adt() %>% .[, src := "xt"]
+## xf <- generate_artnews_data(yeet_pm_founders = F) %>% adt() %>% .[, src := "xf"]
+
+## melt(rbind(xt, xf), id.vars = c("iso3c", "year", "src")) %>%
+##     dcast.data.table(iso3c + year + variable ~ src) %>%
+##     .[, diff := xf -xt] %$% .[diff != 0] %$% hist(diff)
+    
  
 
 ## generate_artnews_data()
