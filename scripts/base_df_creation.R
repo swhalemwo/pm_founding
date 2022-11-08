@@ -104,8 +104,28 @@ aggregate_openings <- function(df_excl) {
 
     ## df_open <- as_tibble(merge(df_open_cnt, df_open_names))
 
-    df_open <- Reduce(\(x,y) left_join(x,y), list(df_open_cnt, df_open_names, df_clsd))
+    df_open <- Reduce(\(x,y) full_join(x,y), list(df_open_cnt, df_open_names, df_clsd))
 
+    
+    ## test in dt: make sure that previous version and dt produce same results
+    dt_open <- adt(df_excl)[, .(name, iso3c = countrycode, year_opened_int, year_closed)] %>%
+        melt(id.vars = c("name", "iso3c"), value.name = "year") %>% 
+        ## .[!complete.cases(.), .N, variable] # 9 PMs have no opening year, 491 no closing year
+        na.omit() %>% 
+        .[, .(vlu_proc = .N), by = c("iso3c", "variable", "year")] %>%
+        dcast.data.table(iso3c + year ~ variable, value.var = "vlu_proc")
+    
+    
+    nbr_row_diff <- rbind(
+        adt(df_open) %>% .[, .(iso3c, year, nbr_opened, nbr_closed)] %>% .[, source := "old"] %>%
+        melt(id.vars = c("iso3c", "year", "source")),
+        dt_open[, .(iso3c,year,nbr_opened=year_opened_int,nbr_closed=year_closed)] %>% .[,source:="dt"] %>%
+        melt(id.vars = c("iso3c", "year", "source"))) %>%
+        dcast.data.table(iso3c + year + variable ~ source) %>%
+        .[dt != old] %>% nrow()
+        
+    if (nbr_row_diff != 0) {stop("there is an error in `aggregate_openings`")}
+    
     
     return(df_open)
 }
