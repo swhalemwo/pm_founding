@@ -605,6 +605,210 @@ plt_to_pdf2 <- function(plt, width, height) {
 
 ## ** cluster-based analysis 
 
+get_df_clust <- function(df_reg, vvs) {
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
+    #' generate the dataframe used for clustering 
+
+    df_clust_prep <- df_reg %>%
+        filter(year >= 1995) %>% 
+        select(iso3c, year, NY.GDP.PCAP.CDk, sptinc992j_p99p100, shweal992j_p99p100,
+               NPO.tax.exemption, Ind.tax.incentives, cnt_contemp_1995,
+               hnwi_nbr_30M, SP.POP.TOTLm) %>%
+        mutate(cnt_contemp_1995 = cnt_contemp_1995/SP.POP.TOTLm,
+               hnwi_nbr_30M = hnwi_nbr_30M/SP.POP.TOTLm) %>%
+        select(-SP.POP.TOTLm) 
+
+
+    ## pivot the columns into wider
+    df_clust <- df_clust_prep %>%
+        pivot_wider(id_cols = iso3c, names_from = year,
+                    values_from = setdiff(names(df_clust_prep), vvs$base_vars))
+
+    
+    ## select the cross-sectional variables separately, yeet them from main df, then re-add them once
+    ## (otherwise get added for every year)
+    crscn_vrbls <- c("NPO.tax.exemption", "Ind.tax.incentives", "cnt_contemp_1995")
+    crscn_vrbls_to_keep <- c("NPO.tax.exemption_2014", "Ind.tax.incentives_2014", "cnt_contemp_1995_1995")
+
+    crscn_data <- df_clust %>% select(crscn_vrbls_to_keep)
+
+    df_clust2 <- df_clust %>% select(-starts_with(crscn_vrbls)) %>%
+        bind_cols(crscn_data)
+
+    
+    ## NA investigation
+    ## rows: countries
+    ## na.omit(df_clust2)
+
+    ## df_clust2 %>%
+    ##     mutate(nbr_nas = rowSums(is.na(.))) %>%
+    ##     select(iso3c, nbr_nas) %>%
+    ##     arrange(-nbr_nas) %>%
+    ##     print(n=100)
+    ## ## hmm there are around 20 with missing where it's worth considering to keep them (nbr_nas < 30)
+
+    ## columns: variables
+
+    ## colsums_na <- colSums(is.na(df_clust2))
+    ## colsums_na_dt <- data.table(vrbl = names(colsums_na), nbr_na = colsums_na)
+    ## colsums_na_dt[order(-nbr_na)] %>% print(n=50)
+    ## colsums_na_dt[order(nbr_na)] %>% print(n=500)
+    ## seems to go high quite quickly: sptinc992j, hnwi, shweal all have at least 40 missing
+    ## yeeting all them would basically mean only using GDP and cross-sectional variables to cluster
+
+    ## -> unless there's a comfy option to adjust distances to missing values, ~50 countries have to be yeeted
+
+
+
+    return(df_clust2)
+}
+
+get_df_clust_lame <- function(df_reg, cutoffs = seq(0, 1, 0.25)) {
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
+    #' super lame way of clustering based on 2020 HDI cutoffs
+
+    hdi_prep <- df_reg %>%
+        filter(year == 2020) %>%
+        select(iso3c, year, hdi) %>% adt()
+        
+    
+    ## prepare for rolling join: remove last number (max)
+    qntls <- quantile(hdi_prep$hdi, probs = cutoffs, na.rm = T) %>% adt() %>% .[1:.N-1]
+    names(qntls) <- "hdi"
+    qntls$cluster <- seq(1,nrow(qntls))
+    ## qntls$asdf <- qntls$qntl
+    
+    ## do rolling joins work? yup
+    dt_hdi_clustered <- qntls[na.omit(hdi_prep), on = "hdi", roll = Inf]
+
+    ## test that rolling worked
+    ## dt_hdi_clustered[, paste(paste0(iso3c, ":", hdi), collapse = ""), by = cluster] %>% .[order(cluster)]
+    ## dt_hdi_clustered[, .(min_hdi = min(hdi), max_hdi = max(hdi)), cluster]
+
+    return(dt_hdi_clustered)
+
+}
+
+get_df_clust_lame(df_reg)
+
+    
+
+
+run_cluster <- function(dists, method, nbr_clusts, na_rm) {
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
+    #' evaluate the clustering solution
+
+    clusts <- hclust(dists, method = method)
+    ## plot(clusts)
+
+    ## incplt_cases <- which(!complete.cases(as.matrix(dists)))
+    ## df_clust[incplt_cases,] %>% adf()
+
+    ## as.matrix(dists)[incplt_cases,]
+    
+    
+    tree_cutted <- cutree(clusts, k=nbr_clusts)
+
+    clust_tbl <- table(tree_cutted)
+
+    skew <- skewness(clust_tbl)
+    mean_nbr_crys <- mean(clust_tbl)
+    min_nbr_crys <- min(clust_tbl)
+    max_nbr_crys <- max(clust_tbl)
+
+    ## number of clusters with only one entry
+    nbr_clusters_w_one <- len(which(clust_tbl == 1))
+
+
+    return(
+        list(
+            nbr_clusts = nbr_clusts,
+            method = method,
+            skew = skew,
+            mean_nbr_crys = mean_nbr_crys,
+            min_nbr_crys = min_nbr_crys,
+            max_nbr_crys = max_nbr_crys,
+            nbr_clusters_w_one = nbr_clusters_w_one,
+            na_rm = na_rm)) 
+}
+
+
+## just yeet Channel Islands and South Sudan (don't have anything in common)
+df_clust <- get_df_clust(filter(df_reg, iso3c %!in% c("CHI", "SSD")), vvs)
+
+dists_wna <- dist(df_clust)
+dists_wona <- dist(na.omit(df_clust))
+
+dist_options <- list(
+    wna = dists_wna,
+    wona = dists_wona)
+    
+
+## nrow(dists)
+## ncol(dists)
+## as.matrix(dists)[,2]
+run_cluster(dist_options[["wna"]], "ward.D", 8, "wna")
+
+clust_methods <- c("ward.D", "ward.D2", "single", "complete", "average", "mcquitty", "median", "centroid")
+nbr_clusts <- seq(3,8)
+na_rm <- c("wna","wona")
+clust_cfg_df <- expand.grid(clust_method = clust_methods, nbr_clusts = nbr_clusts, na_rm = na_rm) %>% adt()
+
+clust_res <- apply(clust_cfg_df, 1, \(x) run_cluster(dists = dist_options[[x[["na_rm"]]]],
+                                                     method = x[["clust_method"]],
+                                                     nbr_clusts = x[["nbr_clusts"]],
+                                                     na_rm = x[["na_rm"]])) %>%
+    rbindlist()
+
+
+ggplot(clust_res, aes(x=skew, y = mean_nbr_crys, color = na_rm, size = max_nbr_crys)) +
+    geom_point() +
+    facet_wrap(~nbr_clusts)
+
+## 8 clusters, wna, smallest skew
+
+## clust_res[nbr_clusts == 8 &na_rm == "wna"]
+
+
+
+world <- ne_countries(scale = "medium", returnclass = "sf") %>% atb() %>%
+    select(iso3c = iso_a3, geometry)
+
+
+assign_clusters <- function(df_clust, tree_cutted, na_rm) {
+    #' assign the clustering solution to df_clust: IDK IF WORKS, not tested
+    ## yeet NAs if necessary 
+    if (na_rm == "wona") {
+        df_clust2 <- na.omit(df_clust)
+    } else {
+        df_clust2 <- df_clust
+    }
+        
+    df_clust2$clust <- tree_cutted
+}
+
+
+
+plot_world_clustered <- function(df_clustrd) {
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
+    #' plot visualization on map 
+
+
+    world_clstrd <- left_join(world, 
+                              select(df_clustrd, iso3c, cluster))
+    
+    plt_world_clstrd <- ggplot(world_clstrd, aes(geometry = geometry, fill = factor(cluster))) +
+        geom_sf() +
+        coord_sf(ylim = c(-55, 83)) +
+        scale_fill_brewer(palette = "Set3")
+
+    return(plt_world_clstrd)
+}
+
+## get_df_clust_lame(df_reg) %>% # , cutoffs = c(0, 0.4, 0.6, 0.8,1)) , cutoffs = c(0,0.5, 0.7, 0.82,1)
+##     plot_world_clustered()
+
+
 ## construct custom versions of base functions that by default yeet nas
 mean_wo_na <- function(...) {
     mean(..., na.rm = T)}
