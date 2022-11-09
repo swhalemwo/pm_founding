@@ -1552,13 +1552,13 @@ vrbl_thld_choices_optmz <- slice_sample(vrbl_thld_choices, n=36)
 
 
 reg_settings_optmz <- list(
-    nbr_specs_per_thld = 3,
+    nbr_specs_per_thld = 4,
     dvfmts = c("rates"), # should also be counts, but multiple dvfmts not yet supported by reg_anls
-    batch_nbr = "v60",
+    batch_nbr = "v61",
     vary_vrbl_lag = F,
     technique_strs = c("nr"),
     difficulty_switches = T,
-    regcmds = c("xtnbreg", "menbreg"),
+    regcmds = c("xtnbreg"),
     ## cbns_to_include = c("cbn_all"),
     cbns_to_include = names(cbn_dfs_counts)[1:3],
     mdls_to_include = c("full")

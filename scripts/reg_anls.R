@@ -839,7 +839,7 @@ stop("functions done")
 ## ** main analysis
 NBR_MDLS <- 3
 ## fldr_info <- fldr_info_optmz
-reg_anls_base <- read_reg_res_files(setup_regression_folders_and_files("v60"))
+reg_anls_base <- read_reg_res_files(setup_regression_folders_and_files("v61"))
 reg_res_objs <- proc_reg_res_objs(reg_anls_base, vvs, NBR_MDLS)
 
 reg_res <- list()
@@ -847,6 +847,18 @@ reg_res <- list()
 ## generate plots, construct configs
 reg_res$plts <- gen_reg_res_plts(reg_res_objs, vvs, NBR_MDLS)
 reg_res$plt_cfgs <- gen_plt_cfgs()
+
+## ** more version comparison 
+
+reg_res60 <- gen_reg_res(setup_regression_folders_and_files("v60"))
+reg_res61 <- gen_reg_res(setup_regression_folders_and_files("v61"))
+
+reg_res60$plts$plt_best_models_condensed + reg_res61$plts$plt_best_models_condensed
+reg_res60$plts$plt_reg_res_within + reg_res61$plts$plt_reg_res_within
+reg_res60$plts$plt_best_models_wlag + reg_res61$plts$plt_best_models_wlag
+
+    
+
 
 ## render all plots to file
 ## lapply(names(reg_res$plts), \(x) render_reg_res(x, fldr_info))
