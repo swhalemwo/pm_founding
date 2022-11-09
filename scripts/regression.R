@@ -1065,7 +1065,7 @@ gen_vrbl_vectors <- function() {
     weal_ineq_vars <- c("shweal992j_p90p100", "shweal992j_p99p100", "ghweal992j")
     ## density_vars <- c("nbr_opened_cum", "nbr_opened_cum_sqrd")
     density_vars <- c("pm_density", "pm_density_sqrd", # "nbr_closed_cum",
-                      "pm_density_global", "pm_density_global_sqrd") # "nbr_closed_cum_global")
+                      "pm_density_global", "pm_density_global_sqrd", "nbr_closed_cum_global")
 
 
     ## non_thld_lngtd_vars <- c("tmitr_approx_linear20step", "ti_tmitr_interact", "smorc_dollar_fxm", "NY.GDP.PCAP.CDk", "SP.POP.TOTLm", "clctr_cnt_cpaer")
@@ -1554,7 +1554,7 @@ vrbl_thld_choices_optmz <- slice_sample(vrbl_thld_choices, n=36)
 reg_settings_optmz <- list(
     nbr_specs_per_thld = 4,
     dvfmts = c("rates"), # should also be counts, but multiple dvfmts not yet supported by reg_anls
-    batch_nbr = "v61",
+    batch_nbr = "v62",
     vary_vrbl_lag = F,
     technique_strs = c("nr"),
     difficulty_switches = T,
