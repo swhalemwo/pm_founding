@@ -1098,3 +1098,255 @@ ggplot(mtcars, aes(x=mpg, y=..count..)) +
     geom_histogram(bins=10) +
     geom_density()
 
+
+## ** yeet outliers: full dataset tho, should be combination specific (and also standardized)
+## *** global
+
+vvs$all_rel_vars
+
+
+hist(df_reg_rts$hnwi_nbr_5M)
+max(df_reg_rts$hnwi_nbr_5M, na.rm = T)
+
+meanx <- mean(df_reg_rts$hnwi_nbr_5M, na.rm = T)
+medx <- median(df_reg_rts$hnwi_nbr_5M, na.rm = T)
+sdx <- sd(df_reg_rts$hnwi_nbr_5M, na.rm = T)
+
+cix_hi <- meanx + 4*sdx
+cix_lo <- meanx - 4*sdx
+
+lapply(seq(3,6), \(x)
+       filter(df_reg_rts, hnwi_nbr_5M > (meanx + x*sdx) | hnwi_nbr_5M < (meanx - x*sdx)) %>% adt() %>%
+       .[, .N, iso3c] %>% .[, src := paste0("sd", x)]) %>% rbindlist() %>%
+    dcast.data.table(iso3c ~ src, value.var = "N", drop=F) %>%
+    .[order(-sd6, -sd5, -sd4, -sd3)]
+
+filter(df_reg_rts, hnwi_nbr_5M > (meanx + x*sdx) | hnwi_nbr_5M < (meanx - x*sdx), iso3c == "ARE") %>% sel
+
+
+check_outliers <- function(dfx, vrbl, ret_obj) {
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
+    #' generate summary of which countries have how many outliers at 3-6 SD
+
+    print(vrbl)
+    dtx <- adt(dfx)
+    ## vrbl <- "hnwi_nbr_5M"
+    
+    meanx <- mean(dtx[[vrbl]], na.rm = T)
+    sdx <- sd(dtx[[vrbl]], na.rm = T)
+
+    
+    ## x <- adt(mtcars) %>% .[, lapply(.SD, mean), .SDcols = vrbl, drop = F]
+
+    ## meanx <- dtx[, mean(get(vrbl), na.rm = T)]
+    ## sdx <- dtx[, mean(get(vrbl), na.rm = T)]
+
+    ## adt(mtcars) %>% .[disp == 160, disp := NA] %>% .[, mean(disp, na.rm = T)]
+
+    sd_cols <- paste0("sd", seq(6,3))
+
+
+    outlier_sumry_up <- map_dfr(seq(3,6), ~dtx[get(vrbl) > (meanx + .x*sdx)] %>% .[, .N, iso3c] %>%
+                                              .[, `:=`(src = paste0("sd", .x), dir ="up")])
+
+    outlier_sumry_down <- map_dfr(seq(3,6), ~dtx[get(vrbl) < (meanx - .x*sdx)] %>% .[, .N, iso3c] %>%
+                                                .[, `:=`(src = paste0("sd", .x), dir = "down")])
+    
+    outlier_sumry <- rbind(outlier_sumry_up, outlier_sumry_down)
+    outlier_sumry$vrbl <- vrbl
+    
+
+    ## generating outlier summary visual: look at where the outliers are, in wide format
+
+    if (nrow(outlier_sumry) > 0) {
+        outlier_sumry_vis <- dcast.data.table(outlier_sumry, iso3c ~ src, value.var = "N", drop = F)
+        
+        outlier_sumry_vis[,setdiff(sd_cols, names(outlier_sumry_vis))] <- NA
+        setorderv(outlier_sumry_vis, cols = sd_cols, order = -1, na.last = T)
+        outlier_sumry_vis$vrbl <- vrbl
+        
+    } else {
+
+        outlier_sumry_vis <- NULL
+    }
+
+    ## get actual data with outlier values
+    vrbl_cols <- c("iso3c", "year", vrbl, "src")
+    outlier_vlus <- map_dfr(seq(3,6), ~dtx[get(vrbl) > (meanx + .x*sdx) | get(vrbl) < (meanx - .x*sdx)] %>%
+                                          .[, src := paste0("sd", .x)] %>% .[, ..vrbl_cols]) %>% 
+        .[, paste0(src, collapse = ","), by=c("iso3c", "year", vrbl)]
+    
+    return(get(ret_obj))
+}
+
+check_outliers(df_reg_rts, "hnwi_nbr_5M", ret_obj = "outlier_sumry")
+check_outliers(df_reg_rts, "pm_density_global", ret_obj = "outlier_sumry")
+
+outlier_vars_to_check <- setdiff(vvs$all_rel_vars, "NPO.tax.exemption")
+
+
+outlier_sumry <- map_dfr(outlier_vars_to_check, ~check_outliers(df_reg_rts, .x, ret_obj = "outlier_sumry"))
+outlier_sumry[dir=="down", N:= -N] # make the ones where the outlier is to the bottom negative
+
+outlier_sumry[, .(cnt = sum(N)), iso3c][order(-cnt)] %>%
+    .[, country_name := countrycode(iso3c, "iso3c", "country.name")] 
+
+outlier_sumry %>% copy() %>% 
+    .[countrycode(iso3c, "iso3c", "un.region.name") != ("Europe")] %>% 
+    ggplot(aes(x=N, y=iso3c, fill = src)) +
+    geom_bar(stat="identity") +
+    facet_wrap(~vrbl, scales = "free")
+
+
+
+## check cases on country-variable basis
+## check_outliers(df_reg_rts, "ghweal992j", ret_obj = "outlier_vlus") %>% print(n=100)
+check_outliers(df_reg_rts, "hnwi_nbr_30M", ret_obj = "outlier_vlus") %>% print(n=100)
+viz_lines(df_reg_rts, y="hnwi_nbr_1M")
+viz_lines(df_reg_rts, y="hnwi_nbr_5M")
+viz_lines(df_reg_rts, y="hnwi_nbr_30M")
+viz_lines(df_reg_rts, y="hnwi_nbr_200M")
+viz_lines(df_reg_rts, y="hnwi_nbr_1B") ## doesn't make sense to use, too many zeroes even in richest ones
+
+
+
+
+check_outliers(df_reg_rts, "ghweal992j", ret_obj = "outlier_vlus") %>% print(n=100)
+
+check_outliers(df_reg_rts, "shweal992j_p90p100", ret_obj = "outlier_vlus") %>% print(n=100)
+check_outliers(df_reg_rts, "shweal992j_p99p100", ret_obj = "outlier_vlus") %>% print(n=100)
+
+filter(df_reg_rts, iso3c %in% c("DEU", "FRA")) %>% select(iso3c, year, smorc_dollar_fxm) %>% print(n=100)
+filter(df_reg_rts, iso3c %in% c("DEU", "QAT")) %>% select(iso3c, year, NY.GDP.PCAP.CDk) %>% print(n=100)
+
+check_outliers(df_reg_rts, "smorc_dollar_fxm", ret_obj = "outlier_vlus") %>% print(n=100)
+viz_lines(df_reg_rts, y="smorc_dollar_fxm", duration = 2, time_level = "cuts")
+
+filter(df_reg_rts, smorc_dollar_fxm > 1500) %>% select(iso3c, year, smorc_dollar_fxm) %>% print(n=50)
+filter(df_reg, iso3c == "QAT") %>% select(iso3c, year, smorc_dollar_fxm, nbr_opened) %>% print(n=50)
+check_outliers(cbn_dfs_rates$cbn_all, "smorc_dollar_fxm_lag0", ret_obj = "outlier_vlus") %>% print(n=50)
+map(cbn_dfs_counts, ~filter(.x, iso3c == "QAT") %>% nrow()) # check how many CYs affected
+
+
+check_outliers(df_reg_rts, "sptinc992j_p90p100", ret_obj = "outlier_vlus")
+viz_lines(df_reg_rts, y="sptinc992j_p90p100")
+filter(df_reg_rts, iso3c == "MWI") %>% select(iso3c, year, sptinc992j_p90p100) %>% print(n=50)
+
+check_outliers(df_reg_rts, "sptinc992j_p99p100", ret_obj = "outlier_vlus")
+viz_lines(df_reg_rts, y="sptinc992j_p99p100")
+
+check_outliers(df_reg_rts, "ti_tmitr_interact", ret_obj = "outlier_vlus")
+check_outliers(df_reg_rts, "tmitr_approx_linear20step", ret_obj = "outlier_vlus")
+viz_lines(df_reg_rts, y="tmitr_approx_linear20step", duration = 1)
+
+
+df_reg_rts %>% mutate(region = countrycode(iso3c, "iso3c", "un.region.name")) %>% 
+viz_lines(y="ghweal992j", facets = "region")
+
+
+
+## **** some more manual outlier detection, leading to yeeting of ISL and BHS
+## previous outlier detection not global
+
+## requires dt_splong
+
+    dt_splong[variable == "clctr_cnt_cpaer" & cbn_name == "cbn_no_cult_spending_and_mitr"] %>% atb() %>% 
+        viz_lines(y="value", duration = 4)
+
+    filter(df_reg_rts, SP.POP.TOTLm > 5)
+
+    filter(df_reg_rts, SP.POP.TOTLm > 5) %$%
+        hist(SP.POP.TOTLm, breaks = 100)
+
+    plot(map_int(seq(0, 10, 0.1), ~nrow(filter(cbn_dfs_rates$cbn_all, SP_POP_TOTLm_lag0_uscld < .x))), type = 'l')
+
+    viz_lines(cbn_dfs_rates$cbn_no_cult_spending_and_mitr, y = "hnwi_nbr_30M_lag0", duration = 4)
+
+    filter(cbn_dfs_rates$cbn_all, year == 2000) %>% select(iso3c, cnt_contemp_1990) %>%
+        arrange(-cnt_contemp_1990)
+
+    viz_lines(df_reg_rts, y = "cnt_contemp", duration = 4)
+    
+    ## df_reg_rts %>% filter(iso3c %in% c("BHS", "ISL")) %>% group_by(iso3c) %>% summarize(sum(nbr_opened))
+    ## filter(cbn_dfs_rates$cbn_no_cult_spending_and_mitr, iso3c == "ISL", nbr_opened == 1)
+
+    df_reg %>% filter(iso3c %in% c("BHS", "ISL")) %>% select(iso3c, year, clctr_cnt_cpaer) %>% print(n=200)
+
+
+
+
+## **** check squared weirdness
+filter(df_reg_rts, iso3c == "KOR") %>% select(iso3c, year, pm_density, pm_density_sqrd, SP.POP.TOTLm) %>%
+    arrange(-year)
+
+filter(df_reg, iso3c == "KOR") %>% select(iso3c, year, pm_density, pm_density_sqrd, SP.POP.TOTLm) %>%
+    arrange(-year)
+
+filter(df_reg_rts, iso3c == "DEU") %>% select(iso3c, year, pm_density, pm_density_sqrd, SP.POP.TOTLm) %>%
+    arrange(-year)
+
+filter(df_reg, iso3c == "DEU") %>% select(iso3c, year, pm_density, pm_density_sqrd, SP.POP.TOTLm) %>%
+    arrange(-year)
+
+
+
+
+## *** within
+
+df_lag <- df_reg_rts %>% adt() %>%
+    melt(id.vars = c("iso3c", "year"), measure.vars = vvs$all_rel_vars) %>%
+    .[order(iso3c, variable, year)] %>%
+    ## .[iso3c == "DEU" & variable %in% c("hnwi_nbr_30M", "gptinc992j")] %>% na.omit() %>% 
+    .[, vlu_lag := shift(value), by=c("iso3c", "variable")]
+    ## .[, x:= shift(value)] %>% 
+    ## print(n=80)
+    
+df_lag[variable == "nbr_closed_cum_global"]
+
+df_lag2 <- df_lag %>% na.omit() %>% copy() %>%
+    .[,`:=`(diff_minus =value - vlu_lag, diff_dvide1 = value/vlu_lag, diff_dvide2 = vlu_lag/value)] %>%
+    .[!is.infinite(diff_dvide1) & !is.infinite(diff_dvide2)] %>% # filter out infinite values
+    .[, max_diff := pmax(diff_dvide1, diff_dvide2)] %>% # pmax: parallelized max: pick which value is larger
+    .[, sd_v := sd(value), by = "variable"] %>% # add vrbl sd to see whether change is large in terms of overall SD
+    .[, sd_c := sd(value), by = c("iso3c", "variable")] %>% ## add country-variable sd sz
+    .[, `:=`(sd_sz_v = diff_minus/sd_v, sd_sz_c = diff_minus/sd_c)]
+    
+
+
+    
+hist(df_lag2$max_diff, breaks = 30)
+
+df_lag2[max_diff > 1.3 & sd_sz_v > 1] %>% print(n=100)
+
+df_lag2[max_diff > 2 & sd_sz_c > 2 & sd_sz_v > 0.4] %>% print(n=100)
+## hmm there seem to be some pretty drastic changes in hnwi in NOR (hnwi_
+## also in smorc, but that's fairly plausible
+
+## inspect HNWI variables, yuuuge fluctuations for ITA
+
+adt(df_reg_rts)[iso3c %in% c("NOR", "ITA", "DEU", "FRA")] %>% atb() %>% 
+    viz_lines(y="hnwi_nbr_30M", duration = 1)
+
+adt(df_reg)[iso3c == "USA", .(year, ghweal992j)] %>% na.omit() %>% plot(type='l')
+
+
+wealth_df <- get_wealth_df("wid_v3")
+
+filter(wealth_df, iso3c == "ITA") %>% select(year, pct_lo, wealth_usd21) %>% unique() %>%
+    ## filter(wealth_usd21 < 27e6 & wealth_usd21 > 25e6) %>%
+    filter(wealth_usd21 < 1e8 & wealth_usd21 > 2e7) %>% 
+    ggplot(aes(x=year, y=wealth_usd21, group = pct_lo)) +
+    geom_line() 
+    ## coord_cartesian(ylim = c(26e6, 27e6), xlim = c(2003,2005))
+
+
+
+    
+df_lag2[max_diff > 1.3 & sd_sz_c > 1 & sd_sz_v > 0.3] %>%
+    ## .[, .N, variable] %>% .[order(-N)]
+    .[variable == "sptinc992j_p99p100", .(iso3c, year, value, vlu_lag, sd_sz_c, sd_sz_v)] %>%
+    .[order(-sd_sz_c, -sd_sz_v)]  %>%
+    ## print(n=25) %>%
+    # just merge those with df_reg_rts to inspect
+    .[, .(iso3c)] %>% unique() %>% adt(df_reg_rts)[., on="iso3c"] %>% atb() %>% 
+    viz_lines(y="sptinc992j_p99p100", facets = "iso3c", duration = 1) # 
