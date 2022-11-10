@@ -765,14 +765,15 @@ gen_plt_hyp_thld_res <- function(df_anls_base, gof_df_cbn) {
 
     ## eval_all_hyps(top_coefs, 0.2)
 
-    hyp_thld_res <- future_map_dfr(seq(0,1, by = 0.05), ~eval_all_hyps(top_coefs, hyp_thld = .x))
+    hyp_thld_res <- future_map_dfr(seq(-1,1, by = 0.05), ~eval_all_hyps(top_coefs, hyp_thld = .x))
 
     plt_hyp_thld_res <- hyp_thld_res %>% 
         ggplot(aes(x=hyp_thld, y=mean_hyp_eval, color = cbn_name)) +
         geom_line() + 
         facet_wrap(~hyp_id, ncol = 2, labeller = labeller(hyp_id = vvs$hyp_lbls)) +
         labs(x="Threshold (variable SD)", y = "proportion of coefficients above threshold") +
-        theme(legend.position = c(0.7, 0.1))
+        theme(legend.position = c(0.7, 0.1)) +
+        geom_vline(xintercept = 0, linetype = "dashed")
 
     return(plt_hyp_thld_res)
 }

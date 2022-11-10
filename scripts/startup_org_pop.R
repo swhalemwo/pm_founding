@@ -36,6 +36,7 @@ library(stringr)
 library(pbmcapply)
 library(purrr)
 library(Hmisc, include.only = "latexTranslate")
+library(furrr)
 
 filter <- dplyr::filter
 melt <- data.table::melt
