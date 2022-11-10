@@ -677,11 +677,113 @@ gen_plt_cvrgnc <- function(gof_df_cbn) {
 
 
 
+eval_h1a <- function(rows, hyp_thld) {
+    rows[, hyp_eval := coef>hyp_thld] %>%
+        .[, hyp_id := "h1a"] %>%
+        .[, coef := NULL]
+}
+
+eval_h1b <- function(rows, hyp_thld) {
+    #' hypothesis test: in cbn_no_cult_spending_and_mitr: whether Ind.tax.incentives > hyp_thld
+    #' other combinations: whether interaction between tax deductibility of donations and TMITR > hyp_thld
+        
+    rows[cbn_name == "cbn_no_cult_spending_and_mitr" , hyp_eval := coef > hyp_thld] %>% 
+        .[cbn_name != "cbn_no_cult_spending_and_mitr" & vrbl_name_unlag == "ti_tmitr_interact",
+          hyp_eval := coef > hyp_thld] %>%
+        .[!is.na(hyp_eval)] %>% # deleting tax deductibility of donations when interaction is there
+        .[, `:=`(coef = NULL, vrbl_name_unlag = NULL)] %>%
+        .[, hyp_id := "h1b"]
+}
+
+
+eval_h2a <- function(rows, hyp_thld) {
+    rows[, hyp_eval := coef < -hyp_thld] %>%
+        .[, hyp_id := "h2a"] %>%
+        .[, coef := NULL]
+}
+
+eval_h2b <- function(rows, hyp_thld) {
+    rows[, hyp_eval := coef > hyp_thld] %>%
+        .[, hyp_id := "h2b"] %>%
+        .[, coef := NULL]
+}
+
+
+eval_h3a <- function(rows, hyp_thld) {
+    rows[, hyp_eval := coef > hyp_thld] %>%
+        .[, hyp_id := "h3a"] %>%
+        .[, coef := NULL]
+}
+
+eval_h3b <- function(rows, hyp_thld) {
+    rows[, hyp_eval := coef > hyp_thld] %>%
+        .[, hyp_id := "h3b"] %>%
+        .[, coef := NULL]
+}
+
+eval_h4 <- function(rows, hyp_thld) {
+    rows[, hyp_eval := coef > hyp_thld] %>%
+        .[, hyp_id := "h4"] %>%
+        .[, coef := NULL]
+}
+
+
+
+eval_all_hyps <- function(top_coefs, hyp_thld) {
+
+    hyp_res <- rbind(
+        top_coefs[vrbl_name_unlag == "NPO.tax.exemption", .(coef, cbn_name)] %>% eval_h1a(hyp_thld),
+        top_coefs[vrbl_name_unlag %in% c("Ind.tax.incentives", "ti_tmitr_interact"),
+                  .(cbn_name, vrbl_name_unlag, coef)] %>% eval_h1b(hyp_thld),
+        top_coefs[vrbl_name_unlag == "smorc_dollar_fxm", .(coef, cbn_name)] %>% eval_h2a(hyp_thld),
+        top_coefs[vrbl_name_unlag == "smorc_dollar_fxm", .(coef, cbn_name)] %>% eval_h2b(hyp_thld),
+        top_coefs[vrbl_name_unlag %in% c("gptinc992j", "sptinc992j_p90p100", "sptinc992j_p99p100"),
+                  .(coef, cbn_name)] %>% eval_h3a(hyp_thld),
+        top_coefs[vrbl_name_unlag %in% c("ghweal992j", "shweal992j_p90p100", "shweal992j_p99p100"),
+                  .(coef, cbn_name)] %>% eval_h3b(hyp_thld),
+        top_coefs[vrbl_name_unlag %in% sprintf("hnwi_nbr_%sM", c(1,5,30,200)),
+                  .(coef, cbn_name)] %>% eval_h4(hyp_thld))
+
+    ## evaluate the hyps per hyp_thld
+    hyp_res[, hyp_thld := hyp_thld]
+
+    hyp_res[, .(mean_hyp_eval = mean(hyp_eval)), by = .(hyp_id, cbn_name, hyp_thld)]
+        
+}
+
+
+gen_plt_hyp_thld_res <- function(df_anls_base, gof_df_cbn) {
+
+    top_mdls_per_thld_choice <- gof_df_cbn %>% adt() %>%
+        .[!is.na(gof_value) & gof_names == "log_likelihood"] %>% # focus on lls
+        .[, vrbl_choice := gsub("[1-5]", "0", base_lag_spec)] %>% # again generate vrbl_choice urg
+        .[, .SD[which.max(gof_value)], by=.(cbn_name, vrbl_choice)] %>% # pick best fitting model
+        .[, .(mdl_id)]
+
+    top_coefs <- df_anls_base %>% adt() %>% .[top_mdls_per_thld_choice, on ="mdl_id"]
+
+
+    ## eval_all_hyps(top_coefs, 0.2)
+
+    hyp_thld_res <- future_map_dfr(seq(0,1, by = 0.05), ~eval_all_hyps(top_coefs, hyp_thld = .x))
+
+    plt_hyp_thld_res <- hyp_thld_res %>% 
+        ggplot(aes(x=hyp_thld, y=mean_hyp_eval, color = cbn_name)) +
+        geom_line() + 
+        facet_wrap(~hyp_id, ncol = 2, labeller = labeller(hyp_id = vvs$hyp_lbls)) +
+        labs(x="Threshold (variable SD)", y = "proportion of coefficients above threshold") +
+        theme(legend.position = c(0.7, 0.1))
+
+    return(plt_hyp_thld_res)
+}
+
+
 gen_reg_res_plts <- function(reg_res_objs, vvs, NBR_MDLS) {
     if (as.character(match.call()[[1]]) %in% fstd){browser()}
     #' generate all the plots
     
 
+    df_anls_base <- reg_res_objs$df_anls_base
     gof_df_cbn <- reg_res_objs$gof_df_cbn
     df_anls_within <- reg_res_objs$df_anls_within
     df_best_mdls <- reg_res_objs$df_best_mdls
@@ -692,12 +794,15 @@ gen_reg_res_plts <- function(reg_res_objs, vvs, NBR_MDLS) {
     plt_reg_res_all = gen_plt_reg_res_all(df_anls_within, vvs)
     plt_best_models_wlag = gen_plt_best_mdls_wlag(df_best_mdls, vvs)
     plt_best_models_condensed = gen_plt_mdl_summary(mdl_summary, vvs)
+    plt_hyp_thld_res <- gen_plt_hyp_thld_res(df_anls_base, gof_df_cbn)
 
     l_plts <- list(plt_cbn_log_likelihoods= plt_cbn_log_likelihoods,
                    plt_reg_res_within = plt_reg_res_within,
                    plt_reg_res_all = plt_reg_res_all,
                    plt_best_models_wlag = plt_best_models_wlag,
-                   plt_best_models_condensed = plt_best_models_condensed)
+                   plt_best_models_condensed = plt_best_models_condensed,
+                   plt_hyp_thld_res = plt_hyp_thld_res)
+    
 
     
     ## only generate lag cprn plot if multiple regcmds are used
@@ -733,7 +838,8 @@ gen_plt_cfgs <- function() {
             plt_best_models_wlag = list(filename = "best_models_wlag.pdf", width = 8, height = 12),
             plt_best_models_condensed = list(filename = "best_models_condensed.pdf", width = 9, height = 8),
             plt_lag_cprn = list(filename = "lag_cprn.pdf", width = 7, height = 5),
-            plt_cvrgnc = list(filename = "crvgnc.pdf", width = 5, height = 7)
+            plt_cvrgnc = list(filename = "crvgnc.pdf", width = 5, height = 7),
+            plt_hyp_thld_res = list(filename = "hyp_thld_res.pdf", width = 7, height = 6)
         )
     )
 
@@ -846,7 +952,12 @@ reg_res <- list()
 
 ## generate plots, construct configs
 reg_res$plts <- gen_reg_res_plts(reg_res_objs, vvs, NBR_MDLS)
+
 reg_res$plt_cfgs <- gen_plt_cfgs()
+render_reg_res("plt_hyp_thld_res", reg_res, reg_res$plt_cfgs, batch_version = "v62")
+
+map(names(reg_res$plts), ~render_reg_res(.x, reg_res, reg_res$plt_cfgs, batch_version = "v62"))
+
 
 ## ** more version comparison 
 
