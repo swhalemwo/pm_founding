@@ -138,7 +138,7 @@ gen_cbn_plots <- function(cbn_dfs, df_reg) {
 }
 
 cbn_plots <- gen_cbn_plots(cbn_dfs_rates_uscld, df_reg)
-## lapply(cbn_plots, \(x) plt_to_pdf(x$plt, width = x$width, height=x$height, fig_name = paste0(x$name, "_v2")))
+lapply(cbn_plots, \(x) plt_to_pdf(x$plt, width = x$width, height=x$height, fig_name = paste0(x$name, "_v2")))
 
 ## * xtsum based descriptives
 
