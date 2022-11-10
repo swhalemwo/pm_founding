@@ -35,7 +35,7 @@ source(paste0(SCRIPT_DIR, "cbn_dfs.R"))
 source(paste0(SCRIPT_DIR, "marginal_tax_rates.R"))
 source(paste0(SCRIPT_DIR, "hdi.R"))
 source(paste0(SCRIPT_DIR, "gen_rates.R"))
-## source(paste0(SCRIPT_DIR, "descriptives.R"))
+
 
 
 
@@ -47,6 +47,8 @@ df_anls <- create_anls_df(df_wb, df_open)
 df_reg_pre_impt <- get_df_reg(df_anls)
 df_reg <- impute_df_reg_vrbls(df_reg_pre_impt)
 df_reg_rts <- gen_df_reg_rts(df_reg)
+
+source(paste0(SCRIPT_DIR, "descriptives.R"))
 
 source(paste0(SCRIPT_DIR, "regression.R"))
 
