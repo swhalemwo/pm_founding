@@ -355,19 +355,22 @@ gen_render_sum_stats_rates <- function(df_regx, dfs_cbnsx, vvs) {
     cmidrules <- map_chr(seq(1,3), ~sprintf("\\cmidrule(r){%s-%s}", (.x * 4)-2, (.x*4)+1)) %>% paste0(collapse = "")
     ## generate the headers: some hacking with hlines/cmidrules
     clm_names <- list()
-    clm_names$pos <- list(-1, -1)
+    clm_names$pos <- list(-1, -1, nrow(wide_tbl_sprt))
     clm_names$command <- c(
         paste0(paste0(c("\\hline \n ",
                         map_chr(cbn_lbls_dt$cbn_lbl, ~sprintf("\\multicolumn{4}{c}{%s}", .x))),
                       collapse = " & "),  # gen dataset n=x
                " \\\\ \n", cmidrules), # add dataset cmidrules separators
         ## gen stat headers1
-        paste0(paste0(c(" \n Variable", rep(stat_dt_sprt$stat_lbl, 3)), collapse = " & "), " \\\\ \n"))
+        paste0(paste0(c(" \n Variable", rep(stat_dt_sprt$stat_lbl, 3)), collapse = " & "), " \\\\ \n"),
+        sprintf("\\hline \\multicolumn{%s}{l}{\\footnotesize{%s}}\n", ncol(wide_tbl_sprt),
+               "all country-level count predictors are per million population; all monetary amounts are 2021 USD"))
 
 
-    xtable(wide_tbl_sprt, align = c("l", "p{6.5cm}", rep("l", 12))) %>%
+    xtable(wide_tbl_sprt, align = c("l", "p{7cm}", rep("l", 12)),
+           label = "summary_stats") %>%
         print(include.rownames = F, include.colnames = F,
-              file = paste0(TABLE_DIR, "summary_stats4.tex"),
+              file = paste0(TABLE_DIR, "summary_stats.tex"),
               add.to.row = clm_names,
               hline.after = c(0),
               sanitize.text.function = identity)
