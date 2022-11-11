@@ -1187,6 +1187,14 @@ gen_vrbl_vectors <- function() {
         "h3b" = "H3: more wealth inequality -> more PMs",
         "h4"  = "H4: more (U/V)HNWIs -> more PMs")
 
+    krnl_lbls <- c(
+        "h1a" = "H1: Tax exemption of non-profits",
+        "h1b" = "H1: Tax deductibility of donations",
+        "h2" = "H2: Gvt cultural spending",
+        "h3a" = "H3: Income inequality variables",
+        "h3b" = "H3: Wealth inequality variables",
+        "h4"  = "H4: (U/V)HNWIs")
+
 
     if (!all(all_rel_vars %in% names(vrbl_lbls))) {
         stop("not all relevant variables have a variable label")
@@ -1211,7 +1219,8 @@ gen_vrbl_vectors <- function() {
         vrbl_lbls = vrbl_lbls,
         cbn_lbls = cbn_lbls,
         regcmd_lbls = regcmd_lbls,
-        hyp_lbls = hyp_lbls
+        hyp_lbls = hyp_lbls,
+        krnl_lbls = krnl_lbls
     )
     )
 }
