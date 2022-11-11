@@ -20,11 +20,15 @@ While multiple hypotheses for the spread of this new form have been raised, syst
 #
 In particular, the rise of private museums has been hypothesized to be associated to tax incentives, reductions in government spending, increasing inequality and increasing elite wealth. 
 #
-Combining various socio-economic and art field data sources, I conduct a quantitative test of these hypotheses of datasets of 1265, 2524 and 3445 country years using random effects negative binomial regression models.
+Combining various socio-economic and art field data sources, I conduct a quantitative test of these hypotheses of datasets of 1258, 2574 and 3400 country years using random effects negative binomial regression models.
 #
-While I find moderate support for a role of tax incentives, government spending is found to positively (not negatively) impact private museum founding; furthermore the effects of inequality are divergent, and no effect is found for increases in elite wealth.
+While I find moderate support for a role of tax incentives, government spending is found to be associated primarily positively (not, as hypothesized, negatively) with private museum founding.
 #
-I conclude with a call for greater theoretical elaboration and precision to further investigate founding causes.
+Furthermore the effects of inequality are divergent, as a positive association with private museum founding is found for wealth inequality and a negative one for income inequality.
+#
+Finally, elite wealth effects are primarily negative (some although are positive) as well as small.
+#
+I conclude with a call for greater theoretical elaboration and measurement precision to further investigate founding causes.
 
 
 
@@ -39,7 +43,7 @@ These institutions can vary substantially in their organizational characteristic
 
 Effectively delineating private museums is not a straightforward task, and depends on the conceptualization of the terms "private" and "museum", neither of which are unambiguous concepts either.
 #
-For this study we understand "private" as set up by a private art collector or their descendants; such a focus on the individual founder thus does not include museums operated by companies (what may more generally be called the "private sector") or groups of people.
+For this study I use "private" to denote being established by a private art collector, art collector couple, or their descendants; such a focus on the individual founder thus does not include museums operated by companies (what may more generally be called the "private sector") or groups of people.
 #
 A "museum" is conceptualized as an organization that possesses a building and a collection of its own (which excludes kunsthalles and exhibition centers), which is sufficiently accessible to the public.
 #
@@ -63,7 +67,7 @@ The literature has proposed a number of factors that might have facilitated thei
 #
 However, previous research has been primarily conducted as case studies of individual museums (sometimes based on fieldwork, but often also only on media reports); systematic comparative work has so far been limited.
 #
-Furthermore, by focusing on museums that have been founded, existing research has generally sampled on the dependent variable; i.e. limited attention has been given to countries without substantial private museum funding (and to a lesser extent time periods, as previous studies often do discuss the longitudinal development of the country where the cases are located). 
+Furthermore, by focusing on museums that have been founded, existing research has generally sampled on the dependent variable; i.e. limited attention has been given to countries without substantial private museum founding (and to a lesser extent time periods, as previous studies often do discuss the longitudinal development of the country where the cases are located). 
 #
 At the same time, substantial interest in the general population of private museum exists:
 #
@@ -78,10 +82,7 @@ In the remainder of the paper, I review the literature on the causes of private 
 #
 I then conduct several regression analyses to investigate the impact that each of the main mechanisms (tax incentives, government spending, inequality and elite wealth).
 #
-I find moderate support for a positive effect of tax incentives, a positive significant effect of cultural spending, divergent effects of different inequality measures and no support for an effect of elite wealth.
-
-
-
+I find support for a positive effect of tax incentives, a positive effect of cultural spending, divergent effects of different inequality measures and limited support for an effect of elite wealth.
 
 ** Theoretical framework
 
@@ -149,16 +150,15 @@ In fact, other motivations (such as the aforementioned passion for the arts, as 
 However, an different reason why tax incentives might not have noticeable effects might be their limited knowledge and familiarity among potential beneficiaries (collectors deliberating the choice of opening a museum), a mechanism which has been argued to negatively effect private museum founding in China [[parencite:&DeNigris_2018_museums p.222]] and charitable donations in Europe generally [[parencite:&Hemels_2017_incentives;&Stanco_2014_fiscaal]].
 #
 While lack of familiarity might prevent an effect of tax incentives that exist, it seems unlikely to be the case here as the topic of tax incentives has found substantive coverage in publications both scholarly parencite:Walker_2019_collector,Reich_2018_philantropy,Zorloni_2016_artmanagement,Zolberg_2000_privatization and journalistic (e.g. cite:Boucher_2016_private,Brown_Pes_2018_taxpayers,Boucher_2020_solow,Halperin_2018_glenstone,Cohen_2015_warhol,Honig_2016_IRS).
+#
+Furthermore, the decision of opening a private museum is likely receiving more deliberation than smaller acts of philanthropy (such as donations) due to the size of the necessary planning efforts (which sometimes results in the establishment of separate foundations staffed by professionals); it is hence unlikely that during this planning process financing pathways through tax incentives are not explored.
 
 
-
-Thus it seems plausible to assume an influence of tax breaks, leading to the following hypothesis:
+It thus seems plausible to assume an influence of tax breaks, leading to the following hypothesis:
 
 #+latex: \bigbreak
 #+latex: \noindent
 *Hypothesis 1*: Tax incentives are associated with higher rates of private museum founding.
-
-
 
 
 **** State funding
@@ -180,7 +180,7 @@ The term "crowding-out" originated in response to the question of how charitable
 #
 While the situation is a different one here, with private museum founding being related to /decreasing/ state funding, the underlying theoretical mechanism is the same:
 #
-In both cases, altruistic donors are motivated in the provision of public goods, and thus allocate their donations in response to the funding choices of the government.
+In both cases, donors are motivated (for altruistic or other reasons) to provide of public goods, and thus allocate their donations in response to the funding choices of the government.
 # 
 However, [[textcite:&DeWit_etal_2018_philanthropy]] and [[textcite:&Lena_2019_entitled]] argue that government funding could also signal valuation of an activity, which raises the possibility of a positive association between government funding and private museum founding.
 
@@ -237,13 +237,13 @@ As these scholars unanimously posit a positive association between inequality an
 
 **** Elite Wealth
 
-The founding of private museums has been associated with the rise of (Very or Ultra) High Net Worth Individuals (HNWI, VHNWI, UHNWI, corresponding to a wealth of 1 million, 5 million and 30 million USD respectively) [[parencite:&Walker_2019_collector p.15/39]] as these "spaces generate costs and mostly no incomes" (cite:&Gnyp_2015_collectors p.236, cite:&Zorloni_Resch_2016_opportunities p.16), and hence are only feasible to maintain by individuals with substantial disposable funds (also cf. [[cite:&Reckhow_2020_politics]]).
+The founding of private museums has been associated with the rise of (Very or Ultra) High Net Worth Individuals (HNWI, VHNWI, UHNWI; corresponding to a wealth of 1 million, 5 million and 30 million USD respectively) [[parencite:&Walker_2019_collector p.15/39]] as these "spaces generate costs and mostly no incomes" (cite:&Gnyp_2015_collectors p.236, cite:&Zorloni_Resch_2016_opportunities p.16), and hence are only feasible to maintain by individuals with substantial disposable funds (also cf. [[cite:&Reckhow_2020_politics]]).
 #
 However, there have also been calls to caution against an exclusive focus on "super rich collectors who attract so much attention [as] there are many others that have made and still make things possible with comparatively small means" [[parencite:&Bechtler_Imhof_2018_future p.12]].
 #
 However, even the "comparatively small means" that textcite:&Bechtler_Imhof_2018_future refer to are presumably "comparatively small" only in relation to the absolutely richest individuals (e.g. billionaires), and are thus presumably still located in the range of what would be classified as HNWI.
 # 
-Thus a hypothesis on elite wealth can be formulated as: 
+A hypothesis on elite wealth can thus be formulated as: 
 
 #+latex: \bigbreak
 #+latex: \noindent
@@ -273,11 +273,11 @@ Therefore the more aggregate unit country-years is used as the unit of analysis,
 *** Dependent Variable: Number of private museum foundings per country-year
 
 #+label: fig:openings
-#+caption: Private Museum openings (absolute and population-rate)
+#+caption: Private Museum openings (absolute and population-rate) of 12 countries with highest counts. 
 [[file:figures/foundings_country_cnt_and_rate.pdf]]
 
 
-To document the development of private museums, the research team has combined existing databases of private contemporary art museums parencite:LarrysList_2015_report,Independent_collectors,global_private_museum_network_2020_museums,BMW_Independent_Collectors_2018_artguide,vdEerenbeemt_vdWauw_DDD_2016.
+To document the development of private museums, existing databases of private contemporary art museums parencite:LarrysList_2015_report,Independent_collectors,global_private_museum_network_2020_museums,BMW_Independent_Collectors_2018_artguide,vdEerenbeemt_vdWauw_DDD_2016 have been combined.
 #
 Additionally, web research has been conducted by searching in a number of online art media[fn::The media sources used were: Artforum, Artnet, Art Territory, Artsy, My Art Guides, Artnews, Artfcity, Frieze, The Art Wolf, The Art Newspaper, Art Privee, Widewalls, White Hot Magazine and Hyperallergic.] for the term "private museum", "private art museum" and "private contemporary art museum".
 #
@@ -285,7 +285,7 @@ After recording the names and deleting duplicates, it was investigated using pub
 #
 Following this, additional information about each museum was collected by student assistants, the most relevant for this research being country and opening year.
 #
-Currently, the database includes 455 museums located in 59 countries, with the majority being located in Western Europe, North America and East Asia.
+Currently, the database includes 548 museums located in 63 countries, with the majority being located in Western Europe (148), East Asia (96) and North America (84).
 #
 Information on country and opening year is used to construct a count indicator of the number of private museums opened in each country-year.
 #
@@ -299,17 +299,14 @@ The report "Rules to Give - A Global Philanthropy Legal Environment Index" [[par
 #
 I use the binary indicators whether non-profits are exempt from at least some taxes, and whether individuals can receive tax deductions for donations to non-profits.
 #
-The two binary variables are summed up to create an indicator ranging from 0 to 2 describing the degree of tax incentives.
-#
 The report covers 193 countries, but only covers the state of the legal environment at its publication date.
 #
 As I have been unable to find good longitudinal data sources on tax incentives covering large numbers of countries (especially for the earlier parts of the time period) tax incentives can only be investigated in regards to between-country differences.
 
 
-Marginal income tax rate data is taken from the Index of Economic Freedom of the World parencite:&Fraser_2022_economic_freedom, of which it constitutes a sub-item.
-
-
-As marginal income tax rates are only expected to provide an incentive if tax donations are tax-deductible, I calculate an interaction term between the extent of tax incentives and marginal income tax rates (note: this specification is incorrect as marginal income tax rates should only be interacted with whether charitable donations are tax-deductible; but I lack the time to fix this now).
+Top marginal income tax rate data is taken from the Index of Economic Freedom of the World parencite:&Fraser_2022_economic_freedom, of which it constitutes a sub-item.
+# 
+As top marginal income tax rates are only expected to provide an incentive if tax donations are tax-deductible, I calculate an interaction term between the tax-deductibility of donations and marginal income tax rates (as tax deductibility is a binary variable, the value of the interaction term is 0 for countries in which charitable donations are not tax-deductible, and the value of top marginal income tax rates otherwise).
  
 **** Cultural Spending
 
@@ -328,7 +325,7 @@ This combination of the different data sources requires the harmonization of dif
 #
 Whereas the the IMF and Eurostat report data exclusively as "Total government expenditure" (TLYCG), the UN uses "Final consumption expenditure" (P3CG); the OECD reports data in both formats ("Total government expenditure" is calculated from "Final consumption expenditure" as well as a number of other items, such as compensation of employees, subsidies and property income). 
 #
-Furthermore within each format, minor variations exist between data sources, the data for a country-year is thus chosen in order of OECD followed by UN for P3CG and OECD followed by IMF followed by Eurostat for TLYCG (for the UN data, sometimes data is also reported in multiple Series corresponding to different SNA methodologies (see [[cite:&UN_2022_consumption]] footnote 2 for details); here SNA 2008 methodology is chosen if available, otherwise the mean of the other series is taken).
+Furthermore within each format, minor variations exist between data sources, the data for a country-year is thus chosen in order of OECD followed by UN for P3CG, and OECD followed by IMF followed by Eurostat for TLYCG (for the UN data, sometimes data is also reported in multiple Series corresponding to different SNA methodologies (see [[cite:&UN_2022_consumption]] footnote 2 for details); here SNA 2008 methodology is chosen if available, otherwise the mean of the other series is taken).
 
 
 As the overall goal is to create a complete picture of government expenditure, Total government expenditure has to be estimated based on Final consumption expenditure for country-years where data is only available for the latter.
@@ -338,14 +335,13 @@ For countries where TLYCG and P3CG series have some overlap and years exist with
 For countries with only P3CG data, the average ratio of all country-years with both P3CG and TLYCG data is chosen to impute TLYCG (as on average P3CG is 58% of TLYCG, the average scaler is 1/0.58 = 1.72). 
 #
 
-As the amounts reported are in local currencies, they are converted to 2021 US dollar using market exchange rates from the World Inequality Database [[citeyear:&WID_2021_WID]].
-
+As the amounts reported are in current local currency units, they are converted to 2021 US dollar using price indices and market exchange rates from the World Inequality Database [[citeyear:&WID_2021_WID]].[fn::An alternative would be to use purchasing power parity exchange rates, which reflect local price levels (as [[textcite:&Blanchet_2017_conversions]] argues, 1 euro or 7 yuan allow the purchase of the same amount of oil on international markets, but different amounts of food in Beijing or Paris). As the art market is however substantially transnational [[parencite:&Velthuis_Curioni_2015_canvases]], and discussion of government spending heavily revolves around acquisition budgets (which are dedicated to the purchase of artworks that often are  international), I consider market exchange rates more appropriate.]
 
 
 **** High Net Worth Individuals
 I use the Wealth Inequality Database (WID, [[citeyear:&WID_2021_WID]]) to calculate the first the percentage, and then the number of High Net Worth Individuals (HNWI), i.e. the population proportion above a certain wealth threshold in a given year. 
 #
-The WID contains for each country-year measures of the wealth at various quantile threshold, for example the value for the 90th percentile describes the amount of wealth of the least wealthy member of the top 10%.
+The WID contains for each country-year measures of the wealth at various quantile thresholds, i.e. the value for the 90th percentile describes the amount of wealth of the least wealthy member of the top 10%.
 #
 With higher quantiles, higher resolutions are included: Up to the 99th percentile, the largest step is 1% (e.g. 91,92,93th etc quantile), while the 99th percentile is subdivided further into percentile tenths (99.1,99.2 etc).
 #
@@ -353,9 +349,9 @@ The top 0.1% and 0.01% (the 99.9th and 99.99th quantile) are also similarly subd
 #
 Amounts are reported in local currencies and are therefore converted into 2021 USD using market exchange rates provided by the WID.
 #
-I use these thresholds to calculate the percentage of people above a certain threshold (I use thresholds of 1 million, 5 million, 30 million, 200 million and 1 billion USD) by linearly interpolating between the two percentiles above and below the respective threshold.
+I use these thresholds to calculate the percentage of people above a certain threshold (I use thresholds of 1 million, 5 million, 30 million, 200 million USD) by linearly interpolating between the two percentiles above and below the respective threshold.
 #
-If the threshold exceeds the value of the highest quantile, I assign a zero.[fn::Linear interpolation likely overestimates the percentage of HNWIs for cases where data on at least one higher threshold exists (as the wealth distribution probably does not increase linearly), and underestimates it when no higher threshold exists (as necessarily 0 is assigned), so it might be worth to develop a more sophisticated calculation. Similarly I have yet to check if/how the resolution (i.e. the distance to the closest percentiles) affects the estimates]
+If the threshold exceeds the value of the highest quantile, I assign a zero.[fn::Linear interpolation likely overestimates the percentage of HNWIs for cases where data on at least one higher threshold exists (as the wealth distribution probably does not increase linearly), and underestimates it when no higher threshold exists (as necessarily 0 is assigned). Nevertheless, I argue that the possibility to set arbitrary wealth thresholds provides valuable insights.]
 #
 The so-obtained proportion of HNWIs is converted into a count using population size from World Bank data.
 
@@ -367,12 +363,9 @@ The WID also provides gini coefficients for wealth and pre-tax income[fn::while 
 
 
 
-*** Controls
+*** Control Variables
 **** GDP per capita and Population size
 Wealthier nations likely have larger population shares interested in art consumption, thus increasing the prestige private museum founders anticipate when making the choice whether to found a private museum.
-#
-Population size similarly accounts for potential audience size (in a relatively rough way). 
-
 
 **** Artnews collectors
 As private museums are founded by collectors, they are more likely to be founded in countries and times where many potential founders exist.
@@ -383,7 +376,11 @@ For this purpose I construct an indicator of the population of art collectors fr
 #
 As Artnews includes the country of residence of each collector, I construct the collector population indicator for a country-year as the number of collectors included in the Artnews ranking for that country and year (thus if no collector is included for a given country in a given year, the value of this index is 0). 
 #
-Artnews furthermore includes information on the genre(s) of each collector, which allows me to only include collectors who collect modern and contemporary art.[fn:: So far this data is not used most effectively, as dropping from the index does not mean a collector has stopped being active. The data is limited furthermore by the intransparency of the selection criteria and the possible presence of reverse causality, e.g. if the announcement of opening a private museum years before it opened could place the collector on the ranking.]
+Artnews furthermore includes information on the genre(s) of each collector, which allows me to only include collectors who collect modern and contemporary art.
+#
+I argue that the number of Artnews collectors per country-year constitutes an indicator of the wider propensity of art collecting in a country (rather than a pool of individuals able to establish a museum) and therefore do not remove art collectors from the index after they have founded a museum (which concerns 141 collectors).
+
+
 
 **** Density dependence
 Research on organizational population parencite:&Carroll_1989_density;&Hannan_1992_dynamics has argued that foundings of organization are driven by legitimacy and competition:
@@ -410,13 +407,19 @@ Furthermore, the marginal value of a private museum as an instrument of distinct
 
 
 
-While the non-profit character of private museum might lead to weaker density effect sizes than in other for-profit organizational populations, it is still worth investigating.
+Thus while the non-profit character of private museum might lead to weaker density effect sizes than in other for-profit organizational populations, it is still worth to control for.
 #
-I therefore include for each country-year terms of the measures based on cumulative number of private museums foundings opened in a country until the given year, in particular a linear term (which measures legitimacy) and a squared term (which measures competition).[fn::So far only cumulative foundings, not actual density is used (which also includes the closing of private museums) as the data of closing dates is still being finalized]
+I therefore include for each country-year measures based on the number of private museums open at that year, in particular a linear term (which measures legitimacy) and a squared term (which measures competition).
 #
 Both these operationalizations follow the density-dependence literature, and result in competition growing slowly at first, but outpacing legitimacy as the organizational population increases.
 
+Given to the transnational nature of the art field (due which legitimation and competition might not be limited to country borders) I also add global linear and squared density measures which are the same for every country in a given year and describe the number of museums open worldwide in a given year.
 
+Another key variable of the organizational population concerns closures:
+# 
+While in the popular imaginary a museum might be seen as permanent, the private museum population has seen substantial closures with 71 institutions having been closed until now (cf. [[cite:&Velthuis_Gera_forthcoming_fragility]]), and growing awareness of the fragility of these institutions might in turn make their founding less attractive to founders keen of leaving a mark in history.
+#
+I therefore add a global variable of the number of cumulative museum closures to capture the potential delegitimating effect of the closing of institutions that often are planned as personal legacies [[parencite:&Walker_2019_collector]].[fn::While the data would allow to measure this variable also on a country-level, the fact that seven of these closures have taken place in Switzerland would turn this country into a very large outlier (the only country with more closures, the United States where 12 private museums closed, has a much larger population) which in turn would bias coefficient estimates into disproportionately reflecting the Swiss case. Using an alternative measurement of the proportion between museums opened and closed would result in a similar outlier situation for the United States and Netherlands, as these countries had seen private museum closures in the 1990s. Since the private museum population was small compared to what it would later grow towards in the 2000s and 2010s, the high closing/opening ratios for these country years would dominate the coefficient estimates. Until a more effective solution is found, I thus limit myself to a measuring the global effect of museum closures.]
 
 
 **** Museum population
@@ -436,7 +439,9 @@ However, existing museums may also compete with private museums for audiences, a
 
 To control for these potential influences, I use the Museums of the World database [[parencite:&deGruyter_2021_MOW]] to describe a country's art museum population. 
 #
-As it seems that the database has not been maintained in the last years (due to a strong decline in museum foundings being covered) I (for now) use it only to construct a cross-sectional indicator of the number of modern and contemporary art museums having opened until 1995 (note: I realize now I should have included a squared term as well, but don't have the time to do that now).
+As it seems that the database has not been maintained in the last years (due to a strong decline in museum foundings being covered) I use it only to construct time-invariant indicators of the number of modern and contemporary art museums having opened until 1990.
+#
+In order to measure both legitimating and competitive effects, I include a linear and squared terms as in the private museum population measures.
 #
 For the construction of this indicator I exclude all museums that are also included in the private museum database constructed by the research team. 
 # could move it to cultural spending?
@@ -449,8 +454,7 @@ During data collection a number of challenges became apparent:
 #
 First, data coverage on some variables was substantially limited; second, the previous literature was not specific enough to derive a single precise measurement of some concepts, namely inequality and HNWIs, and third, the temporal duration of the mechanisms has not been investigated in the literature. 
 #
-
-
+I address these challenges as follows: 
 
 *** Variable combinations 
 #+label: fig:cpltns_vrbl_plot
@@ -468,21 +472,41 @@ Only using the most complete dataset would entail a large reduction of countries
 #
 However coefficient estimates could also be biased by omitting key variables.
 #
-To partly remedy these shortcomings, I construct multiple datasets (also referred to as "variable combinations" or "cbn" in figures) which vary in their inclusion of variables and country years (the more variables are included, the fewer country years can be covered).
+To partly remedy these shortcomings, I construct multiple datasets which vary in their inclusion of variables and country years (the more variables are included, the fewer country years can be covered).
 #
-In particular, I construct one dataset with all variables (1265 country years, 85 countries), one with all variables except cultural spending (2524 country years, 154 countries), and one with all variables except cultural spending and marginal income tax rates (3445 country years, 168 countries).
+In particular, I construct one dataset with all variables (1258 country years, 86 countries; referred to as "DS all IVs"), one with all variables except cultural spending (2574 country years, 153 countries; "DS --CuSp"), and one with all variables except cultural spending and marginal income tax rates (3400 country years, 163 countries; "DS --CuSp/TMITR").
 #
-While this approach does not solve neither omitted variable bias (as variables with limited coverage can not be included in the datasets with more country-years) nor data missing not-at-random (still possibly present in the datasets with fewer country-years), it uses the data most effectively by including as many variables and country-years in at least one analysis, leading to a more complete picture adequate for an exploratory approach. 
+While this approach does not solve completely either omitted variable bias (as variables with limited coverage can not be included in the datasets with more country-years) nor data missing not-at-random (still possibly present in the datasets with fewer country-years), it uses the data most effectively by including as many variables and country-years in at least one analysis, leading to a more complete picture adequate for an exploratory approach. 
 
-#+label: fig:world_plot_stacked
-#+caption: Countries colored by most complete variable combination
-[[file:figures/world_plot_stacked_v1.pdf]]
+#+label: fig:world_plot_faceted
+#+caption: Countries colored by number of country-years per combination
+[[file:figures/world_plot_faceted_v2.pdf]]
 
 #+label: fig:cbn_cnt_line_plot
 #+caption: Number of countries per year per variable combinationn
-[[file:figures/cbn_cnt_line_plot_v1.pdf]]
+[[file:figures/cbn_cnt_line_plot_v2.pdf]]
 
-Figures [[fig:world_plot_stacked]] and [[fig:cbn_cnt_line_plot]] (as well as [[fig:country_tile_plot]] in the appendix) illustrate the variation of country-year coverage between the variable combinations. 
+Figures [[fig:world_plot_faceted]] and [[fig:cbn_cnt_line_plot]] illustrate the variation of country-year coverage between the variable combinations. 
+
+As a consequence of the data availability of longitudinal variables, for most countries the analysis covers the years 2000-2020.
+#
+While such time-frame thus makes it impossible to cover the early period of private museum founding, it still allows the focus on the time period in which the majority of the foundings (~84%) have taken place.
+
+#+latex: \input{./tables/summary_stats4.tex}
+
+
+
+*Summary statistics for all variables are provided in table \ref{summary_stats}.*
+*npo not good
+make sure label is there1*
+
+*** Variable selection
+While theoretical relations involving the number of HNWIs and inequality have been proposed, concrete operationalizations have been missing.
+#
+For the number of HNWIs, I randomly choose a threshold of 1, 5, 30, 200 million USD, while inequality is first differentiated into wealth and income inequality, for which in turn one of Gini, 10% share and 1% share is chosen randomly.
+#
+This choices result in 32 possible variable combinations (4 HNWI variables \times 3 income inequality variables \times 3 wealth inequality variables), which are then optimized in terms of time lags of each variable.
+
 
 *** Time lags
 So far there has been limited investigation into the time frames each mechanism needs to take effect.
@@ -491,39 +515,36 @@ For example, an effect of a decrease of cultural spending might not become effec
 #
 As a misspecified time lag might miss an effect that exists at a different time-lag, I take an exploratory approach and vary the lag of each longitudinal variable between one and five years.
 #
-To obtain comparability between the models using different time-lags, I limit the country-years to those that have data on all of the five preceding years for all time-lag variations (this is the reason that coverage of the HNWI count and wealth inequality indicators increases already from 1995 onwards (figure [[fig:cpltns_vrbl_plot]]), but that the coverage of the non-control combinations increases only at 2000 (figure [[fig:cbn_cnt_line_plot]]).
+To obtain comparability between the models using different time-lags, I limit the country-years to those that have data on all of the five preceding years for all time-lag variations.
+# (this is the reason that coverage of the HNWI count and wealth inequality indicators increases already from 1995 onwards (figure [[fig:cpltns_vrbl_plot]]), but that the coverage of the non-control combinations increases only at 2000 (figure [[fig:cbn_cnt_line_plot]]).
 #
-As a complete exploration of the lag-choice space is not possible (it grows exponentially with the number of longitudinal variables included) I randomly sample lag-specifications.
-
-
-
-As a consequence of the data availability of longitudinal variables, for most countries the analysis covers the years 2000-2020.
+As a complete exploration of the lag-choice space is not possible (it grows exponentially with the number of longitudinal variables included), I developed an optimization technique: 
 #
-While such time-frame thus makes it impossible to cover the early period of private museum founding, it still allows the focus on the time period in which the majority of the foundings (~84%) have taken place. 
-
-
+For a selection of variables, I first select random starting values for the lags.
 #
-# Furthermore, after choosing a lag-specification (i.e. a random lag for every variable), I vary each variable's lag to estimate the effect of lagging any particular variable while keeping the other lags constant.
-# # 
-# While such a strategy might still not find the correct lag specification, it gives an indication of how a coefficient varies between lags and lag-choices of other variables. 
-
-
-
-*** Variable selection
-While theoretical relations involving the number of HNWIs and inequality have been proposed, concrete operationalizations have been missing.
+I then select all variables in random order, and for each variable in turn vary the lag by calculating five regression models and keep the best fitting one (characterized by maximum log-likelihood), the lag of which is then used for the respective variables for the following models where the lag of the next variable is optimized.
+# 
+If multiple models fit equally well, a lag among these is selected at random.
 #
-For the number of HNWIs, I randomly choose a threshold of 1, 5, 30, 200 or 1000 million USD, while inequality is first differentiated into wealth and income inequality, for which in turn one of Gini, 10% share and 1% share is chosen randomly.
+These selection of variables in random order is continued until no further improvement is achieved.
+#
+While the random starting values and random order of variables help to explore the lag space, models can still be stuck in local optima; I therefore run each model four times, each with a different set of random starting values. 
+
+
 
 *** Analysis
 
 #
-To facilitate convergence and interpretation, all variables are rescaled to a mean of 0 and a standard deviation of 1.
+To facilitate convergence and interpretation, all variables except the binary variables of tax exemptions for non-profits and tax deductibility of charitable donations are rescaled to a mean of 0 and a standard deviation of 1 (the interaction between tax deductibility of charitable donations and top marginal income tax rate is calculated after rescaling).
 #
 Then given a specification of inequality and HNWI variable selection, time lag choices and variable combination choice, a random effects (with clustering on the country-level) negative binomial model is run using the xtnbreg command of Stata 14 (random effects are necessary to account for the time-invariant variables tax incentives and museum population, coefficients therefore capture both within-country and between-country variation). 
 #
 In the current iteration, 148k models are run, out of with the vast majority (99.8%) converged successfully.
 
 ** Results
+
+
+
 *** general introduction :ignhead:
 #+label: fig:best_models_condensed
 #+caption: Best-fitting model per dataset
@@ -679,12 +700,6 @@ Despite such limitations, this exploratory research constitutes a substantial co
 
 
 
-
-
-#+label: fig:country_tile_plot
-#+caption: Country-year with most complete variable combination
-#+attr_latex: :width 8cm
-[[file:figures/country_tile_plot_v1.pdf]]
 
 #+label: fig:reg_within_tmitr_fixed
 #+caption: Coefficients of 15 randomly-selected models per lag and combination, lines indicate stability of other variables as the lag of the variable on the line is varied, minor variation around x-axis added to improve legibility; control combination is omitted
