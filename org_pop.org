@@ -349,7 +349,7 @@ The top 0.1% and 0.01% (the 99.9th and 99.99th quantile) are also similarly subd
 #
 Amounts are reported in local currencies and are therefore converted into 2021 USD using market exchange rates provided by the WID.
 #
-I use these thresholds to calculate the percentage of people above a certain threshold (I use thresholds of 1 million, 5 million, 30 million, 200 million USD) by linearly interpolating between the two percentiles above and below the respective threshold.
+I use these thresholds to calculate the percentage of people above a certain threshold (I use thresholds of 1 million, 5 million, 30 million, 200 million USD[fn::Despite the large number of thresholds and the increases of resolution in the higher percentiles, I do not consider it adequate to measure numbers at higher thresholds than 200M. It it is thus unfortunately not possible to measure the effect of billionaires which receive much media attention.]) by linearly interpolating between the two nearest percentiles above and below the respective threshold.
 #
 If the threshold exceeds the value of the highest quantile, I assign a zero.[fn::Linear interpolation likely overestimates the percentage of HNWIs for cases where data on at least one higher threshold exists (as the wealth distribution probably does not increase linearly), and underestimates it when no higher threshold exists (as necessarily 0 is assigned). Nevertheless, I argue that the possibility to set arbitrary wealth thresholds provides valuable insights.]
 #
@@ -366,6 +366,9 @@ The WID also provides gini coefficients for wealth and pre-tax income[fn::while 
 *** Control Variables
 **** GDP per capita and Population size
 Wealthier nations likely have larger population shares interested in art consumption, thus increasing the prestige private museum founders anticipate when making the choice whether to found a private museum.
+#
+Population size is included as an offset (see section [[id:d2d676fc-e644-4815-a06d-906a30c823f0][Analysis]]).
+
 
 **** Artnews collectors
 As private museums are founded by collectors, they are more likely to be founded in countries and times where many potential founders exist.
@@ -379,6 +382,8 @@ As Artnews includes the country of residence of each collector, I construct the 
 Artnews furthermore includes information on the genre(s) of each collector, which allows me to only include collectors who collect modern and contemporary art.
 #
 I argue that the number of Artnews collectors per country-year constitutes an indicator of the wider propensity of art collecting in a country (rather than a pool of individuals able to establish a museum) and therefore do not remove art collectors from the index after they have founded a museum (which concerns 141 collectors).
+#
+Furthermore, given that the magazine has for all years collected the top 200 collectors and therefore cannot capture changes in the total art collector population, the constructed indicator measures the relative propensity of art collecting compared to other countries/time periods.
 
 
 
@@ -447,6 +452,22 @@ For the construction of this indicator I exclude all museums that are also inclu
 # could move it to cultural spending?
 
 
+*** Data processing
+#
+A number of countries have been excluded for various reasons:
+#
+The exchange rates for Zimbabwe and Venezuela were deemed unsuitable (Venezuela is discussed by [[textcite:&Blanchet_2017_conversions]]); both countries were therefore excluded.
+#
+Furthermore, a number of country-years have been removed for Yemen due to negative cultural spending.
+#
+For number of years of South Africa the wealth inequality Gini coefficient was larger than 1; in this cases it has been set to a ceiling of 0.99.
+#
+Finally, Iceland, the Bahamas, Monaco and Liechtenstein have been excluded as these countries' small population results in an extremely high rate of Artnews top 200 collectors per capita (and in the case of Iceland, also an extremely high rate of modern/contemporary art museums in 1990).
+#
+I argue that since the number of Artnews collectors is a discrete count variable, it is less suitable to provide an accurate measures in countries with small populations; the inability to measure of this variable to  accurately measure the intended concept thus justifies the exclusion of these countries on methodological grounds.
+
+
+
 
 ** Analytical Strategy
 
@@ -456,15 +477,18 @@ First, data coverage on some variables was substantially limited; second, the pr
 #
 I address these challenges as follows: 
 
+
+
+
 *** Variable combinations 
-#+label: fig:cpltns_vrbl_plot
+#+label: fig:cpltns_vrbl_plot_v2
 #+caption: Number of countries with data per year
-[[file:figures/cpltns_vrbl_plot_v1.pdf]]
+[[file:figures/cpltns_vrbl_plot_v2.pdf]]
 
 #
 Despite substantial efforts to collect complete data for the relevant variables, it was not possible to collect data for all country-years.
 #
-As figure [[fig:cpltns_vrbl_plot]] shows, in particular cultural spending and marginal income tax rate have coverage gaps.
+As figure [[fig:cpltns_vrbl_plot_v2]] shows, in particular cultural spending and marginal income tax rate have coverage gaps.
 #
 I therefore choose an approach that attempts to (at least partly) address two competing limitations, namely omitted variable bias and data missing not-at-random:
 #
@@ -483,7 +507,7 @@ While this approach does not solve completely either omitted variable bias (as v
 [[file:figures/world_plot_faceted_v2.pdf]]
 
 #+label: fig:cbn_cnt_line_plot
-#+caption: Number of countries per year per variable combinationn
+#+caption: Number of countries per year per variable combination
 [[file:figures/cbn_cnt_line_plot_v2.pdf]]
 
 Figures [[fig:world_plot_faceted]] and [[fig:cbn_cnt_line_plot]] illustrate the variation of country-year coverage between the variable combinations. 
@@ -492,20 +516,20 @@ As a consequence of the data availability of longitudinal variables, for most co
 #
 While such time-frame thus makes it impossible to cover the early period of private museum founding, it still allows the focus on the time period in which the majority of the foundings (~84%) have taken place.
 
-#+latex: \input{./tables/summary_stats4.tex}
+
+#+latex: \begin{landscape}
+#+latex: \input{./tables/summary_stats.tex}
+#+latex: \end{landscape}
 
 
-
-*Summary statistics for all variables are provided in table \ref{summary_stats}.*
-*npo not good
-make sure label is there1*
 
 *** Variable selection
 While theoretical relations involving the number of HNWIs and inequality have been proposed, concrete operationalizations have been missing.
 #
 For the number of HNWIs, I randomly choose a threshold of 1, 5, 30, 200 million USD, while inequality is first differentiated into wealth and income inequality, for which in turn one of Gini, 10% share and 1% share is chosen randomly.
 #
-This choices result in 32 possible variable combinations (4 HNWI variables \times 3 income inequality variables \times 3 wealth inequality variables), which are then optimized in terms of time lags of each variable.
+This choices result in 36 possible variable combinations (4 HNWI variables \times 3 income inequality variables \times 3 wealth inequality variables), of which the time lag of each variable is then optimized.
+
 
 
 *** Time lags
@@ -518,12 +542,12 @@ As a misspecified time lag might miss an effect that exists at a different time-
 To obtain comparability between the models using different time-lags, I limit the country-years to those that have data on all of the five preceding years for all time-lag variations.
 # (this is the reason that coverage of the HNWI count and wealth inequality indicators increases already from 1995 onwards (figure [[fig:cpltns_vrbl_plot]]), but that the coverage of the non-control combinations increases only at 2000 (figure [[fig:cbn_cnt_line_plot]]).
 #
-As a complete exploration of the lag-choice space is not possible (it grows exponentially with the number of longitudinal variables included), I developed an optimization technique: 
+As a complete exploration of the lag-choice space is not possible (it grows exponentially with the number of longitudinal variables included), I use an optimization procedure:
 #
 For a selection of variables, I first select random starting values for the lags.
 #
-I then select all variables in random order, and for each variable in turn vary the lag by calculating five regression models and keep the best fitting one (characterized by maximum log-likelihood), the lag of which is then used for the respective variables for the following models where the lag of the next variable is optimized.
-# 
+I then select all variables in random order, and for each variable in turn vary the lag by calculating five regression models (see next section for more details) identical except for the lag of the variable in question, and keep the best fitting one (characterized by maximum log-likelihood), the lag of which is then used for the respective variables for the following models where the lag of the next variable is optimized.
+#
 If multiple models fit equally well, a lag among these is selected at random.
 #
 These selection of variables in random order is continued until no further improvement is achieved.
@@ -532,138 +556,225 @@ While the random starting values and random order of variables help to explore t
 
 
 
-*** Analysis
+*** Regression specification
+:PROPERTIES:
+:ID:       d2d676fc-e644-4815-a06d-906a30c823f0
+:END:
 
+Each regression model is specified as a negative binomial model (which is robust to potential overdispersion of the dependent variable) model is run using the xtnbreg command of Stata 14. 
 #
-To facilitate convergence and interpretation, all variables except the binary variables of tax exemptions for non-profits and tax deductibility of charitable donations are rescaled to a mean of 0 and a standard deviation of 1 (the interaction between tax deductibility of charitable donations and top marginal income tax rate is calculated after rescaling).
+Random country intercepts are added to account for clustering of observations in countries.
 #
-Then given a specification of inequality and HNWI variable selection, time lag choices and variable combination choice, a random effects (with clustering on the country-level) negative binomial model is run using the xtnbreg command of Stata 14 (random effects are necessary to account for the time-invariant variables tax incentives and museum population, coefficients therefore capture both within-country and between-country variation). 
+Due to the presence of time-invariant variables (tax incentives and museum population) pure fixed effects models (which would capture only within-country variation) are not feasible, coefficients therefore describe both within-country and between-country variation.
 #
-In the current iteration, 148k models are run, out of with the vast majority (99.8%) converged successfully.
+I furthermore use population as an offset (which estimates founding rate per capita) to allow comparison between countries of different population sizes; all count predictors are therefore first transformed into per capita rates.
+#
+To facilitate convergence and interpretation, all variables except the binary variables of tax exemptions for non-profits and tax deductibility of charitable donations are also rescaled to a mean of 0 and a standard deviation of 1 (the interaction between tax deductibility of charitable donations and top marginal income tax rate is calculated after rescaling).
+#
+95 320 models are run, of which all converge successfully. 
+#
+Given 36 variable combinations which are optimized four times with different starting values each per three datasets this results in an average of 221 regression models per variable combination.
+
 
 ** Results
+
+*** Descriptive findings
+
+Summary statistics for all variables are provided in unscaled form in table \ref{summary_stats}.
+#
+A number of insights can be gained from these descriptive findings:
+#
+First, private museum founding is more prevalent in the smaller datasets in which countries of the Global North are disproportionately represented.
+#
+Consequently, the less country-years are included in a dataset, the stronger it is characterized by higher rates of HNWIs, lower inequalities, higher GDP per capita and larger (per capita) populations of museums and collectors of modern and contemporary art.
+#
+Second, tax exemption of non-profits is very common (present in more than 95% of all countries), which limits its explanatory power as it varies too little to explain much of the variation in private museum founding.
+#
+
+#+label: plt_xtsum
+#+caption: Variable variance decomposition
+[[file:figures/plt_xtsum.pdf]]
+
+While between-country differences are substantial, they are not the only source of variation: 
+#
+Figure [[plt_xtsum]] shows the proportion between within-country variance and overall variance, which reveals that private museum founding constitutes a process more dynamic than many of its hypothesized predictors.
+#
+
+
 
 
 
 *** general introduction :ignhead:
+#+label: plt_v62_coef_krnls
+#+caption: distribution of main coefficients
+#+attr_latex: :width 16cm
+[[file:figures/plt_v62_coef_krnls.pdf]]
+
+
+
+
+
+
 #+label: fig:best_models_condensed
 #+caption: Best-fitting model per dataset
 #+attr_latex: :width 18cm
-[[file:figures/best_models_condensed.pdf]]
+[[file:figures/plt_v62_best_models_condensed.pdf]]
 
-Figure [[fig:best_models_condensed]] shows the results of the best-fitting models for each dataset (the time lags of the independent variables are omitted here, but can be seen in figure [[fig:best_models_tmitr_fixed]]). 
-#
-Coefficients are interpreted as logged multipliers of country founding rate, therefore a coefficient of 0.2 corresponds to a exp(0.25) = 1.28 multiplier, i.e. a 28% increase in average country founding rate given a 1 standard deviation change in the independent variable (as the independent variables are standardized).
-#
-Coefficients above 0 indicate positive multipliers, and 
-in the same way, coefficients of -0.5, 0.1, 0.5 and 1 correspond to 40% decrease, 10% increase, 64% increase and 171% increase, respectively).
+# Figure [[fig:best_models_condensed]] shows the results of the best-fitting models for each dataset (the time lags of the independent variables are omitted here, but can be seen in figure [[fig:plt_v62_reg_res_within]] in the appendix). 
 
-
-
-Overall, cbn_no_cult_spending and cbn_no_cult_spending_and_mitr are more similar in coefficient results than either is to cbn_all. 
+Coefficients are to be interpreted as logged multipliers of a country's founding rate, therefore a coefficient of 0.2 corresponds to a exp(0.25) = 1.28 multiplier, i.e. a 28% increase in average country founding rate given a 1 standard deviation change in the independent variable (as the independent variables are standardized).
 #
-This can be seen in the identical selection of variables for HNWI and inequality as well as similar coefficient signs, sizes and significances:
+Coefficients above 0 indicate multipliers above 1, while coefficients below 0 indicate multipliers below 1.
 #
-The only substantial difference is that in cbn_no_cult_spending cumulative openings squared is significant whereas it is only marginally significant in cbn_no_cult_spending_and_mitr (the difference in significance of Tax incentives is not comparable as in cbn_no_cult_spending it is part of an interaction term which changes the substantive interpretation).
+Thus, coefficients of -0.5, 0.1, 0.5 and 1 correspond to 40% decrease, 10% increase, 64% increase and 171% increase, respectively.
 #
-This could indicate either that government cultural spending is a very influential variable as its inclusion impacts the selection and values of other variables; or alternatively that the effects differ substantially between the populations (note: further analysis (running cbn_all without government spending) will be able to at least partially investigate this further).
+Given that the datasets are not (random) samples but consist of the entire population (or more precisely, varying proportions of it) I do not give substantial consideration to standard errors and p-values as they are not meaningful in this case; instead I focus on effect sizes (which are straightforward to compare across variables as all variables (except tax incentive binary variables) have been rescaled to a standard deviation of 1).
 
 
-*** tax incentives (H1)
+Figure [[plt_v62_coef_krnls]] shows the coefficient distribution of the best fitting model per dataset and variable combination.
+#
+For easier evaluation of the hypotheses, coefficients have been grouped by their corresponding hypothesis as follows: 
+#
+In the case of facet "H1: Tax deductibility of donations", DS -CuSp/TMTIR uses the coefficient of Tax deductibility of donations, while the other two datasets use the interaction between Tax deductibility of donations and top marginal income tax rate.
+#
+For inequality measures (H3), coefficients of all three variables (10% proportion, 1% proportion and gini coefficient) are combined, which is also done for elite wealth (H4) coefficients (number of HNWI per capita at 1M, 5%, 30M and 200M USD thresholds).
+
+
+The results for tax incentives (H1) are mixed:
+#
+While the tax exemption of non-profits has a negative coefficient across all datasets, tax deductibility of donations is positively associated with private museum founding in all datasets.
 
 
 
-# *interaction interpretation*
-Tax incentives are found to be positive significant in the dataset without cultural spending and marginal income tax rates (right-most column), thus lending some support to H1.
+Government cultural spending is found to have a positive association with private museum founding.
+# 
+This finding thus does not support the crowding-out argument of the private museum literature of private museum founding as a consequence of declining government spending (H2a). 
+
+
+
+For the inequality variables (H3), results are mixed:
 #
-In cbn_all and cbn_no_cult_spending, the coefficients of Tax incentives and the Marginal income tax rate refer (due to additional of the interaction between the variables) to the value when the value of the other variable is 0 (which due to standardization refers to the mean).
-#
-Both variable coefficients are positive (yet insignificant) in both datasets, thus indicating positive effects if the other variable is at the mean.
-#
-As the interaction is positive in both cases as well, higher top income tax rates have a larger effect when the tax incentive index is higher (and vice versa: tax incentives have a larger effect when top income tax rates are higher).
-#
-Given that one indicator per dataset is marginally significant (tax incentives for cbn_no_cult_spending and Marginal income tax rate for cbn_all), these findings give further tentative support to H1. 
+While income inequality is associated with lower founding, wealth inequality variables are positively associated with the establishment of new private museums.
+
+Finally, the effect of HNWIs (H4) is mostly negative and relatively small in the two larger datasets, but evenly centered around 0 in "DS all IVs". 
+
+
+# Overall, cbn_no_cult_spending and cbn_no_cult_spending_and_mitr are more similar in coefficient results than either is to cbn_all. 
+# #
+# This can be seen in the identical selection of variables for HNWI and inequality as well as similar coefficient signs, sizes and significances:
+# #
+# The only substantial difference is that in cbn_no_cult_spending cumulative openings squared is significant whereas it is only marginally significant in cbn_no_cult_spending_and_mitr (the difference in significance of Tax incentives is not comparable as in cbn_no_cult_spending it is part of an interaction term which changes the substantive interpretation).
+# #
+# This could indicate either that government cultural spending is a very influential variable as its inclusion impacts the selection and values of other variables; or alternatively that the effects differ substantially between the populations (note: further analysis (running cbn_all without government spending) will be able to at least partially investigate this further).
+
+
+# *** tax incentives (H1)
+
+
+
+# # *interaction interpretation*
+# Tax incentives are found to be positive significant in the dataset without cultural spending and marginal income tax rates (right-most column), thus lending some support to H1.
+# #
+# In cbn_all and cbn_no_cult_spending, the coefficients of Tax incentives and the Marginal income tax rate refer (due to additional of the interaction between the variables) to the value when the value of the other variable is 0 (which due to standardization refers to the mean).
+# #
+# Both variable coefficients are positive (yet insignificant) in both datasets, thus indicating positive effects if the other variable is at the mean.
+# #
+# As the interaction is positive in both cases as well, higher top income tax rates have a larger effect when the tax incentive index is higher (and vice versa: tax incentives have a larger effect when top income tax rates are higher).
+# #
+# Given that one indicator per dataset is marginally significant (tax incentives for cbn_no_cult_spending and Marginal income tax rate for cbn_all), these findings give further tentative support to H1. 
 
  
-*** cultural spending (H2)
+# *** cultural spending (H2)
 
-Cultural spending has a significant positive effect, which rejects the crowding-out argument of the private museum literature of private museum founding as a consequence of declining government spending (H2a).
-#
-Thus, a more plausible mechanism to be a place seems to be the signaling effect of government spending   [[parencite:&DeWit_etal_2018_philanthropy]] according to which government spending for the arts legitimates and thus encourages private initiative in this sector (H2b).
-#
-Such a mechanism would also explain the significant positive coefficients for the number of private museums founded until 1995 across all datasets.
-
-*** inequalities (H3)
-
-Inequalities paint a complex picture:
-#
-In cbn_no_cult_spending and cbn_no_cult_spending_and_mitr there are marginally significant negative income inequality and positive significant wealth inequality coefficients, while the pattern is reversed in cbn_all with a positive income inequality and negative wealth inequality coefficient (both marginally significant).
-#
-Furthermore, the variable selection differs between cbn_all and the other datasets as well, with cbn_all selecting gini of tax income and wealth, while the other datasets select the top 10% income share and top 1% wealth share.
-#
-As these conflicting findings are hard to combine under a single statement they make one thing clear:
-#
-Clear directional statements about the relations between inequality and philanthropy (such as those found in the current philanthropy literature) do not replicate under systematic investigation, thus giving no support to H3.
-
-
-*** HNWIs (H4)
-Regarding the effect of HNWIs, the choice of the variable differs between models with "cbn_all" choosing the number of 5 million USD, and the other two datasets selecting 1 million USD as the variable in the best-fitting models.
-#
-The coefficients are positive in the "cbn_no_cult_spending" and "cbn_no_cult_spending_and_mitr", but they are small and insignificant, thus lending no support to H4, as does the coefficient in "cbn_all", which is virtually indistinguishable from 0.
-#
-Thus there is little support for the hypothesis that the private museum founding is associated with an increasing number of super-rich.
-
-
-
-
-
-
-*** Controls 
-
-**** GDP and population size
-
-The controls for GDP per capita and population size are positive and significant in cbn_no_cult_spending and cbn_no_cult_spending_and_mitr, but become marginally significant in cbn_all.
-#
-As these are rather crude measures, them becoming insignificant could indicate again a strong influence of cultural spending, or different effects being present in the different datasets.
-
-
-**** density dependence 
-In all datasets, cumulative openings (legitimacy) and cumulative openings squared (competition) correspond to the density-dependence hypotheses, namely a positive effect of legitimacy and a negative of competition; however legitimacy is only significant in the "all variables" dataset, and competition only in "all variables" and "all variables except cultural spending".
-
-
-**** Artnews collector ranking 
-Suprisingly, the number of collectors in the Artnews collector ranking has a negative effect on private museum founding, which is significant in cbn_all and marginally significant elsewhere.
-#
-At the moment I do not have a plausible interpretation, but it could be an artifact of still including collectors with a private museum in the computation of the variable.
-
-
-
-
-
-
-# Figure [[fig:reg_within_tmitr_fixed]] shows one way of evaluating the results (while all inequality and HNWI variables are included in the figure, only one per group is included in each model).
-
-
-
-
-# While figure [[fig:reg_within_tmitr_fixed]] already allows to assess coefficient size and significance, the impact of the variables and lags to model fit has not been fully evaluated yet.
-# # 
-# While substantial model fit variation exists between combinations (figure [[fig:cbn_log_likelihoods]]), this is expected as combinations differ in size and variables.
+# Cultural spending has a significant positive effect, which rejects the crowding-out argument of the private museum literature of private museum founding as a consequence of declining government spending (H2a).
 # #
-# Figure [[fig:mdl_fit_plot]] shows the average changes in log-likelihood resulting from different lag choices, which paint a picture similar to figure [[fig:reg_within_tmitr_fixed]] as larger coefficients are associated with larger model improvements (especially in the inequality variables).
+# Thus, a more plausible mechanism to be a place seems to be the signaling effect of government spending   [[parencite:&DeWit_etal_2018_philanthropy]] according to which government spending for the arts legitimates and thus encourages private initiative in this sector (H2b).
 # #
-# A selection of the best-fitting models (figure [[fig:best_models_tmitr_fixed]]) also shows that lagged indicators are often chosen (the necessity for further data cleaning is especially visible in the exclusive choice of 1 billion as the HNWI cutoff, which as in figure [[fig:reg_within_tmitr_fixed]] is likely an artifact, but here results in the complete exclusion of other HNWI thresholds).
+# Such a mechanism would also explain the significant positive coefficients for the number of private museums founded until 1995 across all datasets.
+
+# *** inequalities (H3)
+
+# Inequalities paint a complex picture:
+# #
+# In cbn_no_cult_spending and cbn_no_cult_spending_and_mitr there are marginally significant negative income inequality and positive significant wealth inequality coefficients, while the pattern is reversed in cbn_all with a positive income inequality and negative wealth inequality coefficient (both marginally significant).
+# #
+# Furthermore, the variable selection differs between cbn_all and the other datasets as well, with cbn_all selecting gini of tax income and wealth, while the other datasets select the top 10% income share and top 1% wealth share.
+# #
+# As these conflicting findings are hard to combine under a single statement they make one thing clear:
+# #
+# Clear directional statements about the relations between inequality and philanthropy (such as those found in the current philanthropy literature) do not replicate under systematic investigation, thus giving no support to H3.
+
+
+# *** HNWIs (H4)
+# Regarding the effect of HNWIs, the choice of the variable differs between models with "cbn_all" choosing the number of 5 million USD, and the other two datasets selecting 1 million USD as the variable in the best-fitting models.
+# #
+# The coefficients are positive in the "cbn_no_cult_spending" and "cbn_no_cult_spending_and_mitr", but they are small and insignificant, thus lending no support to H4, as does the coefficient in "cbn_all", which is virtually indistinguishable from 0.
+# #
+# Thus there is little support for the hypothesis that the private museum founding is associated with an increasing number of super-rich.
+
+
+
+
+
+
+# *** Controls 
+
+# **** GDP and population size
+
+# The controls for GDP per capita and population size are positive and significant in cbn_no_cult_spending and cbn_no_cult_spending_and_mitr, but become marginally significant in cbn_all.
+# #
+# As these are rather crude measures, them becoming insignificant could indicate again a strong influence of cultural spending, or different effects being present in the different datasets.
+
+
+# **** density dependence 
+# In all datasets, cumulative openings (legitimacy) and cumulative openings squared (competition) correspond to the density-dependence hypotheses, namely a positive effect of legitimacy and a negative of competition; however legitimacy is only significant in the "all variables" dataset, and competition only in "all variables" and "all variables except cultural spending".
+
+
+# **** Artnews collector ranking 
+# Suprisingly, the number of collectors in the Artnews collector ranking has a negative effect on private museum founding, which is significant in cbn_all and marginally significant elsewhere.
+# #
+# At the moment I do not have a plausible interpretation, but it could be an artifact of still including collectors with a private museum in the computation of the variable.
+
+
+
+
+
+
+# # Figure [[fig:reg_within_tmitr_fixed]] shows one way of evaluating the results (while all inequality and HNWI variables are included in the figure, only one per group is included in each model).
+
+
+
+
+# # While figure [[fig:reg_within_tmitr_fixed]] already allows to assess coefficient size and significance, the impact of the variables and lags to model fit has not been fully evaluated yet.
+# # # 
+# # While substantial model fit variation exists between combinations (figure [[fig:cbn_log_likelihoods]]), this is expected as combinations differ in size and variables.
+# # #
+# # Figure [[fig:mdl_fit_plot]] shows the average changes in log-likelihood resulting from different lag choices, which paint a picture similar to figure [[fig:reg_within_tmitr_fixed]] as larger coefficients are associated with larger model improvements (especially in the inequality variables).
+# # #
+# # A selection of the best-fitting models (figure [[fig:best_models_tmitr_fixed]]) also shows that lagged indicators are often chosen (the necessity for further data cleaning is especially visible in the exclusive choice of 1 billion as the HNWI cutoff, which as in figure [[fig:reg_within_tmitr_fixed]] is likely an artifact, but here results in the complete exclusion of other HNWI thresholds).
+
+
+
 ** Discussion and conclusion
 #
 
-
 The previous exploratory analysis shows mixed results:
+# #
+# While moderate support can be found for a positive effect of tax incentives, effects for inequality are too divergent to allow clear conclusions.
+While moderate support can be found for a positive effect of tax deductibility of donations, the effect of tax exemption for non-profits is negative.
 #
-While moderate support can be found for a positive effect of tax incentives, effects for inequality are too divergent to allow clear conclusions.
+Given that tax-exemption for non-profits exhibit only very little variance, its negative effect might be more due to multi-variate outliers or other regression particularities.
 #
-Furthermore, while government funding has a significant effect, it is positive and thus contradicting the argument in the private museum literature (yet supporting the signaling theory of government spending from philanthropy literature).
-# 
-Finally, no support is found for elite wealth.
+
+
+
+# #
+# Furthermore, while government funding has a significant effect, it is positive and thus contradicting the argument in the private museum literature (yet supporting the signaling theory of government spending from philanthropy literature).
+# # 
+# Finally, no support is found for elite wealth.
+
+
+
 
 
 These findings first and foremost point to the need of theoretical development in particular in regards to the effects of inequality as well as the role of government spending.
@@ -674,19 +785,24 @@ Despite such limitations, this exploratory research constitutes a substantial co
 
 
 
+The current study is limited by a number of factors:
+#
+As interest in the organizational form of private museums has risen only recently, data collection has been both retrospective (which might be less inclusive than continuous measurements based on for example industry directories) and primarily based on english-language media.
+#
+Furthermore, private museums are here treated as uniform, yet as they have been shown to exhibit substantial variation cite:&LarrysList_2015_report, different kinds of private museum might be subject to different social forces (yet more detailed analysis could also complicate the analysis as already in the current datasets where all private museums are pooled the founding of one constitutes a relatively rare event which most countries don't experience even once).
+#
+Also, multiple predictors are exhibiting substantial limitations in measuring their intended concepts, such as the tax incentives and non-private art museum populations variables (which are only cross-sectional and in the former case not art-sector specific), the WID HNWI data (which make aggregation beyond 200m USD infeasible) and the collector data (which does not capture absolute changes collector populations).
+#
+Furthermore substantial gaps in data coverage of cultural spending (which might also be affected by limited standardization) and top marginal income tax rates has so far necessitated the use of multiple datasets (and given that the former is reported by national statistical agencies, it is unlikely that the present country-year gaps are will filled in the foreseeable future).
+#
+A potentially influential phenomenon which might influence private museum founding, the exchange of ideas between art collectors, is completely unobservable on a systematic level. 
+#
+Finally, further relationships between variables (such as mediation or moderation) as well as nonlinear relationships to private museum foundings might be present which if not taken into account might bias coefficient estimates. 
 
-# ** further steps
-# - various minor variable modifications:
-#   - check ginis > 1
-#   - check cultural spending < 0
-#   - remove collectors with private museum from Artnews collector list
-#   - improve HNWI calculations: currently overestimate when non-zero due to linear interpolation, and underestimate when zero due to requiring a percentile above threshold 
-# - run the analysis with fixed effects to compare random with within-country effects (will mean no time-invariant variables, but presumably still insightful)
-# - run combinations with variables of more restricted combinations (e.g. cbn_all data with cbn_no_cultural_spending variables) to see if changes in coefficients are due to inclusion of variables or removal of country-years
-# - run models with/without each variable to see which variables/lags result in significant improvements
-# - get AIC/BIC: can get computed by Stata, just haven't implemented it yet 
-# - optional: combine different cultural spending indicators to increase cbn_all: So far I'm using only P3CG and TLYCG series to compute cultural spending, but there are still a number of other variables from the National Accounts data (mostly UN) as well as employment data from the ILO which might be used to impute TLYCG for more country-years, and thereby increase the variable combination involving all variables, as it is mostly limited by missing data on cultural spending. However, I feel I would need to approach imputation more theoretically-based, which so far I haven't done as I've been sticking to the knowledge I have so far to come up with ad-hoc solutions. With things already taking longer than expected, I feel I don't have the time for more detours, yet on the other hand imputation might be both helpful here to increase the sample sizes to improve the significance of some indicators as well as a useful skill in general.
-  
+
+
+Nevertheless, *some more about contributions*
+
   
 ** References
 # \hypertarget{refs}{}
@@ -696,28 +812,9 @@ Despite such limitations, this exploratory research constitutes a substantial co
 #+Latex: \end{sloppypar}
 
 
-** Appendix
 
+* appendix
 
-
-
-#+label: fig:reg_within_tmitr_fixed
-#+caption: Coefficients of 15 randomly-selected models per lag and combination, lines indicate stability of other variables as the lag of the variable on the line is varied, minor variation around x-axis added to improve legibility; control combination is omitted
-[[file:figures/reg_within_tmitr_fixed.pdf]]
-
-
-#+label: fig:cbn_log_likelihoods
-#+caption: Log-likelihood distribution of model results
-[[file:figures/cbn_log_likelihoods.pdf]]
-
-
-#+label: fig:mdl_fit_plot
-#+caption: Average Log-Likelihood changes through lags (0 is worst-fitting model)
-[[file:figures/mdl_fit_plot.pdf]]
-
-
-#+label: fig:best_models_tmitr_fixed
-#+caption: Coefficients of best fitting models
-[[file:figures/best_models_tmirtr_fixed.pdf]]
-
-
+#+label: fig:plt_v62_reg_res_within
+#+caption: Coefficients of the 3 best-fittin models per lag and variable combination, lines indicate stability of other variables as the lag of the variable on the line is varied, minor variation around x-axis added to improve legibility
+[[file:figures/plt_v62_reg_res_within.pdf]]
