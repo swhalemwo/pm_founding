@@ -304,20 +304,6 @@ RootLinearInterpolant <- function (x, y, y0 = 0) {
 ##     group_by(iso3c, year) %>%
 ##     summarise(pct_cutoff = RootLinearInterpolant(pct_lo, wealth_cur, y0=1e+06))
 
-sanitize_number <- function(nbr) {
-    #' custom formatting for number abbreviations because f_denom doesn't work??
-
-    if (nbr >= 1000 & nbr < 1e6) {
-        lbl <- paste0(nbr/1000, "K")
-    } else if (nbr >= 1e6 & nbr < 1e+9) {
-        lbl <- paste0(nbr/1e6, "M")
-    } else if (nbr >= 1e9 & nbr < 1e12) {
-        lbl <- paste0(nbr/1e9, "B")
-    } else {
-        lbl <- paste0(nbr)
-    }
-    return(lbl)
-}
         
 
 wealth_cutoff <- function(x,y,cutoff_amt, iso3c, year) {

@@ -359,3 +359,95 @@ check_df_name_unqns <- function(l, skip_var_names) {
     }
     return(invisible(NULL))
 }
+
+pal <- function(col, border = "light gray", ...){
+  n <- length(col)
+  plot(0, 0, type="n", xlim = c(0, 1), ylim = c(0, 1),
+       axes = FALSE, xlab = "", ylab = "", ...)
+  rect(0:(n-1)/n, 0, 1:n/n, 1, col = col, border = border)
+}
+
+
+tol1qualitative=c("#4477AA")
+tol2qualitative=c("#4477AA", "#CC6677")
+tol3qualitative=c("#4477AA", "#DDCC77", "#CC6677")
+tol4qualitative=c("#4477AA", "#117733", "#DDCC77", "#CC6677")
+tol5qualitative=c("#332288", "#88CCEE", "#117733", "#DDCC77", "#CC6677")
+tol6qualitative=c("#332288", "#88CCEE", "#117733", "#DDCC77", "#CC6677","#AA4499")
+tol7qualitative=c("#332288", "#88CCEE", "#44AA99", "#117733", "#DDCC77", "#CC6677","#AA4499")
+tol8qualitative=c("#332288", "#88CCEE", "#44AA99", "#117733", "#999933", "#DDCC77", "#CC6677","#AA4499")
+tol9qualitative=c("#332288", "#88CCEE", "#44AA99", "#117733", "#999933", "#DDCC77", "#CC6677", "#882255", "#AA4499")
+tol10qualitative=c("#332288", "#88CCEE", "#44AA99", "#117733", "#999933", "#DDCC77", "#661100", "#CC6677", "#882255", "#AA4499")
+tol11qualitative=c("#332288", "#6699CC", "#88CCEE", "#44AA99", "#117733", "#999933", "#DDCC77", "#661100", "#CC6677", "#882255", "#AA4499")
+tol12qualitative=c("#332288", "#6699CC", "#88CCEE", "#44AA99", "#117733", "#999933", "#DDCC77", "#661100", "#CC6677", "#AA4466", "#882255", "#AA4499")
+
+
+sanitize_number <- function(nbr) {
+    #' custom formatting for number abbreviations because f_denom doesn't work??
+
+    if (nbr >= 1000 & nbr < 1e6) {
+        lbl <- paste0(nbr/1000, "K")
+    } else if (nbr >= 1e6 & nbr < 1e+9) {
+        lbl <- paste0(nbr/1e6, "M")
+    } else if (nbr >= 1e9 & nbr < 1e12) {
+        lbl <- paste0(nbr/1e9, "B")
+    } else {
+        lbl <- paste0(nbr)
+    }
+    return(lbl)
+}
+
+
+
+prvlt <- function(dtx, input_fmt = "R") {
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
+    1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;
+    #' preview table as latex table as pdf
+
+    if (input_fmt == "R") {
+        #' first convert table to tex
+        xtbl <- xtable(dtx)
+    } else {
+        xtbl <- dtx
+    }
+
+    ## ps() %>% adt() %>% .[grepl("zathura", name)]
+    
+    tmp <- tempfile(fileext = ".tex")
+    tmp_dir <- "/tmp/"
+    tmp_file_tex <- "prvlt.tex"
+    
+    tmp <- paste0(tmp_dir, tmp_file_tex)
+
+    print(xtbl, file = tmp)
+        
+    ## just use most barebones latex command for now
+    ##  from: https://tex.stackexchange.com/questions/302788/how-to-get-the-pdf-of-a-compiled-table-only
+    cmplcmd <- "pdflatex '\\documentclass{article}\\pagestyle{empty}\\begin{document}\\input{prvlt.tex}\\end{document}'"
+    full_cmd <- paste0("cd /tmp && ", cmplcmd)
+    
+    system(full_cmd)
+    
+    ## crop command pdfcrop needed to focus on table
+    crop_cmd <- "cd /tmp && pdfcrop texput.pdf"
+    system(crop_cmd)
+
+    ## somewhat annoying check with lsof
+    open_check_cmd <- "lsof -w /tmp/texput-crop.pdf"
+    open_check_res <- system(open_check_cmd, intern = T)
+    
+    ## if an attribute is returned (rather than being null), file is not open
+    open <- is.null(attr(open_check_res, "status"))
+
+    if (!open) {
+        open_cmd <- "zathura /tmp/texput-crop.pdf & "
+        system(open_cmd)
+    }
+        
+    invisible(NULL)
+
+}
+
+## head(mtcars) %>% prvlt()
+## prvlt(data.table(brand = rownames(mtcars), mpg = mtcars$mpg, cyl = mtcars$cyl), input_fmt = "R")
+
