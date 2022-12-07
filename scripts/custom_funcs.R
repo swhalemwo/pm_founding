@@ -399,17 +399,18 @@ sanitize_number <- function(nbr) {
 
 
 
-prvlt <- function(dtx, input_fmt = "R") {
+prvlt <- function(dtx) {
     if (as.character(match.call()[[1]]) %in% fstd){browser()}
     1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;
     #' preview table as latex table as pdf
 
-    if (input_fmt == "R") {
-        #' first convert table to tex
+    
+    if ("xtable" %!in% class(dtx)) {
         xtbl <- xtable(dtx)
     } else {
         xtbl <- dtx
     }
+
 
     ## ps() %>% adt() %>% .[grepl("zathura", name)]
     
@@ -419,7 +420,7 @@ prvlt <- function(dtx, input_fmt = "R") {
     
     tmp <- paste0(tmp_dir, tmp_file_tex)
 
-    print(xtbl, file = tmp)
+    print(xtbl, file = tmp, include.rownames = F)
         
     ## just use most barebones latex command for now
     ##  from: https://tex.stackexchange.com/questions/302788/how-to-get-the-pdf-of-a-compiled-table-only
@@ -449,5 +450,7 @@ prvlt <- function(dtx, input_fmt = "R") {
 }
 
 ## head(mtcars) %>% prvlt()
-## prvlt(data.table(brand = rownames(mtcars), mpg = mtcars$mpg, cyl = mtcars$cyl), input_fmt = "R")
+## data.table(brand = rownames(mtcars), mpg = mtcars$mpg, cyl = mtcars$cyl) %>%
+    ## xtable(caption="cars") %>% 
+    ## prvlt()
 
