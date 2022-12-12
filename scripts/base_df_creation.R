@@ -1,6 +1,17 @@
 ## * base df creation
 
+vrbl_fndr <- function(df, penl_vrbls) {
+    vrbl <- intersect(names(df), penl_vrbls)
+    if (len(vrbl) > 1 | len(vrbl) == 0 ) {
+        stop("variable unclear: referred to by ", paste0(penl_vrbls, collapse = " - "))
+    } else {
+        vrbl
+    }
+}
+
+
 create_excel_df <- function(db_file, only_pms=T) {
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
     
     #' read the excel sheet into R
 
@@ -15,14 +26,20 @@ create_excel_df <- function(db_file, only_pms=T) {
     nrows <- nrow(df)
     df <- df[2:nrows,]
 
+    ## more flexible renaming 
+   
+    df$country <- pull(df, vrbl_fndr(df, c("Country where museum is located", "Museum_country")))
+    df$name <- pull(df, vrbl_fndr(df, c("Museum_name", "Name of museum")))
 
-    df$country <- df$"Country where museum is located"
+    ## df$name <- df[1] # reeeee-name because column names get changed
+    ## df$year_opened_str <- df$"Opening year"
+    df$year_opened_str <- pull(df, vrbl_fndr(df, c("Opening year", "Museum_opening year")))
 
-    df$name <- df[1] # reeeee-name because column names get changed
-    df$year_opened_str <- df$"Opening year"
-    df$year_closed <- as.numeric(df$"Closing year / year it changed structure")
-    df$ID <- as.numeric(df$ID)
-    df$museum_status <- df$`Museum status`
+    df$year_closed <- as.integer(pull(df, vrbl_fndr(df, c("Closing year", "Museum_closing year"))))
+    
+    df$ID <- as.integer(df$ID)
+    df$museum_status <- pull(df, vrbl_fndr(df, c("Museum status", "Museum_status")))
+    
     ## df$museum_closed <- df$"Museum closed"
 
     ## tbl <- table(df$country)
@@ -43,7 +60,6 @@ create_excel_df <- function(db_file, only_pms=T) {
     ## make ugly conditional filtering
     if (only_pms) {
         df_only_pms <- filter(df, museum_status %in% c("private museum", "no longer a private museum", "closed"))
-        
     } else {
         df_only_pms <- df
     }
@@ -54,19 +70,25 @@ create_excel_df <- function(db_file, only_pms=T) {
 
 
 
-create_excel_df_diagnose <- function(df, verbose = 0){
+create_excel_df_diagnose <- function(df, verbose = F){
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
+    
     #' check status of base df
     ## debugging unclear/missing countries: atm 12 cases
 
-    country_test <- filter(df, is.na(countrycode))[,c("country", "name")]
+    country_test <- filter(df, is.na(countrycode)) %>% select(ID, name, countrycode, museum_status)
+
+
     print(paste0("non-perfect countries: ", nrow(country_test)))
-    if (verbose == 1){
+    if (verbose){
         print(as.data.frame(country_test))
     }
 
-    year_opened_test <- filter(df, is.na(year_opened_int))[,c("year_opened_str", "year_opened_int")]
+    year_opened_test <- filter(df, is.na(year_opened_int)) %>%
+        select(ID, name, year_opened_str, year_opened_int, museum_status)
+    
     print(paste0("non-perfect opening years: ", nrow(year_opened_test)))
-    if (verbose == 1){
+    if (verbose) {
         print(as.data.frame(year_opened_test))
     }
     ## could functionalize this diagnosis properly with mapping variables to sort, with additional variables to be selected
@@ -76,7 +98,7 @@ create_excel_df_diagnose <- function(df, verbose = 0){
 ## dfx <- create_excel_df(PMDB_FILE)
 ## create_excel_df_diagnose(dfx, verbose =0)
 
-
+## create_excel_df(PMDB_FILE) %>% create_excel_df_diagnose(verbose = F)
 
 
 aggregate_openings <- function(df_excl, yeet_early_closed = F) {
