@@ -1015,18 +1015,18 @@ get_eurostat <- function() {
 
 ## ** source comparison
 
-sort_by_priority <- function(dfx, priority_vec, pos) {
-    #' pick all obs that adhere to priority_vec[pos], but only if not also matched by higher priority
+## sort_by_priority <- function(dfx, priority_vec, pos) {
+##     #' pick all obs that adhere to priority_vec[pos], but only if not also matched by higher priority
     
-    prty_vlu <- priority_vec[pos]
-    vlus_to_disregard <- priority_vec[0:(pos-1)]
+##     prty_vlu <- priority_vec[pos]
+##     vlus_to_disregard <- priority_vec[0:(pos-1)]
 
-    dfx %>% group_by(iso3c, year) %>%
-        ## first exclude all the higher priorities
-        mutate(matched_by_higher_prorities = ifelse(len(intersect(source, vlus_to_disregard))==0, F, T)) %>%
-        filter(!matched_by_higher_prorities, source == prty_vlu) %>%
-        select(all_of(names(dfx)))
-}
+##     dfx %>% group_by(iso3c, year) %>%
+##         ## first exclude all the higher priorities
+##         mutate(matched_by_higher_prorities = ifelse(len(intersect(source, vlus_to_disregard))==0, F, T)) %>%
+##         filter(!matched_by_higher_prorities, source == prty_vlu) %>%
+##         select(all_of(names(dfx)))
+## }
 
 ## df_cprn %>% filter(format == "tlycg") %>% 
 ##     sort_by_priority(source_priority, 1)

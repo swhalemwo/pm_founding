@@ -841,26 +841,26 @@ get_eurostat <- function() {
     return(df_euro_fltrd2)
 }
 
-sort_by_priority <- function(dfx, priority_vec, pos) {
-    if (as.character(match.call()[[1]]) %in% fstd){browser()}
-    #' pick all obs that adhere to priority_vec[pos], but only if not also matched by higher priority
-    #' to be used with lapply(seq_along(priority_vec))
-    #' needs source column that corresponds to values in priority_vec
+## sort_by_priority <- function(dfx, priority_vec, pos) {
+##     if (as.character(match.call()[[1]]) %in% fstd){browser()}
+##     #' pick all obs that adhere to priority_vec[pos], but only if not also matched by higher priority
+##     #' to be used with lapply(seq_along(priority_vec))
+##     #' needs source column that corresponds to values in priority_vec
 
-    prty_vlu <- priority_vec[pos]
-    vlus_to_disregard <- priority_vec[0:(pos-1)]
+##     prty_vlu <- priority_vec[pos]
+##     vlus_to_disregard <- priority_vec[0:(pos-1)]
     
-    grouping_vars <- intersect(c("iso3c", "year"), names(dfx))
+##     grouping_vars <- intersect(c("iso3c", "year"), names(dfx))
 
-    ## print(grouping_vars)
-    ## dfx %>% group_by(iso3c, year) %>%
-    dfx %>% group_by_at(c(grouping_vars)) %>%
-    ## dfx %>% group_by(iso3c) %>%
-        ## first exclude all the higher priorities
-        mutate(matched_by_higher_prorities = ifelse(len(intersect(source, vlus_to_disregard))==0, F, T)) %>%
-        filter(!matched_by_higher_prorities, source == prty_vlu) %>%
-        select(all_of(names(dfx)))
-}
+##     ## print(grouping_vars)
+##     ## dfx %>% group_by(iso3c, year) %>%
+##     dfx %>% group_by_at(c(grouping_vars)) %>%
+##     ## dfx %>% group_by(iso3c) %>%
+##         ## first exclude all the higher priorities
+##         mutate(matched_by_higher_prorities = ifelse(len(intersect(source, vlus_to_disregard))==0, F, T)) %>%
+##         filter(!matched_by_higher_prorities, source == prty_vlu) %>%
+##         select(all_of(names(dfx)))
+## }
 
 ## df_cprn %>% filter(format == "tlycg") %>% 
 ##     sort_by_priority(source_priority, 1)
