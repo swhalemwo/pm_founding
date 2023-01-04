@@ -5,6 +5,9 @@ library(stringr)
 library(ggbeeswarm)
 library(patchwork)
 
+library(sf)
+library(stars)
+
 read_reg_res <- function(idx, fldr_info) {
     #' read back model results with some id    
 
@@ -764,32 +767,205 @@ gen_top_coefs <- function(df_anls_base, gof_df_cbn) {
     return(top_coefs)
 }
 
+
+
+gen_lbl_raster <- function(dens_dt, method) {
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
+
+    ## library(raster, include.only = c("rasterize", "raster"))
+
+    ## some selection of density 
+    ## lbltest_dt <- top_coefs_dens %>% copy() %>%
+    ##     .[hyp_id == "h4" & cbn_name == "cbn_all"] # & vrbl_name_unlag == "hnwi_nbr_1M"]
+
+    ## dens_dt %>%
+    ##     ggplot(aes(x=x, y=y, group = vrbl_name_unlag)) +
+    ##     geom_line()
+
+    ## old raster function, now using st_rasterize
+    ## r <- raster(ncols = 45, nrows = 15, xmn = min(dens_dt$x), xmx = max(dens_dt$x),
+    ##             ymn = min(dens_dt$y), ymx = max(dens_dt$y))
+    
+    
+
+    ## scale x up to have good visual inspection
+    ## dens_dt2 <- dens_dt %>% copy() %>% .[, x := x*60]
+    
+    ## combine different variables into polygons
+    dens_polys <- split(dens_dt, dens_dt$vrbl_name_unlag) %>% 
+        purrr::map(~rbind(.x, .x[1])) %>%
+        purrr::map(~.x[c(1, .N-1, .N), y := y-0.01]) %>% # adjust first/last point a bit to get no intersections
+        purrr::map(~as.matrix(.x[, .(x,y)])) %>%
+        ## sf::st_multipolygon(x=list(.)) %>% 
+        purrr::map(~st_polygon(list(.x))) %>% 
+        ## sf::st_geometrycollection() %>%
+        reduce(st_union)
+
+    ## dens_polys$hnwi_nbr_5M[c(1, .N), y := y-1] %>% .[c(1, .N)]
+
+    ## st_union(dens_polys[[1]], dens_polys[[2]], by_feature = T)
+    
+    ## plot(dens_polys[[1]])
+
+    ## st_coordinates(dens_polys[[1]]) %>% adt() %>%
+    ##     ggplot(aes(x=X, y=Y)) +
+    ##     geom_path()
+
+    ## dens_dt$y %>% min()
+    
+    ## set up raster with sf to compare with random points
+    dens_sf <- st_sf(id = "x", geometry = st_sfc(dens_polys))
+    dens_raster <- st_rasterize(dens_sf, options = "ALL_TOUCHED=TRUE",
+                                st_as_stars(st_bbox(dens_sf), nx = 15, ny=10, values = NA_real_))
+    
+    raster_pts <- dens_raster %>% adf() %>% adt() %>% .[!is.na(ID), .(x,y)]
+
+        
+    ## raster_pts %>% 
+    ##     ggplot(aes(x=x, y=y)) +
+    ##     geom_point()
+
+    len(dens_polys)
+
+    random_pts <- sf::st_sample(dens_polys, size = 30) %>% st_coordinates() %>% adt() %>% .[, .(x=X, y=Y)]
+
+    ## plot(rnd_pts)
+    ## sf::st_coordinates(rnd_pts) %>% adt() %>% #
+    ##     ggplot(aes(x=X, y=Y)) + 
+    ##     geom_point()
+
+    if (method == "random") {
+        return(random_pts)
+    } else if (method == "raster") {
+        return(raster_pts)
+
+    }
+}
+
+
+
 gen_plt_coef_krnls <- function(top_coefs) {
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
+    
     #' kernel distribution of coefficients of main variables
 
     top_coefs2 <- rbind(
-        top_coefs[vrbl_name_unlag == "NPO.tax.exemption", .(hyp_id = "h1a", cbn_name, coef)],
+        top_coefs[vrbl_name_unlag == "NPO.tax.exemption",
+                  .(hyp_id = "h1a", vrbl_name_unlag, cbn_name, coef)],
         top_coefs[cbn_name != "cbn_no_cult_spending_and_mitr" & vrbl_name_unlag == "ti_tmitr_interact", 
-                  .(hyp_id = "h1b", cbn_name, coef)],
+                  .(hyp_id = "h1b", vrbl_name_unlag, cbn_name, coef)],
         top_coefs[cbn_name == "cbn_no_cult_spending_and_mitr" & vrbl_name_unlag == "Ind.tax.incentives", 
-                  .(hyp_id = "h1b", cbn_name, coef)],
-        top_coefs[vrbl_name_unlag == "smorc_dollar_fxm", .(hyp_id = "h2", cbn_name, coef)],
+                  .(hyp_id = "h1b", vrbl_name_unlag, cbn_name, coef)],
+        top_coefs[vrbl_name_unlag == "smorc_dollar_fxm",
+                  .(hyp_id = "h2", vrbl_name_unlag, cbn_name, coef)],
         top_coefs[vrbl_name_unlag %in% c("gptinc992j", "sptinc992j_p90p100", "sptinc992j_p99p100"),
-                  .(hyp_id = "h3a", cbn_name, coef)],
+                  .(hyp_id = "h3a", vrbl_name_unlag, cbn_name, coef)],
         top_coefs[vrbl_name_unlag %in% c("ghweal992j", "shweal992j_p90p100", "shweal992j_p99p100"),
-                  .(hyp_id = "h3b", cbn_name, coef)],
+                  .(hyp_id = "h3b", vrbl_name_unlag, cbn_name, coef)],
         top_coefs[vrbl_name_unlag %in% sprintf("hnwi_nbr_%sM", c(1,5,30,200)),
-                  .(hyp_id = "h4", cbn_name, coef)]) 
+                  .(hyp_id = "h4", vrbl_name_unlag, cbn_name, coef)]) 
 
-    plt_coef_krnls <- top_coefs2 %>%
-        ggplot(aes(x=coef, y=..density.., fill = cbn_name)) +
-        geom_density() +
-        facet_grid(hyp_id ~ cbn_name, scales = "free_y", switch = "y",
-                   labeller = as_labeller(c(vvs$krnl_lbls, vvs$cbn_lbls))) +
+    ## working plot, grouped by hypothesis
+    ## plt_coef_krnls <- top_coefs2 %>%
+    ##     ggplot(aes(x=coef, y=..density.., fill = cbn_name)) +
+    ##     geom_density() +
+    ##     facet_grid(hyp_id ~ cbn_name, scales = "free_y", switch = "y",
+    ##                labeller = as_labeller(c(vvs$krnl_lbls, vvs$cbn_lbls, vvs$vrbl_lbls))) +
+    ##     geom_vline(xintercept = 0, linetype = "dashed") +
+    ##     theme(strip.text.y.left = element_text(angle = 0),
+    ##           legend.position = "bottom") +
+    ##     labs(x="coefficient")
+
+    ## calculate densities (to get variable labels in plot)
+    top_coefs_dens <- top_coefs2 %>% copy() %>%
+        .[hyp_id != "h1a"] %>% 
+        .[, .(x = density(coef)$x,
+              y = density(coef)$y), by = .(vrbl_name_unlag, cbn_name, hyp_id)]
+
+    ## actually get labels
+    top_coefs_lbls <- top_coefs_dens %>% copy() %>%
+        .[hyp_id %in% c("h3a", "h3b", "h4")] %>%
+        .[, max_coef := max(y), by = .(vrbl_name_unlag, cbn_name, hyp_id)] %>%
+        .[y == max_coef] %>%
+        .[, .(hyp_id, cbn_name, x, y, label = vrbl_name_unlag, force = 1)]
+
+    ## , label := vrbl_name_unlag] %>%
+    ##         .[is.na(label), label := ""]
+
+
+    ## investigate labels
+    top_coefs_lbls[!is.na(label)]
+    top_coefs_lbls[!is.na(label), .N, by = .(hyp_id, vrbl_name_unlag, cbn_name)][, max(N)]
+
+    ## .[, .SD[which.max(y)], by = .(vrbl_name_unlag, cbn_name, hyp_id)]
+
+    lbl_pts <- top_coefs_dens %>% copy() %>%
+        .[hyp_id %in% c("h3a", "h3b", "h4")] %>%
+        .[, gen_lbl_raster(.SD, method = "raster"), by = .(hyp_id, cbn_name)] %>%
+        .[, `:=`(label = "", force = 0)] %>%
+        rbind(top_coefs_lbls)
+
+    ## testing
+    ## top_coefs_dens[hyp_id == "h4" & cbn_name == "cbn_no_cult_spending_and_mitr"] %>% 
+    ##     gen_lbl_raster(method = "random")
+
+    
+    ggplot() + 
+        ## geom_point(lbl_pts, mapping = aes(x=x, y=y), alpha = 0.1) +
+        geom_text_repel(lbl_pts, mapping = aes(x=x, y=y, label = label), 
+                        min.segment.length = 0,
+                        point.size = 3
+                        ## point.padding = 0,
+                        ## box.padding = 0,
+                        ## force = 5
+                        ) +
+        geom_line(top_coefs_dens, mapping = aes(x=x, y=y, group = vrbl_name_unlag)) +
+        facet_grid(hyp_id ~ cbn_name, scales = "free_y", switch = "y", space = "free", 
+                   labeller = as_labeller(c(vvs$krnl_lbls, vvs$cbn_lbls, vvs$vrbl_lbls))) +
         geom_vline(xintercept = 0, linetype = "dashed") +
         theme(strip.text.y.left = element_text(angle = 0),
               legend.position = "bottom") +
         labs(x="coefficient")
+
+    
+    top_coefs2 %>%
+        .[hyp_id != "h1a"] %>% 
+        ggplot(aes(x=coef, y=..density.., fill = cbn_name, group = vrbl_name_unlag, alpha = vrbl_name_unlag)) +
+        geom_density() +
+        ## geom_line(stat = "density") + 
+        facet_grid(hyp_id ~ cbn_name, scales = "free_y", switch = "y", space = "free_y", 
+                   labeller = as_labeller(c(vvs$krnl_lbls, vvs$cbn_lbls, vvs$vrbl_lbls))) +
+        geom_vline(xintercept = 0, linetype = "dashed") +
+        theme(strip.text.y.left = element_text(angle = 0),
+              legend.position = "bottom") +
+        labs(x="coefficient")
+    
+    ## preliminary labelling: label for every point on density line
+    ggplot() +
+         geom_line(top_coefs_dens, mapping = aes(x=x, y=y, group = vrbl_name_unlag)) +
+         ## geom_point(top_coefs_lbls, mapping = aes(x=x, y=y)) + 
+         geom_text_repel(top_coefs_lbls, mapping = aes(x=x, y=y, label = label)) +
+         facet_grid(hyp_id ~ cbn_name, scales = "free", switch = "y", space = "free",
+                    labeller = as_labeller(c(vvs$krnl_lbls, vvs$cbn_lbls, vvs$vrbl_lbls))) +
+         geom_vline(xintercept = 0, linetype = "dashed") +
+         theme(strip.text.y.left = element_text(angle = 0),
+               legend.position = "bottom") +
+         labs(x="coefficient")
+
+    
+
+    plt_coef_krnls <- top_coefs2 %>%
+        ggplot(aes(x=coef, y=..density.., fill = cbn_name)) +
+        geom_density() +
+        facet_grid(vrbl_name_unlag ~ cbn_name, scales = "free_y", switch = "y",
+                   labeller = as_labeller(c(vvs$krnl_lbls, vvs$cbn_lbls, vvs$vrbl_lbls))) +
+        geom_vline(xintercept = 0, linetype = "dashed") +
+        theme(strip.text.y.left = element_text(angle = 0),
+              legend.position = "bottom") +
+        labs(x="coefficient")
+    plt_coef_krnls
+
+    
 
 
     return(plt_coef_krnls)
