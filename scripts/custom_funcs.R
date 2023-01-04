@@ -21,7 +21,7 @@ lm.beta.lmer <- function(mod) {
 minus <- function(a,b){return(a-b)}
 plus <- function(a,b){return(a+b)}
 
-rollmean_custom <- function(v, win_len, func, orientation = "left"){
+rollmean_custom <- function(v, win_len, func, orientation = "left") {
     # computes rolling mean without removing observations by using smaller windows at the sides
     c <- 1
     ## slider needs orientation if length of sliding window is even:
@@ -399,7 +399,7 @@ sanitize_number <- function(nbr) {
 
 
 
-prvlt <- function(dtx) {
+pvlt <- function(dtx) {
     if (as.character(match.call()[[1]]) %in% fstd){browser()}
     1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;
     #' preview table as latex table as pdf
@@ -448,6 +448,41 @@ prvlt <- function(dtx) {
     invisible(NULL)
 
 }
+
+render_xtable <- function(xtable, filepath) {
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
+    #' renders xtable to pdf file 
+
+    filename <- basename(filepath) %>% gsub(".pdf", "", .)
+
+    file_dir <- dirname(filepath)
+
+    tmp <- tempfile(tmpdir = file_dir, fileext = ".tex")
+
+    tmp_filename <- basename(tmp)
+
+    print(xtable, file = tmp, include.rownames = F)
+
+    cmplcmd <- sprintf("pdflatex -jobname=%s '\\documentclass{article}\\pagestyle{empty}\\begin{document}\\input{%s}\\end{document}'",
+                       filename, tmp_filename)
+
+    full_cmd <- sprintf("cd %s && %s", file_dir, cmplcmd)
+    system(full_cmd)
+
+    ## cropping: just overwrite 
+    filename_pdf <- paste0(filename, ".pdf")
+    crop_cmd <- sprintf("cd %s && pdfcrop %s %s", file_dir, filename_pdf, filename_pdf)
+    system(crop_cmd)
+
+    ## remove temp files 
+    cleanup_cmd <- sprintf("rm %s %s", tmp, paste0(file_dir, "/", filename, c(".log", ".aux"), collapse = " "))
+    system(cleanup_cmd)
+
+    
+}
+
+## render_xtable(reprt_tbls$tbl_age_sumry, paste0(REP_TABLE_DIR, "tbl_age_sumry.pdf"))
+## render_xtable(reprt_tbls$tbl_close_after_death, paste0(REP_TABLE_DIR, "tbl_close_after_death.pdf"))
 
 ## head(mtcars) %>% prvlt()
 ## data.table(brand = rownames(mtcars), mpg = mtcars$mpg, cyl = mtcars$cyl) %>%
