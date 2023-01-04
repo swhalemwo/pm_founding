@@ -913,7 +913,7 @@ gen_plt_coef_krnls <- function(top_coefs) {
     ggplot() + 
         ## geom_point(lbl_pts, mapping = aes(x=x, y=y), alpha = 0.1) +
         geom_text_repel(lbl_pts, mapping = aes(x=x, y=y, label = label), 
-                        min.segment.length = 0,
+                        min.segment.length = 0, # test
                         point.size = 3
                         ## point.padding = 0,
                         ## box.padding = 0,
