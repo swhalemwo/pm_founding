@@ -105,7 +105,8 @@ aggregate_openings <- function(df_excl, yeet_early_closed = F) {
     if (as.character(match.call()[[1]]) %in% fstd){browser()}
     #' aggregate excel df into country-year openings
 
-    df_excl2 <- select(df_excl, name, country, countrycode, year_opened_int, year_closed) %>%
+    ## country,
+    df_excl2 <- select(df_excl, name,  countrycode, year_opened_int, year_closed) %>%
         ## na.omit() 
         filter(!is.na(year_opened_int))
     ## excel-based df
@@ -122,11 +123,12 @@ aggregate_openings <- function(df_excl, yeet_early_closed = F) {
         ## .[is.na(year_opened_int)]
         
     ## generate count of closed 
-    df_clsd <- select(df_excl2, name, iso3c = countrycode, year = year_closed) %>% na.omit() %>%
+    df_clsd <- select(df_excl2, name, iso3c = countrycode, year = year_closed) %>%
+        na.omit() %>%
         group_by(iso3c, year) %>% 
         summarize(nbr_closed = n())
     
-
+    
     df_excl2$ctr <- 1
     df_open_cnt <- as_tibble(aggregate(ctr ~ countrycode + year_opened_int, df_excl2, FUN = sum))
     names(df_open_cnt) <- c('iso3c', 'year', 'nbr_opened')
@@ -135,27 +137,34 @@ aggregate_openings <- function(df_excl, yeet_early_closed = F) {
     names(df_open_names) <- c("iso3c", "year", "name")
 
     ## df_open <- as_tibble(merge(df_open_cnt, df_open_names))
-
-    df_open <- Reduce(\(x,y) full_join(x,y), list(df_open_cnt, df_open_names, df_clsd))
-
     
-    ## test in dt: make sure that previous version and dt produce same results
+    ## df_open <- Reduce(\(x,y) full_join(x,y), list(df_open_cnt, df_open_names, df_clsd))
+
+    df_open <- Reduce(full_join, list(df_open_cnt, df_open_names, df_clsd))
+
+    ## test suite: test in dt: make sure that previous version and dt produce same results
     dt_open <- adt(df_excl)[, .(name, iso3c = countrycode, year_opened_int, year_closed)] %>%
         melt(id.vars = c("name", "iso3c"), value.name = "year") %>% 
         ## .[!complete.cases(.), .N, variable] # 9 PMs have no opening year, 491 no closing year
         na.omit() %>% 
         .[, .(vlu_proc = .N), by = c("iso3c", "variable", "year")] %>%
-        dcast.data.table(iso3c + year ~ variable, value.var = "vlu_proc")
+        dcast.data.table(iso3c + year ~ variable, value.var = "vlu_proc", drop = c(T,F))
     
-    
-    nbr_row_diff <- rbind(
+    opng_cprn <- rbind(
         adt(df_open) %>% .[, .(iso3c, year, nbr_opened, nbr_closed)] %>% .[, source := "old"] %>%
         melt(id.vars = c("iso3c", "year", "source")),
         dt_open[, .(iso3c,year,nbr_opened=year_opened_int,nbr_closed=year_closed)] %>% .[,source:="dt"] %>%
         melt(id.vars = c("iso3c", "year", "source"))) %>%
-        dcast.data.table(iso3c + year + variable ~ source) %>%
-        .[dt != old] %>% nrow()
-        
+        dcast.data.table(iso3c + year + variable ~ source)
+
+    ## test that no unallowed NAs sneak in
+    if (opng_cprn[, any(is.na(iso3c)) | any(is.na(year)) | any(is.na(variable))]) {stop("unallowed NAs")}
+
+    ## need some stupid NA recoding to have proper comparison (otherwise NA comparisons don't work
+    opng_cprn[is.na(opng_cprn)] <- 9999
+
+    nbr_row_diff <- nrow(opng_cprn[dt != old])
+
     if (nbr_row_diff != 0) {stop("there is an error in `aggregate_openings`")}
     
     
@@ -188,6 +197,7 @@ create_anls_df <- function(df_wb, df_open) {
         group_by(year) %>%
         mutate(nbr_opened_cum_global = sum(nbr_opened_cum),
                nbr_closed_cum_global = sum(nbr_closed_cum),
+               nbr_opened_global = sum(nbr_opened),
                pm_density_global = nbr_opened_cum_global - nbr_closed_cum_global,
                pm_density_global_sqrd = pm_density_global^2)
                ## prop_closed = nbr_closed_cum/nbr_opened_cum)
