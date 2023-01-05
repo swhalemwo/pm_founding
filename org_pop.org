@@ -611,6 +611,10 @@ Figure [[plt_xtsum]] shows the proportion between within-country variance and ov
 [[file:figures/plt_v62_coef_krnls.pdf]]
 
 
+#+label: plt_v62_coef_violin
+#+caption: distribution of main coefficients
+#+attr_latex: :width 18cm
+[[file:figures/plt_v62_coef_violin.pdf]]
 
 
 

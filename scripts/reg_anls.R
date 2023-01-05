@@ -1007,6 +1007,45 @@ gen_plt_coef_krnls <- function(top_coefs) {
 
 }
 
+gen_plt_coef_violin <- function(top_coefs) {
+    #' generate violin plot: nicer way of showing distribution of variables (separately) across combinations
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
+    1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;
+
+    
+    # reorder variable names
+    top_coefs2 <- gen_top_coefs2(top_coefs) %>%
+        .[hyp_id != "zcontrols"] %>% 
+        .[, vrbl_name_unlag := factor(vrbl_name_unlag, levels = rev(names(vvs$vrbl_lbls)))]
+
+    ## get custom function for variable labels
+    addline_format <- function(x,...){
+        gsub(' \\* ',' *\n',x) %>%
+            gsub(' \\(\\*100\\)', "", .)            
+    }
+
+    ## make violin plot
+    plt_coef_violin <- ggplot(top_coefs2[hyp_id != "h1a"], aes(y=vrbl_name_unlag, x=coef)) +
+        geom_violin(scale = "area", trim = T, bw = 0.04) +
+        ## geom_col() + 
+        ## use custom bandwidth -> somehow good sizing across facets
+        ## geom_jitter(size = 0.4, width = 0, height = 0.1) + # don't litter plot with jitter
+        scale_y_discrete(labels = addline_format(vvs$vrbl_lbls)) + # actual relabelling of variables (on y-axes)
+        facet_grid(hyp_id ~ cbn_name, scales = "free", switch = "y", space = "free",
+                   labeller = as_labeller(c(vvs$krnl_lbls, vvs$cbn_lbls, vvs$vrbl_lbls))) +
+        geom_vline(xintercept = 0, linetype = "dashed") +
+        theme(strip.text.y.left = element_text(angle = 0, size = 11),
+              strip.text.x = element_text(size = 12),
+              axis.text.y = element_text(size = 11),
+              axis.text.x = element_text(size = 10)) + 
+        labs(x=element_blank(), y = element_blank())
+    ## plt_coef_violin
+
+    return(plt_coef_violin)
+    
+}
+
+
 gen_plt_hyp_thld_res <- function(top_coefs) {
     if (as.character(match.call()[[1]]) %in% fstd){browser()}
 
@@ -1048,6 +1087,8 @@ gen_reg_res_plts <- function(reg_res_objs, vvs, NBR_MDLS) {
     plt_hyp_thld_res <- gen_plt_hyp_thld_res(top_coefs)
     plt_coef_krnls <- gen_plt_coef_krnls(top_coefs)
 
+    plt_coef_violin <- gen_plt_coef_violin(top_coefs)
+
     
 
     l_plts <- list(plt_cbn_log_likelihoods= plt_cbn_log_likelihoods,
@@ -1056,7 +1097,8 @@ gen_reg_res_plts <- function(reg_res_objs, vvs, NBR_MDLS) {
                    plt_best_models_wlag = plt_best_models_wlag,
                    plt_best_models_condensed = plt_best_models_condensed,
                    plt_hyp_thld_res = plt_hyp_thld_res,
-                   plt_coef_krnls = plt_coef_krnls)
+                   plt_coef_krnls = plt_coef_krnls,
+                   plt_coef_violin = plt_coef_violin)
                    
     
 
@@ -1096,7 +1138,8 @@ gen_plt_cfgs <- function() {
             plt_lag_cprn = list(filename = "lag_cprn.pdf", width = 7, height = 5),
             plt_cvrgnc = list(filename = "crvgnc.pdf", width = 5, height = 7),
             plt_hyp_thld_res = list(filename = "hyp_thld_res.pdf", width = 7, height = 6),
-            plt_coef_krnls = list(filename = "coef_krnls.pdf", width = 9, height = 6)
+            plt_coef_krnls = list(filename = "coef_krnls.pdf", width = 9, height = 6),
+            plt_coef_violin = list(filename = "coef_violin.pdf", width = 9, height = 4.5)
         )
     )
 
@@ -1210,8 +1253,11 @@ reg_res <- list()
 ## generate plots, construct configs
 reg_res$plts <- gen_reg_res_plts(reg_res_objs, vvs, NBR_MDLS)
 
-reg_res$plt_cfgs <- gen_plt_cfgs()
-render_reg_res("plt_coef_krnls", reg_res, reg_res$plt_cfgs, batch_version = "v62")
+
+## reg_res$plt_cfgs <- gen_plt_cfgs()
+## render_reg_res("plt_coef_violin", reg_res, reg_res$plt_cfgs, batch_version = "v62")
+
+## reg_res$plts$plt_coef_krnls
 
 map(names(reg_res$plts), ~render_reg_res(.x, reg_res, reg_res$plt_cfgs, batch_version = "v62"))
 
