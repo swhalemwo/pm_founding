@@ -843,6 +843,7 @@ gen_lbl_raster <- function(dens_dt, method) {
 }
 
 gen_top_coefs2 <- function(top_coefs) {
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
     #' move coefficient grouping by hypothesis into own function to allow access in gen_plt_coef_krnls_dev
     
     top_coefs2 <- rbind(
@@ -859,7 +860,13 @@ gen_top_coefs2 <- function(top_coefs) {
         top_coefs[vrbl_name_unlag %in% c("ghweal992j", "shweal992j_p90p100", "shweal992j_p99p100"),
                   .(hyp_id = "h3b", vrbl_name_unlag, cbn_name, coef)],
         top_coefs[vrbl_name_unlag %in% sprintf("hnwi_nbr_%sM", c(1,5,30,200)),
-                  .(hyp_id = "h4", vrbl_name_unlag, cbn_name, coef)])
+                  .(hyp_id = "h4", vrbl_name_unlag, cbn_name, coef)],
+        top_coefs[vrbl_name_unlag %in% c("cnt_contemp_1990", "cnt_contemp_1990_squared", "NY.GDP.PCAP.CDk",
+                                         "clctr_cnt_cpaer", "pm_density", "pm_density_sqrd",
+                                         "pm_density_global", "pm_density_global_sqrd",
+                                         "nbr_closed_cum_global"),
+                  .(hyp_id = "zcontrols", vrbl_name_unlag, cbn_name, coef)]
+        )
 
     return(top_coefs2)
 }
@@ -976,7 +983,7 @@ gen_plt_coef_krnls <- function(top_coefs) {
     
     #' kernel distribution of coefficients of main variables
 
-    top_coefs2 <- gen_top_coefs2(top_coefs)
+    top_coefs2 <- gen_top_coefs2(top_coefs)[hyp_id != "zcontrols"]
 
     
     ## working plot, grouped by hypothesis
@@ -990,6 +997,7 @@ gen_plt_coef_krnls <- function(top_coefs) {
               legend.position = "bottom") +
         labs(x="coefficient")
 
+    
     
 
     
