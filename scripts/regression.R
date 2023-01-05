@@ -1187,13 +1187,25 @@ gen_vrbl_vectors <- function() {
         "h3b" = "H3: more wealth inequality -> more PMs",
         "h4"  = "H4: more (U/V)HNWIs -> more PMs")
 
+    ## original labels, now getting shortened
+    ## krnl_lbls <- c(
+    ##     "h1a" = "H1: Tax exemption of non-profits",
+    ##     "h1b" = "H1: Tax deductibility of donations",
+    ##     "h2" = "H2: Gvt cultural spending",
+    ##     "h3a" = "H3: Income inequality variables",
+    ##     "h3b" = "H3: Wealth inequality variables",
+    ##     "h4"  = "H4: (U/V)HNWIs",
+    ##     "zcontrols" = "Controls") 
+    
     krnl_lbls <- c(
-        "h1a" = "H1: Tax exemption of non-profits",
-        "h1b" = "H1: Tax deductibility of donations",
-        "h2" = "H2: Gvt cultural spending",
-        "h3a" = "H3: Income inequality variables",
-        "h3b" = "H3: Wealth inequality variables",
-        "h4"  = "H4: (U/V)HNWIs")
+        "h1a" = "H1:\nNPO Tax exemption",
+        "h1b" = "H1:\nTax deductibility\nof donations",
+        "h2"  = "H2:\n Cultural spending",
+        "h3a" = "H3:\nIncome inequality",
+        "h3b" = "H3:\nWealth inequality",
+        "h4"  = "H4:\n(U/V)HNWIs",
+        "zcontrols" = "Controls") 
+
 
 
     if (!all(all_rel_vars %in% names(vrbl_lbls))) {
