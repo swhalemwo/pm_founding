@@ -1,0 +1,51 @@
+#+latex_class: article_usual2
+# erases make title
+# #+BIND: org-export-latex-title-command ""
+
+# fucks all the maketitlestuff just to be sure
+#+OPTIONS: num:nil
+#+OPTIONS: toc:nil
+#+OPTIONS: h:5
+
+# -*- org-export-babel-evaluate: nil -*-
+
+* Investigating causes of private museum founding
+
+** Introduction
+
+
+Private museums constitute a substantial development in the cultural sector in the last decades.
+#
+While museums have been privately founded throughout history, recent decades have seen an increase in their founding that has been coined the "private museum boom" [[parencite:&Walker_2019_collector]], which has resulted in hundreds of private museums being founded since 2000 [[parencite:&LarrysList_2015_report]].
+#
+These institutions raise questions about the configuration of the art field in particular, and the development of new organizational forms in general:
+#
+Is their emergence related to a decline of public institutions which shifts decision-making further into the hands of wealthy, private individuals, who use the image of public benefit to legitimate increasing inequalities?
+#
+Are private museums a short-lived fad, or will they leave a lasting impact in the art field, potentially wrangling consecrating power from other museums?
+#
+While no single study can address all these questions simultaneously, I argue that an analysis of the foundings of private museum constitutes a sofar unexploited opportunity to shed light onto larger questions of organization form development and power arrangements. 
+
+ 
+Multiple hypotheses for the spread of this new form have been raised, but systematic analyses of these have been lacking.
+# 
+In particular, the rise of private museums has been hypothesized to be associated to tax incentives, reductions in government spending, increasing inequality and increasing elite wealth.
+
+
+Combining various socio-economic and art field data sources, I conduct a quantitative test of these hypotheses of datasets of 1258, 2574 and 3400 country years using random effects negative binomial regression models.
+#
+While I find moderate support for a role of tax incentives, government spending is found to be associated primarily positively (not, as hypothesized, negatively) with private museum founding.
+#
+Furthermore the effects of inequality are divergent, as a positive association with private museum founding is found for wealth inequality and a negative one for income inequality.
+#
+Finally, elite wealth effects are primarily negative (some although are positive) as well as small.
+
+
+** Delineating private museums
+Effectively defining private museums is not a straightforward task, and depends on the conceptualization of the terms "private" and "museum", neither of which are unambiguous concepts either.
+#
+For this study I use "private" to denote being established by a private art collector, art collector couple, or their descendants; such a focus on the individual founder thus does not include museums operated by companies (what may more generally be called the "private sector") or groups of people.
+#
+A "museum" is conceptualized as an organization that possesses a building and a collection of its own (which excludes kunsthalles and exhibition centers), which is sufficiently accessible to the public.
+#
+For the purpose of this research I also only include such institutions that focuses on modern or contemporary art, with modern and contemporary art operationalized as art created after 1900.
