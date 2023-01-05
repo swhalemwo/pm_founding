@@ -116,9 +116,9 @@ Investigating charitable donations more generally, [[textcite:&Peloza_Steel_2005
 
 
 I focus here on two forms of tax incentives, first the exemptions of certain taxes for charitable organizations, and second the top marginal income tax rates, i.e. the amount of tax to be paid on income in the uppermost tax bracket.
-# 
+#
+# fixme: net cost also mentioned some paragraphs before -> combine
 Higher marginal income tax rates (in combination with tax deductibility of charitable donations) decrease the net "cost" of a donation (as higher rates increase the amount returned, cf. cite:&Hemels_2017_incentives for a more detailed discussion), and are thus expected to increase the incentive to engage in charitable behavior such as the opening of private museums. 
-
 
 
 ***** pro :ignhead:
@@ -142,6 +142,7 @@ Nevertheless, a clear overall argument is reached in the impact of tax incentive
 
 ***** contra :ignhead:
 
+# fixme: check sentence structure: list lacking verb?
 The impact of tax incentives does not exclude other motivations, thus the arguments of scholars who point towards other motivations to de-emphasize the impact of tax incentives such as "passion for art" ([[cite:&Zorloni_Resch_2016_opportunities p.7]], [[cite:&Adam_2021_rise p.12]]) or other "personal motivations" [[parencite:&Walker_2019_collector p.144]] do not contradict the argument that tax incentive play a role.
 #
 In fact, other motivations (such as the aforementioned passion for the arts, as well as potential reputation gains; cf. [[cite:&Bekkers_Wiepking_2010_literature;&Bekkers_Wiepking_2011_philanthropic]] for motivations of philanthropic behavior generally) are required as tax incentives only /reduce/ the cost of philanthropic behavior but do not cancel it out completely, let alone result in a financial profit; tax incentives thus may play a supportive role by easing the financial burdens of running a private museum as a consequence of other motivations.
