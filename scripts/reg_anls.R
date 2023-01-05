@@ -842,13 +842,9 @@ gen_lbl_raster <- function(dens_dt, method) {
     }
 }
 
-
-
-gen_plt_coef_krnls <- function(top_coefs) {
-    if (as.character(match.call()[[1]]) %in% fstd){browser()}
+gen_top_coefs2 <- function(top_coefs) {
+    #' move coefficient grouping by hypothesis into own function to allow access in gen_plt_coef_krnls_dev
     
-    #' kernel distribution of coefficients of main variables
-
     top_coefs2 <- rbind(
         top_coefs[vrbl_name_unlag == "NPO.tax.exemption",
                   .(hyp_id = "h1a", vrbl_name_unlag, cbn_name, coef)],
@@ -863,18 +859,21 @@ gen_plt_coef_krnls <- function(top_coefs) {
         top_coefs[vrbl_name_unlag %in% c("ghweal992j", "shweal992j_p90p100", "shweal992j_p99p100"),
                   .(hyp_id = "h3b", vrbl_name_unlag, cbn_name, coef)],
         top_coefs[vrbl_name_unlag %in% sprintf("hnwi_nbr_%sM", c(1,5,30,200)),
-                  .(hyp_id = "h4", vrbl_name_unlag, cbn_name, coef)]) 
+                  .(hyp_id = "h4", vrbl_name_unlag, cbn_name, coef)])
 
-    ## working plot, grouped by hypothesis
-    ## plt_coef_krnls <- top_coefs2 %>%
-    ##     ggplot(aes(x=coef, y=..density.., fill = cbn_name)) +
-    ##     geom_density() +
-    ##     facet_grid(hyp_id ~ cbn_name, scales = "free_y", switch = "y",
-    ##                labeller = as_labeller(c(vvs$krnl_lbls, vvs$cbn_lbls, vvs$vrbl_lbls))) +
-    ##     geom_vline(xintercept = 0, linetype = "dashed") +
-    ##     theme(strip.text.y.left = element_text(angle = 0),
-    ##           legend.position = "bottom") +
-    ##     labs(x="coefficient")
+    return(top_coefs2)
+}
+
+
+
+gen_plt_coef_krnls_dev <- function(top_coefs) {
+    #' experimental version of having a separate density for each variable
+    #' doesn't look good so far: densities vary in spread, labelling of line difficult
+
+    # could also add color
+
+    top_coefs2 <- gen_top_coefs2(top_coefs)
+
 
     ## calculate densities (to get variable labels in plot)
     top_coefs_dens <- top_coefs2 %>% copy() %>%
@@ -911,16 +910,19 @@ gen_plt_coef_krnls <- function(top_coefs) {
 
     
     ggplot() + 
-        ## geom_point(lbl_pts, mapping = aes(x=x, y=y), alpha = 0.1) +
+        geom_point(lbl_pts, mapping = aes(x=x, y=y), alpha = 0.1) +
         geom_text_repel(lbl_pts, mapping = aes(x=x, y=y, label = label), 
                         min.segment.length = 0, # test
-                        point.size = 3
+                        point.size = 3,
+                        verbose = T,
+                        max.iter = 2e6,
+                        max.time = 5
                         ## point.padding = 0,
                         ## box.padding = 0,
                         ## force = 5
                         ) +
         geom_line(top_coefs_dens, mapping = aes(x=x, y=y, group = vrbl_name_unlag)) +
-        facet_grid(hyp_id ~ cbn_name, scales = "free_y", switch = "y", space = "free", 
+        facet_grid(hyp_id ~ cbn_name, scales = "free", switch = "y", space = "free", 
                    labeller = as_labeller(c(vvs$krnl_lbls, vvs$cbn_lbls, vvs$vrbl_lbls))) +
         geom_vline(xintercept = 0, linetype = "dashed") +
         theme(strip.text.y.left = element_text(angle = 0),
@@ -953,7 +955,6 @@ gen_plt_coef_krnls <- function(top_coefs) {
          labs(x="coefficient")
 
     
-
     plt_coef_krnls <- top_coefs2 %>%
         ggplot(aes(x=coef, y=..density.., fill = cbn_name)) +
         geom_density() +
@@ -964,6 +965,32 @@ gen_plt_coef_krnls <- function(top_coefs) {
               legend.position = "bottom") +
         labs(x="coefficient")
     plt_coef_krnls
+
+}
+
+
+
+
+gen_plt_coef_krnls <- function(top_coefs) {
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
+    
+    #' kernel distribution of coefficients of main variables
+
+    top_coefs2 <- gen_top_coefs2(top_coefs)
+
+    
+    ## working plot, grouped by hypothesis
+    plt_coef_krnls <- top_coefs2 %>%
+        ggplot(aes(x=coef, y=..density.., fill = cbn_name)) +
+        geom_density() +
+        facet_grid(hyp_id ~ cbn_name, scales = "free_y", switch = "y",
+                   labeller = as_labeller(c(vvs$krnl_lbls, vvs$cbn_lbls, vvs$vrbl_lbls))) +
+        geom_vline(xintercept = 0, linetype = "dashed") +
+        theme(strip.text.y.left = element_text(angle = 0),
+              legend.position = "bottom") +
+        labs(x="coefficient")
+
+    
 
     
 
