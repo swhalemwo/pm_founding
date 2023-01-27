@@ -201,12 +201,20 @@ cpltns_checker <- function(vx, varx) {
 
     
 scramblematch<-function(query,target, ignore.case=T) {
+    ## print(sprintf("query: %s", query))
+    ## print(sprintf("target: %s", target))
+    ## print("\n")
     #' returns true if query is substring of target, by default ignore case
     ## Reduce("&",lapply(strsplit(query," ")[[1]],grepl,target,fixed=TRUE))
     Reduce("&",lapply(strsplit(query," ")[[1]], grepl, target, ignore.case = ignore.case))
 }
 
+
+
 findt <- scramblematch
+
+findt_v <- Vectorize(findt)
+
 
 locate_col <- function(df, term) {
     #' find the column labeled as term (if data is not clearly structured)
@@ -488,4 +496,5 @@ render_xtable <- function(xtable, filepath) {
 ## data.table(brand = rownames(mtcars), mpg = mtcars$mpg, cyl = mtcars$cyl) %>%
     ## xtable(caption="cars") %>% 
     ## prvlt()
+
 
