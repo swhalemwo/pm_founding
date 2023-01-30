@@ -145,7 +145,8 @@ gen_vrbl_thld_choices <- function(hnwi_vars, inc_ineq_vars, weal_ineq_vars) {
 
 
 
-gen_reg_spec <- function(non_thld_lngtd_vars, vrbl_thld_choice) {
+gen_reg_spec <- function(non_thld_lngtd_vars, vrbl_thld_choice, reg_settings) {
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
     
     #' generate the regression specification: basically just choice of some variables/thresholds and lag lengths
 
@@ -164,10 +165,17 @@ gen_reg_spec <- function(non_thld_lngtd_vars, vrbl_thld_choice) {
 
     lngtd_vars <- data.frame(vrbl = c(vrbl_thld_choice$hnwi_var, vrbl_thld_choice$inc_ineq_var,
                                       vrbl_thld_choice$weal_ineq_var,  non_thld_lngtd_vars))
-    lngtd_vars$lag <- sample(seq(1,5), nrow(lngtd_vars), replace = T)
+
+    
+    ## lngtd_vars$lag <- sample(seq(1,5), nrow(lngtd_vars), replace = T)
+    ## set lags
+    lngtd_vars$lag <- sample(reg_settings$lags, nrow(lngtd_vars), replace = T)
 
     ## lag TI*TMITR interaction with same lag as TMITR
-    lngtd_vars[which(lngtd_vars$vrbl == "ti_tmitr_interact"),]$lag <- lngtd_vars[lngtd_vars$vrbl == "tmitr_approx_linear20step", ]$lag
+    ## lngtd_vars[which(lngtd_vars$vrbl == "ti_tmitr_interact"),]$lag <- lngtd_vars[lngtd_vars$vrbl == "tmitr_approx_linear20step", ]$lag
+    ## newer data.table based version
+    lngtd_vars <- adt(lngtd_vars)[vrbl == "ti_tmitr_interact",
+                    lag := adt(lngtd_vars)[vrbl == "tmitr_approx_linear20step", lag]] %>% adf()
 
     reg_spec <- list(lngtd_vrbls = lngtd_vars)
 
@@ -1004,7 +1012,9 @@ replace_vlue <- function(lngtd_vrbls, vrbl, lag) {
 
 
 
-vary_spec <- function(reg_spec, vvs, vary_vrbl_lag){
+vary_spec <- function(reg_spec, vvs, vary_vrbl_lag, lags){
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
+    
     #' for a spec, vary each variable along all lags 
     
     
@@ -1012,10 +1022,11 @@ vary_spec <- function(reg_spec, vvs, vary_vrbl_lag){
 
     ## if I want to vary the variable lags, do it here
     if (vary_vrbl_lag) {
+
         ## don't vary the ti_tmitr interaction 
         varied_specs <-
             lapply(reg_spec[["lngtd_vrbls"]]$vrbl[reg_spec[["lngtd_vrbls"]]$vrbl != "ti_tmitr_interact"], \(x)
-                   lapply(seq(1,5), \(t)
+                   lapply(lags, \(t)
                           list(
                               ## "lngtd_vrbls" = mutate(reg_spec[["lngtd_vrbls"]],
                               ##                         lag = ifelse(vrbl == x, t, lag)),
@@ -1027,8 +1038,8 @@ vary_spec <- function(reg_spec, vvs, vary_vrbl_lag){
                           )
                           )
                    )
-
         varied_specs_long <- Reduce(\(x, y) c(x,y), varied_specs) %>% unique()
+
         ## if i don't want to vary variable lag, still add base_lag_spec
     } else {
         
@@ -1039,6 +1050,7 @@ vary_spec <- function(reg_spec, vvs, vary_vrbl_lag){
         varied_specs_long <- list(c(reg_spec,
                                list("base_lag_spec" = base_lag_spec)
                                ))
+        
     }
 
 
@@ -1290,7 +1302,8 @@ gen_batch_reg_specs <- function(reg_settings, vvs, vrbl_thld_choices) {
 
     reg_specs <- lapply(seq(1, nrow(vrbl_thld_choices)), \(x)
                         lapply(seq(1, reg_settings$nbr_specs_per_thld), \(i)
-                               gen_reg_spec(vvs$non_thld_lngtd_vars, vrbl_thld_choices[x,]))) %>% flatten()
+                               gen_reg_spec(vvs$non_thld_lngtd_vars, vrbl_thld_choices[x,], reg_settings))) %>%
+        flatten()
 
     ## reg_specs <- lapply(seq(1,reg_settings$nbr_specs_per_thld), \(x)
     ##                     gen_reg_spec(vvs$non_thld_lngtd_vars, vrbl_thld_choices)) %>%
@@ -1300,6 +1313,7 @@ gen_batch_reg_specs <- function(reg_settings, vvs, vrbl_thld_choices) {
     reg_spec_mdls <- vary_batch_reg_spec(reg_specs, reg_settings, vvs)
 
     reg_spec_mdls_with_ids <- idfy_reg_specs(reg_spec_mdls, vvs)
+    
     
     t2 = Sys.time()
     print(t2-t1)
@@ -1319,7 +1333,11 @@ vary_batch_reg_spec <- function(reg_specs, reg_settings, vvs) {
 
     ## generate variations of basic reg_spec
     reg_spec_varyns <- mclapply(reg_specs, \(x)
-                                vary_spec(x, vvs, reg_settings$vary_vrbl_lag), mc.cores = 6) %>% flatten()
+                                vary_spec(x, vvs, reg_settings$vary_vrbl_lag, reg_settings$lags),
+                                mc.cores = 6) %>% flatten()
+
+    ## vary_spec(reg_specs[[1]], vvs, reg_settings$vary_vrbl_lag, reg_settings$lags)
+    ## vary_spec(reg_specs[[3]], vvs, T, c(1,2,3,4))
 
 
     
@@ -1329,6 +1347,9 @@ vary_batch_reg_spec <- function(reg_specs, reg_settings, vvs) {
                               gen_spec_cbn_info(x, reg_settings$cbns_to_include, vvs),
                               mc.cores = 6) %>%
         flatten()
+
+    ## map(reg_spec_cbns, ~.x$cfg$cbn_name) %>% unlist() %>% table()
+    
 
     ## reg_spec_cbns <- lapply(reg_spec_varyns, \(x) gen_spec_cbn_info(x, vvs$base_vars)) %>% flatten()
     ## reg_spec_cbns <- sapply(reg_spec_varyns, \(x) gen_spec_cbn_info(x, base_vars))
@@ -1428,7 +1449,7 @@ optmz_vrbl_lag <- function(reg_spec, vrblx, loop_nbr, fldr_info, reg_settings, v
     
 
     ## only pick the lngtd_vrbls, and vary vrblx
-    reg_specs_vrblx_varied <- lapply(seq(1,5), \(x)
+    reg_specs_vrblx_varied <- lapply(reg_settings$lags, \(x)
                                     reg_spec$lngtd_vrbls %>% 
                                     mutate(lag = ifelse(vrbl==vrblx, x, lag)) %>%
                                     list(lngtd_vrbls = .))
@@ -1439,6 +1460,7 @@ optmz_vrbl_lag <- function(reg_spec, vrblx, loop_nbr, fldr_info, reg_settings, v
     reg_settings2$technique_strs <- reg_spec$cfg$technique_str
     reg_settings2$difficulty_switches <- reg_spec$cfg$difficulty
     reg_settings2$regcmds <- reg_spec$cfg$regcmd
+    
     
     reg_specs_full_again <- vary_batch_reg_spec(reg_specs_vrblx_varied, reg_settings2, vvs)
     
@@ -1463,7 +1485,7 @@ optmz_vrbl_lag <- function(reg_spec, vrblx, loop_nbr, fldr_info, reg_settings, v
 
     if (all(is.na(lag_lls))) {
         # time for break
-        best_lag <- sample(1:5, 1)
+        best_lag <- sample(reg_settings$lags, 1)
         print("all lags of current model result in non-convergence, pick lag at random")
             
     } else {
@@ -1558,10 +1580,16 @@ optmz_reg_spec <- function(reg_spec, fldr_info, reg_settings) {
 
 ## ** running 
 
+if (identical(args, character(0))) {
+    stop("functions are done")
+}
+
+
 if (is.null(args[[1]])) {
     stop("functions are DONE")
 }
 
+## generate all data for lags of 0-5 to ensure compatibility across lag choices
 vvs <- gen_vrbl_vectors()
 vrbl_cbns <- gen_cbns(vvs$all_rel_vars, vvs$base_vars)
 cbn_dfs_counts_uscld <- gen_cbn_dfs(df_reg, vvs$lngtd_vars, vvs$crscn, vrbl_cbns, vvs$base_vars)
@@ -1584,9 +1612,10 @@ vrbl_thld_choices_optmz <- slice_sample(vrbl_thld_choices, n=36)
 
 
 reg_settings_optmz <- list(
-    nbr_specs_per_thld = 4,
+    nbr_specs_per_thld = 1,
     dvfmts = c("rates"), # should also be counts, but multiple dvfmts not yet supported by reg_anls
-    batch_nbr = "v62",
+    batch_nbr = "v63",
+    lags = c(1),
     vary_vrbl_lag = F,
     technique_strs = c("nr"),
     difficulty_switches = T,
@@ -1605,6 +1634,9 @@ fldr_info_optmz <- setup_regression_folders_and_files(reg_settings_optmz$batch_n
 
 pbmclapply(reg_spec_mdls_optmz, \(x) optmz_reg_spec(x, fldr_info_optmz, reg_settings_optmz),
          mc.cores = 6)
+
+## optmz_reg_spec(reg_spec_mdls_optmz[[1]], fldr_info_optmz, reg_settings_optmz)
+
 
 ## mclapply(reg_spec_mdls_optmz, \(x) run_vrbl_mdl_vars(x, vvs, fldr_info_optmz), mc.cores = 6)
 
