@@ -134,11 +134,14 @@ construct_df_anls_within_prep <- function(df_anls_base, optmzd) {
     ## dt_anls_within_prep4[, .N, group_vrbls][, .N, N] ## check the grouping counts
     ## dt_anls_within_prep4[, .N, lag_variatn][, .N, N]
 
+    ## only use the models that have as many models converged as the groups with the most models
+    ## hopefully equivalent to number of lags
+    nbr_mdls_max <- dt_anls_within_prep4[, .N, lag_variatn][, max(N)]
 
     df_anls_within_prep5 <- atb(dt_anls_within_prep4) %>%
         group_by(across(all_of(group_vrbls))) %>% # haha plain english verbs make it so EZ AMIRITE
         mutate(nbr_mdls_cvrgd = len(base_lag_spec_id)) %>% 
-        filter(nbr_mdls_cvrgd == 5)
+        filter(nbr_mdls_cvrgd == nbr_mdls_max)
 
 
     return(df_anls_within_prep5)
@@ -279,6 +282,7 @@ construct_df_anls_within <- function(df_anls_base, vvs, NBR_MDLS, optmzd, gof_df
 
 
 construct_df_anls_all <- function(df_anls_base, vvs, NBR_MDLS) {
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
     #' pick coefs from all models 
 
     df_anls_all <- df_anls_base %>%
@@ -288,7 +292,9 @@ construct_df_anls_all <- function(df_anls_base, vvs, NBR_MDLS) {
         group_by(vrbl_name_unlag, cbn_name, lag) %>%
         slice_sample(n=NBR_MDLS)
 
-## table(df_anls_all$vrbl_name_unlag)
+    ## table(df_anls_all$vrbl_name_unlag)
+
+    ## adt(df_anls_all)[, .N, by = .(vrbl_name_unlag, cbn_name, lag)][order(N)]
 
     df_anls_all$vrbl_name_unlag <- factor(df_anls_all$vrbl_name_unlag,
                                           levels = c(names(vvs$vrbl_lbls)[names(vvs$vrbl_lbls) %in%
@@ -1222,7 +1228,7 @@ cpr_vrsns <- function(reg_res_vsns) {
 gen_reg_res <- function(fldr_info) {
     if (as.character(match.call()[[1]]) %in% fstd){browser()}
 
-    NBR_MDLS <- 3
+    NBR_MDLS <- 1
     ## fldr_info <- fldr_info_optmz
     reg_anls_base <- read_reg_res_files(fldr_info)
     reg_res_objs <- proc_reg_res_objs(reg_anls_base, vvs, NBR_MDLS)
@@ -1243,9 +1249,9 @@ gen_reg_res <- function(fldr_info) {
 stop("functions done")
 
 ## ** main analysis
-NBR_MDLS <- 3
+NBR_MDLS <- 1
 ## fldr_info <- fldr_info_optmz
-reg_anls_base <- read_reg_res_files(setup_regression_folders_and_files("v62"))
+reg_anls_base <- read_reg_res_files(setup_regression_folders_and_files("v64"))
 reg_res_objs <- proc_reg_res_objs(reg_anls_base, vvs, NBR_MDLS)
 
 reg_res <- list()
@@ -1259,17 +1265,20 @@ reg_res$plts <- gen_reg_res_plts(reg_res_objs, vvs, NBR_MDLS)
 
 ## reg_res$plts$plt_coef_krnls
 
-map(names(reg_res$plts), ~render_reg_res(.x, reg_res, reg_res$plt_cfgs, batch_version = "v62"))
+map(names(reg_res$plts), ~render_reg_res(.x, reg_res, reg_res$plt_cfgs, batch_version = "v63"))
 
 
 ## ** more version comparison 
 
-reg_res60 <- gen_reg_res(setup_regression_folders_and_files("v60"))
-reg_res61 <- gen_reg_res(setup_regression_folders_and_files("v61"))
+library(patchwork)
 
-reg_res60$plts$plt_best_models_condensed + reg_res61$plts$plt_best_models_condensed
-reg_res60$plts$plt_reg_res_within + reg_res61$plts$plt_reg_res_within
-reg_res60$plts$plt_best_models_wlag + reg_res61$plts$plt_best_models_wlag
+reg_res63 <- gen_reg_res(setup_regression_folders_and_files("v63"))
+reg_res64 <- gen_reg_res(setup_regression_folders_and_files("v64"))
+
+reg_res63$plts$plt_best_models_condensed + reg_res64$plts$plt_best_models_condensed
+reg_res63$plts$plt_reg_res_within + reg_res64$plts$plt_reg_res_within
+reg_res63$plts$plt_best_models_wlag + reg_res64$plts$plt_best_models_wlag
+reg_res63$plts$plt_coef_violin + reg_res64$plts$plt_coef_violin
 
     
 
