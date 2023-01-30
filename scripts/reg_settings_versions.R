@@ -287,6 +287,52 @@ reg_settings_optmz <- list(
     mdls_to_include = c("full")
 )
 
+## ** v62: most recent version (maybe some data changes?)
+vrbl_thld_choices_optmz <- slice_sample(vrbl_thld_choices, n=36)
+
+## vrbl_thld_choices_optmz <- filter(vrbl_thld_choices, hnwi_var == "hnwi_nbr_5M",
+##                                   inc_ineq_var == "sptinc992j_p99p100", weal_ineq_var == "shweal992j_p99p100")
+
+
+reg_settings_optmz <- list(
+    nbr_specs_per_thld = 4,
+    dvfmts = c("rates"), # should also be counts, but multiple dvfmts not yet supported by reg_anls
+    batch_nbr = "v62",
+    vary_vrbl_lag = F,
+    technique_strs = c("nr"),
+    difficulty_switches = T,
+    regcmds = c("xtnbreg"),
+    ## cbns_to_include = c("cbn_all"),
+    cbns_to_include = names(cbn_dfs_counts)[1:3],
+    mdls_to_include = c("full")
+)
+
+
+## ** v63: only lag of 1 year, requires generalization of lag usage 
+
+vrbl_thld_choices_optmz <- slice_sample(vrbl_thld_choices, n=4)
+
+## vrbl_thld_choices_optmz <- filter(vrbl_thld_choices, hnwi_var == "hnwi_nbr_5M",
+##                                   inc_ineq_var == "sptinc992j_p99p100", weal_ineq_var == "shweal992j_p99p100")
+
+
+reg_settings_optmz <- list(
+    nbr_specs_per_thld = 1,
+    dvfmts = c("rates"), # should also be counts, but multiple dvfmts not yet supported by reg_anls
+    batch_nbr = "v63",
+    lags <- 1,
+    vary_vrbl_lag = F,
+    technique_strs = c("nr"),
+    difficulty_switches = T,
+    regcmds = c("xtnbreg"),
+    ## cbns_to_include = c("cbn_all"),
+    cbns_to_include = names(cbn_dfs_counts)[1:3],
+    mdls_to_include = c("full")
+)
+
+
+
+
 
 ## * read settings back in 
 
