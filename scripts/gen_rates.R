@@ -1,3 +1,5 @@
+## * generate rates
+
 proc_csnt_cnts_to_rts <- function(df_reg) {
     if (as.character(match.call()[[1]]) %in% fstd){browser()}
     #' process the constant count variables (for now only MOW museum counts at some year) to rates
