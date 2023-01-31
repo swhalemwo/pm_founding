@@ -53,7 +53,8 @@ read_reg_res_files <- function(fldr_info) {
     gof_df <- mclapply(all_mdl_res, \(x) x[["gof_df"]], mc.cores = 6) %>% bind_rows() %>% atb()
 
     ## add the model details as variables 
-    gof_df_cbn <- merge(gof_df, df_reg_anls_cfgs_wide) %>% atb()
+    gof_df_cbn <- merge(gof_df, df_reg_anls_cfgs_wide) %>% atb() %>%
+        mutate(vrbl_choice = gsub("[1-5]", "0", base_lag_spec)) ## add vrbl choice
 
     gof_df_cbn$cbn_name <- factor(gof_df_cbn$cbn_name, levels = names(vrbl_cbns))
 
@@ -629,9 +630,9 @@ gen_plt_cvrgnc <- function(gof_df_cbn) {
     ## first: get the top values (values only go up)
 
     cvrgnc_df_prep <- filter(gof_df_cbn, gof_names == "log_likelihood") %>%
-        select(gof_value, base_lag_spec, loop_nbr, vrbl_optmzd, cbn_name, regcmd) %>%
-        mutate(step_base = 1, loop_nbr = as.numeric(loop_nbr),
-               vrbl_choice = gsub("[1-5]", "0", base_lag_spec))
+        select(gof_value, base_lag_spec, loop_nbr, vrbl_optmzd, cbn_name, regcmd, vrbl_choice) %>%
+        mutate(step_base = 1, loop_nbr = as.numeric(loop_nbr))
+               ## vrbl_choice = gsub("[1-5]", "0", base_lag_spec))
 
     ## developing analysis of value-analyzing
     ## dtx <- data.table(vlu = c(1,1,2, 1,2,2, 2, 2, 1), id = c(rep("a", 3), rep("b", 3), rep("c", 3)))
@@ -1193,7 +1194,7 @@ cpr_vrsns <- function(reg_res_vsns) {
     ## get best models
     dt_cpr_vsns <- imap_dfr(reg_res_vsns, ~ .x$reg_res_objs$gof_df_cbn %>%
                                               filter(gof_names == "log_likelihood") %>%
-                                              mutate(vrbl_choice = gsub("[1-5]", "0", base_lag_spec)) %>% 
+                                              ## mutate(vrbl_choice = gsub("[1-5]", "0", base_lag_spec)) %>% 
                                               group_by(cbn_name, regcmd, vrbl_choice) %>% 
                                               slice_max(gof_value, with_ties = F) %>%
                                               select(cbn_name, regcmd, gof_value) %>%
@@ -1327,7 +1328,7 @@ reg_res_objs$gof_df_cbn %>% filter(gof_names == "log_likelihood") %>%
 ## ** evaluate possible savings of better model caching 
 
 reg_res_objs$gof_df_cbn %>% filter(gof_names == "log_likelihood") %>%
-    mutate(vrbl_choice = gsub("[1-5]", "0", base_lag_spec)) %>% 
+    ## mutate(vrbl_choice = gsub("[1-5]", "0", base_lag_spec)) %>% 
     group_by(regcmd, cbn_name, vrbl_choice) %>%
     summarize(nbr_mdls = len(vrbl_choice), nbr_unq_mdls = n_distinct(lag_spec)) %>%
     ungroup() %>%
