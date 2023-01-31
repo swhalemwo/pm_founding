@@ -1250,12 +1250,14 @@ gen_vrbl_vectors <- function() {
 }
 
 
-setup_regression_folders_and_files <- function(batch_version) {
+setup_regression_folders_and_files <- function(batch_version, batch_dir_addgn = "") {
     #' setup folders and files for running regressions
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
+    
 
     ## batch_version <- "v20"
     REG_MONKEY_DIR <- "/home/johannes/reg_res/"
-    BATCH_DIR <- paste0(REG_MONKEY_DIR, batch_version, "/")
+    BATCH_DIR <- paste0(REG_MONKEY_DIR, batch_dir_addgn, batch_version, "/")
 
     REG_RES_DIR <- paste0(BATCH_DIR, "reg_res/")
     REG_RES_FILE_LAGS <- paste0(BATCH_DIR, batch_version, "_lags.csv")
