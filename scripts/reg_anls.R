@@ -1273,6 +1273,7 @@ map(names(reg_res$plts), ~render_reg_res(.x, reg_res, reg_res$plt_cfgs, batch_ve
 
 library(patchwork)
 
+reg_res62 <- gen_reg_res(setup_regression_folders_and_files("v62"))
 reg_res63 <- gen_reg_res(setup_regression_folders_and_files("v63"))
 reg_res64 <- gen_reg_res(setup_regression_folders_and_files("v64"))
 
@@ -1318,6 +1319,43 @@ cpr_vrsns(reg_res_vsns)
 
 ## render_reg_res(reg_res$plts$cbn_log_likelihoods, fldr_info)
 ## render_reg_res(reg_res$plts$best_models_condensed, fldr_info)
+
+## ** version comparison: compare v63 and v64 to v62
+
+## compare log-likelihood distributions between v62 (all variables with up to 5 lags), v63 (all lags = 1),
+## and v64 (some variable combinations, up to 3 lags)
+dt_llcpr_long <- rbind(reg_res62$reg_res_objs$gof_df_cbn %>% adt() %>%
+      .[gof_names == "log_likelihood", .(max_ll = max(gof_value), version = "v62"),
+        by = .(cbn_name, vrbl_choice)],
+      reg_res63$reg_res_objs$gof_df_cbn %>% adt() %>%
+      .[gof_names == "log_likelihood", .(max_ll = max(gof_value), version = "v63"),
+        by = .(cbn_name, vrbl_choice)],
+      reg_res64$reg_res_objs$gof_df_cbn %>% adt() %>%
+      .[gof_names == "log_likelihood", .(max_ll = max(gof_value), version = "v64"),
+        by = .(cbn_name, vrbl_choice)])
+
+## actual comparison: first cast into wide
+dt_llcpr_wide <- dt_llcpr_long %>% 
+    dcast.data.table(cbn_name + vrbl_choice ~ version, value.var = "max_ll") %>%
+    .[, `:=`(d63 = v62- v63,
+             d64 = v62- v64)] 
+
+
+dt_llcpr_long2 <- dt_llcpr_wide %>% 
+    melt(id.vars = c("cbn_name", "vrbl_choice"), measure.vars = c("d63", "d64"))
+
+## plot the differences from v63/v64 to v62
+dt_llcpr_long2 %>%
+    ggplot(aes(x=value, color = variable)) +
+    geom_density()
+    
+
+dt_llcpr_long2[, .(mean_diff = mean(value, na.rm = T)), variable]
+## d63           7.33
+## d64           2.86
+
+
+
 ## ** evaluate model convergence consistency
 
 reg_res_objs$gof_df_cbn %>% filter(gof_names == "log_likelihood") %>%
