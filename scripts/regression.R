@@ -1598,9 +1598,9 @@ if (is.null(args[[1]])) {
 ## generate all data for lags of 0-5 to ensure compatibility across lag choices
 vvs <- gen_vrbl_vectors()
 vrbl_cbns <- gen_cbns(vvs$all_rel_vars, vvs$base_vars)
-cbn_dfs_counts_uscld <- gen_cbn_dfs(df_reg, vvs$lngtd_vars, vvs$crscn, vrbl_cbns, vvs$base_vars)
+cbn_dfs_counts_uscld <- gen_cbn_dfs(df_reg, vvs$lngtd_vars, vvs$crscn_vars, vrbl_cbns, vvs$base_vars)
 cbn_dfs_counts <- scale_cbn_dfs(cbn_dfs_counts_uscld, vvs$base_vars, df_reg)
-cbn_dfs_rates_uscld <- gen_cbn_dfs(df_reg_rts, vvs$lngtd_vars, vvs$crscn, vrbl_cbns, vvs$base_vars)
+cbn_dfs_rates_uscld <- gen_cbn_dfs(df_reg_rts, vvs$lngtd_vars, vvs$crscn_vars, vrbl_cbns, vvs$base_vars)
 cbn_dfs_rates <- scale_cbn_dfs(cbn_dfs_rates_uscld, vvs$base_vars, df_reg_rts)
 
 cbn_df_dict <- list(counts = cbn_dfs_counts,
