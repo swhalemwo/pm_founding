@@ -377,6 +377,8 @@ gen_lag_id <- function(reg_spec, vvs) {
 
 
 gen_mdl_id <- function(reg_spec, vvs) {
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
+    
     #' generate unique id for each model
 
     ## get id: need information which variable is there (X if not there), also of lag of each variable that is there
@@ -740,9 +742,11 @@ reg_spec_run_dispatch <- function(iv_vars, dfx, regcmd, dvfmt, fldr_info, techni
 
 
 ## run_vrbl_mdl_vars <- function(mdl_vars, df_cbn, cbn_name, mdl_name, reg_specx) {
-run_vrbl_mdl_vars <- function(reg_spec, vvs, fldr_info, return_objs = c("converged"), verbose = F) {
+run_vrbl_mdl_vars <- function(reg_spec, vvs, fldr_info, return_objs = c("converged"), verbose = F, wtf = T) {
     if (as.character(match.call()[[1]]) %in% fstd){browser()}
     #' run one regression given the model vars
+    #' can also return different stuffs
+    #' if wtf (write-to-file) ==F, don't write any output 
     
     ## df_cbn <- cbn_df_dict[[reg_spec$cfg$dvfmt]][[reg_spec$cfg$cbn_name]]
     df_cbn <- get(reg_spec$cfg$dvfmt, cbn_df_dict) %>% get(reg_spec$cfg$cbn_name, .)
@@ -762,10 +766,10 @@ run_vrbl_mdl_vars <- function(reg_spec, vvs, fldr_info, return_objs = c("converg
     ## always have SP_POP_TOTLm_lag0_uscld so that dvfmt = "rates" can easily add it as offset
     dfx <- select(df_cbn, all_of(c(vvs$base_vars, "iso3c_num", "nbr_opened",iv_vars, "SP_POP_TOTLm_lag0_uscld")))
 
-    ## saving reg spec information to debug later 
-    saveRDS(reg_spec, file = paste0(fldr_info$REG_SPEC_DIR, file_id))
+    ## saving reg spec information to debug later
+    if (wtf) {saveRDS(reg_spec, file = paste0(fldr_info$REG_SPEC_DIR, file_id))}
     ## write model id to start_file to see which models don't converge
-    write.table(file_id, fldr_info$MDL_START_FILE, append = T, col.names = F, row.names = F)
+    if (wtf) {write.table(file_id, fldr_info$MDL_START_FILE, append = T, col.names = F, row.names = F)}
 
 
     regcmd <- reg_spec$cfg$regcmd
@@ -796,7 +800,7 @@ run_vrbl_mdl_vars <- function(reg_spec, vvs, fldr_info, return_objs = c("converg
                     
     } else {
         
-        save_parsed_res(r_regspec$res_parsed, file_id, fldr_info)
+        if (wtf) {save_parsed_res(r_regspec$res_parsed, file_id, fldr_info)}
 
         df_idx$cvrgd <- 1
         ## add time passed to other_cfgs
@@ -807,11 +811,11 @@ run_vrbl_mdl_vars <- function(reg_spec, vvs, fldr_info, return_objs = c("converg
     }
 
     ## save id to df_id to keep track
-    write.table(df_idx, file = fldr_info$REG_RES_FILE_LAGS, append = T, col.names = F, row.names = F)
-    write.table(other_cfgs, file = fldr_info$REG_RES_FILE_CFGS, append = T, col.names = F, row.names = F)
+    if (wtf) {write.table(df_idx, file = fldr_info$REG_RES_FILE_LAGS, append = T, col.names = F, row.names = F)}
+    if (wtf) {write.table(other_cfgs, file = fldr_info$REG_RES_FILE_CFGS, append = T, col.names = F, row.names = F)}
 
     ## write model id to end file to debug convergence failure
-    write.table(file_id, fldr_info$MDL_END_FILE, append = T, col.names = F, row.names = F)
+    if (wtf) {write.table(file_id, fldr_info$MDL_END_FILE, append = T, col.names = F, row.names = F)}
 
     return(r_regspec[return_objs])
     
