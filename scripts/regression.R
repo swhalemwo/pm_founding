@@ -1222,6 +1222,38 @@ gen_vrbl_vectors <- function() {
         "h4"  = "H4:\n(U/V)HNWIs",
         "zcontrols" = "Controls") 
 
+    ## hypothesis memberships
+    hyp_mep <- c(
+        c("NPO.tax.exemption"         = "h1a"),
+        c("tmitr_approx_linear20step" = "h1b"),
+        c("ti_tmitr_interact"         = "h1b"),
+        c("Ind.tax.incentives"        = "h1b"),
+        c("smorc_dollar_fxm"          = "h2"),
+        c("smorc_dollar_fxm_sqrd"     = "h2"),
+        c("gptinc992j"                = "h3a"),
+        c("sptinc992j_p90p100"        = "h3a"),
+        c("sptinc992j_p99p100"        = "h3a"),
+        c("ghweal992j"                = "h3b"),
+        c("shweal992j_p90p100"        = "h3b"),
+        c("shweal992j_p99p100"        = "h3b"),
+        c("hnwi_nbr_1M"               = "h4"),
+        c("hnwi_nbr_5M"               = "h4"),
+        c("hnwi_nbr_30M"              = "h4"),
+        c("hnwi_nbr_200M"             = "h4"),
+        c("cnt_contemp_1990"          = "zcontrols"),
+        c("cnt_contemp_1990_squared"  = "zcontrols"),
+        c("NY.GDP.PCAP.CDk"           = "zcontrols"),
+        c("clctr_cnt_cpaer"           = "zcontrols"),
+        c("pm_density"                = "zcontrols"),
+        c("pm_density_sqrd"           = "zcontrols"),
+        c("pm_density_global"         = "zcontrols"),
+        c("pm_density_global_sqrd"    = "zcontrols"),
+        c("nbr_closed_cum_global"     = "zcontrols"),
+        c("all_dens"                  = "zcontrols"), ## also add some ou-sets
+        c("all_dens_close"            = "zcontrols"))
+        
+          
+    hyp_mep_dt <- data.table(vrbl = names(hyp_mep), hyp = hyp_mep)
 
 
     if (!all(all_rel_vars %in% names(vrbl_lbls))) {
@@ -1248,7 +1280,8 @@ gen_vrbl_vectors <- function() {
         cbn_lbls = cbn_lbls,
         regcmd_lbls = regcmd_lbls,
         hyp_lbls = hyp_lbls,
-        krnl_lbls = krnl_lbls
+        krnl_lbls = krnl_lbls,
+        hyp_mep_dt = hyp_mep_dt
     )
     )
 }
