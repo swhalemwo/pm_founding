@@ -168,7 +168,7 @@ one_out_setup <- function(batch_nbr) {
     ## check that there are no duplicate names 
     check_df_name_unqns(list(dt_ou_base, mdl_id_dt), skip_var_names = c())
     
-
+    ## prep ou data: join with mdl_id_dt (for LL/df), conduct LLRT
     ou_anls <- copy(mdl_id_dt)[dt_ou_base, on = .(mdl_id = nonou_id)] %>%
         .[, ou_set_title_unlag := gsub("_lag[1-5]", "", ou_set_title)] %>% # remove lag info
         .[, `:=`(log_likelihood_diff = log_likelihood - log_likelihood_ou,
@@ -186,20 +186,58 @@ one_out_setup <- function(batch_nbr) {
     ## if (ou_anls[, min(df_diff)] == 0) {stop("some one-out models are not simpler")}
     
     
-
     ## add hypothesis coding
     ou_anls2 <- vvs$hyp_mep_dt %>% copy() %>%
         ## .[copy(ou_anls)[, ou_set_title_unlag2 := ou_set_title_unlag], # preserve to have keep it later 
         .[copy(ou_anls), on = .(vrbl = ou_set_title_unlag)] %>%
         .[, ou_set_title_unlag := vrbl] # other way to keep ou_set_title_unlag: recreate from vrbl
     
+    ## get proporition significant improvement when added to model when variable added
+    dt_llrt_improv_prop <- ou_anls2 %>% copy() %>%
+        .[, .(prop_sig = sum(sig)/.N), by = .(vrbl, cbn_name)]
+
+    hist(dt_llrt_improv_prop$prop_sig)
+    
+    dt_llrt_improv_prop %>% copy() %>%
+        .[prop_sig == 0, prop_sig_bin :=0] %>%
+        .[prop_sig == 1, prop_sig_bin :=1] %>%
+        .[prop_sig > 0 & prop_sig < 1, prop_sig_bin :=0.5] %>%
+        .[, .N, prop_sig_bin] %>% 
+        ggplot(aes(x=factor(prop_sig_bin), y = N)) +
+        geom_col()
+
+          
         
+
+    
+    ## reg_res_ou$plts$plt_best_coefs_single
+    ## top_coefs, colored by prop_sig (LLRT improvement)
+    top_coefs <- gen_top_coefs(reg_res$reg_res_objs$df_anls_base, reg_res$reg_res_objs$gof_df_cbn) %>%
+        .[, .SD[which.max(log_likelihood)], by = .(vrbl_name_unlag, cbn_name)] %>%
+        copy(vvs$hyp_mep_dt)[., on = .(vrbl = vrbl_name_unlag)] %>%
+        .[!is.na(hyp)] %>%
+        .[dt_llrt_improv_prop, on = .(vrbl, cbn_name)]
+        
+    top_coefs %>%
+        ## .[vrbl %!in% c("NPO.tax.exemption", "pm_density_global", "pm_density_global_sqrd")] %>% 
+        ggplot(aes(x=coef, y=vrbl, color = prop_sig)) +
+        geom_point(size = 2) +
+        geom_errorbarh(aes(xmin = coef - 1.96*se, xmax = coef + 1.96*se), height = 0) + 
+        facet_grid(hyp~cbn_name, scales = "free", space =  "free") +
+        geom_vline(xintercept = 0, linetype = "dashed") +
+        scale_color_gradient(low = "#1C5BA6", high = "#BD0017")
+
+    
+    
+
+    
         
     ## violin plot
-    ou_anls %>%
-        ggplot(aes(x=log_likelihood_diff, y = ou_set_title_unlag)) +
-        geom_violin() + 
-        facet_grid(~cbn_name, scales = "free", space = "free")    
+    ou_anls2 %>%
+        ggplot(aes(x=z, y = ou_set_title_unlag)) +
+        geom_violin(bw = 0.2) + 
+        facet_grid(hyp~cbn_name, scales = "free", space = "free") +
+        geom_vline(xintercept = 1.96, linetype = "dashed")
 
     
     reg_res$plts$plt_best_models_condensed
