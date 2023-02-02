@@ -1134,7 +1134,7 @@ gen_reg_res_plts <- function(reg_res_objs, vvs, NBR_MDLS) {
     plt_coef_violin <- gen_plt_coef_violin(top_coefs)
 
     plt_best_coefs_cloud <- gen_plt_best_coefs_cloud(top_coefs)
-    plt_best_coefs_sinle <- gen_plt_best_coefs_single(top_coefs)
+    plt_best_coefs_single <- gen_plt_best_coefs_single(top_coefs)
 
     l_plts <- list(plt_cbn_log_likelihoods= plt_cbn_log_likelihoods,
                    plt_reg_res_within = plt_reg_res_within,
@@ -1143,7 +1143,9 @@ gen_reg_res_plts <- function(reg_res_objs, vvs, NBR_MDLS) {
                    plt_best_models_condensed = plt_best_models_condensed,
                    plt_hyp_thld_res = plt_hyp_thld_res,
                    plt_coef_krnls = plt_coef_krnls,
-                   plt_coef_violin = plt_coef_violin)
+                   plt_coef_violin = plt_coef_violin,
+                   plt_best_coefs_cloud = plt_best_coefs_cloud,
+                   plt_best_coefs_single = plt_best_coefs_single)
                    
     
 
