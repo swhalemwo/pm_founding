@@ -763,12 +763,13 @@ eval_all_hyps <- function(top_coefs, hyp_thld) {
 
 
 gen_top_coefs <- function(df_anls_base, gof_df_cbn) {
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
 
     top_mdls_per_thld_choice <- gof_df_cbn %>% adt() %>%
         .[!is.na(gof_value) & gof_names == "log_likelihood"] %>% # focus on lls
         .[, vrbl_choice := gsub("[1-5]", "0", base_lag_spec)] %>% # again generate vrbl_choice urg
         .[, .SD[which.max(gof_value)], by=.(cbn_name, vrbl_choice)] %>% # pick best fitting model
-        .[, .(mdl_id)]
+        .[, .(mdl_id ,log_likelihood = gof_value)]
 
     top_coefs <- df_anls_base %>% adt() %>% .[top_mdls_per_thld_choice, on ="mdl_id"]
     return(top_coefs)
