@@ -1074,6 +1074,42 @@ gen_plt_hyp_thld_res <- function(top_coefs) {
 }
 
 
+gen_plt_best_coefs_cloud <- function(top_coefs) {
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
+    1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;
+
+    #' coef distribution
+
+    top_coefs %>% copy() %>%
+        copy(vvs$hyp_mep_dt)[., on = .(vrbl = vrbl_name_unlag)] %>% 
+        ggplot(aes(x=coef, y = vrbl)) +
+        geom_point(position = position_jitter(width = 0, height = 0.4, seed = 3), size = 0.2) + 
+        geom_errorbarh(aes(xmin = coef - 1.96*se, xmax = coef + 1.96*se), height = 0,
+                       position = position_jitter(width = 0, height = 0.4, seed = 3), alpha = 0.15) + 
+        facet_grid(hyp~cbn_name, scales = "free", space =  "free") +
+        geom_vline(xintercept = 0, linetype = "dashed")
+
+}
+
+gen_plt_best_coefs_single <- function(top_coefs) {
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
+    1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;
+
+    #' pick best-fitting coef for each variable (now mixes a bunch of models together tho)
+
+    top_coefs %>% copy() %>%
+        .[, .SD[which.max(log_likelihood)], by = .(vrbl_name_unlag, cbn_name)] %>%
+        copy(vvs$hyp_mep_dt)[., on = .(vrbl = vrbl_name_unlag)] %>%
+        .[!is.na(hyp)] %>% 
+        ggplot(aes(x=coef, y=vrbl, color = factor(sig))) +
+        geom_point() +
+        geom_errorbarh(aes(xmin = coef - 1.96*se, xmax = coef + 1.96*se), height = 0) + 
+        facet_grid(hyp~cbn_name, scales = "free", space =  "free") +
+        geom_vline(xintercept = 0, linetype = "dashed") +
+        scale_color_manual(values = c("#1C5BA6", "#BD0017")) 
+
+}
+
 gen_reg_res_plts <- function(reg_res_objs, vvs, NBR_MDLS) {
     if (as.character(match.call()[[1]]) %in% fstd){browser()}
     #' generate all the plots
@@ -1086,7 +1122,7 @@ gen_reg_res_plts <- function(reg_res_objs, vvs, NBR_MDLS) {
     mdl_summary <- reg_res_objs$mdl_summary
 
     top_coefs <- gen_top_coefs(df_anls_base, gof_df_cbn)
-
+    
     plt_cbn_log_likelihoods = gen_plt_cbn_log_likelihoods(gof_df_cbn)
     plt_reg_res_within = gen_plt_reg_res_within(df_anls_within, vvs, NBR_MDLS)
     plt_reg_res_all = gen_plt_reg_res_all(df_anls_within, vvs)
@@ -1097,7 +1133,8 @@ gen_reg_res_plts <- function(reg_res_objs, vvs, NBR_MDLS) {
 
     plt_coef_violin <- gen_plt_coef_violin(top_coefs)
 
-    
+    plt_best_coefs_cloud <- gen_plt_best_coefs_cloud(top_coefs)
+    plt_best_coefs_sinle <- gen_plt_best_coefs_single(top_coefs)
 
     l_plts <- list(plt_cbn_log_likelihoods= plt_cbn_log_likelihoods,
                    plt_reg_res_within = plt_reg_res_within,
