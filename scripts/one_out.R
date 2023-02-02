@@ -121,11 +121,12 @@ one_out_setup <- function(batch_nbr) {
     ## .[5, mdl_id]
 
     ## get data for the comparision: mdl_id for joining, LL and df for LLRT
+    ## first filter by LL
     mdl_id_dt_prep <- reg_res$reg_res_objs$gof_df_cbn %>% adt() %>%
         .[gof_names == "log_likelihood", .SD[which.max(gof_value)], by = .(cbn_name, vrbl_choice),
           .SDcols = c("mdl_id", "gof_value")] %>%
         .[, setnames(.SD, "gof_value", "log_likelihood")]
-
+    ## then add df
     mdl_id_dt <- reg_res$reg_res_objs$gof_df_cbn %>% adt() %>%
         .[gof_names == "df", .(mdl_id, df = gof_value)] %>% 
         .[mdl_id_dt_prep, on = "mdl_id"]
@@ -184,10 +185,12 @@ one_out_setup <- function(batch_nbr) {
     ## check that all models are complex enough 
     ## if (ou_anls[, min(df_diff)] == 0) {stop("some one-out models are not simpler")}
     
+    
+
     ## add hypothesis coding
     ou_anls2 <- vvs$hyp_mep_dt %>% copy() %>%
         ## .[copy(ou_anls)[, ou_set_title_unlag2 := ou_set_title_unlag], # preserve to have keep it later 
-        .[copy(ou_anls), on = .(vrbl = ou_set_title_unlag)]%>%
+        .[copy(ou_anls), on = .(vrbl = ou_set_title_unlag)] %>%
         .[, ou_set_title_unlag := vrbl] # other way to keep ou_set_title_unlag: recreate from vrbl
     
         
