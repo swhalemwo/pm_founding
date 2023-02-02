@@ -1629,6 +1629,7 @@ if (is.null(args[[1]])) {
 }
 
 ## generate all data for lags of 0-5 to ensure compatibility across lag choices
+
 vvs <- gen_vrbl_vectors()
 vrbl_cbns <- gen_cbns(vvs$all_rel_vars, vvs$base_vars)
 cbn_dfs_counts_uscld <- gen_cbn_dfs(df_reg, vvs$lngtd_vars, vvs$crscn_vars, vrbl_cbns, vvs$base_vars)
@@ -1644,17 +1645,17 @@ vrbl_thld_choices <- gen_vrbl_thld_choices(vvs$hnwi_vars, vvs$inc_ineq_vars, vvs
 
 
 
-vrbl_thld_choices_optmz <- slice_sample(vrbl_thld_choices, n=4)
+vrbl_thld_choices_optmz <- slice_sample(vrbl_thld_choices, n=36)
 
 ## vrbl_thld_choices_optmz <- filter(vrbl_thld_choices, hnwi_var == "hnwi_nbr_5M",
 ##                                   inc_ineq_var == "sptinc992j_p99p100", weal_ineq_var == "shweal992j_p99p100")
 
 
 reg_settings_optmz <- list(
-    nbr_specs_per_thld = 1,
+    nbr_specs_per_thld = 3,
     dvfmts = c("rates"), # should also be counts, but multiple dvfmts not yet supported by reg_anls
-    batch_nbr = "v64",
-    lags = c(1,2,3),
+    batch_nbr = "v65",
+    lags = 1:5,
     vary_vrbl_lag = F,
     technique_strs = c("nr"),
     difficulty_switches = T,
@@ -1672,7 +1673,7 @@ print(len(reg_spec_mdls_optmz))
 fldr_info_optmz <- setup_regression_folders_and_files(reg_settings_optmz$batch_nbr)
 
 pbmclapply(reg_spec_mdls_optmz, \(x) optmz_reg_spec(x, fldr_info_optmz, reg_settings_optmz),
-         mc.cores = 6)
+         mc.cores = 5)
 
 ## optmz_reg_spec(reg_spec_mdls_optmz[[1]], fldr_info_optmz, reg_settings_optmz)
 
