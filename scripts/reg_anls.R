@@ -26,7 +26,43 @@ read_reg_res <- function(idx, fldr_info) {
 }
 
 
+
+prep_sqlitedb <- function(dbx, dfx, table_title, constraints, insert_data = F) {
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
+    
+    #' create schema for dfx (in terms of dbx)
+    #' add any additional constraints (primary key(s), foreign keys)
+    #' insert data if insert_data==T
+    
+    schema <- dbDataType(dbx, dfx)
+
+    if (table_title %in% dbListTables(dbx)) {
+        dbRemoveTable(dbx, table_title)
+    }
+
+    ## try to modify primary keys: modify schema
+        
+    init_part <- sprintf("CREATE TABLE %s (", table_title)
+
+    
+    column_info <- paste0(imap_chr(schema, ~sprintf("%s %s", .y, .x)))
+    ## constraints <- "PRIMARY KEY (mdl_id, gof_names)"
+        
+    setup_cmd <- paste0(c(init_part,
+                          paste(c(column_info, constraints), collapse = ",\n"), ")"), collapse = "\n")
+    cat(setup_cmd)
+    dbSendQuery(dbx, setup_cmd)
+
+    if (insert_data) {
+        dbAppendTable(dbx, table_title, dfx)
+    }
+    return(invisible(T))
+}
+
+
+
 read_reg_res_files <- function(fldr_info) {
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
     #' reads the basic regression result files in
     
 
@@ -54,11 +90,41 @@ read_reg_res_files <- function(fldr_info) {
 
     ## add the model details as variables 
     gof_df_cbn <- merge(gof_df, df_reg_anls_cfgs_wide) %>% atb() %>%
-        mutate(vrbl_choice = gsub("[1-5]", "0", base_lag_spec)) ## add vrbl choice
+        mutate(vrbl_choice = gsub("[1-5]", "0", base_lag_spec), ## add vrbl choice
+               cbn_name = factor(cbn_name, levels = names(vrbl_cbns)),
+               loop_nbr = as.integer(loop_nbr),
+               t_diff = as.numeric(t_diff))
+    
+                              
+    ## technology for reading to sqlite, don't use it yet tho 
+    ## db_gof <- dbConnect(RSQLite::SQLite(), "/home/johannes/db_gof.sqlite")
 
-    gof_df_cbn$cbn_name <- factor(gof_df_cbn$cbn_name, levels = names(vrbl_cbns))
+    ## dbExecute(conn = db_gof, "PRAGMA foreign_keys=ON")
+    
+    ## dbListTables(db_gof)
+    
+    ## ## df_reg_anls_cfgs_wide
+    ## dbRemoveTable(db_gof, "df_reg_anls_cfgs_wide")
+    
+    ## prep_sqlitedb(dbx=db_gof, dfx=df_reg_anls_cfgs_wide, table_title = "df_reg_anls_cfgs_wide",
+    ##               constraints = c("PRIMARY KEY (mdl_id)"), insert_data = T)
+    
+    ## dbRemoveTable(db_gof, "coef_df")
+    ## ## coef_df
 
+    ## prep_sqlitedb(dbx=db_gof, dfx=coef_df, table_title = "coef_df", insert_data = T,
+    ##               constraints = c("PRIMARY KEY (vrbl_name, mdl_id)",
+    ##                               "FOREIGN KEY (mdl_id) REFERENCES df_reg_anls_cfgs_wide (mdl_id)"))
 
+    ## dbRemoveTable(db_gof, "gof_df_cbn")
+    ## ## gof_df_cbn
+
+    ## prep_sqlitedb(dbx=db_gof, dfx=gof_df_cbn, table_title = "gof_df_cbn", insert_data = T,
+    ##               constraints = c("PRIMARY KEY (mdl_id, gof_names)",
+    ##                               "FOREIGN KEY (mdl_id) REFERENCES df_reg_anls_cfgs_wide (mdl_id)"))
+
+    
+    
     ## construct the within-change df
 
 
