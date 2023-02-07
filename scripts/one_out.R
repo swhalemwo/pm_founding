@@ -218,6 +218,7 @@ one_out_setup <- function(batch_nbr) {
         .[!is.na(hyp)] %>%
         .[dt_llrt_improv_prop, on = .(vrbl, cbn_name)]
         
+    ## combine significance of improvement with coefficient significance
     top_coefs %>%
         ## .[vrbl %!in% c("NPO.tax.exemption", "pm_density_global", "pm_density_global_sqrd")] %>% 
         ggplot(aes(x=coef, y=vrbl, color = prop_sig)) +
@@ -225,7 +226,8 @@ one_out_setup <- function(batch_nbr) {
         geom_errorbarh(aes(xmin = coef - 1.96*se, xmax = coef + 1.96*se), height = 0) + 
         facet_grid(hyp~cbn_name, scales = "free", space =  "free") +
         geom_vline(xintercept = 0, linetype = "dashed") +
-        scale_color_gradient(low = "#1C5BA6", high = "#BD0017")
+        scale_color_gradient(low = "#1C5BA6", high = "#BD0017") +
+        coord_cartesian(xlim = c(min(top_coefs$coef, na.rm = T), max(top_coefs$coef, na.rm = T)))
 
     
     
