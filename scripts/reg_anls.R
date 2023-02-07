@@ -1081,6 +1081,13 @@ gen_plt_coef_krnls <- function(top_coefs) {
 
 }
 
+
+addline_format <- function(x,...){
+    #' get custom function for variable labels
+    gsub(' \\* ',' *\n',x) %>%
+        gsub(' \\(\\*100\\)', "", .)            
+}
+
 gen_plt_coef_violin <- function(top_coefs) {
     #' generate violin plot: nicer way of showing distribution of variables (separately) across combinations
     if (as.character(match.call()[[1]]) %in% fstd){browser()}
@@ -1092,12 +1099,7 @@ gen_plt_coef_violin <- function(top_coefs) {
         .[hyp_id != "zcontrols"] %>% 
         .[, vrbl_name_unlag := factor(vrbl_name_unlag, levels = rev(names(vvs$vrbl_lbls)))]
 
-    ## get custom function for variable labels
-    addline_format <- function(x,...){
-        gsub(' \\* ',' *\n',x) %>%
-            gsub(' \\(\\*100\\)', "", .)            
-    }
-
+    
     ## make violin plot
     plt_coef_violin <- ggplot(top_coefs2[hyp_id != "h1a"], aes(y=vrbl_name_unlag, x=coef)) +
         geom_violin(scale = "area", trim = T, bw = 0.04) +
@@ -1176,6 +1178,56 @@ gen_plt_best_coefs_single <- function(top_coefs) {
 
 }
 
+
+gen_plt_lag_dens <- function(top_coefs) {
+    #' violin plot of lags
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
+    1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;
+    
+    ## aggregate by vrbl/lag/cbn
+    lag_prep1 <- top_coefs %>% copy() %>%
+        .[lag != 0, .N, by = .(vrbl_name_unlag, cbn_name, lag)] # yeet time-invariant
+        
+    ## set up grid 
+    lag_grid <- lag_prep1 %$% 
+        expand.grid(vrbl_name_unlag = unique(vrbl_name_unlag), cbn_name = unique(cbn_name), lag = unique(lag)) %>%
+        adt() 
+    
+    ## combine grid with actual data
+    lag_prep1[lag_grid, on = .(vrbl_name_unlag, cbn_name, lag)] %>%
+        .[is.na(N), N := 0] %>% # assign 0 to not matched
+        .[, Nprob := N / sum(N), by = .(vrbl_name_unlag, cbn_name)] %>% 
+        copy(vvs$hyp_mep_dt)[., on = .(vrbl = vrbl_name_unlag)] %>%
+        .[!is.na(hyp)] %>% # yeet cons, ln_r, ln_s
+        ## plotting
+        ggplot(aes(x=factor(lag), y=vrbl, fill = Nprob)) +
+        geom_tile() + 
+        facet_grid(hyp~cbn_name, scales = "free", space =  "free", switch = "y",
+                   labeller = as_labeller(c(vvs$krnl_lbls, vvs$cbn_lbls))) + 
+        scale_fill_gradient(low = "grey90", high = "#0077b6", na.value = "white") + # grey to only blue
+        theme(# panel.grid = element_blank(),
+              # panel.background = element_rect(fill = "white"),
+            strip.text.y.left = element_text(angle = 0)
+            ) +
+        ## geom_hline(yintercept = Inf, color = "white", size = 2) + 
+        scale_y_discrete(labels = addline_format(vvs$vrbl_lbls), expand = c(0,0)) +
+        scale_x_discrete(expand = c(0,0))
+        
+                  
+
+    
+    ## scale_fill_gradient(low = "grey80", high = "blue") # grey to string-blue
+    ## scale_fill_gradient(high = "#132B43", low = "#56B1F7") # reversed normal 
+    ## scale_fill_gradient(high = "#c0e5f9", low = "#0077b6") # blue 
+    ## scale_fill_gradient(high = "#000000", low = "#FFFFFF") # black-white 
+
+    
+        
+
+
+}
+
+
 gen_reg_res_plts <- function(reg_res_objs, vvs, NBR_MDLS) {
     if (as.character(match.call()[[1]]) %in% fstd){browser()}
     #' generate all the plots
@@ -1198,9 +1250,11 @@ gen_reg_res_plts <- function(reg_res_objs, vvs, NBR_MDLS) {
     plt_coef_krnls <- gen_plt_coef_krnls(top_coefs)
 
     plt_coef_violin <- gen_plt_coef_violin(top_coefs)
-
+    
     plt_best_coefs_cloud <- gen_plt_best_coefs_cloud(top_coefs)
     plt_best_coefs_single <- gen_plt_best_coefs_single(top_coefs)
+
+    plt_lag_dens <- gen_plt_lag_dens(top_coefs)
 
     l_plts <- list(plt_cbn_log_likelihoods= plt_cbn_log_likelihoods,
                    plt_reg_res_within = plt_reg_res_within,
@@ -1211,7 +1265,8 @@ gen_reg_res_plts <- function(reg_res_objs, vvs, NBR_MDLS) {
                    plt_coef_krnls = plt_coef_krnls,
                    plt_coef_violin = plt_coef_violin,
                    plt_best_coefs_cloud = plt_best_coefs_cloud,
-                   plt_best_coefs_single = plt_best_coefs_single)
+                   plt_best_coefs_single = plt_best_coefs_single,
+                   plt_lag_dens = plt_lag_dens)
                    
     
 
@@ -1252,7 +1307,10 @@ gen_plt_cfgs <- function() {
             plt_cvrgnc = list(filename = "crvgnc.pdf", width = 5, height = 7),
             plt_hyp_thld_res = list(filename = "hyp_thld_res.pdf", width = 7, height = 6),
             plt_coef_krnls = list(filename = "coef_krnls.pdf", width = 9, height = 6),
-            plt_coef_violin = list(filename = "coef_violin.pdf", width = 9, height = 4.5)
+            plt_coef_violin = list(filename = "coef_violin.pdf", width = 9, height = 4.5),
+            plt_best_coefs_cloud = list(filename = "best_coefs_cloud.pdf", width = 9, height = 6),
+            plt_best_coefs_single = list(filename = "best_coefs_single.pdf", width = 9, height = 6),
+            plt_lag_dens = list(filename = "lag_dens.pdf", width = 9, height = 5)
         )
     )
 
@@ -1367,12 +1425,12 @@ reg_res <- list()
 reg_res$plts <- gen_reg_res_plts(reg_res_objs, vvs, NBR_MDLS)
 
 
-## reg_res$plt_cfgs <- gen_plt_cfgs()
+reg_res$plt_cfgs <- gen_plt_cfgs()
 ## render_reg_res("plt_coef_violin", reg_res, reg_res$plt_cfgs, batch_version = "v62")
 
 ## reg_res$plts$plt_coef_krnls
 
-map(names(reg_res$plts), ~render_reg_res(.x, reg_res, reg_res$plt_cfgs, batch_version = "v63"))
+map(names(reg_res$plts), ~render_reg_res(.x, reg_res, reg_res$plt_cfgs, batch_version = "v65"))
 
 
 ## ** more version comparison 
