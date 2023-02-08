@@ -465,6 +465,9 @@ proc_reg_res_objs <- function(reg_anls_base, vvs, NBR_MDLS) {
     df_best_mdls <- construct_df_best_mdls(df_anls_base, gof_df_cbn)
     mdl_summary <- construct_best_mdls_summary(df_best_mdls)
 
+    top_coefs <- gen_top_coefs(df_anls_base, gof_df_cbn)
+    
+
 
     return(
         list(
@@ -473,7 +476,8 @@ proc_reg_res_objs <- function(reg_anls_base, vvs, NBR_MDLS) {
             df_anls_within = df_anls_within,
             df_anls_all = df_anls_all,
             df_best_mdls = df_best_mdls,
-            mdl_summary = mdl_summary
+            mdl_summary = mdl_summary,
+            top_coefs = top_coefs
         )
     )
     
@@ -1238,8 +1242,9 @@ gen_reg_res_plts <- function(reg_res_objs, vvs, NBR_MDLS) {
     df_anls_within <- reg_res_objs$df_anls_within
     df_best_mdls <- reg_res_objs$df_best_mdls
     mdl_summary <- reg_res_objs$mdl_summary
+    top_coefs <- reg_res_objs$top_coefs
 
-    top_coefs <- gen_top_coefs(df_anls_base, gof_df_cbn)
+    
     
     plt_cbn_log_likelihoods = gen_plt_cbn_log_likelihoods(gof_df_cbn)
     plt_reg_res_within = gen_plt_reg_res_within(df_anls_within, vvs, NBR_MDLS)
