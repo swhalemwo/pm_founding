@@ -1584,13 +1584,13 @@ stop("functions done")
 ## ** main analysis
 NBR_MDLS <- 1
 ## fldr_info <- fldr_info_optmz
-reg_anls_base <- read_reg_res_files(setup_regression_folders_and_files("v65"))
+reg_anls_base <- read_reg_res_files(setup_regression_folders_and_files("v66"))
 reg_res_objs <- proc_reg_res_objs(reg_anls_base, vvs, NBR_MDLS)
 
 reg_res <- list()
 
 ## generate plots, construct configs
-reg_res$plts <- gen_reg_res_plts(reg_res_objs, vvs, NBR_MDLS)
+reg_res$plts <- gen_reg_res_plts(reg_res_objs, vvs, NBR_MDLS, "v66")
 
 
 reg_res$plt_cfgs <- gen_plt_cfgs()

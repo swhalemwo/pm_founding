@@ -1072,7 +1072,8 @@ gen_vrbl_vectors <- function() {
 
     base_vars <- c("iso3c", "year")
     ## crscn_vars <- c("sum_core", "cnt_contemp_1995")
-    crscn_vars <- c("Ind.tax.incentives", "NPO.tax.exemption", "cnt_contemp_1990", "cnt_contemp_1990_squared")
+    crscn_vars <- c("Ind.tax.incentives", # "NPO.tax.exemption",
+                    "cnt_contemp_1990", "cnt_contemp_1990_squared")
 
     ## for now manually exclude the 1B threshold
 
@@ -1846,17 +1847,16 @@ cbn_df_dict <- list(counts = cbn_dfs_counts,
 vrbl_thld_choices <- gen_vrbl_thld_choices(vvs$hnwi_vars, vvs$inc_ineq_vars, vvs$weal_ineq_vars)
 
 
-
-vrbl_thld_choices_optmz <- slice_sample(vrbl_thld_choices, n=36)
-
 ## vrbl_thld_choices_optmz <- filter(vrbl_thld_choices, hnwi_var == "hnwi_nbr_5M",
 ##                                   inc_ineq_var == "sptinc992j_p99p100", weal_ineq_var == "shweal992j_p99p100")
 
 
+vrbl_thld_choices_optmz <- slice_sample(vrbl_thld_choices, n=36)
+
 reg_settings_optmz <- list(
-    nbr_specs_per_thld = 3,
+    nbr_specs_per_thld = 4,
     dvfmts = c("rates"), # should also be counts, but multiple dvfmts not yet supported by reg_anls
-    batch_nbr = "v65",
+    batch_nbr = "v66",
     lags = 1:5,
     vary_vrbl_lag = F,
     technique_strs = c("nr"),
@@ -1876,6 +1876,9 @@ fldr_info_optmz <- setup_regression_folders_and_files(reg_settings_optmz$batch_n
 
 pbmclapply(reg_spec_mdls_optmz, \(x) optmz_reg_spec(x, fldr_info_optmz, reg_settings_optmz),
          mc.cores = 5)
+
+## run the one-out analysis
+one_out_setup_and_run(reg_settings_optmz$batch_nbr)
 
 ## optmz_reg_spec(reg_spec_mdls_optmz[[1]], fldr_info_optmz, reg_settings_optmz)
 
