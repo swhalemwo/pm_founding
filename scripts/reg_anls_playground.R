@@ -100,6 +100,7 @@ prep_sqlitedb(dbx = db_regres, dfx = df_anls_within, table_title = "df_anls_with
 prep_sqlitedb(dbx = db_regres, dfx = df_anls_all, table_title = "df_anls_all", insert_data = T,
               constraints = c("PRIMARY KEY (mdl_id, vrbl_name)",
                               "FOREIGN KEY (mdl_id, vrbl_name) REFERENCES df_anls_base (mdl_id, vrbl_name)"))
+                              ## "FOREIGN KEY (mdl_id) REFERENCES df_reg_anls_cfgs_wide (mdl_id)"))
 
 
 prep_sqlitedb(dbx = db_regres, dfx = df_best_mdls, table_title = "df_best_mdls", insert_data = T,

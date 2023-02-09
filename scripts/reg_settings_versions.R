@@ -388,6 +388,24 @@ reg_settings_optmz <- list(
     mdls_to_include = c("full")
 )
 
+## ** v67: same as v66, just see if the one-out analysis works properly
+vrbl_thld_choices_optmz <- slice_sample(vrbl_thld_choices, n=36)
+
+reg_settings_optmz <- list(
+    nbr_specs_per_thld = 4,
+    dvfmts = c("rates"), # should also be counts, but multiple dvfmts not yet supported by reg_anls
+    batch_nbr = "v67",
+    lags = 1:5,
+    vary_vrbl_lag = F,
+    technique_strs = c("nr"),
+    difficulty_switches = T,
+    regcmds = c("xtnbreg"),
+    ## cbns_to_include = c("cbn_all"),
+    cbns_to_include = names(cbn_dfs_counts)[1:3],
+    mdls_to_include = c("full")
+)
+
+
 
 ## * read settings back in 
 
