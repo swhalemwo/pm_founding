@@ -164,6 +164,90 @@ read_reg_res_files <- function(fldr_info) {
 
 }
 
+
+read_reg_anls_files <- function(fldr_info) {
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
+    #' reads reg_res_files, also adds one-out files 
+    #' having wrapper means read_reg_res_files can stay the same
+
+    reg_anls_base_objs <- read_reg_res_files(fldr_info)
+
+
+    ## setup and read-in ou results
+    fldr_info_ou <- setup_regression_folders_and_files(batch_version = paste0(fldr_info$batch_version, "ou"),
+                                                       batch_dir_addgn = paste0(fldr_info$batch_version, "/ou/"))
+
+    reg_anls_ou_objs <- read_reg_res_files(fldr_info_ou)
+
+    return(c(reg_anls_base_objs, list(ou_objs = reg_anls_ou_objs)))
+    
+   
+}
+
+proc_ou_files <- function(regres_ou_files, gof_df_cbn, top_coefs) {
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
+    1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;
+    #' process the one-out files 
+
+
+    ## ## compare with previous results
+    
+    dt_ou_base <- regres_ou_files$gof_df_cbn %>% adt() %>%
+        .[gof_names %in% c("log_likelihood", "df"),
+          .(ou_set_title, gof_name = gof_names, gof_value_ou = gof_value, mdl_id_ou = mdl_id,  nonou_id)] %>%
+        .[, gof_name := paste0(gof_name, "_ou")] %>% 
+        dcast.data.table(ou_set_title + mdl_id_ou + nonou_id ~ gof_name, value.var = "gof_value_ou") %>%
+        .[, df_ou := as.integer(df_ou)]
+
+    ## get the original models LL/df
+    mdl_id_dt <- gen_mdl_id_dt(gof_df_cbn)
+
+
+    check_df_name_unqns(list(dt_ou_base, mdl_id_dt), skip_var_names = c())
+
+    ## combine one-out results with full models
+    ou_anls <- copy(mdl_id_dt)[dt_ou_base, on = .(mdl_id = nonou_id)] %>% # str() %>%
+        .[, ou_set_title_unlag := gsub("_lag[1-5]", "", ou_set_title)] %>% # remove lag info
+        .[, `:=`(log_likelihood_diff = log_likelihood - log_likelihood_ou,
+                 df_diff = df - df_ou)] %>% # calc diffs in LL and df 
+        .[, llrt_vlu := -2 * (log_likelihood_ou - log_likelihood)] %>% # start with LLRT
+        ##  FIXME: due to changed data some LLRT_vlus are negative
+        .[, llrt_p := pchisq(llrt_vlu, df = df_diff, lower.tail = F)] %>% # LLRT p-value
+        .[, `:=`(sig = llrt_p < 0.05,
+                 z = qnorm(llrt_p/2, lower.tail = F))] %>% # just plug chi2-based p-values into normal dist
+        copy(vvs$hyp_mep_dt)[., on =.(vrbl = ou_set_title_unlag)] %>% # add hypothesis coding
+        .[, ou_set_title_unlag := vrbl] ## keep ou_set_title_unlag
+
+    
+    ## get proporition significant improvement when added to model when variable added
+    dt_llrt_improv_prop <- ou_anls %>% copy() %>%
+        .[, .(prop_sig = sum(sig)/.N), by = .(vrbl, cbn_name)]
+
+    ## ## investigate number of coefs that make model better when dropped
+    ## hist(dt_llrt_improv_prop$prop_sig)
+    ## dt_llrt_improv_prop %>% copy() %>%
+    ##     .[, prop_sig_bin := round(prop_sig)] %>%
+    ##     .[prop_sig != prop_sig_bin, prop_sig_bin := 0.5] %>% 
+    ##     .[, .N, prop_sig_bin] %>% 
+    ##     ggplot(aes(x=factor(prop_sig_bin), y = N)) +
+    ##     geom_col()
+
+    ## reg_res_ou$plts$plt_best_coefs_single
+    ## top_coefs, colored by prop_sig (LLRT improvement)
+    top_coefs_llrt <- top_coefs %>% copy() %>% 
+        .[, .SD[which.max(log_likelihood)], by = .(vrbl_name_unlag, cbn_name)] %>%
+        copy(vvs$hyp_mep_dt)[., on = .(vrbl = vrbl_name_unlag)] %>%
+        .[!is.na(hyp)] %>%
+        .[dt_llrt_improv_prop, on = .(vrbl, cbn_name)]
+
+    return(list(
+        top_coefs_llrt = top_coefs_llrt,
+        ou_anls = ou_anls))
+
+}
+
+
+
 add_coef_sig <- function(coef_df,  df_reg_anls_cfgs_wide) {
     #' add significance to coefs
 
@@ -495,6 +579,8 @@ proc_reg_res_objs <- function(reg_anls_base, vvs, NBR_MDLS) {
 
     top_coefs <- gen_top_coefs(df_anls_base, gof_df_cbn)
     
+    ou_procd <- proc_ou_files(reg_anls_base$ou_objs, gof_df_cbn, top_coefs)
+    
 
 
     return(
@@ -505,7 +591,9 @@ proc_reg_res_objs <- function(reg_anls_base, vvs, NBR_MDLS) {
             df_anls_all = df_anls_all,
             df_best_mdls = df_best_mdls,
             mdl_summary = mdl_summary,
-            top_coefs = top_coefs
+            top_coefs = top_coefs,
+            top_coefs_llrt = ou_procd$top_coefs_llrt,
+            ou_anls = ou_procd$ou_anls
         )
     )
     
@@ -978,138 +1066,72 @@ gen_top_coefs2 <- function(top_coefs) {
 }
 
 
-oneout_anls <- function(gof_df_cbn, top_coefs, batch_nbr) {
+gen_plt_oneout_coefs <- function(ou_anls, top_coefs_llrt) {
     if (as.character(match.call()[[1]]) %in% fstd){browser()}
-    
-    
-    fldr_info_ou <- setup_regression_folders_and_files(batch_version = paste0(batch_nbr, "ou"),
-                                                       batch_dir_addgn = paste0(batch_nbr, "/ou/"))
-
-    
-    ## read-in ou results
-    ## reg_res_ou <- gen_reg_res(fldr_info_ou) # would be recursive at this point
-
-    regres_ou_files <- read_reg_res_files(fldr_info_ou)
-
-    ## compare with previous results
-    ## first get the df and LL for all the OU models (df for LLRT)
-    dt_ou_base <- regres_ou_files$gof_df_cbn %>% adt() %>%
-        .[gof_names %in% c("log_likelihood", "df"),
-          .(ou_set_title, gof_name = gof_names, gof_value_ou = gof_value, mdl_id_ou = mdl_id,  nonou_id)] %>%
-        .[, gof_name := paste0(gof_name, "_ou")] %>% 
-        dcast.data.table(ou_set_title + mdl_id_ou + nonou_id ~ gof_name, value.var = "gof_value_ou")
-
-    mdl_id_dt <- gen_mdl_id_dt(gof_df_cbn)
-    
-    ## check that there are no duplicate names 
-    check_df_name_unqns(list(dt_ou_base, mdl_id_dt), skip_var_names = c())
-    
-    ## prep ou data: join with mdl_id_dt (for LL/df), conduct LLRT
-    ou_anls <- copy(mdl_id_dt)[dt_ou_base, on = .(mdl_id = nonou_id)] %>%
-        .[, ou_set_title_unlag := gsub("_lag[1-5]", "", ou_set_title)] %>% # remove lag info
-        .[, `:=`(log_likelihood_diff = log_likelihood - log_likelihood_ou,
-                 df_diff = df - df_ou)] %>% # calc diffs in LL and df 
-        .[, llrt_vlu := -2 * (log_likelihood_ou - log_likelihood)] %>% # start with LLRT
-        .[llrt_vlu > 0] %>% # FIXME: due to changed data some LLRT_vlus are negative
-        .[, llrt_p := pchisq(llrt_vlu, df = df_diff, lower.tail = F)] %>% # LLRT p-value
-        .[, `:=`(sig = llrt_p < 0.05,
-                 z = qnorm(llrt_p/2, lower.tail = F))] # just plug chi2-based p-values into normal dist
-        ## ggplot(aes(x=llrt_p)) +
-        ## geom_density()
-        
-    
-    ## check that all models are complex enough 
-    ## if (ou_anls[, min(df_diff)] == 0) {stop("some one-out models are not simpler")}
-    
-    
-    ## add hypothesis coding
-    ou_anls2 <- vvs$hyp_mep_dt %>% copy() %>%
-        ## .[copy(ou_anls)[, ou_set_title_unlag2 := ou_set_title_unlag], # preserve to have keep it later 
-        .[copy(ou_anls), on = .(vrbl = ou_set_title_unlag)] %>%
-        .[, ou_set_title_unlag := vrbl] # other way to keep ou_set_title_unlag: recreate from vrbl
-    
-    ## get proporition significant improvement when added to model when variable added
-    dt_llrt_improv_prop <- ou_anls2 %>% copy() %>%
-        .[, .(prop_sig = sum(sig)/.N), by = .(vrbl, cbn_name)]
-
-    hist(dt_llrt_improv_prop$prop_sig)
-    
-    dt_llrt_improv_prop %>% copy() %>%
-        .[prop_sig == 0, prop_sig_bin :=0] %>%
-        .[prop_sig == 1, prop_sig_bin :=1] %>%
-        .[prop_sig > 0 & prop_sig < 1, prop_sig_bin :=0.5] %>%
-        .[, .N, prop_sig_bin] %>% 
-        ggplot(aes(x=factor(prop_sig_bin), y = N)) +
-        geom_col()
-
-          
-        
-
-    
-    ## reg_res_ou$plts$plt_best_coefs_single
-    ## top_coefs, colored by prop_sig (LLRT improvement)
-    top_coefs2 <- top_coefs %>% copy() %>% 
-        .[, .SD[which.max(log_likelihood)], by = .(vrbl_name_unlag, cbn_name)] %>%
-        copy(vvs$hyp_mep_dt)[., on = .(vrbl = vrbl_name_unlag)] %>%
-        .[!is.na(hyp)] %>%
-        .[dt_llrt_improv_prop, on = .(vrbl, cbn_name)]
-        
+ 
+ 
     ## combine significance of improvement with coefficient significance
-    top_coefs2 %>%
-        ## .[vrbl %!in% c("NPO.tax.exemption", "pm_density_global", "pm_density_global_sqrd")] %>% 
+    top_coefs_llrt %>%
+        .[!is.na(hyp)] %>% 
         ggplot(aes(x=coef, y=vrbl, color = prop_sig)) +
         geom_point(size = 2) +
         geom_errorbarh(aes(xmin = coef - 1.96*se, xmax = coef + 1.96*se), height = 0) + 
         facet_grid(hyp~cbn_name, scales = "free", space =  "free") +
         geom_vline(xintercept = 0, linetype = "dashed") +
         scale_color_gradient(low = "#1C5BA6", high = "#BD0017") +
-        coord_cartesian(xlim = c(min(top_coefs$coef, na.rm = T), max(top_coefs$coef, na.rm = T)))
+        coord_cartesian(xlim = c(min(top_coefs_llrt$coef, na.rm = T),
+                                 max(top_coefs_llrt$coef, na.rm = T)))
 
-    
+}
+
+
+gen_plt_oneout_llrt_z <- function(ou_anls) {
+    ## generates violin plot of distribution of z-value (based on LLRT-chisq p-value) of LLRT test
+    ## uses z-value due to better visualizability (than p-values)
     
 
-    
-        
+
     ## violin plot z
-    ou_anls2 %>%
+    ou_anls %>%
         ggplot(aes(x=z, y = ou_set_title_unlag)) +
         geom_violin(bw = 0.2) + 
         facet_grid(hyp~cbn_name, scales = "free", space = "free") +
         geom_vline(xintercept = 1.96, linetype = "dashed")
 
-    ## violing LL diff
-    ou_anls2 %>%
-        ggplot(aes(x=log_likelihood_diff, y = ou_set_title_unlag)) +
-        geom_violin() + 
-        facet_grid(hyp~cbn_name, scales = "free", space = "free")
-        
-
-    
-    ## reg_res$plts$plt_best_models_condensed
-
-    ## point plot
-    ou_anls2 %>%
-        ggplot(aes(x=z, y = ou_set_title_unlag, shape = sig, color = sig)) +
-        geom_jitter(size = 2, height = 0.2, width = 0) + 
-        facet_grid(hyp~cbn_name, scales = "free", space = "free") +
-        scale_shape_manual(values = c(1,4)) +
-        geom_vline(xintercept = 1.96, linetype = "dashed")
-        
-        
-    ou_anls %>%
-        ggplot(aes(x=log_likelihood_diff, y = ou_set_title_unlag, shape = cbn_name, color = cbn_name)) +
-        ## geom_point() +
-        geom_boxplot() 
-        ## facet_grid(ou_set_title_unlag ~ ., scales = "free", space = "free")
-        
-    ou_anls %>% copy() %>%
-        .[, .(mean_gof_diff = mean(log_likelihood_diff)), by = .(ou_set_title_unlag, cbn_name)] %>%
-        ggplot(aes(x=mean_gof_diff, y = ou_set_title_unlag, shape = cbn_name, color = cbn_name)) +
-        geom_point(size =3)
-        
-    
+    ## ## point plot: doesn't scale well 
+    ## ou_anls %>%
+    ##     ggplot(aes(x=z, y = ou_set_title_unlag, shape = sig, color = sig)) +
+    ##     geom_jitter(size = 2, height = 0.2, width = 0) + 
+    ##     facet_grid(hyp~cbn_name, scales = "free", space = "free") +
+    ##     scale_shape_manual(values = c(1,4)) +
+    ##     geom_vline(xintercept = 1.96, linetype = "dashed")
 
 }
+
+gen_plt_oneout_llrt_lldiff <- function(ou_anls) {
+    #' visualizes change in log-likelihood if variable
+    ## (or variables, in case of interactions/squared variables/sets)
+    ## are removed
+
+    ## violin LL diff
+    ou_anls %>%
+        ggplot(aes(x=log_likelihood_diff, y = ou_set_title_unlag)) +
+        geom_violin(bw = 0.4) + # , size = 0.3, color = "black") + 
+        facet_grid(hyp~cbn_name, scales = "free", space = "free")
+
+    
+    ## ou_anls %>%
+    ##     ggplot(aes(x=log_likelihood_diff, y = ou_set_title_unlag)) +
+    ##     geom_boxplot() + 
+    ##     facet_grid(hyp~cbn_name, scales = "free", space = "free")
+
+}
+
+
+        
+    
+
+
 
 
 gen_plt_coef_krnls_dev <- function(top_coefs) {
@@ -1393,7 +1415,7 @@ gen_plt_lag_dens <- function(top_coefs) {
 }
 
 
-gen_reg_res_plts <- function(reg_res_objs, vvs, NBR_MDLS, batch_nbr) {
+gen_reg_res_plts <- function(reg_res_objs, vvs, NBR_MDLS) {
     if (as.character(match.call()[[1]]) %in% fstd){browser()}
     #' generate all the plots
     
@@ -1404,7 +1426,8 @@ gen_reg_res_plts <- function(reg_res_objs, vvs, NBR_MDLS, batch_nbr) {
     df_best_mdls <- reg_res_objs$df_best_mdls
     mdl_summary <- reg_res_objs$mdl_summary
     top_coefs <- reg_res_objs$top_coefs
-
+    top_coefs_llrt <- reg_res_objs$top_coefs_llrt
+    ou_anls <- reg_res_objs$ou_anls
     
     
     plt_cbn_log_likelihoods = gen_plt_cbn_log_likelihoods(gof_df_cbn)
@@ -1422,7 +1445,9 @@ gen_reg_res_plts <- function(reg_res_objs, vvs, NBR_MDLS, batch_nbr) {
 
     plt_lag_dens <- gen_plt_lag_dens(top_coefs)
 
-    plt_oneout <- oneout_anls(gof_df_cbn, top_coefs, batch_nbr)
+    plt_oneout_coefs <- gen_plt_oneout_coefs(ou_anls, top_coefs_llrt)
+    plt_oneout_llrt_z <- gen_plt_oneout_llrt_z(ou_anls)
+    plt_oneout_llrt_lldiff <- gen_plt_oneout_llrt_lldiff(ou_anls)
 
     l_plts <- list(plt_cbn_log_likelihoods= plt_cbn_log_likelihoods,
                    plt_reg_res_within = plt_reg_res_within,
@@ -1434,11 +1459,12 @@ gen_reg_res_plts <- function(reg_res_objs, vvs, NBR_MDLS, batch_nbr) {
                    plt_coef_violin = plt_coef_violin,
                    plt_best_coefs_cloud = plt_best_coefs_cloud,
                    plt_best_coefs_single = plt_best_coefs_single,
-                   plt_lag_dens = plt_lag_dens)
+                   plt_lag_dens = plt_lag_dens,
+                   plt_oneout_coefs = plt_oneout_coefs,
+                   plt_oneout_llrt_z = plt_oneout_llrt_z,
+                   plt_oneout_llrt_lldiff = plt_oneout_llrt_lldiff)
                    
-    
-
-    
+        
     ## only generate lag cprn plot if multiple regcmds are used
     if (all(c("menbreg", "xtnbreg") %in% df_best_mdls$regcmd)) {
         plt_lag_cprn <- gen_plt_lag_cprn(df_best_mdls, vvs)
@@ -1478,7 +1504,10 @@ gen_plt_cfgs <- function() {
             plt_coef_violin = list(filename = "coef_violin.pdf", width = 9, height = 4.5),
             plt_best_coefs_cloud = list(filename = "best_coefs_cloud.pdf", width = 9, height = 6),
             plt_best_coefs_single = list(filename = "best_coefs_single.pdf", width = 9, height = 6),
-            plt_lag_dens = list(filename = "lag_dens.pdf", width = 9, height = 5)
+            plt_lag_dens = list(filename = "lag_dens.pdf", width = 9, height = 5),
+            plt_oneout_coefs = list(filename = "oneout_coefs.pdf", width = 9, height = 6),
+            plt_oneout_llrt_lldiff = list(filename = "oneout_llrt_lldiff.pdf", width = 9, height = 6),
+            plt_oneout_llrt_z = list(filename = "oneout_llrt_z.pdf", width = 9, height = 6)
         )
     )
 
@@ -1569,7 +1598,7 @@ gen_reg_res <- function(fldr_info) {
     reg_res <- list()
 
     ## generate plots, construct configs
-    reg_res$plts <- gen_reg_res_plts(reg_res_objs, vvs, NBR_MDLS, fldr_info$batch_nbr)
+    reg_res$plts <- gen_reg_res_plts(reg_res_objs, vvs, NBR_MDLS)
     reg_res$plt_cfgs <- gen_plt_cfgs()
 
     reg_res$reg_res_objs <- reg_res_objs
@@ -1583,14 +1612,16 @@ stop("functions done")
 
 ## ** main analysis
 NBR_MDLS <- 1
+batch_version <- "v67"
 ## fldr_info <- fldr_info_optmz
-reg_anls_base <- read_reg_res_files(setup_regression_folders_and_files("v66"))
+fldr_info <- setup_regression_folders_and_files(batch_version)
+reg_anls_base <- read_reg_anls_files(fldr_info)
 reg_res_objs <- proc_reg_res_objs(reg_anls_base, vvs, NBR_MDLS)
 
 reg_res <- list()
 
 ## generate plots, construct configs
-reg_res$plts <- gen_reg_res_plts(reg_res_objs, vvs, NBR_MDLS, "v66")
+reg_res$plts <- gen_reg_res_plts(reg_res_objs, vvs, NBR_MDLS)
 
 
 reg_res$plt_cfgs <- gen_plt_cfgs()

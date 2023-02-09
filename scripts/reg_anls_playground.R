@@ -116,5 +116,21 @@ adt(mdl_summary)[, .N, .(vrbl_name_unlag, cbn_name)][, .N, N]
 prep_sqlitedb(dbx = db_regres, dfx = mdl_summary, table_title = "mdl_summary", insert_data = T,
               constraints =c(
                   "PRIMARY KEY (cbn_name, vrbl_name_unlag)",
-                  "FOREIGN KEY (cbn_name, vrbl_name_unlag) REFERENCES df_best_mdls (cbn_name, vrbl_name_unlag)"))
+                  "FOREIGN KEY (cbn_name, vrbl_name_unlag) REFERENCES df_best_mdls (cbn_name, vrbl_name_unlag)"
+                  ))
 
+
+## ** one-out visualization that failed at life
+## *** boxplot with dodged cbns
+ou_anls %>%
+        ggplot(aes(x=log_likelihood_diff, y = ou_set_title_unlag, shape = cbn_name, color = cbn_name)) +
+        ## geom_point() +
+        geom_boxplot() 
+        ## facet_grid(ou_set_title_unlag ~ ., scales = "free", space = "free")
+
+## *** pointplot 
+
+ou_anls %>% copy() %>%
+        .[, .(mean_gof_diff = mean(log_likelihood_diff)), by = .(ou_set_title_unlag, cbn_name)] %>%
+        ggplot(aes(x=mean_gof_diff, y = ou_set_title_unlag, shape = cbn_name, color = cbn_name)) +
+        geom_point(size =3)
