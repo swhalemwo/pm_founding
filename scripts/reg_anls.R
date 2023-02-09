@@ -95,9 +95,10 @@ read_reg_res_files <- function(fldr_info) {
     
     ## dx[, .N, id_len][order(-id_len)] %>% print(n=60)
     
+    ## debugging weird ids 
     ## idx <- df_reg_anls_cfgs_wide %>% adt() %>% copy() %>% 
     ##     .[, `:=`(id_ou_len = nchar(mdl_id), ctr = 1:.N)] %>% 
-    ##     .[id_ou_len > 1000]
+    ##     .[id_ou_len > 1000, id_ou_len]
         
     ## mys_lag_specs <- idx$lag_spec
     

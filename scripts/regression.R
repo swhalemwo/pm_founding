@@ -1778,9 +1778,16 @@ one_out_setup_and_run <- function(batch_version) {
 
     
     ## modify original regspecs to make them work with one-out
+        
     regspecs_ou <- mclapply(reg_specs_orig, \(x) gen_regspecs_ou(x, vvs), mc.cores = 4) %>% flatten()
     len(regspecs_ou)
-    
+
+
+    ## gen_regspecs_ou(reg_specs_orig[[3]], vvs)
+    ## dx <- data.table(ou_set_title = map_chr(regspecs_ou, ~.x$cfg$ou_set_title))
+    ## dx[, .N, ou_set_title][grepl("SP.POP", ou_set_title)]
+                                 
+
 
     ## dx <- Reduce(rbind, list(
     ##     data.table(idx = map_chr(reg_specs_orig, ~.x$mdl_id), source = "id_orig"),
@@ -1792,13 +1799,19 @@ one_out_setup_and_run <- function(batch_version) {
 
     ## regspecs_ou[[3]]
 
-    ## mys_lag_specs <- c("X5XXX3XX3X111151545521", "XXX23XXXX5111151545521")
+    ## ## mys_lag_specs <- c("X5XXX3XX3X111151545521", "XXX23XXXX5111151545521")
+    ## mys_lag_specs <- c("1XXX3XX3XX551151511521", "1XXX3XXX3X111141545511", "X5XXX3XX3X111151545521")
 
-    ## penl_mys <- keep(regspecs_ou, ~.x$base_lag_spec == mys_lag_specs[2])
+    ## penl_mys <- keep(regspecs_ou, ~.x$base_lag_spec %in% mys_lag_specs[2:3])
     ## len(penl_mys)
-    ## penl_mys[[3]]
+    ## ## penl_mys[[3]]
 
     ## lapply(penl_mys, \(x) run_vrbl_mdl_vars(x, vvs, fldr_info_ou))
+
+    ## ou_debug <- read_reg_res_files(fldr_info_ou)
+
+    ## ou_debug$df_reg_anls_cfgs_wide %>% adt() %>%
+    ##     .[, max(nchar(mdl_id))]
 
     
     
@@ -1811,7 +1824,7 @@ one_out_setup_and_run <- function(batch_version) {
     
     if (len(setdiff(ou_ids, ou_files)) != 0) {
         ## run modified regspecs
-        mclapply(regspecs_ou, \(x) run_vrbl_mdl_vars(x, vvs, fldr_info_ou), mc.cores = 4)
+        mclapply(regspecs_ou, \(x) run_vrbl_mdl_vars(x, vvs, fldr_info_ou), mc.cores = 1)
     }
     
 }
