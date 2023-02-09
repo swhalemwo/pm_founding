@@ -1696,7 +1696,9 @@ gen_regspecs_ou <- function(reg_spec, vvs) {
 
     #' generate the modified reg_specs from one reg_spec (drop each variable once)
 
-    vrbls_to_ou <- setdiff(reg_spec$mdl_vars, vvs$base_vars)
+    vrbls_to_ou <- setdiff(reg_spec$mdl_vars, vvs$base_vars) %>%
+        keep(~!grepl("SP.POP.TOTLm", .x))
+    
     
     ## generate one-out sets: yeet squared/interaction variables
     ou_sets <- lapply(vrbls_to_ou, \(x) gen_vrbl_oud(x, vrbls_to_ou))
@@ -1890,6 +1892,7 @@ pbmclapply(reg_spec_mdls_optmz, \(x) optmz_reg_spec(x, fldr_info_optmz, reg_sett
 
 ## run the one-out analysis
 one_out_setup_and_run(reg_settings_optmz$batch_version)
+one_out_setup_and_run("v67")
 
 
 ## optmz_reg_spec(reg_spec_mdls_optmz[[1]], fldr_info_optmz, reg_settings_optmz)
