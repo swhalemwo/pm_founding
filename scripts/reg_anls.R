@@ -1629,7 +1629,10 @@ reg_res$plt_cfgs <- gen_plt_cfgs()
 
 ## reg_res$plts$plt_coef_krnls
 
-map(names(reg_res$plts), ~render_reg_res(.x, reg_res, reg_res$plt_cfgs, batch_version = "v65"))
+map(names(reg_res$plts), ~render_reg_res(.x, reg_res, reg_res$plt_cfgs, batch_version = batch_version))
+
+pdftk_cmd <- sprintf("cd %s && pdftk plt_%s* output plts_%s.pdf", FIG_DIR, batch_version, batch_version)
+system(pdftk_cmd)
 
 
 ## ** more version comparison 
