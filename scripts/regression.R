@@ -1744,32 +1744,33 @@ gen_mdl_id_dt <- function(gof_df_cbn) {
 
 
 
-one_out_setup_and_run <- function(batch_nbr) {
+one_out_setup_and_run <- function(batch_version) {
     if (as.character(match.call()[[1]]) %in% fstd){browser()}
     1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;
     
     ## reg_res64 <- gen_reg_res(setup_regression_folders_and_files("v64"))
-    fldr_info <- setup_regression_folders_and_files(batch_nbr)
+    fldr_info <- setup_regression_folders_and_files(batch_version)
 
-    reg_res <- gen_reg_res(fldr_info)
+    
+    reg_res_files <- read_reg_res_files(fldr_info)
 
     ## get the best fitting models
     ## mdl_idx <- reg_res64$reg_res_objs$gof_df_cbn %>% adt() %>%
     ## .[gof_names == "log_likelihood", .SD[which.max(gof_value)], by = .(cbn_name, vrbl_choice),
     ##   .SDcols = "mdl_id"] %>%
     ## .[5, mdl_id]
-    mdl_id_dt <- gen_mdl_id_dt(reg_res$reg_res_objs$gof_df_cbn)
+    mdl_id_dt <- gen_mdl_id_dt(reg_res_files$gof_df_cbn)
     
 
     ## reconstruct folder info to read the reg_spec of model 
     
     ## set up ou (one-out) folder for new regression results
     ## first get /ou/ folder in v64
-    ou_cmd <- paste0("mkdir /home/johannes/reg_res/", batch_nbr, "/ou/") %>% system()
+    ou_cmd <- paste0("mkdir /home/johannes/reg_res/", batch_version, "/ou/") %>% system()
     ## then setup new folders there
     ## fldr_info_ou <- setup_regression_folders_and_files("v64ou", batch_dir_addgn = "v64/ou/")
-    fldr_info_ou <- setup_regression_folders_and_files(batch_version = paste0(batch_nbr, "ou"),
-                                                       batch_dir_addgn = paste0(batch_nbr, "/ou/"))
+    fldr_info_ou <- setup_regression_folders_and_files(batch_version = paste0(batch_version, "ou"),
+                                                       batch_dir_addgn = paste0(batch_version, "/ou/"))
 
     ## get original reg_spec to modify 
     reg_specs_orig <- mclapply(mdl_id_dt[, mdl_id],
@@ -1779,28 +1780,25 @@ one_out_setup_and_run <- function(batch_nbr) {
     ## modify original regspecs to make them work with one-out
     regspecs_ou <- mclapply(reg_specs_orig, \(x) gen_regspecs_ou(x, vvs), mc.cores = 4) %>% flatten()
     len(regspecs_ou)
-
-    
     
 
-    dx <- Reduce(rbind, list(
-        data.table(idx = map_chr(reg_specs_orig, ~.x$mdl_id), source = "id_orig"),
-        data.table(idx = map_chr(regspecs_ou, ~.x$mdl_id), source = "id_ou_regspec"),
-        data.table(idx = map_chr(regspecs_ou, ~.x$other_cfgs$mdl_id[1]), source = "id_other_cfgs"),
-        data.table(idx = list.files(fldr_info_ou$REG_RES_DIR), source = "ou_dir")))
+    ## dx <- Reduce(rbind, list(
+    ##     data.table(idx = map_chr(reg_specs_orig, ~.x$mdl_id), source = "id_orig"),
+    ##     data.table(idx = map_chr(regspecs_ou, ~.x$mdl_id), source = "id_ou_regspec"),
+    ##     data.table(idx = map_chr(regspecs_ou, ~.x$other_cfgs$mdl_id[1]), source = "id_other_cfgs"),
+    ##     data.table(idx = list.files(fldr_info_ou$REG_RES_DIR), source = "ou_dir")))
 
-    dx[, max(nchar(idx)), source]
+    ## dx[, max(nchar(idx)), source]
 
-        
-    regspecs_ou[[3]]
+    ## regspecs_ou[[3]]
 
-    mys_lag_specs <- c("X5XXX3XX3X111151545521", "XXX23XXXX5111151545521")
+    ## mys_lag_specs <- c("X5XXX3XX3X111151545521", "XXX23XXXX5111151545521")
 
-    penl_mys <- keep(regspecs_ou, ~.x$base_lag_spec == mys_lag_specs[2])
-    len(penl_mys)
-    penl_mys[[3]]
+    ## penl_mys <- keep(regspecs_ou, ~.x$base_lag_spec == mys_lag_specs[2])
+    ## len(penl_mys)
+    ## penl_mys[[3]]
 
-    lapply(penl_mys, \(x) run_vrbl_mdl_vars(x, vvs, fldr_info_ou))
+    ## lapply(penl_mys, \(x) run_vrbl_mdl_vars(x, vvs, fldr_info_ou))
 
     
     
@@ -1856,7 +1854,7 @@ vrbl_thld_choices_optmz <- slice_sample(vrbl_thld_choices, n=36)
 reg_settings_optmz <- list(
     nbr_specs_per_thld = 4,
     dvfmts = c("rates"), # should also be counts, but multiple dvfmts not yet supported by reg_anls
-    batch_nbr = "v66",
+    batch_version = "v67",
     lags = 1:5,
     vary_vrbl_lag = F,
     technique_strs = c("nr"),
@@ -1872,13 +1870,14 @@ reg_settings_optmz <- list(
 reg_spec_mdls_optmz <- gen_batch_reg_specs(reg_settings_optmz, vvs, vrbl_thld_choices_optmz)
 print(len(reg_spec_mdls_optmz))
 
-fldr_info_optmz <- setup_regression_folders_and_files(reg_settings_optmz$batch_nbr)
+fldr_info_optmz <- setup_regression_folders_and_files(reg_settings_optmz$batch_version)
 
 pbmclapply(reg_spec_mdls_optmz, \(x) optmz_reg_spec(x, fldr_info_optmz, reg_settings_optmz),
          mc.cores = 5)
 
 ## run the one-out analysis
-one_out_setup_and_run(reg_settings_optmz$batch_nbr)
+one_out_setup_and_run(reg_settings_optmz$batch_version)
+
 
 ## optmz_reg_spec(reg_spec_mdls_optmz[[1]], fldr_info_optmz, reg_settings_optmz)
 
