@@ -1473,3 +1473,67 @@ ggplotly(p)
 
 
 
+## *** density color band
+
+
+## use densities
+dens_color_dt <- copy(dt_rng_visl) %>%
+    .[, .(x=density(value)$x,
+          y=density(value)$y), by = variable] %>%
+    .[, max_y := max(y), variable] %>%
+    .[, y_scld := y/max_y] %>% 
+    .[, x_prev := shift(x, type = "lag"), variable] %>%
+    .[, width := x - x_prev] %>% na.omit() %>%
+    .[, .(variable, x, y_scld, width)]
+
+## add padding left and right 
+padding_left <- dens_color_dt %>% copy() %>%
+    .[, .(minx_vrbl = min(x)), variable] %>%
+    .[, minx_glbl := min(minx_vrbl)] %>%
+    .[, .(x = mean(c(minx_glbl, minx_vrbl)), y_scld = 0, width = (minx_vrbl - minx_glbl)), variable]
+
+padding_right <- dens_color_dt %>% copy() %>%
+    .[, .(max_vrbl = max(x)), variable] %>%
+    .[, max_glbl := max(max_vrbl)] %>%
+    .[, .(x = mean(c(max_glbl, max_vrbl)), y_scld = 0, width = (max_glbl - max_vrbl)), variable]
+
+
+dens_color_dt_cbn <- rbind(dens_color_dt, padding_left, padding_right)
+
+## rbind, geom_tile, facet by hypothesis
+px <- dens_color_dt_cbn %>% 
+    .[, variable := gsub("_lag0", "", variable)] %>%
+    copy(vvs$hyp_mep_dt)[., on = .(vrbl = variable)] %>%
+    ggplot(aes(x=x, y=vrbl, width = width, fill = y_scld, color = y_scld)) +
+    geom_tile() +
+    facet_grid(hyp~., scales = "free", space = "free") +
+    coord_cartesian(xlim = c(-3, 5))
+
+pdf(paste0(FIG_DIR, "dens_color_bar.pdf"), width = 8, height = 5)
+print(px)
+dev.off()
+
+## debug white spots
+## dens_color_dt[variable == "hnwi_nbr_1M_lag0", .N, width][, width]
+
+dens_color_dt_cbn[variable == "smorc_dollar_fxm" & x > 2.5 & x < 2.7 ] %>%
+    ## dens_color_dt_cbn[variable == "smorc_dollar_fxm"] %>% 
+    ggplot(aes(x=x, y=variable, width = width, fill = y_scld, color = y_scld))+
+    geom_tile()
+
+## *** manually repositioned curves
+
+dens_adj_dt <- dens_color_dt %>% copy() %>%
+    .[, variable_fac := factor(variable)] %>%
+    .[, variable_num := as.numeric(variable_fac)] %>%
+    .[, y_adj := y_scld + variable_num - 0.5]
+
+lbls <- dens_adj_dt[, .(variable = as.character(variable), variable_num)] %>% unique() %$%
+    setNames(variable, variable_num)
+
+setNames(levels(dens_adj_dt$variable), dens_adj_dt$variable_num)
+
+dens_adj_dt %>%
+    ggplot(aes(x=x, y=y_adj, group = variable)) +
+    geom_line() + 
+    scale_y_continuous(breaks = 1:21, labels = lbls)
