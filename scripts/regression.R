@@ -812,7 +812,10 @@ run_vrbl_mdl_vars <- function(reg_spec, vvs, fldr_info, return_objs = c("converg
 
     ## save id to df_id to keep track
     if (wtf) {write.table(df_idx, file = fldr_info$REG_RES_FILE_LAGS, append = T, col.names = F, row.names = F)}
-    if (wtf) {write.table(other_cfgs, file = fldr_info$REG_RES_FILE_CFGS, append = T, col.names = F, row.names = F)}
+
+    pid <- Sys.getpid()
+    if (wtf) {write.table(other_cfgs, file = paste0(fldr_info$REG_RES_FILE_CFGS, pid),
+                          append = T, col.names = F, row.names = F)}
 
     ## write model id to end file to debug convergence failure
     if (wtf) {write.table(file_id, fldr_info$MDL_END_FILE, append = T, col.names = F, row.names = F)}
@@ -1745,6 +1748,25 @@ gen_mdl_id_dt <- function(gof_df_cbn) {
 }
 
 
+cbn_splitted_files <- function(grep_pattern, fldr_info) {
+    #' combines back together the CFG files
+    #' 
+    
+    cfg_files <- list.files(fldr_info$BATCH_DIR) %>%
+        keep(~grepl(grep_pattern, .x)) %>%
+        paste0(fldr_info$BATCH_DIR, .)
+    
+    cbn_cfgs_cmd <- sprintf("cat %s > %s", paste(cfg_files, collapse = " "), fldr_info$REG_RES_FILE_CFGS)
+    
+    system(cbn_cfgs_cmd)
+
+    cleanup_cmd <- sprintf("rm %s", paste0(cfg_files, collapse = " "))
+    system(cleanup_cmd)
+}
+
+
+
+
 
 one_out_setup_and_run <- function(batch_version) {
     if (as.character(match.call()[[1]]) %in% fstd){browser()}
@@ -2023,9 +2045,12 @@ fldr_info_optmz <- setup_regression_folders_and_files(reg_settings_optmz$batch_v
 pbmclapply(reg_spec_mdls_optmz, \(x) optmz_reg_spec(x, fldr_info_optmz, reg_settings_optmz),
          mc.cores = 5)
 
+cbn_splitted_files("_cfgs.csv", fldr_info_optmz)
+
 ## run the one-out analysis
 one_out_setup_and_run(reg_settings_optmz$batch_version)
-one_out_setup_and_run("v67")
+
+## one_out_setup_and_run("v67")
 
 
 ## optmz_reg_spec(reg_spec_mdls_optmz[[1]], fldr_info_optmz, reg_settings_optmz)
