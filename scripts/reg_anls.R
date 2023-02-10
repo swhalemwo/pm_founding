@@ -968,10 +968,11 @@ gen_plt_oneout_coefs <- function(ou_anls, top_coefs_llrt) {
 
 
 gen_plt_oneout_llrt_z <- function(ou_anls) {
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
     ## generates violin plot of distribution of z-value (based on LLRT-chisq p-value) of LLRT test
     ## uses z-value due to better visualizability (than p-values)
     
-
+    ## ou_anls[, .(z, ou_set_title_unlag, hyp)]
 
     ## violin plot z
     ou_anls %>%
@@ -1504,6 +1505,10 @@ reg_res <- list()
 
 ## generate plots, construct configs
 reg_res$plts <- gen_reg_res_plts(reg_res_objs, vvs, NBR_MDLS)
+
+## plt_inspector(reg_res$plts)
+## reg_res$plts$plt_oneout_llrt_z
+
 
 
 reg_res$plt_cfgs <- gen_plt_cfgs()

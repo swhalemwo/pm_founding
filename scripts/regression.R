@@ -1832,7 +1832,7 @@ one_out_setup_and_run <- function(batch_version) {
 
     ## lapply(penl_mys, \(x) run_vrbl_mdl_vars(x, vvs, fldr_info_ou))
 
-    ## ou_debug <- read_reg_res_files(fldr_info_ou)
+    
 
     ## ou_debug$df_reg_anls_cfgs_wide %>% adt() %>%
     ##     .[, max(nchar(mdl_id))]
