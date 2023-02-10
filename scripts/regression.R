@@ -1826,10 +1826,143 @@ one_out_setup_and_run <- function(batch_version) {
     
     if (len(setdiff(ou_ids, ou_files)) != 0) {
         ## run modified regspecs
-        mclapply(regspecs_ou, \(x) run_vrbl_mdl_vars(x, vvs, fldr_info_ou), mc.cores = 1)
+        mclapply(regspecs_ou, \(x) run_vrbl_mdl_vars(x, vvs, fldr_info_ou), mc.cores = 4)
     }
+
+    cbn_splitted_files(grep_pattern = "_cfgs.csv", fldr_info = fldr_info_ou) 
+
+    ## ou_debug <- read_reg_res_files(fldr_info_ou)
+    ## ou_debug$df_reg_anls_cfgs_wide %>% adt() %>% .[, .(mean(as.numeric(t_diff)), SD(as.numeric(t_diff)))]
+
+    ## mclapply(regspecs_ou[1:20], \(x) run_vrbl_mdl_vars(x, vvs, fldr_info_ou), mc.cores = 4)
+
+    ## running commands to combine PID-specific files
     
 }
+
+
+read_reg_res <- function(idx, fldr_info) {
+    #' read back model results with some id    
+
+    reg_res <- readRDS(paste0(fldr_info$REG_RES_DIR, idx))
+
+    coef_df <- reg_res$coef_df
+    coef_df$mdl_id <- idx
+    
+    gof_df <- reg_res$gof_df
+    gof_df$mdl_id <- idx
+
+
+    return(list(coef_df = coef_df,
+                gof_df = gof_df))
+    
+}
+
+
+read_reg_res_files <- function(fldr_info) {
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
+    #' reads the basic regression result files in
+    
+
+    ## df_reg_anls_lags <- read.csv(paste0(fldr_info$REG_RES_FILE_LAGS), sep = " ", header = F,
+    ##                              col.names = c("variable", "value", "lag_spec", "cfg_id", "mdl_id", "cvrgd")) %>%
+    ##     atb()
+
+    df_reg_anls_cfgs <- read.csv(paste0(fldr_info$REG_RES_FILE_CFGS), sep = " ", header = F,
+                                 col.names = c("variable", "value", "cfg_id", "lag_spec", "mdl_id", "cvrgd")) %>%
+        atb()
+
+    df_reg_anls_cfgs_wide <- df_reg_anls_cfgs %>%
+        select(variable, value, mdl_id, lag_spec, cvrgd) %>% unique() %>% 
+        pivot_wider(id_cols = c(mdl_id, lag_spec, cvrgd), names_from = variable, values_from = value)
+
+
+    ## read_reg_res(df_reg_anls_cfgs$mdl_id[[1]])
+
+    
+
+
+    ## list of all the model results 
+    ## all_mdl_res <- unique(filter(df_reg_anls_cfgs, cvrgd == 1)$mdl_id) %>%
+    ##     mclapply(\(x) read_reg_res(x, fldr_info), mc.cores = 6)
+
+    ## ids <- unique(filter(df_reg_anls_cfgs, cvrgd == 1)$mdl_id)
+
+    ## dx <- data.table(idx = ids) %>%
+    ##     .[, id_len := nchar(idx)]
+    
+    ## dx[, .N, id_len][order(-id_len)] %>% print(n=60)
+    
+    ## debugging weird ids 
+    ## idx <- df_reg_anls_cfgs_wide %>% adt() %>% copy() %>% 
+    ##     .[, `:=`(id_ou_len = nchar(mdl_id), ctr = 1:.N)] %>% 
+    ##     .[id_ou_len > 1000, id_ou_len]
+        
+    ## mys_lag_specs <- idx$lag_spec
+    
+    
+    ## df_reg_anls_cfgs_wide %>% adt() %>%
+    ##     .[1:3] %>% adf()
+
+    ## idx %>% adf()
+    
+    
+    
+    all_mdl_res <- unique(filter(df_reg_anls_cfgs, cvrgd == 1)$mdl_id) %>%
+        lapply(\(x) read_reg_res(x, fldr_info))
+
+
+    coef_df <- mclapply(all_mdl_res, \(x) atb(x[["coef_df"]]), mc.cores = 6) %>% bind_rows()
+    gof_df <- mclapply(all_mdl_res, \(x) x[["gof_df"]], mc.cores = 6) %>% bind_rows() %>% atb()
+
+    ## add the model details as variables 
+    gof_df_cbn <- merge(gof_df, df_reg_anls_cfgs_wide) %>% atb() %>%
+        mutate(vrbl_choice = gsub("[1-5]", "0", base_lag_spec), ## add vrbl choice
+               cbn_name = factor(cbn_name, levels = names(vrbl_cbns)),
+               loop_nbr = as.integer(loop_nbr),
+               t_diff = as.numeric(t_diff))
+    
+                              
+    ## technology for reading to sqlite, don't use it yet tho 
+    ## db_gof <- dbConnect(RSQLite::SQLite(), "/home/johannes/db_gof.sqlite")
+
+    ## dbExecute(conn = db_gof, "PRAGMA foreign_keys=ON")
+    
+    ## dbListTables(db_gof)
+    
+    ## ## df_reg_anls_cfgs_wide
+    ## dbRemoveTable(db_gof, "df_reg_anls_cfgs_wide")
+    
+    ## prep_sqlitedb(dbx=db_gof, dfx=df_reg_anls_cfgs_wide, table_title = "df_reg_anls_cfgs_wide",
+    ##               constraints = c("PRIMARY KEY (mdl_id)"), insert_data = T)
+    
+    ## dbRemoveTable(db_gof, "coef_df")
+    ## ## coef_df
+
+    ## prep_sqlitedb(dbx=db_gof, dfx=coef_df, table_title = "coef_df", insert_data = T,
+    ##               constraints = c("PRIMARY KEY (vrbl_name, mdl_id)",
+    ##                               "FOREIGN KEY (mdl_id) REFERENCES df_reg_anls_cfgs_wide (mdl_id)"))
+
+    ## dbRemoveTable(db_gof, "gof_df_cbn")
+    ## ## gof_df_cbn
+
+    ## prep_sqlitedb(dbx=db_gof, dfx=gof_df_cbn, table_title = "gof_df_cbn", insert_data = T,
+    ##               constraints = c("PRIMARY KEY (mdl_id, gof_names)",
+    ##                               "FOREIGN KEY (mdl_id) REFERENCES df_reg_anls_cfgs_wide (mdl_id)"))
+
+    
+    
+    ## construct the within-change df
+
+
+    return(list(
+        df_reg_anls_cfgs_wide = df_reg_anls_cfgs_wide,
+        coef_df = coef_df,
+        gof_df_cbn = gof_df_cbn
+        ))
+
+}
+
 
 
 
