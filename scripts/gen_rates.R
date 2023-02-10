@@ -107,7 +107,7 @@ gen_df_reg_rts <- function(df_reg) {
 
     rt_names <- setdiff(names(rts_cbn), c("iso3c", "year"))
 
-        df_reg_rts <- df_reg %>% select(-rt_names) %>% # get the non-population scaled variables 
+    df_reg_rts <- df_reg %>% select(-rt_names) %>% # get the non-population scaled variables 
         inner_join(atb(rts_cbn), on = c(iso3c, year)) ## combine them with the population scaled vrbls
     
     ## check that all columns in df_reg are also in df_reg_rts
