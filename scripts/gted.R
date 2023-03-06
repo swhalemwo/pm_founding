@@ -2,16 +2,18 @@
 
 
 ## get the gted data with the proper sheets
-df_gted <- lapply(list(tep=1, ## tax expenditure provision
-                       rev=2, ## Revenue forgone
-                       ben=3, ## number of beneficiaries
-                       cry=4), ## country data
+df_gted <- lapply(list(tep=2, ## tax expenditure provision
+                       rev=3, ## Revenue forgone
+                       ben=4, ## number of beneficiaries
+                       cry=5), ## country data
                   function(x) as_tibble(read_excel(
-                                  paste0(PROJECT_DIR, "data/gted/GTED_FullDatabase_20220307.xlsx"), sheet = x)))
+                                  ## paste0(PROJECT_DIR, "data/gted/GTED_FullDatabase_20220307.xlsx"), sheet = x)))
+                                  paste0(PROJECT_DIR, "data/gted/GTED_FullDatabase_20220506.xlsx"), sheet = x)))
 
 ## ** exploring df_gted$tep
 
 names(df_gted$tep)
+
 
 table(df_gted$tep$`Beneficiaries - Level 1`)
 len(table(df_gted$tep$`Beneficiaries - Level 1`))
@@ -22,6 +24,7 @@ table(is.na(df_gted$tep$`Beneficiaries - Level 2`))
 ## 11k have some unstandardized beneficiaries, 11k don't
 
 grepl_term <- "collector"
+grepl_term <- "museum"
 
 table(grepl(grepl_term, df_gted$tep$`Beneficiaries - Level 2`))
 sample(df_gted$tep$`Beneficiaries - Level 2`[grepl(grepl_term, df_gted$tep$`Beneficiaries - Level 2`)],2)
