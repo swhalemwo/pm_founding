@@ -1,9 +1,13 @@
 ## * base df creation
 
 vrbl_fndr <- function(df, penl_vrbls) {
+    #' find the variable referred by by potential variables (penl_vrbls)
+
     vrbl <- intersect(names(df), penl_vrbls)
-    if (len(vrbl) > 1 | len(vrbl) == 0 ) {
-        stop("variable unclear: referred to by ", paste0(penl_vrbls, collapse = " - "))
+    if (len(vrbl) > 1)  {
+        stop("multiple variables found: referred to by ", paste0(penl_vrbls, collapse = " - "))
+    } else if (len(vrbl) == 0 ) {
+        stop("no variable found: referred to by ", paste0(penl_vrbls, collapse = " - "))
     } else {
         vrbl
     }
