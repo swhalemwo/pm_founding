@@ -75,7 +75,9 @@ gen_artnews_names_fixed <- function(artnews_name_check_dt, antdf){
 }
 
 gen_pm_founder_names_fixed <- function(artnews_name_check_dt2, artnews_orig_dt, df_excl) {
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
     ## fix the mismatches between res and orig: some are due to encoding weirdness, one (family) due to name changes
+    
     
     dt_founder_crpn <- data.table(founder_res=unique(artnews_name_check_dt2$founder_name_pmdb),
                                   founder_orig = artnews_orig_dt$founder_name_pmdb)
@@ -108,8 +110,8 @@ gen_pm_founder_names_fixed <- function(artnews_name_check_dt2, artnews_orig_dt, 
     ## some test, idk what it does
     ## checks whether there are founders in artnews that are not in pmdb???
     ## ofc there are... 
-    if (len(setdiff(artnews_name_check_dt3$founder_name_pmdb, df_excl$`Founder name`)) > 1) {
-        print(setdiff(artnews_name_check_dt3$founder_name_pmdb, df_excl$`Founder name`))
+    if (len(setdiff(artnews_name_check_dt3$founder_name_pmdb, df_excl$`Founder_name`)) > 1) {
+        print(setdiff(artnews_name_check_dt3$founder_name_pmdb, df_excl$`Founder_name`))
         stop("match of museum founders incomplete")}
 
     return(artnews_name_check_dt3)
@@ -120,7 +122,7 @@ gen_pm_founder_names_fixed <- function(artnews_name_check_dt2, artnews_orig_dt, 
 
 gen_merge_res <- function(df_excl) {
     #' generate the merge res: artnews_time with fitting founder name 
-    
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
 
     check_for_ids(df_excl)
 
