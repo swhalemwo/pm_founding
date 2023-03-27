@@ -498,3 +498,16 @@ render_xtable <- function(xtable, filepath) {
     ## prvlt()
 
 
+plt_inspector <- function(plt_list) {
+
+    
+
+    for (i in seq_along(plt_list)) {
+        print(names(plt_list)[i])
+        plot(plt_list[[i]])
+        readline("press F to continue")
+    
+    }
+    invisible(NULL)
+   
+}
