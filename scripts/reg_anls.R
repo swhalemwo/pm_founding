@@ -1506,7 +1506,7 @@ reg_res <- list()
 ## generate plots, construct configs
 reg_res$plts <- gen_reg_res_plts(reg_res_objs, vvs, NBR_MDLS)
 
-## plt_inspector(reg_res$plts)
+plt_inspector(reg_res$plts)
 ## reg_res$plts$plt_oneout_llrt_z
 
 

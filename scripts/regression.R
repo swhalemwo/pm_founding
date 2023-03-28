@@ -77,6 +77,7 @@ cleanup_old_stata_procs <- function() {
 
 
 parse_stata_res <- function(stata_res, stata_output_vars, gof_names){
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
     #' parse the stata res into result_list
 
     stata_res_parsed <- stata_res %>% pivot_longer(cols = names(stata_res)) %>%
