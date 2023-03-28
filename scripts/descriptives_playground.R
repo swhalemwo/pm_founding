@@ -1537,3 +1537,36 @@ dens_adj_dt %>%
     ggplot(aes(x=x, y=y_adj, group = variable)) +
     geom_line() + 
     scale_y_continuous(breaks = 1:21, labels = lbls)
+
+## ** logging test
+
+## *** clcltr_ctn_cpaer
+
+hist(df_reg_rts$clctr_cnt_cpaer)
+hist(log(df_reg_rts$clctr_cnt_cpaer+1))
+
+## pretty pointless: so skewed no amount of logging can fix it 
+
+## *** pm_density
+hist(df_reg_rts$pm_density)
+hist(log(df_reg_rts$pm_density+1))
+
+## ehh it's all these zeroes: there's no way to get the data into normal shape
+
+## *** hnwi 
+hist(df_reg_rts$hnwi_nbr_1M)
+hist(log(df_reg_rts$hnwi_nbr_1M+min(filter(df_reg_rts, hnwi_nbr_1M > 0)$hnwi_nbr_1M)))
+
+## looks somewhat better, at least for lower thresholds
+
+## *** smorc
+hist(df_reg_rts$smorc_dollar_fxm)
+hist(log(df_reg_rts$smorc_dollar_fxm))
+hist(log(df_reg_rts$smorc_dollar_fxm+1))
+
+## looks at least somewhat better
+
+
+
+
+
