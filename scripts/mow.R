@@ -72,7 +72,7 @@ proc_mow_dt <- function(df_mow2, sets, years) {
         .[, .(cnt = .N, cnt_squared = as.integer(.N^2)), by = c("iso3c", "founding_date1", "tag")] %>%
         melt(id.vars = c("iso3c", "founding_date1", "tag")) %>% # melt into super long
         .[, vrbl_name := paste0("cnt_", tag, "_", founding_date1)] %>% # generate variable name
-        .[variable == "cnt_squared", vrbl_name := paste0(vrbl_name, "_squared")] %>% # update "squared" vrbl name
+        .[variable == "cnt_squared", vrbl_name := paste0(vrbl_name, "_sqrd")] %>% # update "squared" vrbl name
         dcast.data.table(iso3c ~ vrbl_name, value.var = "value")
 
     ## fill up zeroes

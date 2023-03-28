@@ -1077,7 +1077,7 @@ gen_vrbl_vectors <- function() {
     base_vars <- c("iso3c", "year")
     ## crscn_vars <- c("sum_core", "cnt_contemp_1995")
     crscn_vars <- c("Ind.tax.incentives", # "NPO.tax.exemption",
-                    "cnt_contemp_1990", "cnt_contemp_1990_squared")
+                    "cnt_contemp_1990", "cnt_contemp_1990_sqrd")
 
     ## for now manually exclude the 1B threshold
 
@@ -1092,7 +1092,7 @@ gen_vrbl_vectors <- function() {
     ## non_thld_lngtd_vars <- c("tmitr_approx_linear20step", "ti_tmitr_interact", "smorc_dollar_fxm", "NY.GDP.PCAP.CDk", "SP.POP.TOTLm", "clctr_cnt_cpaer")
 
     ctrl_vars <- c("NY.GDP.PCAP.CDk", "SP.POP.TOTLm", "clctr_cnt_cpaer", "cnt_contemp_1990",
-                   "cnt_contemp_1990_squared")
+                   "cnt_contemp_1990_sqrd")
     ctrl_vars_lngtd <- ctrl_vars[ctrl_vars %!in% crscn_vars]
     ti_vars <- c("tmitr_approx_linear20step", "ti_tmitr_interact")
     cult_spending_vars <- c("smorc_dollar_fxm", "smorc_dollar_fxm_sqrd")
@@ -1128,7 +1128,7 @@ gen_vrbl_vectors <- function() {
                    "cnt_contemp_1995" = "# of modern/contemp. art museums in 1995",
                    "cnt_contemp_1995_squared" = "# of contemp. art museums (1995) (sqrd)",
                    "cnt_contemp_1990" = "# of modern/contemp. art museums in 1990",
-                   "cnt_contemp_1990_squared" = "# of contemp. art museums (1990) (sqrd)",
+                   "cnt_contemp_1990_sqrd" = "# of contemp. art museums (1990) (sqrd)",
                    "clctr_cnt_cpaer" = "# Collectors in Artnews collector list",
                    "nbr_opened_cum" = "cumulative openings (legitimacy)",
                    "nbr_opened_cum_sqrd" = "cumulative openings squared (competition)",
@@ -1175,7 +1175,7 @@ gen_vrbl_vectors <- function() {
                    ## "cnt_contemp_1995" = "Nbr. of modern/contemp. art museums in 1995 per cap(M)",
                    ## "cnt_contemp_1995_squared" = "Nbr. of contemp. art museums 1995 per cap (M,squared)",
                    "cnt_contemp_1990" = "modern/contemp. art museums (1990)",
-                   "cnt_contemp_1990_squared" = "modern/contemp. art museums (1990, squared)",
+                   "cnt_contemp_1990_sqrd" = "modern/contemp. art museums (1990, squared)",
                    "clctr_cnt_cpaer" = "Collectors in Artnews top 200 collector list",
                    ## "nbr_opened_cum" = "Nbr. cumulative openings per 1M pop. (legitimacy)",
                    ## "nbr_opened_cum_sqrd" = "Nbr. cumulative openings per per 1M pop. squared (competition)",
@@ -1246,7 +1246,7 @@ gen_vrbl_vectors <- function() {
         c("hnwi_nbr_30M"              = "h4"),
         c("hnwi_nbr_200M"             = "h4"),
         c("cnt_contemp_1990"          = "zcontrols"),
-        c("cnt_contemp_1990_squared"  = "zcontrols"),
+        c("cnt_contemp_1990_sqrd"  = "zcontrols"),
         c("NY.GDP.PCAP.CDk"           = "zcontrols"),
         c("clctr_cnt_cpaer"           = "zcontrols"),
         c("pm_density"                = "zcontrols"),
@@ -1990,7 +1990,7 @@ read_reg_res_files <- function(fldr_info) {
 
 
 
-## ** running 
+## ** main
 
 if (identical(args, character(0))) {
     stop("functions are done")
