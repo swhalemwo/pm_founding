@@ -1567,6 +1567,318 @@ hist(log(df_reg_rts$smorc_dollar_fxm+1))
 ## looks at least somewhat better
 
 
+## * variable ranges and coef size exploration
+## ** variable ranges
+
+library(ggridges)
+
+dt_rng_visl <- cbn_dfs_rates$cbn_all %>% adt() %>%
+    ## .[, .(iso3c, year, ti_tmitr_interact_lag0, pm_density_sqrd_lag0, smorc_dollar_fxm_sqrd_lag0)] %>%
+    melt(id.vars = c("iso3c", "year"), variable.factor = F) %>%
+    .[grepl("lag0", variable) & variable %!in% c("SP_POP_TOTLm_lag0_uscld", "SP.POP.TOTLm_lag0")] %>%
+    .[, variable := gsub("_lag0", "", variable)] %>%  
+   copy(vvs$hyp_mep_dt)[., on = .(vrbl = variable)]
 
 
 
+library(scales, include.only = "pretty_breaks")
+
+## violin plot
+dt_rng_visl %>%
+    ## .[, .(mean = mean(value)), variable] %>%
+    ## .[order(-mean)]
+    ggplot(aes(x=value, y = vrbl)) +
+    geom_violin(bw = 0.1) +
+    facet_grid(hyp~., scales = "free", space = "free") +
+    scale_x_continuous(breaks = pretty_breaks(n=10))
+    
+
+
+
+## density: has to use y-facets for variable already 
+dt_rng_visl %>%
+    ggplot(aes(x=value)) +
+    geom_density(trim = T) + 
+    facet_grid(hyp + vrbl ~. , scales = "free")
+
+## ridges
+set.seed(3)
+dt_rng_visl %>% 
+    ggplot(aes(x=value, y = vrbl)) + # , y = variable, height = ..density..)) + 
+    geom_density_ridges(rel_min_height = 0.001, scale = 1, panel_scaling = F) +
+    geom_jitter(dt_rng_visl[value > 6], # add points for outliers
+                mapping = aes(x=value, y=vrbl, color = iso3c),
+                width = 0, height = 0.2, size = 1) 
+    ## coord_cartesian(xlim = c(-3, 5))
+ 
+
+    geom_ridgeline()
+
+
+## variable ranges
+dt_vrblrngs <- dt_rng_visl %>% copy() %>% 
+    .[, setNames(as.list(range(value)), c("min", "max")), by = .(vrbl, hyp)] %>%
+    .[, range := max - min]
+    
+    
+dt_vrblrngs %>%
+    ggplot(aes(x=range, y=vrbl)) +
+    ## geom_segment(xend= 0, yend = 2) +
+    geom_col(width = 0.2) + 
+    facet_grid(hyp~., scales = "free", space = "free")
+    ## melt(id.vars = c("vrbl", "hyp"), variable.name = "measure") %>%
+    ## .[
+
+
+## ** coef size comparison:
+
+dt_coefsz <- reg_res_objs$top_coefs %>% copy() %>%
+    .[cbn_name == "cbn_all", .SD[which.max(log_likelihood)], vrbl_name_unlag] %>%
+    .[, .(vrbl_name_unlag, coef, coef_abs =abs(coef))]
+
+## check what names are not in dt_rng_visl: TI (because not longitudinal) -> fix filtering? 
+setdiff(dt_coefsz$vrbl_name_unlag, dt_vrblrngs$vrbl)
+
+## coef size comparison 
+dt_coefszcprn <- dt_coefsz[dt_vrblrngs, on = .(vrbl_name_unlag = vrbl)]
+
+dt_coefszcprn %>%
+    ggplot(aes(x = range, y=coef_abs)) +
+    geom_point() +
+    geom_text_repel(aes(label = vrbl_name_unlag))
+    
+    
+dt_coefszcprn %>% copy() %>%
+    .[, coef_abs_ttl := coef_abs * range] %>%
+    .[order(coef_abs_ttl)] %>%
+    .[, vrbl_name_unlag := factor(vrbl_name_unlag, levels = vrbl_name_unlag)] %>% 
+    ggplot(aes(x=coef_abs_ttl, y = vrbl_name_unlag)) +
+    geom_col() +
+    facet_grid(hyp~., scales = "free", space = "free")
+
+
+## * squared standardized variable construction exploration
+dt_coefszcprn[grepl("smorc", vrbl_name_unlag)]
+
+dt_pred <- data.table(
+    x = seq(-1, 4, by = 0.01)) %>% # range of smorc_dollar_fxm
+    .[, `:=`(linear = 0.382 *x,
+             squared = -0.8 * (x^2))] %>%
+    .[, sum := linear + squared] %>%
+    .[, .(x, sum, tpc = "pred")] %>%
+    rbind(data.table(x = density(dt_rng_visl[vrbl == "smorc_dollar_fxm", value], adjust = 0.25)$x, #  add smorc distribution
+                     sum = density(dt_rng_visl[vrbl == "smorc_dollar_fxm", value], adjust = 0.25)$y,
+                     tpc = "dens"))
+
+dt_pred %>% ggplot(aes(x=x, y=sum)) +
+    geom_line() +
+    facet_grid(tpc~., scales = "free")
+
+dt_pred[, .SD[which.max(sum)]]
+
+reg_res$plts$plt_oneout_coefs
+
+## ** squared variable inspection
+    
+## square exploration
+dt_sqrsplrn <- cbn_dfs_rates$cbn_all %>% adt() %>% 
+    .[, .(nbr_opened, iso3c, iso3c_num, year, SP_POP_TOTLm_lag0_uscld,
+          smorc_dollar_fxm_lag1, smorc_dollar_fxm_sqrd_lag1)] %>%
+    .[, `:=`(smorc_dollar_fxm_sqrdv2_lag1 = smorc_dollar_fxm_lag1^2,  # v2: square standardized variable
+             ## v3: flip negative tail 
+             smorc_dollar_fxm_sqrdv3_lag1 = smorc_dollar_fxm_lag1^2 * sign(smorc_dollar_fxm_lag1))]
+
+dt_sqrsplrn[, .(smorc_dollar_fxm_lag1, smorc_dollar_fxm_sqrd_lag1, smorc_dollar_fxm_sqrdv2_lag1, smorc_dollar_fxm_sqrdv3_lag1)] %>%
+    cor()
+
+## square exploration unscaled
+dt_sqrsplrn_uscld <- cbn_dfs_rates_uscld$cbn_all %>% adt() %>% 
+    .[, .(iso3c, year, smorc_dollar_fxm_lag1, smorc_dollar_fxm_sqrd_lag1)] %>%
+    .[, `:=`(smorc_dollar_fxm_sqrdv2_lag1 = smorc_dollar_fxm_lag1^2,  # v2: square standardized variable
+             ## v3: flip negative tail 
+             smorc_dollar_fxm_sqrdv3_lag1 = smorc_dollar_fxm_lag1^2 * sign(smorc_dollar_fxm_lag1))] %>% 
+    dt_sqrsplrn[, .(iso3c, nbr_opened,
+                    year, iso3c_num, SP_POP_TOTLm_lag0_uscld)][., on = .(iso3c, year)]
+
+## yup are all the same 
+dt_sqrsplrn_uscld[, .(smorc_dollar_fxm_sqrd_lag1, smorc_dollar_fxm_sqrdv2_lag1, smorc_dollar_fxm_sqrdv3_lag1)] %>%
+    cor()
+
+
+
+dt_sqrsplrn[, .(smorc_dollar_fxm_lag1, smorc_dollar_fxm_sqrd_lag1,
+                smorc_dollar_fxm_sqrdv2_lag1, smorc_dollar_fxm_sqrdv3_lag1)] %>%
+    melt(id.vars = "smorc_dollar_fxm_lag1") %>%
+    ggplot(aes(x=smorc_dollar_fxm_lag1, y = value)) +
+    geom_point() +
+    facet_grid(variable ~ .)
+
+
+## original to squared comparisons
+## original variable
+ggplot(dt_sqrsplrn, aes(x=smorc_dollar_fxm_lag1, y = smorc_dollar_fxm_sqrd_lag1)) +
+    geom_point()
+
+## v2
+ggplot(dt_sqrsplrn, aes(x=smorc_dollar_fxm_lag1, y = smorc_dollar_fxm_sqrdv2_lag1)) +
+    geom_point()
+
+ggplot(dt_sqrsplrn, aes(x=smorc_dollar_fxm_lag1, y = smorc_dollar_fxm_sqrdv3_lag1)) +
+    geom_point()
+
+
+## compare different squared constructions
+ggplot(dt_sqrsplrn, aes(x=smorc_dollar_fxm_sqrd_lag1, y = smorc_dollar_fxm_sqrdv2_lag1)) +
+    geom_point()
+
+
+## pglm 
+## only linear effect
+res1 <- pglm(nbr_opened ~ smorc_dollar_fxm_lag1 + offset(log(pop)), index = "iso3c", data = dt_sqrsplrn,
+             model = "random", effect = "individual", family = poisson(link = log))
+## pop added as normal control, not offset
+res2 <- pglm(nbr_opened ~ smorc_dollar_fxm_lag1 + pop, index = "iso3c", data = dt_sqrsplrn,
+             model = "random", effect = "individual", family = poisson)
+## no offset at all
+res3 <- pglm(nbr_opened ~ smorc_dollar_fxm_lag1, index = "iso3c", data = dt_sqrsplrn,
+             model = "random", effect = "individual", family = poisson(link = log))
+screenreg(list(res1, res2, res3))
+## pglm doesn't support offsets -> useless
+
+stata_runner <- function(iv_vars, dtx) {
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
+   
+    ## pretty lame ad-hoc wrapper for testing different IV vars choices
+    
+    output_vars <- c(iv_vars, "cons", "ln_r", "ln_s")
+    gof_names <- c("N", "log_likelihood", "N_g", "Chi2", "p", "df") # not properly handled in gen_stata_code_xtnbreg
+
+    stata_code <- gen_stata_code_xtnbreg(iv_vars = iv_vars, dvfmt = "rates",
+                                         gof_names = gof_names,
+                                         stata_output_vars = output_vars,
+                                         difficult_str = "difficult",
+                                         technique_str = "nr")
+
+    stata_res_parsed <- stata(stata_code, data.in = dtx, data.out = T) %>%
+        parse_stata_res(output_vars, gof_names) 
+
+    ## creating texreg, manually adjusting gof names to fit glmmTMB results
+    stata_texreg <- stata_res_parsed %$% 
+        createTexreg(coef.names = coef_df$vrbl_name, coef = coef_df$coef,
+                     se = coef_df$se, pvalues = coef_df$pvalues,
+                     gof.names = c("Num. obs.", "Log Likelihood", "Num. groups: iso3c"),
+                     gof = gof_df$gof_value[1:3])
+
+    return(stata_texreg)
+}
+
+
+## glmmTMB
+library(glmmTMB)
+
+r_glmm1 <- glmmTMB(nbr_opened ~ smorc_dollar_fxm_lag1 + (1 | iso3c) + offset(log(SP_POP_TOTLm_lag0_uscld)),
+                   data = dt_sqrsplrn, family = nbinom2)
+
+r_glmm2 <- glmmTMB(nbr_opened ~ smorc_dollar_fxm_lag1 + (1 | iso3c), data = dt_sqrsplrn,
+                   family = nbinom2)
+
+r_glmm3 <- glmmTMB(nbr_opened ~ smorc_dollar_fxm_lag1 + smorc_dollar_fxm_sqrd_lag1 + (1 | iso3c) +
+                       offset(log(SP_POP_TOTLm_lag0_uscld)),
+                   data = dt_sqrsplrn, family = nbinom2)
+
+r_glmm4 <- glmmTMB(nbr_opened ~ smorc_dollar_fxm_lag1 + smorc_dollar_fxm_sqrdv2_lag1 + (1 | iso3c) +
+                       offset(log(SP_POP_TOTLm_lag0_uscld)),
+                   data = dt_sqrsplrn, family = nbinom2)
+
+r_glmm5 <- glmmTMB(nbr_opened ~ smorc_dollar_fxm_lag1 + smorc_dollar_fxm_sqrdv3_lag1 + (1 | iso3c) +
+                       offset(log(SP_POP_TOTLm_lag0_uscld)),
+                   data = dt_sqrsplrn, family = nbinom2)
+
+r_glmm_uscld <- glmmTMB(nbr_opened ~ smorc_dollar_fxm_lag1 + smorc_dollar_fxm_sqrd_lag1 + (1 | iso3c) +
+                            offset(log(SP_POP_TOTLm_lag0_uscld)),
+                        data = dt_sqrsplrn_uscld, family = nbinom2)
+
+
+## stata
+stata_res1 <- stata_runner(iv_vars = c("smorc_dollar_fxm_lag1"), dt_sqrsplrn)
+stata_res2 <- stata_runner(iv_vars = c("smorc_dollar_fxm_lag1", "smorc_dollar_fxm_sqrd_lag1"), dt_sqrsplrn)
+stata_res3 <- stata_runner(iv_vars = c("smorc_dollar_fxm_lag1", "smorc_dollar_fxm_sqrdv2_lag1"), dt_sqrsplrn)
+stata_res4 <- stata_runner(iv_vars = c("smorc_dollar_fxm_lag1", "smorc_dollar_fxm_sqrdv3_lag1"), dt_sqrsplrn)
+
+
+stata_uscld_res <- stata_runner(iv_vars = c("smorc_dollar_fxm_lag1", "smorc_dollar_fxm_sqrd_lag1"),
+                                dt_sqrsplrn_uscld)
+
+## base model comparison, also include garbage models (1,2)
+## screenreg(list(res3, # no offset pglm -> garbage
+##                r_glmm2, # no offset glmmtmb -> garbage
+##                r_glmm1, # tmb offset, linear,
+##                stata_res1 # stata: linear (offset always there)               
+##                )
+##           )
+
+
+# squared variable specification
+screenreg(list(
+    r_glmm3, # tmb offset, linear + squared v1
+    r_glmm4, # tmb offset, linear + squared v2 (squaring the standardized variable)
+    r_glmm5, # tmb offset, linear + squared v3 (squaring linear variable and flip negative tail)
+    r_glmm_uscld,
+    stata_res2, # stata: linear + squared
+    stata_res3, # stata: linear + squared v2
+    stata_res4, # stata: linear + squared v3
+    stata_uscld_res
+))
+
+## checking squared variables SD
+sd(cbn_dfs_rates$cbn_all$smorc_dollar_fxm_lag1^2)
+sd(cbn_dfs_rates$cbn_all$smorc_dollar_fxm_sqrd_lag1)
+
+sd(cbn_dfs_rates$cbn_all$pm_density_lag1)
+sd(cbn_dfs_rates$cbn_all$pm_density_sqrd_lag1)
+
+sdcols <- setdiff(names(cbn_dfs_rates$cbn_all), c("iso3c", "iso3c_num", "year"))
+
+
+
+cbn_dfs_rates$cbn_all %>% adt() %>% .[, lapply(.SD, \(x) sd(x)), .SDcols = sdcols] %>%
+    melt() %>%
+    ## .[, .N, value]
+    .[value != 1 | value != 1L] %>% print(n=200)
+    ## .[1, value]
+
+vege <- sort(runif(200, 0, 1))
+
+veg2<-vege^2
+z.veg <- scale(vege)
+z.veg2 <- scale(veg2)
+z.vege2.1 <- z.veg^2
+
+#original variables
+cor(veg2,vege) #highly correlated e.g. 0.97
+
+#method 2
+cor(z.veg2,z.veg) #highly correlated e.g. 0.97
+
+#method 1
+cor(z.vege2.1,z.veg) #much less correlated e.g. -0.13
+
+dt_veg <- data.table(veg = runif(200, 0, 1)) %>%
+    .[, `:=`(veg2 = veg^2, z.veg = scale(veg))] %>%
+    .[, `:=`(z.veg2 = scale(veg2))] %>%
+    .[, z.veg21 := z.veg^2]
+
+cor(dt_veg)
+
+melt(dt_veg) %>% ggplot(aes(x=value)) + geom_density() + facet_grid(variable ~ . )
+
+melt(dt_veg, variable.factor = F) %>%
+    .[, ID := 1:.N, variable] %>%
+    .[., on = "ID", allow.cartesian = T] %>% 
+    ## .[variable > i.variable] %>%
+    .[variable != i.variable] %>% 
+    ggplot(aes(x=i.value, y=value)) +
+    geom_point() +
+    geom_smooth(method = "lm", se = F) + 
+    facet_grid(variable ~ i.variable)
+    

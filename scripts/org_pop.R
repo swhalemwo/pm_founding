@@ -64,84 +64,6 @@ cbn_dfs_rates$cbn_all %>% adt() %>%
     .[, .(sd = sd(value), mean = mean(value), min = min(value), max = max(value)), variable] %>% print(n=220)
 
 
-## ** visualizing densities -> ranges
-
-library(ggridges)
-
-dt_rng_visl <- cbn_dfs_rates$cbn_all %>% adt() %>%
-    ## .[, .(iso3c, year, ti_tmitr_interact_lag0, pm_density_sqrd_lag0, smorc_dollar_fxm_sqrd_lag0)] %>%
-    melt(id.vars = c("iso3c", "year"), variable.factor = F) %>%
-    .[grepl("lag0", variable) & variable %!in% c("SP_POP_TOTLm_lag0_uscld", "SP.POP.TOTLm_lag0")] %>%
-    .[, variable := gsub("_lag0", "", variable)] %>%  
-   copy(vvs$hyp_mep_dt)[., on = .(vrbl = variable)]
-
-
-
-library(scales, include.only = "pretty_breaks")
-
-## violin plot
-dt_rng_visl %>%
-    ## .[, .(mean = mean(value)), variable] %>%
-    ## .[order(-mean)]
-    ggplot(aes(x=value, y = vrbl)) +
-    geom_violin(bw = 0.1) +
-    facet_grid(hyp~., scales = "free", space = "free") +
-    scale_x_continuous(breaks = pretty_breaks(n=10))
-    
-
-
-
-## density: has to use y-facets for variable already 
-dt_rng_visl %>%
-    ggplot(aes(x=value)) +
-    geom_density(trim = T) + 
-    facet_grid(hyp + vrbl ~. , scales = "free")
-
-## ridges
-set.seed(3)
-dt_rng_visl %>% 
-    ggplot(aes(x=value, y = vrbl)) + # , y = variable, height = ..density..)) + 
-    geom_density_ridges(rel_min_height = 0.01, scale = 1, panel_scaling = F) +
-    geom_jitter(dt_rng_visl[value > 6], # add points for outliers
-                mapping = aes(x=value, y=vrbl, color = iso3c),
-                width = 0, height = 0.2, size = 1) 
-    ## coord_cartesian(xlim = c(-3, 5))
- 
-
-    geom_ridgeline()
-
-
-## ** logging test
-
-## *** clcltr_ctn_cpaer
-
-hist(df_reg_rts$clctr_cnt_cpaer)
-hist(log(df_reg_rts$clctr_cnt_cpaer+1))
-
-## pretty pointless: so skewed no amount of logging can fix it 
-
-## *** pm_density
-hist(df_reg_rts$pm_density)
-hist(log(df_reg_rts$pm_density+1))
-
-## ehh it's all these zeroes: there's no way to get the data into normal shape
-
-## *** hnwi 
-hist(df_reg_rts$hnwi_nbr_1M)
-hist(log(df_reg_rts$hnwi_nbr_1M+min(filter(df_reg_rts, hnwi_nbr_1M > 0)$hnwi_nbr_1M))
-
-## looks somewhat better, at least for lower thresholds
-
-## *** smorc
-hist(df_reg_rts$smorc_dollar_fxm)
-hist(log(df_reg_rts$smorc_dollar_fxm+1))
-
-## looks at least somewhat better
-
-
-
-
-
 
 ## ** more outlier search 
 
@@ -152,6 +74,8 @@ dt_rng_visl[value > 6] %>% print(n=80)
 dt_rng_visl[, .N, iso3c] %>% print(n=200)
     
 
+    
+             
 
 
 
