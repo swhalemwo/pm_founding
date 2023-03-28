@@ -1,4 +1,5 @@
-# library(psych)
+## * descriptives
+## library(psych)
 
 plt_to_pdf <- function(plt, width, height, fig_name) {
     if (missing(fig_name)) { 
