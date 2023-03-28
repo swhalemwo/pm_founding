@@ -295,6 +295,7 @@ gen_cbn_dfs <- function(df_regx, lngtd_vars, crscn_vars, vrbl_cnbs, base_vars) {
 }
     
 scale_cbn_dfs <- function(cbn_dfs, base_vars, df_regx) {
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}  
     #' scale cbn dfs
 
     ## add unscaled Population at lag 0: needed for rates/exposures(use Stata naming scheme)
@@ -319,7 +320,7 @@ scale_cbn_dfs <- function(cbn_dfs, base_vars, df_regx) {
     ## effectively makes it bigger, so coefs should be smaller
 
     ## first calculate interaction values
-
+    
     ti_tmitr_interactions <- lapply(cbn_dfs3, \(x)
            lapply(seq(0,5), \(lagx)
                   x %>% 
@@ -337,14 +338,40 @@ scale_cbn_dfs <- function(cbn_dfs, base_vars, df_regx) {
            cbind(cbn_dfs3[[x]] %>% select(-all_of(names(ti_tmitr_interactions[[x]]))),
                  ti_tmitr_interactions[[x]]) %>% atb())
 
+
+    ## update the squared terms: recalculate them on the basis of the squared variables
+
+    cbn_dfs5 <- lapply(cbn_dfs4, \(dtx) # loop over dfs of co
+                       adt(dtx)[, .SD^2, # get vrbls that have sqrd, and square their non-squared, scaled form
+                                .SDcols = gsub("_sqrd", "", keep(names(dtx), ~grepl("_sqrd", .x)))] %>%
+           setnames(old = gsub("_sqrd", "", keep(names(dtx), ~grepl("_sqrd", .x))), # give newly squared vrbls
+                    new = keep(names(dtx), ~grepl("_sqrd", .x))) %>% # proper squared names 
+           cbind(adt(dtx)[, .SD, .SDcols = setdiff(names(dtx), names(.))], .) %>% atb()) # replace old by new sqrd
+
+ 
+    ## inspection that transformation went well 
+    ## dtx2 <- cbn_dfs5$cbn_all %>% adt()
+    ## melt(dtx2, id.vars = c("iso3c", "year")) %>%
+    ## .[, .(mean = mean(value), sd = sd(value)), variable] %>% print(n=200)
+        
+    ## vrbl_sqrd <- "pm_density_global_sqrd_lag0"
+    ## vrbl_base <- "pm_density_global_lag0"
+    
+    ## mean(dtx2[[vrbl_base]]) # 0
+    ## sd(dtx2[[vrbl_base]]) # 1
+    ## mean(dtx2[[vrbl_sqrd]]) # should be 1
+    ## sd(dtx2[[vrbl_sqrd]]) # sd_calc (=sd_check)
+    ## mean((dtx2[[vrbl_base]])^2) # should be 1
+    ## sd((dtx2[[vrbl_base]]^2)) # sd_check (=sd_calc)
+
     ## add iso3c_num to make stata happy 
     ## cbn_dfs <- lapply(cbn_dfs, \(x) mutate(x, iso3c_num = as.numeric(factor(iso3c))))
 
     ## add nbr_opened
-    cbn_dfs5 <- lapply(cbn_dfs4, \(x) merge(x, select(df_regx, iso3c, year, nbr_opened), all.x = T) %>% atb())
+    cbn_dfs6 <- lapply(cbn_dfs5, \(x) merge(x, select(df_regx, iso3c, year, nbr_opened), all.x = T) %>% atb())
 
     
-    return(cbn_dfs5)
+    return(cbn_dfs6)
 }
 
 gen_lag_id <- function(reg_spec, vvs) {
@@ -2012,6 +2039,10 @@ cbn_dfs_rates <- scale_cbn_dfs(cbn_dfs_rates_uscld, vvs$base_vars, df_reg_rts)
 cbn_df_dict <- list(counts = cbn_dfs_counts,
                     rates = cbn_dfs_rates)
                     
+## cbn_dfs_counts$cbn_all %>% adt() %>%
+##     melt(id.vars = c("iso3c", "year")) %>%
+##     .[, .(mean = mean(value), sd = sd(value)), variable] %>% print(n=200)
+
 
 vrbl_thld_choices <- gen_vrbl_thld_choices(vvs$hnwi_vars, vvs$inc_ineq_vars, vvs$weal_ineq_vars)
 

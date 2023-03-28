@@ -56,6 +56,7 @@ mow_cntns_cvrg <- function(mow_df, setx, sets) {
 
 
 proc_mow_dt <- function(df_mow2, sets, years) {
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
     #' split into subfunction the processing with data table 
         
 

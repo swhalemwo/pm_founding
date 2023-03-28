@@ -1374,5 +1374,80 @@ mtcars
 iris
 
 
-## * old reg runs 
+## ** updating squared terms
 
+## calculate new squared values: based on 
+cfgs <- names(cbn_dfs3$cbn_all) %>% keep(~grepl("_sqrd", .x)) %>% setNames(., gsub("_sqrd", "", .))
+dtx <- adt(cbn_dfs3$cbn_all)
+iwalk(as.list(cfgs), ~dtx[, get(.x) := get(.y)^2])
+sd(dtx$smorc_dollar_fxm_sqrd_lag0)
+
+vlu_vec <- list(iso3c_num = 10, iso3c = "asdf")
+
+## lapply test: accessing external values doesn't really work well 
+dtx[, lapply(.SD, \(x) vlu_vec[x]), .SDcols = c("iso3c_num", "iso3c")][1:3]
+
+## lapply assignment by reference: doesn't work: .SD is locked
+dtx[, lapply(cfgs, \(x) .SD[,unname(x)[[1]] := names(x)])]
+
+## try without renaming in place 
+dtx[, .(lapply(as.list(cfgs), \(x) unname(x)[[1]] = names(x)))]
+
+## try with get
+dtx[, .(lapply(as.list(cfgs), get(unname(x)[[1]]) = get(names(x))))]
+
+## try with entire .SD
+copy(dtx)[, lapply(.SD, \(x) x = x^2), .SDcols = names(cfgs)] %>%
+    setnames(old = names(cfgs), new = unname(cfgs)) %>%
+    cbind(dtx[, .SD, .SDcols = setdiff(names(dtx), names(.))], .) %>%
+    melt(id.vars = c("iso3c", "year")) %>%
+    .[, .(sd = sd(value), mean = mean(value)), variable] %>% print(n=200)
+
+
+## combine into single block? dtx given 
+x <- keep(names(dtx), ~grepl("_sqrd", .x)) %>% gsub("_sqrd", "", .)
+## dtx[, .SD^2, .SDcols = .]
+## .[, lapply(.SD, \(x) x = x^2), .SDcols = .]
+x <- dtx[, .SD^2, .SDcols = gsub("_sqrd", "", keep(names(dtx), ~grepl("_sqrd", .x)))]
+
+
+
+## seems to work 
+    ## copy(dtx)[, .SD^2, .SDcols = gsub("_sqrd", "", keep(names(dtx), ~grepl("_sqrd", .x)))] %>%
+    ##     setnames(old = gsub("_sqrd", "", keep(names(dtx), ~grepl("_sqrd", .x))),
+    ##              new = keep(names(dtx), ~grepl("_sqrd", .x))) %>%
+##     cbind(dtx[, .SD, .SDcols = setdiff(names(dtx), names(.))], .)
+
+## list(linear = . ,sqrd = gsub("_sqrd", "", .)) needs to be named vector for setnames
+ 
+        
+    
+        dtx[, .SD^2, .SDcols = names(.)]
+
+    
+    x1 <- dtx[, .SD^2, .SDcols = names(cfgs)]
+    
+    ## all(x==x1)
+    ## dtx[, .SD := .SD^2]
+
+    ## melt into superlong
+    ## squared original: needed for names
+
+    cfg_dt <- data.table(name_base = names(cfgs), name_sqrd = cfgs)
+        
+    dtx_sqrd_old <- dtx[, .SD, .SDcols = c("iso3c", "year", cfg_dt[, name_sqrd])]  %>%
+        melt(id.vars = c("iso3c", "year")) %>%
+        cfg_dt[., on = .(name_sqrd = variable)] # get the variable name of the unsquared variable 
+        ## .[, lapply(.SD, \(x) sum(is.na(x)))]
+        
+
+    dt_usqrd <- dtx[, .SD, .SDcols = c("iso3c", "year", cfg_dt[, name_base])] %>%
+        melt(id.vars = c("iso3c", "year"), value.name = "value_usqrd")
+
+    dtx_sqrd_old[dt_usqrd, on = .(iso3c, year, name_base = variable)] %>%
+        .[, value_sqrd_new := value^2] %>%
+        .[, .(iso3c, year, name_sqrd, value_sqrd_new)] %>%
+        dcast.data.table(iso3c + year ~ name_sqrd, value.var = "value_sqrd_new") %>% atb()
+        ## .[, lapply(.SD, sd)] %>% atb() ## %>% melt() %>% print(n=30)
+        
+    
