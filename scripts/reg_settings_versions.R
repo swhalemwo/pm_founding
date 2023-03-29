@@ -423,7 +423,21 @@ reg_settings_optmz <- list(
     mdls_to_include = c("full")
 )
 
+## ** v69 (nice): properly scaled squared variables
 
+reg_settings_optmz <- list(
+    nbr_specs_per_thld = 3,
+    dvfmts = c("rates"), # should also be counts, but multiple dvfmts not yet supported by reg_anls
+    batch_version = "v69",
+    lags = 1:5,
+    vary_vrbl_lag = F,
+    technique_strs = c("nr"),
+    difficulty_switches = T,
+    regcmds = c("xtnbreg"),
+    ## cbns_to_include = c("cbn_all"),
+    cbns_to_include = names(cbn_dfs_counts)[1:3],
+    mdls_to_include = c("full")
+)
 
 
 ## * read settings back in 
