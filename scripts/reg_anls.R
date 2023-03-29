@@ -11,37 +11,6 @@ library(stars)
 
 
 
-prep_sqlitedb <- function(dbx, dfx, table_title, constraints, insert_data = F) {
-    if (as.character(match.call()[[1]]) %in% fstd){browser()}
-    
-    #' create schema for dfx (in terms of dbx)
-    #' add any additional constraints (primary key(s), foreign keys)
-    #' insert data if insert_data==T
-    
-    schema <- dbDataType(dbx, dfx)
-
-    if (table_title %in% dbListTables(dbx)) {
-        dbRemoveTable(dbx, table_title)
-    }
-
-    ## try to modify primary keys: modify schema
-        
-    init_part <- sprintf("CREATE TABLE %s (", table_title)
-
-    
-    column_info <- paste0(imap_chr(schema, ~sprintf("%s %s", .y, .x)))
-    ## constraints <- "PRIMARY KEY (mdl_id, gof_names)"
-        
-    setup_cmd <- paste0(c(init_part,
-                          paste(c(column_info, constraints), collapse = ",\n"), ")"), collapse = "\n")
-    cat(setup_cmd)
-    dbSendQuery(dbx, setup_cmd)
-
-    if (insert_data) {
-        dbAppendTable(dbx, table_title, dfx)
-    }
-    return(invisible(T))
-}
 
 
 
