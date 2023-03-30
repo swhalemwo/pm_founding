@@ -67,6 +67,7 @@ proc_ou_files <- function(regres_ou_files, gof_df_cbn, top_coefs) {
         .[, `:=`(sig = llrt_p < 0.05,
                  z = qnorm(llrt_p/2, lower.tail = F))] %>% # just plug chi2-based p-values into normal dist
         copy(vvs$hyp_mep_dt)[., on =.(vrbl = ou_set_title_unlag)] %>% # add hypothesis coding
+        .[, vrbl := factor(vrbl, levels = levels(vvs$hyp_mep_dt$vrbl))] %>% 
         .[, ou_set_title_unlag := vrbl] ## keep ou_set_title_unlag
 
     
@@ -724,79 +725,7 @@ gen_plt_cvrgnc <- function(gof_df_cbn) {
 
 
 
-eval_h1a <- function(rows, hyp_thld) {
-    rows[, hyp_eval := coef>hyp_thld] %>%
-        .[, hyp_id := "h1a"] %>%
-        .[, coef := NULL]
-}
 
-eval_h1b <- function(rows, hyp_thld) {
-    #' hypothesis test: in cbn_no_cult_spending_and_mitr: whether Ind.tax.incentives > hyp_thld
-    #' other combinations: whether interaction between tax deductibility of donations and TMITR > hyp_thld
-        
-    rows[cbn_name == "cbn_no_cult_spending_and_mitr" , hyp_eval := coef > hyp_thld] %>% 
-        .[cbn_name != "cbn_no_cult_spending_and_mitr" & vrbl_name_unlag == "ti_tmitr_interact",
-          hyp_eval := coef > hyp_thld] %>%
-        .[!is.na(hyp_eval)] %>% # deleting tax deductibility of donations when interaction is there
-        .[, `:=`(coef = NULL, vrbl_name_unlag = NULL)] %>%
-        .[, hyp_id := "h1b"]
-}
-
-
-eval_h2a <- function(rows, hyp_thld) {
-    rows[, hyp_eval := coef < -hyp_thld] %>%
-        .[, hyp_id := "h2a"] %>%
-        .[, coef := NULL]
-}
-
-eval_h2b <- function(rows, hyp_thld) {
-    rows[, hyp_eval := coef > hyp_thld] %>%
-        .[, hyp_id := "h2b"] %>%
-        .[, coef := NULL]
-}
-
-
-eval_h3a <- function(rows, hyp_thld) {
-    rows[, hyp_eval := coef > hyp_thld] %>%
-        .[, hyp_id := "h3a"] %>%
-        .[, coef := NULL]
-}
-
-eval_h3b <- function(rows, hyp_thld) {
-    rows[, hyp_eval := coef > hyp_thld] %>%
-        .[, hyp_id := "h3b"] %>%
-        .[, coef := NULL]
-}
-
-eval_h4 <- function(rows, hyp_thld) {
-    rows[, hyp_eval := coef > hyp_thld] %>%
-        .[, hyp_id := "h4"] %>%
-        .[, coef := NULL]
-}
-
-
-
-eval_all_hyps <- function(top_coefs, hyp_thld) {
-
-    hyp_res <- rbind(
-        top_coefs[vrbl_name_unlag == "NPO.tax.exemption", .(coef, cbn_name)] %>% eval_h1a(hyp_thld),
-        top_coefs[vrbl_name_unlag %in% c("Ind.tax.incentives", "ti_tmitr_interact"),
-                  .(cbn_name, vrbl_name_unlag, coef)] %>% eval_h1b(hyp_thld),
-        top_coefs[vrbl_name_unlag == "smorc_dollar_fxm", .(coef, cbn_name)] %>% eval_h2a(hyp_thld),
-        top_coefs[vrbl_name_unlag == "smorc_dollar_fxm", .(coef, cbn_name)] %>% eval_h2b(hyp_thld),
-        top_coefs[vrbl_name_unlag %in% c("gptinc992j", "sptinc992j_p90p100", "sptinc992j_p99p100"),
-                  .(coef, cbn_name)] %>% eval_h3a(hyp_thld),
-        top_coefs[vrbl_name_unlag %in% c("ghweal992j", "shweal992j_p90p100", "shweal992j_p99p100"),
-                  .(coef, cbn_name)] %>% eval_h3b(hyp_thld),
-        top_coefs[vrbl_name_unlag %in% sprintf("hnwi_nbr_%sM", c(1,5,30,200)),
-                  .(coef, cbn_name)] %>% eval_h4(hyp_thld))
-
-    ## evaluate the hyps per hyp_thld
-    hyp_res[, hyp_thld := hyp_thld]
-
-    hyp_res[, .(mean_hyp_eval = mean(hyp_eval)), by = .(hyp_id, cbn_name, hyp_thld)]
-        
-}
 
 
 gen_top_coefs <- function(df_anls_base, gof_df_cbn) {
@@ -808,7 +737,11 @@ gen_top_coefs <- function(df_anls_base, gof_df_cbn) {
         .[, .SD[which.max(gof_value)], by=.(cbn_name, vrbl_choice)] %>% # pick best fitting model
         .[, .(mdl_id ,log_likelihood = gof_value)]
 
-    top_coefs <- df_anls_base %>% adt() %>% .[top_mdls_per_thld_choice, on ="mdl_id"]
+    top_coefs <- df_anls_base %>% adt() %>% .[top_mdls_per_thld_choice, on ="mdl_id"] %>%
+        .[, vrbl_name_unlag := factor(vrbl_name_unlag, levels = rev(names(vvs$vrbl_lbls)))]
+        
+    
+    
     return(top_coefs)
 }
 
@@ -887,34 +820,6 @@ gen_lbl_raster <- function(dens_dt, method) {
     }
 }
 
-gen_top_coefs2 <- function(top_coefs) {
-    if (as.character(match.call()[[1]]) %in% fstd){browser()}
-    #' move coefficient grouping by hypothesis into own function to allow access in gen_plt_coef_krnls_dev
-    
-    top_coefs2 <- rbind(
-        top_coefs[vrbl_name_unlag == "NPO.tax.exemption",
-                  .(hyp_id = "h1a", vrbl_name_unlag, cbn_name, coef)],
-        top_coefs[cbn_name != "cbn_no_cult_spending_and_mitr" & vrbl_name_unlag == "ti_tmitr_interact", 
-                  .(hyp_id = "h1b", vrbl_name_unlag, cbn_name, coef)],
-        top_coefs[cbn_name == "cbn_no_cult_spending_and_mitr" & vrbl_name_unlag == "Ind.tax.incentives", 
-                  .(hyp_id = "h1b", vrbl_name_unlag, cbn_name, coef)],
-        top_coefs[vrbl_name_unlag == "smorc_dollar_fxm",
-                  .(hyp_id = "h2", vrbl_name_unlag, cbn_name, coef)],
-        top_coefs[vrbl_name_unlag %in% c("gptinc992j", "sptinc992j_p90p100", "sptinc992j_p99p100"),
-                  .(hyp_id = "h3a", vrbl_name_unlag, cbn_name, coef)],
-        top_coefs[vrbl_name_unlag %in% c("ghweal992j", "shweal992j_p90p100", "shweal992j_p99p100"),
-                  .(hyp_id = "h3b", vrbl_name_unlag, cbn_name, coef)],
-        top_coefs[vrbl_name_unlag %in% sprintf("hnwi_nbr_%sM", c(1,5,30,200)),
-                  .(hyp_id = "h4", vrbl_name_unlag, cbn_name, coef)],
-        top_coefs[vrbl_name_unlag %in% c("cnt_contemp_1990", "cnt_contemp_1990_squared", "NY.GDP.PCAP.CDk",
-                                         "clctr_cnt_cpaer", "pm_density", "pm_density_sqrd",
-                                         "pm_density_global", "pm_density_global_sqrd",
-                                         "nbr_closed_cum_global"),
-                  .(hyp_id = "zcontrols", vrbl_name_unlag, cbn_name, coef)]
-        )
-
-    return(top_coefs2)
-}
 
 
 gen_plt_oneout_coefs <- function(ou_anls, top_coefs_llrt) {
@@ -980,146 +885,6 @@ gen_plt_oneout_llrt_lldiff <- function(ou_anls) {
 }
 
 
-        
-    
-
-
-
-
-gen_plt_coef_krnls_dev <- function(top_coefs) {
-    #' experimental version of having a separate density for each variable
-    #' doesn't look good so far: densities vary in spread, labelling of line difficult
-
-    # could also add color
-
-    top_coefs2 <- gen_top_coefs2(top_coefs)
-
-
-    ## calculate densities (to get variable labels in plot)
-    top_coefs_dens <- top_coefs2 %>% copy() %>%
-        .[hyp_id != "h1a"] %>% 
-        .[, .(x = density(coef)$x,
-              y = density(coef)$y), by = .(vrbl_name_unlag, cbn_name, hyp_id)]
-
-    ## actually get labels
-    top_coefs_lbls <- top_coefs_dens %>% copy() %>%
-        .[hyp_id %in% c("h3a", "h3b", "h4")] %>%
-        .[, max_coef := max(y), by = .(vrbl_name_unlag, cbn_name, hyp_id)] %>%
-        .[y == max_coef] %>%
-        .[, .(hyp_id, cbn_name, x, y, label = vrbl_name_unlag, force = 1)]
-
-    ## , label := vrbl_name_unlag] %>%
-    ##         .[is.na(label), label := ""]
-
-
-    ## investigate labels
-    top_coefs_lbls[!is.na(label)]
-    top_coefs_lbls[!is.na(label), .N, by = .(hyp_id, vrbl_name_unlag, cbn_name)][, max(N)]
-
-    ## .[, .SD[which.max(y)], by = .(vrbl_name_unlag, cbn_name, hyp_id)]
-
-    lbl_pts <- top_coefs_dens %>% copy() %>%
-        .[hyp_id %in% c("h3a", "h3b", "h4")] %>%
-        .[, gen_lbl_raster(.SD, method = "raster"), by = .(hyp_id, cbn_name)] %>%
-        .[, `:=`(label = "", force = 0)] %>%
-        rbind(top_coefs_lbls)
-
-    ## testing
-    ## top_coefs_dens[hyp_id == "h4" & cbn_name == "cbn_no_cult_spending_and_mitr"] %>% 
-    ##     gen_lbl_raster(method = "random")
-
-    
-    ggplot() + 
-        geom_point(lbl_pts, mapping = aes(x=x, y=y), alpha = 0.1) +
-        geom_text_repel(lbl_pts, mapping = aes(x=x, y=y, label = label), 
-                        min.segment.length = 0, # test
-                        point.size = 3,
-                        verbose = T,
-                        max.iter = 2e6,
-                        max.time = 5
-                        ## point.padding = 0,
-                        ## box.padding = 0,
-                        ## force = 5
-                        ) +
-        geom_line(top_coefs_dens, mapping = aes(x=x, y=y, group = vrbl_name_unlag)) +
-        facet_grid(hyp_id ~ cbn_name, scales = "free", switch = "y", space = "free", 
-                   labeller = as_labeller(c(vvs$krnl_lbls, vvs$cbn_lbls, vvs$vrbl_lbls))) +
-        geom_vline(xintercept = 0, linetype = "dashed") +
-        theme(strip.text.y.left = element_text(angle = 0),
-              legend.position = "bottom") +
-        labs(x="coefficient")
-
-    
-    top_coefs2 %>%
-        .[hyp_id != "h1a"] %>% 
-        ggplot(aes(x=coef, y=..density.., fill = cbn_name, group = vrbl_name_unlag, alpha = vrbl_name_unlag)) +
-        geom_density() +
-        ## geom_line(stat = "density") + 
-        facet_grid(hyp_id ~ cbn_name, scales = "free_y", switch = "y", space = "free_y", 
-                   labeller = as_labeller(c(vvs$krnl_lbls, vvs$cbn_lbls, vvs$vrbl_lbls))) +
-        geom_vline(xintercept = 0, linetype = "dashed") +
-        theme(strip.text.y.left = element_text(angle = 0),
-              legend.position = "bottom") +
-        labs(x="coefficient")
-    
-    ## preliminary labelling: label for every point on density line
-    ggplot() +
-         geom_line(top_coefs_dens, mapping = aes(x=x, y=y, group = vrbl_name_unlag)) +
-         ## geom_point(top_coefs_lbls, mapping = aes(x=x, y=y)) + 
-         geom_text_repel(top_coefs_lbls, mapping = aes(x=x, y=y, label = label)) +
-         facet_grid(hyp_id ~ cbn_name, scales = "free", switch = "y", space = "free",
-                    labeller = as_labeller(c(vvs$krnl_lbls, vvs$cbn_lbls, vvs$vrbl_lbls))) +
-         geom_vline(xintercept = 0, linetype = "dashed") +
-         theme(strip.text.y.left = element_text(angle = 0),
-               legend.position = "bottom") +
-         labs(x="coefficient")
-
-    
-    plt_coef_krnls <- top_coefs2 %>%
-        ggplot(aes(x=coef, y=..density.., fill = cbn_name)) +
-        geom_density() +
-        facet_grid(vrbl_name_unlag ~ cbn_name, scales = "free_y", switch = "y",
-                   labeller = as_labeller(c(vvs$krnl_lbls, vvs$cbn_lbls, vvs$vrbl_lbls))) +
-        geom_vline(xintercept = 0, linetype = "dashed") +
-        theme(strip.text.y.left = element_text(angle = 0),
-              legend.position = "bottom") +
-        labs(x="coefficient")
-    plt_coef_krnls
-
-}
-
-
-
-
-gen_plt_coef_krnls <- function(top_coefs) {
-    if (as.character(match.call()[[1]]) %in% fstd){browser()}
-    
-    #' kernel distribution of coefficients of main variables
-
-    top_coefs2 <- gen_top_coefs2(top_coefs)[hyp_id != "zcontrols"]
-
-    
-    ## working plot, grouped by hypothesis
-    plt_coef_krnls <- top_coefs2 %>%
-        ggplot(aes(x=coef, y=..density.., fill = cbn_name)) +
-        geom_density() +
-        facet_grid(hyp_id ~ cbn_name, scales = "free_y", switch = "y",
-                   labeller = as_labeller(c(vvs$krnl_lbls, vvs$cbn_lbls, vvs$vrbl_lbls))) +
-        geom_vline(xintercept = 0, linetype = "dashed") +
-        theme(strip.text.y.left = element_text(angle = 0),
-              legend.position = "bottom") +
-        labs(x="coefficient")
-
-    
-    
-
-    
-
-
-    return(plt_coef_krnls)
-
-}
-
 
 addline_format <- function(x,...){
     #' get custom function for variable labels
@@ -1133,20 +898,22 @@ gen_plt_coef_violin <- function(top_coefs) {
     1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;
 
     
-    # reorder variable names
-    top_coefs2 <- gen_top_coefs2(top_coefs) %>%
-        .[hyp_id != "zcontrols"] %>% 
-        .[, vrbl_name_unlag := factor(vrbl_name_unlag, levels = rev(names(vvs$vrbl_lbls)))]
+    ## # reorder variable names
+    ## top_coefs2 <- gen_top_coefs2(top_coefs) %>%
+    ##     .[hyp_id != "zcontrols"] %>% 
+    ##     .[, vrbl_name_unlag := factor(vrbl_name_unlag, levels = rev(names(vvs$vrbl_lbls)))]
+    top_coefs2 <- vvs$hyp_mep_dt[top_coefs, on = .(vrbl = vrbl_name_unlag)]
+    
 
     
     ## make violin plot
-    plt_coef_violin <- ggplot(top_coefs2[hyp_id != "h1a"], aes(y=vrbl_name_unlag, x=coef)) +
+    plt_coef_violin <- ggplot(top_coefs2[hyp != "h1a"], aes(y=vrbl, x=coef)) +
         geom_violin(scale = "area", trim = T, bw = 0.04) +
         ## geom_col() + 
         ## use custom bandwidth -> somehow good sizing across facets
         ## geom_jitter(size = 0.4, width = 0, height = 0.1) + # don't litter plot with jitter
         scale_y_discrete(labels = addline_format(vvs$vrbl_lbls)) + # actual relabelling of variables (on y-axes)
-        facet_grid(hyp_id ~ cbn_name, scales = "free", switch = "y", space = "free",
+        facet_grid(hyp ~ cbn_name, scales = "free", switch = "y", space = "free",
                    labeller = as_labeller(c(vvs$krnl_lbls, vvs$cbn_lbls, vvs$vrbl_lbls))) +
         geom_vline(xintercept = 0, linetype = "dashed") +
         theme(strip.text.y.left = element_text(angle = 0, size = 11),
@@ -1161,24 +928,6 @@ gen_plt_coef_violin <- function(top_coefs) {
 }
 
 
-gen_plt_hyp_thld_res <- function(top_coefs) {
-    if (as.character(match.call()[[1]]) %in% fstd){browser()}
-
-
-    ## eval_all_hyps(top_coefs, 0.2)
-
-    hyp_thld_res <- future_map_dfr(seq(-1,1, by = 0.05), ~eval_all_hyps(top_coefs, hyp_thld = .x))
-
-    plt_hyp_thld_res <- hyp_thld_res %>% 
-        ggplot(aes(x=hyp_thld, y=mean_hyp_eval, color = cbn_name)) +
-        geom_line() + 
-        facet_wrap(~hyp_id, ncol = 2, labeller = labeller(hyp_id = vvs$hyp_lbls)) +
-        labs(x="Threshold (variable SD)", y = "proportion of coefficients above threshold") +
-        theme(legend.position = c(0.7, 0.1)) +
-        geom_vline(xintercept = 0, linetype = "dashed")
-
-    return(plt_hyp_thld_res)
-}
 
 
 gen_plt_best_coefs_cloud <- function(top_coefs) {
@@ -1203,10 +952,15 @@ gen_plt_best_coefs_single <- function(top_coefs) {
     1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;
 
     #' pick best-fitting coef for each variable (now mixes a bunch of models together tho)
+    ## dtx <- copy(vvs$hyp_mep_dt)[, vrbl := factor(vrbl, level = rev(names(vvs$vrbl_lbls)))]
+        
+
 
     top_coefs %>% copy() %>%
         .[, .SD[which.max(log_likelihood)], by = .(vrbl_name_unlag, cbn_name)] %>%
-        copy(vvs$hyp_mep_dt)[., on = .(vrbl = vrbl_name_unlag)] %>%
+        copy(vvs$hyp_mep_dt)[., on = .(vrbl = vrbl_name_unlag)] %>% # original 
+        ## .[copy(vvs$hyp_mep_dt), on = .(vrbl_name_unlag = vrbl)] # different order
+        ## dtx[., on = .(vrbl = vrbl_name_unlag)] %>%
         .[!is.na(hyp)] %>% 
         ggplot(aes(x=coef, y=vrbl, color = factor(sig))) +
         geom_point() +
@@ -1287,8 +1041,8 @@ gen_reg_res_plts <- function(reg_res_objs, vvs, NBR_MDLS) {
     plt_reg_res_all = gen_plt_reg_res_all(df_anls_within, vvs)
     plt_best_models_wlag = gen_plt_best_mdls_wlag(df_best_mdls, vvs)
     plt_best_models_condensed = gen_plt_mdl_summary(mdl_summary, vvs)
-    plt_hyp_thld_res <- gen_plt_hyp_thld_res(top_coefs)
-    plt_coef_krnls <- gen_plt_coef_krnls(top_coefs)
+    ## plt_hyp_thld_res <- gen_plt_hyp_thld_res(top_coefs)
+    ## plt_coef_krnls <- gen_plt_coef_krnls(top_coefs)
 
     plt_coef_violin <- gen_plt_coef_violin(top_coefs)
     
@@ -1306,8 +1060,8 @@ gen_reg_res_plts <- function(reg_res_objs, vvs, NBR_MDLS) {
                    plt_reg_res_all = plt_reg_res_all,
                    plt_best_models_wlag = plt_best_models_wlag,
                    plt_best_models_condensed = plt_best_models_condensed,
-                   plt_hyp_thld_res = plt_hyp_thld_res,
-                   plt_coef_krnls = plt_coef_krnls,
+                   ## plt_hyp_thld_res = plt_hyp_thld_res,
+                   ## plt_coef_krnls = plt_coef_krnls,
                    plt_coef_violin = plt_coef_violin,
                    plt_best_coefs_cloud = plt_best_coefs_cloud,
                    plt_best_coefs_single = plt_best_coefs_single,
@@ -1351,8 +1105,8 @@ gen_plt_cfgs <- function() {
             plt_best_models_condensed = list(filename = "best_models_condensed.pdf", width = 9, height = 8),
             plt_lag_cprn = list(filename = "lag_cprn.pdf", width = 7, height = 5),
             plt_cvrgnc = list(filename = "crvgnc.pdf", width = 5, height = 7),
-            plt_hyp_thld_res = list(filename = "hyp_thld_res.pdf", width = 7, height = 6),
-            plt_coef_krnls = list(filename = "coef_krnls.pdf", width = 9, height = 6),
+            ## plt_hyp_thld_res = list(filename = "hyp_thld_res.pdf", width = 7, height = 6),
+            ## plt_coef_krnls = list(filename = "coef_krnls.pdf", width = 9, height = 6),
             plt_coef_violin = list(filename = "coef_violin.pdf", width = 9, height = 4.5),
             plt_best_coefs_cloud = list(filename = "best_coefs_cloud.pdf", width = 9, height = 6),
             plt_best_coefs_single = list(filename = "best_coefs_single.pdf", width = 9, height = 6),
@@ -1464,7 +1218,7 @@ stop("functions done")
 
 ## ** main analysis
 NBR_MDLS <- 1
-batch_version <- "v67"
+batch_version <- "v69"
 ## fldr_info <- fldr_info_optmz
 fldr_info <- setup_regression_folders_and_files(batch_version)
 reg_anls_base <- read_reg_anls_files(fldr_info)

@@ -1214,7 +1214,9 @@ gen_vrbl_vectors <- function() {
                    "nbr_closed_cum_global" = "Nbr. PM closings (cumulative, global)",
                    "ln_s" = "ln(s)",
                    "cons" = "cons",
-                   "ln_r" = "ln(r)"
+                   "ln_r" = "ln(r)",
+                   all_dens = "density variables",
+                   all_dens_close = "density variables + closings"
                    )
 
     cbn_lbls <- c("cbn_all" = "DS all IVs",      
@@ -1285,7 +1287,8 @@ gen_vrbl_vectors <- function() {
         c("all_dens_close"            = "zcontrols"))
         
           
-    hyp_mep_dt <- data.table(vrbl = names(hyp_mep), hyp = hyp_mep)
+    hyp_mep_dt <- data.table(vrbl = names(hyp_mep), hyp = hyp_mep) %>%
+        .[, vrbl := factor(vrbl, levels = rev(names(vrbl_lbls)))] # modify variable order
 
 
     if (!all(all_rel_vars %in% names(vrbl_lbls))) {
