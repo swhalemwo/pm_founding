@@ -175,12 +175,44 @@ gen_reg_spec <- function(non_thld_lngtd_vars, vrbl_thld_choice, reg_settings) {
     ## lag TI*TMITR interaction with same lag as TMITR
     ## lngtd_vars[which(lngtd_vars$vrbl == "ti_tmitr_interact"),]$lag <- lngtd_vars[lngtd_vars$vrbl == "tmitr_approx_linear20step", ]$lag
     ## newer data.table based version
-    lngtd_vars <- adt(lngtd_vars)[vrbl == "ti_tmitr_interact",
-                    lag := adt(lngtd_vars)[vrbl == "tmitr_approx_linear20step", lag]] %>% adf()
+    ## lngtd_vars <- adt(lngtd_vars)[vrbl == "ti_tmitr_interact",
+    ##                 lag := adt(lngtd_vars)[vrbl == "tmitr_approx_linear20step", lag]] %>% adf()
+
+    ## ## backup
+    ## ## lngtd_vars_bu <- copy(lngtd_vars)
+    ## lngtd_vars <- lngtd_vars_bu
+    
+    ## ## test how update join works with different variable combinations
+
+    ## lngtd_vars <- adt(lngtd_vars)[-c(6, 7)]
+    ## lngtd_vars[vrbl == "ti_tmitr_interact", lag := 2]
+    ## lngtd_vars[vrbl == "pm_density_global", lag := 2]
+
+    ## new constraining procedure with update join
+    ## lngtd_vars <- copy(adt(lngtd_vars)) %>%
+    ##   ## get the new values for the constrained variables from the determiners
+    ##     .[vvs$dt_cstrnd_vrbls[adt(lngtd_vars), on = .(dtrmnr = vrbl),
+    ##                       nomatch = NULL][, .(cstrnd, lag_new = lag)],
+    ##       lag := lag_new, on = .(vrbl = cstrnd)] ## %>% # constrain values with update join
+    ##     ## adf()
+
+    lngtd_vars <- cstrn_vrbl_lags(lngtd_vars)
 
     reg_spec <- list(lngtd_vrbls = lngtd_vars)
 
     return(reg_spec)
+}
+
+cstrn_vrbl_lags <- function(lngtd_vars) {
+    ## constrain the lags of the variables listed in vvs$dt_cstrnd_vrbls
+    ## to the lag of their lag determining variables
+
+    ## get the new values for the constrained variables from the determiners
+    adt(lngtd_vars) %>%
+        .[vvs$dt_cstrnd_vrbls[adt(lngtd_vars), on = .(dtrmnr = vrbl),
+                              nomatch = NULL][, .(cstrnd, lag_new = lag)],
+          lag := lag_new, on = .(vrbl = cstrnd)] %>% ## %>% # constrain values with update join
+        adf()
 }
 
 
@@ -1058,6 +1090,8 @@ vary_spec <- function(reg_spec, vvs, vary_vrbl_lag, lags){
     ## if I want to vary the variable lags, do it here
     if (vary_vrbl_lag) {
 
+        stop("let's hope this branch is no longer used (switched to better constraining process)")
+
         ## don't vary the ti_tmitr interaction 
         varied_specs <-
             lapply(reg_spec[["lngtd_vrbls"]]$vrbl[reg_spec[["lngtd_vrbls"]]$vrbl != "ti_tmitr_interact"], \(x)
@@ -1078,8 +1112,12 @@ vary_spec <- function(reg_spec, vvs, vary_vrbl_lag, lags){
         ## if i don't want to vary variable lag, still add base_lag_spec
     } else {
         
-        reg_spec$lngtd_vrbls[which(reg_spec$lngtd_vrbls$vrbl == "ti_tmitr_interact"),]$lag <-
-            reg_spec$lngtd_vrbls[reg_spec$lngtd_vrbls$vrbl == "tmitr_approx_linear20step", ]$lag
+        ## reg_spec$lngtd_vrbls[which(reg_spec$lngtd_vrbls$vrbl == "ti_tmitr_interact"),]$lag <-
+        ##     reg_spec$lngtd_vrbls[reg_spec$lngtd_vrbls$vrbl == "tmitr_approx_linear20step", ]$lag
+
+        ## hopefully more functional constrainment of squares/interactions
+
+        reg_spec$lngtd_vrbls <- cstrn_vrbl_lags(reg_spec$lngtd_vrbls)
         
 
         varied_specs_long <- list(c(reg_spec,
@@ -1290,6 +1328,15 @@ gen_vrbl_vectors <- function() {
     hyp_mep_dt <- data.table(vrbl = names(hyp_mep), hyp = hyp_mep) %>%
         .[, vrbl := factor(vrbl, levels = rev(names(vrbl_lbls)))] # modify variable order
 
+    
+    ## constrain lag of variables: used for interactions and squared variables
+    dt_cstrnd_vrbls <- list(
+        list(cstrnd = "ti_tmitr_interact", dtrmnr = "tmitr_approx_linear20step"),
+        list(cstrnd = "smorc_dollar_fxm_sqrd", dtrmnr = "smorc_dollar_fxm"),
+        list(cstrnd = "pm_density_sqrd", dtrmnr = "pm_density"),
+        list(cstrnd = "pm_density_global_sqrd", dtrmnr = "pm_density_global")) %>% rbindlist()
+
+
 
     if (!all(all_rel_vars %in% names(vrbl_lbls))) {
         stop("not all relevant variables have a variable label")
@@ -1316,7 +1363,8 @@ gen_vrbl_vectors <- function() {
         regcmd_lbls = regcmd_lbls,
         hyp_lbls = hyp_lbls,
         krnl_lbls = krnl_lbls,
-        hyp_mep_dt = hyp_mep_dt
+        hyp_mep_dt = hyp_mep_dt,
+        dt_cstrnd_vrbls = dt_cstrnd_vrbls
     )
     )
 }
@@ -1572,9 +1620,11 @@ optmz_vrbl_lag <- function(reg_spec, vrblx, loop_nbr, fldr_info, reg_settings, v
 
     
     ## adjust the lag of ti_tmitr interaction to tmitr
-    reg_spec$lngtd_vrbls[which(reg_spec$lngtd_vrbls == "ti_tmitr_interact"),]$lag <-
-        reg_spec$lngtd_vrbls[reg_spec$lngtd_vrbls$vrbl == "tmitr_approx_linear20step", ]$lag
+    ## reg_spec$lngtd_vrbls[which(reg_spec$lngtd_vrbls == "ti_tmitr_interact"),]$lag <-
+    ##     reg_spec$lngtd_vrbls[reg_spec$lngtd_vrbls$vrbl == "tmitr_approx_linear20step", ]$lag
         
+    reg_spec$lngtd_vrbls <- cstrn_vrbl_lags(reg_spec$lngtd_vrbls)
+
         
            
     return(reg_spec)
@@ -1590,14 +1640,22 @@ optmz_vrbl_lag <- function(reg_spec, vrblx, loop_nbr, fldr_info, reg_settings, v
 optmz_reg_spec_once <- function(reg_spec, loop_nbr, fldr_info, reg_settings) {
     if (as.character(match.call()[[1]]) %in% fstd){browser()}
     #' one round of optimization
-    
+    #' need for loop, because nbr_skipped_in_row has to be reassinged
+    #' although maybe could generate them afterwards
+    #' maybe the cur_lag_id tracking would also not work in mapping
     
     ## v = sample(reg_spec$lngtd_vrbls$vrbl[reg_spec$lngtd_vrbls$vrbl != "ti_tmitr_interact"])[1]
     ## reg_spec_bu <- reg_spec
     ## reg_spec <- reg_spec_bu 
 
-    for (v in sample(reg_spec$lngtd_vrbls$vrbl[reg_spec$lngtd_vrbls$vrbl != "ti_tmitr_interact"])) {
+    ## for (v in sample(reg_spec$lngtd_vrbls$vrbl[reg_spec$lngtd_vrbls$vrbl != "ti_tmitr_interact"])) {
         
+    ## new way of selecting the variables that need to be optimized: skip the ones to be constrained 
+    ## setdiff(adt(reg_spec$lngtd_vrbls)[, vrbl], vvs$dt_cstrnd_vrbls[, cstrnd])
+    
+    
+    for (v in setdiff(reg_spec$lngtd_vrbls$vrbl, vvs$dt_cstrnd_vrbls[, cstrnd])) {
+
         
         cur_lag_id <- gen_lag_id(reg_spec, vvs) %>% pull(value) %>% paste0(collapse = "")
 
@@ -1738,6 +1796,8 @@ gen_regspecs_ou <- function(reg_spec, vvs) {
     ou_sets <- lapply(vrbls_to_ou, \(x) gen_vrbl_oud(x, vrbls_to_ou))
     names(ou_sets) <- vrbls_to_ou
 
+    ## gen_vrbl_oud(vrbls_to_ou[2], vrbls_to_ou)
+    
     ## add some manual sets of variables to exclude: 
     ## - all density
     ## - all density + closing
@@ -2054,12 +2114,12 @@ vrbl_thld_choices <- gen_vrbl_thld_choices(vvs$hnwi_vars, vvs$inc_ineq_vars, vvs
 ##                                   inc_ineq_var == "sptinc992j_p99p100", weal_ineq_var == "shweal992j_p99p100")
 
 
-vrbl_thld_choices_optmz <- slice_sample(vrbl_thld_choices, n=36)
+vrbl_thld_choices_optmz <- slice_sample(vrbl_thld_choices, n=10)
 
 reg_settings_optmz <- list(
-    nbr_specs_per_thld = 3,
+    nbr_specs_per_thld = 1,
     dvfmts = c("rates"), # should also be counts, but multiple dvfmts not yet supported by reg_anls
-    batch_version = "v69",
+    batch_version = "v70",
     lags = 1:5,
     vary_vrbl_lag = F,
     technique_strs = c("nr"),
@@ -2074,6 +2134,8 @@ reg_settings_optmz <- list(
 
 reg_spec_mdls_optmz <- gen_batch_reg_specs(reg_settings_optmz, vvs, vrbl_thld_choices_optmz)
 print(len(reg_spec_mdls_optmz))
+## lapply(reg_spec_mdls_optmz, \(x) x[["mdl_vars"]])
+
 
 fldr_info_optmz <- setup_regression_folders_and_files(reg_settings_optmz$batch_version)
 
@@ -2098,10 +2160,7 @@ stop("models are DONE")
 
 
 
-
 ## ** garage for inspection
-
-
 
 regspec_x <- reg_spec_mdls_optmz[[1]]
 

@@ -1218,7 +1218,7 @@ stop("functions done")
 
 ## ** main analysis
 NBR_MDLS <- 1
-batch_version <- "v69"
+batch_version <- "v70"
 ## fldr_info <- fldr_info_optmz
 fldr_info <- setup_regression_folders_and_files(batch_version)
 reg_anls_base <- read_reg_anls_files(fldr_info)
@@ -1231,7 +1231,7 @@ reg_res$plts <- gen_reg_res_plts(reg_res_objs, vvs, NBR_MDLS)
 
 plt_inspector(reg_res$plts)
 ## reg_res$plts$plt_oneout_llrt_z
-
+reg_res$plts$plt_lag_dens
 
 
 reg_res$plt_cfgs <- gen_plt_cfgs()

@@ -425,6 +425,8 @@ reg_settings_optmz <- list(
 
 ## ** v69 (nice): properly scaled squared variables
 
+vrbl_thld_choices_optmz <- slice_sample(vrbl_thld_choices, n=36)
+
 reg_settings_optmz <- list(
     nbr_specs_per_thld = 3,
     dvfmts = c("rates"), # should also be counts, but multiple dvfmts not yet supported by reg_anls
