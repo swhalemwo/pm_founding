@@ -1882,3 +1882,40 @@ melt(dt_veg, variable.factor = F) %>%
     geom_smooth(method = "lm", se = F) + 
     facet_grid(variable ~ i.variable)
     
+
+## ** squared variable simulation
+library(glmmTMB)
+
+res_test <- glmmTMB(nbr_opened ~ smorc_dollar_fxm_lag1 + smorc_dollar_fxm_sqrd_lag1 + (1 | iso3c) +
+                       offset(log(SP_POP_TOTLm_lag0_uscld)),
+                    data = dt_sqrsplrn, family = nbinom2)
+
+newdata <- data.table(smorc_dollar_fxm_lag1 = seq(min(dt_sqrsplrn$smorc_dollar_fxm_lag1),
+                                                  max(dt_sqrsplrn$smorc_dollar_fxm_lag1),
+                                                  by = 0.05)) %>%
+    .[, `:=`(smorc_dollar_fxm_sqrd_lag1 = smorc_dollar_fxm_lag1^2, iso3c = "DEU")]
+
+predict(res_test, newdata)
+predict(res_test) %>% exp() %>% hist() # quite some cases where predicted are much higher than observed (max 0.8)
+
+dt_sqrsplrn[, nbr_opened_rate := nbr_opened/SP_POP_TOTLm_lag0_uscld] # add rate of DV (what's being estimated)
+dt_sqrsplrn$pred_opened_rate <- predict(res_test)
+dt_sqrsplrn[, region := countrycode(iso3c, "iso3c", "un.region.name")]
+
+hist(dt_sqrsplrn$nbr_opened_rate, breaks = 30)
+
+dt_sqrsplrn[iso3c %in% c("DEU","IRN", "SVK", "KOR", "CHN"),
+            .(iso3c, year, pred_opened_rate, nbr_opened_rate)] %>%
+    melt(id.vars = c("iso3c", "year")) %>% 
+    ggplot(aes(x=year, y=value, group = interaction(variable, iso3c), color = iso3c, linetype = variable)) +
+    geom_line()
+
+dt_sqrsplrn[, .(iso3c, year, region, pred_opened_rate, log(nbr_opened_rate))] %>%
+    melt(id.vars = c("iso3c", "year", "region")) %>%
+    ggplot(aes(x=year, y=value, color = iso3c, group = interaction(iso3c, variable), linetype = variable)) +
+    geom_line(show.legend = T) +
+    facet_wrap(~region)
+
+library(margins)
+    
+
