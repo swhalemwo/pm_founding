@@ -42,7 +42,7 @@ source(paste0(SCRIPT_DIR, "gen_rates.R"))
 
 ## df_excl <- create_excel_df(PMDB_FILE, only_pms = F)
 df_excl <- create_excel_df(PMDB_FILE)
-df_open <- aggregate_openings(df_excl)
+df_open <- aggregate_openings(df_excl, impute_closing_year = T)
 df_wb <- get_WB_data(c("NY.GDP.PCAP.CD", "SP.POP.TOTL", "NY.GDP.MKTP.CN"))
 df_anls <- create_anls_df(df_wb, df_open)
 df_reg_pre_impt <- get_df_reg(df_anls)
@@ -53,6 +53,10 @@ df_reg_rts <- gen_df_reg_rts(df_reg)
 
 source(paste0(SCRIPT_DIR, "regression.R"))
 
+    
+
+    
+
 ## ** inspecting rates calculation 
 
 df_reg_rts %>% adt() %>% .[iso3c %in% c("DEU", "KOR") & year == 2010,
@@ -60,7 +64,7 @@ df_reg_rts %>% adt() %>% .[iso3c %in% c("DEU", "KOR") & year == 2010,
 
 ## ** comparing consistency of computation of squared variables and interactions
 cbn_dfs_rates$cbn_all %>% adt() %>%
-    .[, .(iso3c, year, ti_tmitr_interact_lag0, pm_density_sqrd_lag0, smorc_dollar_fxm_sqrd_lag0)] %>%
+    ## .[, .(iso3c, year, ti_tmitr_interact_lag0, pm_density_sqrd_lag0, smorc_dollar_fxm_sqrd_lag0)] %>%
     melt(id.vars = c("iso3c", "year")) %>%
     .[, .(sd = sd(value), mean = mean(value), min = min(value), max = max(value)), variable] %>% print(n=220)
 
@@ -68,6 +72,7 @@ ggplot(df_anls, aes(x=year, y= pm_density, group = iso3c)) +
     geom_line() +
     geom_text(adt(df_anls)[, .SD[which.max(year)], iso3c], mapping = aes(x=year, y=pm_density, label = iso3c))
     
+
 
 
 

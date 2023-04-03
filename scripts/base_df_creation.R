@@ -104,13 +104,44 @@ create_excel_df_diagnose <- function(df, verbose = F) {
 
 ## create_excel_df(PMDB_FILE) %>% create_excel_df_diagnose(verbose = F)
 
+gen_closing_year_imputed <- function(dfx) {
+    #' impute closing year for museums that closed (based on opening year)
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
+    1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;
+    
+    dt_pred_closing <- adt(dfx)[!is.na(year_opened_int) & !is.na(year_closed)]
+    lm_pred <- lm(year_closed ~ year_opened_int, dt_pred_closing)
 
-aggregate_openings <- function(df_excl, yeet_early_closed = F) {
+    df_imptd <- adt(dfx) %>%
+        .[is.na(year_closed) & !is.na(year_opened_int) & museum_status != "private museum",
+          year_closed := as.integer(predict(lm_pred, .SD))] %>% atb()
+
+    if ((adt(df_imptd)[, max(year_closed, na.rm =T)] > 2022)) { stop("year_closed too big")}
+
+    ## check that now all PMs that are not currently open have closing year
+    ## adt(dfx)[, .N, is.na(year_closed)]
+    ## adt(df_imptd)[, .N, by = .(year_closed_there = !is.na(year_closed), museum_status)]
+
+    ## rbind(
+    ##     x[museum_status != "private museum", .N, year_closed][,source := "imptd"],
+    ##     adt(filter(df_imptd, !is.na(year_closed)))[, .N, year_closed][,source := "orig"]) %>%
+    ##     ggplot(aes(x=year_closed, y = N, fill = source)) +
+    ##     geom_col(position = "dodge2")
+
+    return(df_imptd)
+    
+}
+
+
+
+
+aggregate_openings <- function(df_excl, yeet_early_closed = F, impute_closing_year) {
     if (as.character(match.call()[[1]]) %in% fstd){browser()}
     #' aggregate excel df into country-year openings
 
     ## country,
-    df_excl2 <- select(df_excl, name,  countrycode, year_opened_int, year_closed) %>%
+    df_excl2 <- select(df_excl, name,  countrycode, year_opened_int, year_closed,
+                       museum_status = `Museum_status`) %>%
         ## na.omit() 
         filter(!is.na(year_opened_int))
     ## excel-based df
@@ -125,19 +156,27 @@ aggregate_openings <- function(df_excl, yeet_early_closed = F) {
     ## select(df_excl, name, country, countrycode, year_opened_int, year_closed) %>% adt() %>% 
         ## .[!complete.cases(.)]
         ## .[is.na(year_opened_int)]
-        
+    
+    if (impute_closing_year) {
+
+        df_excl3 <- gen_closing_year_imputed(df_excl2)
+    } else {
+        df_excl3 <- df_excl2
+    }
+
+    
     ## generate count of closed 
-    df_clsd <- select(df_excl2, name, iso3c = countrycode, year = year_closed) %>%
+    df_clsd <- select(df_excl3, name, iso3c = countrycode, year = year_closed) %>%
         na.omit() %>%
         group_by(iso3c, year) %>% 
         summarize(nbr_closed = n())
     
     
-    df_excl2$ctr <- 1
-    df_open_cnt <- as_tibble(aggregate(ctr ~ countrycode + year_opened_int, df_excl2, FUN = sum))
+    df_excl3$ctr <- 1
+    df_open_cnt <- as_tibble(aggregate(ctr ~ countrycode + year_opened_int, df_excl3, FUN = sum))
     names(df_open_cnt) <- c('iso3c', 'year', 'nbr_opened')
 
-    df_open_names <- df_excl2 %>% group_by(countrycode, year_opened_int) %>% summarise(name = list(name))
+    df_open_names <- df_excl3 %>% group_by(countrycode, year_opened_int) %>% summarise(name = list(name))
     names(df_open_names) <- c("iso3c", "year", "name")
 
     ## df_open <- as_tibble(merge(df_open_cnt, df_open_names))
@@ -147,7 +186,7 @@ aggregate_openings <- function(df_excl, yeet_early_closed = F) {
     df_open <- Reduce(full_join, list(df_open_cnt, df_open_names, df_clsd))
 
     ## test suite: test in dt: make sure that previous version and dt produce same results
-    dt_open <- adt(df_excl)[, .(name, iso3c = countrycode, year_opened_int, year_closed)] %>%
+    dt_open <- adt(df_excl3)[, .(name, iso3c = countrycode, year_opened_int, year_closed)] %>%
         melt(id.vars = c("name", "iso3c"), value.name = "year") %>% 
         ## .[!complete.cases(.), .N, variable] # 9 PMs have no opening year, 491 no closing year
         na.omit() %>% 
