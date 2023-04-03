@@ -1896,21 +1896,30 @@ newdata <- data.table(smorc_dollar_fxm_lag1 = seq(min(dt_sqrsplrn$smorc_dollar_f
     .[, `:=`(smorc_dollar_fxm_sqrd_lag1 = smorc_dollar_fxm_lag1^2, iso3c = "DEU")]
 
 predict(res_test, newdata)
-predict(res_test) %>% exp() %>% hist() # quite some cases where predicted are much higher than observed (max 0.8)
+predict(res_test) %>% exp() %>% hist(breaks=30)
+## quite some cases where predicted are much higher than observed (max 0.8)
+
+preds <- predict(res_test, se.fit = T)
 
 dt_sqrsplrn[, nbr_opened_rate := nbr_opened/SP_POP_TOTLm_lag0_uscld] # add rate of DV (what's being estimated)
 dt_sqrsplrn$pred_opened_rate <- predict(res_test)
+
+
+predict(res_test, type = "disp") %>% hist()
+predict(res_test) %>% exp() %>% hist()
+
 dt_sqrsplrn[, region := countrycode(iso3c, "iso3c", "un.region.name")]
 
 hist(dt_sqrsplrn$nbr_opened_rate, breaks = 30)
 
-dt_sqrsplrn[iso3c %in% c("DEU","IRN", "SVK", "KOR", "CHN"),
+dt_sqrsplrn[iso3c %in% c("DEU","IRN", "SVK", "KOR", "CHN", "USA"),
             .(iso3c, year, pred_opened_rate, nbr_opened_rate)] %>%
-    melt(id.vars = c("iso3c", "year")) %>% 
+    melt(id.vars = c("iso3c", "year")) %>%
+    .[variable == "nbr_opened_rate"] %>% 
     ggplot(aes(x=year, y=value, group = interaction(variable, iso3c), color = iso3c, linetype = variable)) +
     geom_line()
 
-dt_sqrsplrn[, .(iso3c, year, region, pred_opened_rate, log(nbr_opened_rate))] %>%
+dt_sqrsplrn[, .(iso3c, year, region, exp(pred_opened_rate), nbr_opened_rate)] %>%
     melt(id.vars = c("iso3c", "year", "region")) %>%
     ggplot(aes(x=year, y=value, color = iso3c, group = interaction(iso3c, variable), linetype = variable)) +
     geom_line(show.legend = T) +
