@@ -65,7 +65,7 @@ create_excel_df <- function(db_file, only_pms=T) {
     if (only_pms) {
         df_only_pms <- filter(df, museum_status %in% c("private museum", "closed"))
     } else {
-        df_only_pms <- df
+        df_only_pms <- filter(df, museum_status %in% c("private museum", "closed", "no longer a private museum"))
     }
 
 
