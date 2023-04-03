@@ -54,6 +54,11 @@ df_reg_rts <- gen_df_reg_rts(df_reg)
 source(paste0(SCRIPT_DIR, "regression.R"))
 
     
+## ** check density numbers after v69
+
+cbn_dfs_rates$cbn_all %>%
+    mutate(region = countrycode(iso3c, "iso3c", "un.region.name")) %>% 
+    viz_lines(y="pm_density_lag0", duration = 1, facets = "region")
 
     
 
