@@ -74,7 +74,7 @@ create_excel_df <- function(db_file, only_pms=T) {
 
 
 
-create_excel_df_diagnose <- function(df, verbose = F){
+create_excel_df_diagnose <- function(df, verbose = F) {
     if (as.character(match.call()[[1]]) %in% fstd){browser()}
     
     #' check status of base df
@@ -84,7 +84,7 @@ create_excel_df_diagnose <- function(df, verbose = F){
 
 
     print(paste0("non-perfect countries: ", nrow(country_test)))
-    if (verbose){
+    if (verbose) {
         print(as.data.frame(country_test))
     }
 
