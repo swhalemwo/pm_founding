@@ -64,6 +64,12 @@ cbn_dfs_rates$cbn_all %>% adt() %>%
     melt(id.vars = c("iso3c", "year")) %>%
     .[, .(sd = sd(value), mean = mean(value), min = min(value), max = max(value)), variable] %>% print(n=220)
 
+ggplot(df_anls, aes(x=year, y= pm_density, group = iso3c)) +
+    geom_line() +
+    geom_text(adt(df_anls)[, .SD[which.max(year)], iso3c], mapping = aes(x=year, y=pm_density, label = iso3c))
+    
+
+
 
 
 ## ** more outlier search 
