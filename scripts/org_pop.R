@@ -40,8 +40,8 @@ source(paste0(SCRIPT_DIR, "gen_rates.R"))
 
 
 
-## df_excl <- create_excel_df(PMDB_FILE, only_pms = F)
-df_excl <- create_excel_df(PMDB_FILE)
+df_excl <- create_excel_df(PMDB_FILE, only_pms = F)
+## df_excl <- create_excel_df(PMDB_FILE, only_pms = T)
 df_open <- aggregate_openings(df_excl, impute_closing_year = T)
 df_wb <- get_WB_data(c("NY.GDP.PCAP.CD", "SP.POP.TOTL", "NY.GDP.MKTP.CN"))
 df_anls <- create_anls_df(df_wb, df_open)
