@@ -1212,13 +1212,73 @@ gen_reg_res <- function(fldr_info) {
     return(reg_res)
 }
 
+gen_nbrs <- function(df_excl, df_open, cbn_dfs_rates, batch_version) {
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
+    1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;
+    
+    dt_excl <- df_excl %>% adt() %>% .[, .(ID, year_opened_int, year_closed, countrycode)]
+    ## number of museums in database as a whole 
+    nbr_muem_in_pmdb <- dt_excl[, .N]
+
+    ## number of opened/closed PMs (based on PMs with complete info)
+    nbr_opnd_wld <- sum(df_open$nbr_opened, na.rm = T)
+    nbr_clsd_wld <- sum(df_open$nbr_closed, na.rm = T)
+
+    ## number of those countries that have at least 1 pm, based on all PMs in database
+    nbr_cry_wal1pm_all <- dt_excl[, uniqueN(na.omit(countrycode))]
+
+    ## number of those countries that have at least 1 pm, based on PMs with complete information
+    ## nbr_cry_wal1pm_cplt <- df_open %>% adt() %>% .[, uniqueN(na.omit(iso3c))]
+
+    ## debugging difference between nbr_cry_wal1pm_all and nbr_cry_wal1pm_cplt: HKG museum (ID = 7) with no info
+    ## setdiff(dt_excl[, unique(na.omit(countrycode))], adt(df_open)[, unique(iso3c)])
+
+    ## number of museums that have been opened per UN sub region
+    nbr_pm_regsub <- dt_excl %>% copy() %>% .[, region := countrycode(countrycode, "iso3c", "un.regionsub.name",
+                                                     custom_match = c("TWN" = "South-eastern Asia"))] %>%
+        .[, .N, region] %>% .[order(-N)] %>% .[1:5] %$%
+        setNames(N, paste0("regsub_cnt_", region))
+
+    
+    ## combination info: nbr CYs, nbr countries, percentage of foundings covered
+    cbn_info <- imap(cbn_dfs_rates[1:3],
+         ~list(nbr_cy = nrow(.x),
+               nbr_crys = n_distinct(.x$iso3c),
+               nbr_opngs = sum(.x$nbr_opened),
+               prop_opngs_cvrd = round(sum(.x$nbr_opened, na.rm = T)/nbr_muem_in_pmdb,3)
+               )) %>% rbindlist(idcol = T) %>% melt(id.vars = ".id") %>%
+        .[, vrbl := paste0(variable, "_", .id)] %$%
+        setNames(value, vrbl)
+        
+    ## number of models started and finished
+    fldr_infox <- setup_regression_folders_and_files(batch_version)
+    nbr_mdl_started <- fread(fldr_infox$MDL_START_FILE, header = F)[, .N]
+    nbr_mld_ended <- fread(fldr_infox$MDL_END_FILE, header = F)[, .N]
+
+    
+    res <- c(list(
+        nbr_muem_in_pmdb = nbr_muem_in_pmdb,
+        nbr_opnd_wld = nbr_opnd_wld,
+        nbr_clsd_wld = nbr_clsd_wld,
+        nbr_cry_wal1pm_all = nbr_cry_wal1pm_all),
+      nbr_pm_regsub,
+      cbn_info,
+      list(
+          nbr_mdl_started = nbr_mdl_started,
+          nbr_mld_ended = nbr_mld_ended
+      ))
+
+    data.table(nbr_name = names(res), value = as.character(unname(res))) %>% ## %>% print(n=100)
+        .[, nbr_name := factor(nbr_name, levels = nbr_name)]
+
+}
 
 
 stop("functions done")
 
 ## ** main analysis
 NBR_MDLS <- 1
-batch_version <- "v70"
+batch_version <- "v72"
 ## fldr_info <- fldr_info_optmz
 fldr_info <- setup_regression_folders_and_files(batch_version)
 reg_anls_base <- read_reg_anls_files(fldr_info)
@@ -1239,11 +1299,16 @@ reg_res$plt_cfgs <- gen_plt_cfgs()
 
 ## reg_res$plts$plt_coef_krnls
 
-map(names(reg_res$plts), ~render_reg_res(.x, reg_res, reg_res$plt_cfgs, batch_version = batch_version))
+purrr::map(names(reg_res$plts), ~render_reg_res(.x, reg_res, reg_res$plt_cfgs, batch_version = batch_version))
 
 pdftk_cmd <- sprintf("cd %s && pdftk plt_%s* output plts_%s.pdf", FIG_DIR, batch_version, batch_version)
 system(pdftk_cmd)
 
+gen_nbrs(df_excl, df_open, cbn_dfs_rates, batch_version) %>% print(n=30)
+
+
+mutate(cbn_dfs_rates$cbn_all, region = countrycode(iso3c, "iso3c", "un.region.name")) %>%
+    viz_lines(y="ghweal992j_lag0", duration = 1, facets = "region", max_lines = 6)
 
 ## ** more version comparison 
 
