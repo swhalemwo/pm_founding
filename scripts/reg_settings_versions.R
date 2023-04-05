@@ -460,6 +460,42 @@ reg_settings_optmz <- list(
 )
 
 
+## ** v71: full model, but accidentally only run 1 spec per threshold
+vrbl_thld_choices_optmz <- slice_sample(vrbl_thld_choices, n=36)
+
+reg_settings_optmz <- list(
+    nbr_specs_per_thld = 1,
+    dvfmts = c("rates"), # should also be counts, but multiple dvfmts not yet supported by reg_anls
+    batch_version = "v72",
+    lags = 1:5,
+    vary_vrbl_lag = F,
+    technique_strs = c("nr"),
+    difficulty_switches = T,
+    regcmds = c("xtnbreg"),
+    ## cbns_to_include = c("cbn_all"),
+    cbns_to_include = names(cbn_dfs_counts)[1:3],
+    mdls_to_include = c("full")
+)
+
+
+## ** v72: full model with 3 specs per threshold
+vrbl_thld_choices_optmz <- slice_sample(vrbl_thld_choices, n=36)
+
+reg_settings_optmz <- list(
+    nbr_specs_per_thld = 3,
+    dvfmts = c("rates"), # should also be counts, but multiple dvfmts not yet supported by reg_anls
+    batch_version = "v72",
+    lags = 1:5,
+    vary_vrbl_lag = F,
+    technique_strs = c("nr"),
+    difficulty_switches = T,
+    regcmds = c("xtnbreg"),
+    ## cbns_to_include = c("cbn_all"),
+    cbns_to_include = names(cbn_dfs_counts)[1:3],
+    mdls_to_include = c("full")
+)
+
+
 
 ## * read settings back in 
 
