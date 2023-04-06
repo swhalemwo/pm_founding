@@ -888,8 +888,10 @@ gen_plt_oneout_llrt_lldiff <- function(ou_anls) {
 
 addline_format <- function(x,...){
     #' get custom function for variable labels
-    gsub(' \\* ',' *\n',x) %>%
-        gsub(' \\(\\*100\\)', "", .)            
+    gsub(' \\* ',' *\n',x) %>% # add linebreak in ti_tmitr_interact
+        gsub(' \\(\\*100\\)', "", .) %>% # yeet *100 for ginis/inequality percentages
+        gsub("\\(thousands\\)", "", .) %>% # yeet thousands from GDP
+        gsub("\\(\\%\\)", "", .) # yeet percentage sign from TMITR
 }
 
 gen_plt_coef_violin <- function(top_coefs) {
@@ -1118,6 +1120,91 @@ gen_plt_cfgs <- function() {
     )
 
 }
+
+gentbl_regtbl <- function(top_coefs, gof_df_cbn, df_best_mdls) {
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
+    1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;
+
+    list_coefs <- top_coefs %>% copy() %>%
+        .[, .SD[which.max(log_likelihood)], by = .(vrbl_name_unlag, cbn_name)] %>%
+        copy(vvs$hyp_mep_dt)[., on = .(vrbl = vrbl_name_unlag)] %>% # original
+        .[vrbl %!in% c("ln_s", "ln_r")] %>% 
+        .[, .(vrbl, hyp, cbn_name, coef, se, pvalue = pvalues)] %>% split(.$cbn_name)
+        
+    ## df_best_mdls[, .SD[which.max(log_likelihood)
+
+
+    list_gofs <- adt(gof_df_cbn)[gof_names == "log_likelihood"] %>%
+        .[, .SD[which.max(gof_value), .(mdl_id)], cbn_name] %>%
+        .[adt(gof_df_cbn), on = "mdl_id", nomatch = NULL] %>%
+        .[gof_names %in% c("N", "N_g", "log_likelihood"), .(cbn_name, gof_names, gof_value)] %>% 
+        split(as.character(.$cbn_name))
+        
+
+    list_texreg <- map2(list_coefs, list_gofs,
+         ~createTexreg(coef.names = as.character(.x$vrbl), coef = .x$coef, se = .x$se, pvalues = .x$pvalue,
+                       gof.names = .y$gof_names, gof = .y$gof_value))
+    names(list_texreg) <- vvs$cbn_lbls
+
+    ## screenreg(list_texreg[[1]], custom.coef.map = as.list(vvs$vrbl_lbls), single.row = T)
+    
+    ## get variable labels and hypothesis membership for ordering
+    dt_texreg_order <- data.table(vrbl = names(vvs$vrbl_lbls), lbl = unname(vvs$vrbl_lbls)) %>%
+        ## use only those vvs entries that are in any list_coef
+        .[data.table(vrbl = intersect(names(vvs$vrbl_lbls), rbindlist(list_coefs)[, unique(achr(vrbl))])),
+          on="vrbl"] %>% 
+        vvs$hyp_mep_dt[., on= "vrbl"] %>% 
+        .[order(hyp)] %>% copy() %>%
+        .[, nbr := 1:.N]
+    
+        
+    ## create texreg grouping of variables by hypothesis
+    texreg_groups <- dt_texreg_order[, .(list_id = list(nbr)), hyp] %>%
+        data.table(hyp_id = names(vvs$krnl_lbls),
+                   hyp_lbl = gsub("\n", " ", unname(vvs$krnl_lbls)))[., on = .(hyp_id = hyp)] %$%
+        setNames(list_id, hyp_lbl)
+
+    texreg_coefmap <- dt_texreg_order %$% setNames(trimws(addline_format(lbl)), vrbl) %>% as.list()
+
+    texreg(list_texreg,
+           custom.coef.map = texreg_coefmap, # reorder variables into hypotheses
+           groups = texreg_groups[2:len(texreg_groups)], # don't put intercept into separate group
+           single.row = T,
+           leading.zero = F,
+           dcolumn = T,
+           use.packages = F,
+           file = paste0(TABLE_DIR, "tbl_regres.tex"))
+        
+    
+    
+    
+    
+    
+    
+
+
+        
+
+
+
+}
+
+
+gen_reg_res_tbls <- function(reg_res_objs) {
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
+    1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;
+
+    top_coefs <- reg_res_objs$top_coefs
+    df_best_mdls <- reg_res_objs$df_best_mdls
+    
+    gof_df_cbn <- reg_res_objs$gof_df_cbn
+
+
+    tbl_regtbl <- gentbl_regtbl(top_coefs, gof_df_cbn, df_best_mdls)
+}
+
+gen_reg_res_tbls(reg_res_objs)
+
 
 render_all_reg_res_plts <- function(reg_res, batch_version) {
     if (as.character(match.call()[[1]]) %in% fstd){browser()}
