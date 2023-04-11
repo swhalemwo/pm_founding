@@ -934,12 +934,14 @@ gen_plt_coef_violin <- function(top_coefs) {
     ## top_coefs2 <- gen_top_coefs2(top_coefs) %>%
     ##     .[hyp_id != "zcontrols"] %>% 
     ##     .[, vrbl_name_unlag := factor(vrbl_name_unlag, levels = rev(names(vvs$vrbl_lbls)))]
-    top_coefs2 <- vvs$hyp_mep_dt[top_coefs, on = .(vrbl = vrbl_name_unlag)]
+    top_coefs2 <- vvs$hyp_mep_dt[top_coefs, on = .(vrbl = vrbl_name_unlag)] %>%
+        .[hyp %!in% c("h1a", "cons")] %>%
+        .[!is.na(hyp)]
     
 
     
     ## make violin plot
-    plt_coef_violin <- ggplot(top_coefs2[hyp != "h1a"], aes(y=vrbl, x=coef)) +
+    plt_coef_violin <- ggplot(top_coefs2, aes(y=vrbl, x=coef)) +
         geom_violin(scale = "area", trim = T, bw = 0.04) +
         ## geom_col() + 
         ## use custom bandwidth -> somehow good sizing across facets
@@ -952,8 +954,8 @@ gen_plt_coef_violin <- function(top_coefs) {
               strip.text.x = element_text(size = 12),
               axis.text.y = element_text(size = 11),
               axis.text.x = element_text(size = 10)) + 
-        labs(x=element_blank(), y = element_blank())
-    ## plt_coef_violin
+        labs(x="coefficient value", y = element_blank())
+    plt_coef_violin
 
     return(plt_coef_violin)
     
@@ -1033,10 +1035,11 @@ gen_plt_lag_dens <- function(top_coefs) {
         theme(# panel.grid = element_blank(),
               # panel.background = element_rect(fill = "white"),
             strip.text.y.left = element_text(angle = 0)
-            ) +
+        ) +
         ## geom_hline(yintercept = Inf, color = "white", size = 2) + 
         scale_y_discrete(labels = addline_format(vvs$vrbl_lbls), expand = c(0,0)) +
-        scale_x_discrete(expand = c(0,0))
+        scale_x_discrete(expand = c(0,0)) +
+        labs(x="lag", y=element_blank())
         
                   
 
