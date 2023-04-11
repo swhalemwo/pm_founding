@@ -2175,7 +2175,7 @@ x <- reg_spec_mdls_optmz[[3]]
 ## x$cfg$dvfmt <- "counts"
 ## x$cfg$regcmd <- "menbreg"
 
-run_vrbl_mdl_vars(x, vvs, fldr_info_optmz, verbose = F)
+run_vrbl_mdl_vars(x, vvs, fldr_info_optmz, verbose = T, wtf = F)
 
 ## ** debugging lack of convergence
 
