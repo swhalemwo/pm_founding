@@ -1133,18 +1133,35 @@ gentbl_regtbl <- function(top_coefs, gof_df_cbn, df_best_mdls) {
         
     ## df_best_mdls[, .SD[which.max(log_likelihood)
 
+    
+
+    dt_gof_lbls <- list(
+        list(gof_name = "N"              , gof_lbl = "N"              , decimal = F),
+        list(gof_name = "N_g"            , gof_lbl = "No. countries"  , decimal = F),
+        list(gof_name = "log_likelihood" , gof_lbl = "Log likelihood" , decimal = T)) %>%
+        rbindlist() %>% 
+        .[, gof_lbl := factor(gof_lbl, levels = gof_lbl)] 
+        ## .[order(gof_lbl)] %>% 
+        ## .[, gof_name := factor(gof_name, levels = gof_name)]
+             
 
     list_gofs <- adt(gof_df_cbn)[gof_names == "log_likelihood"] %>%
         .[, .SD[which.max(gof_value), .(mdl_id)], cbn_name] %>%
         .[adt(gof_df_cbn), on = "mdl_id", nomatch = NULL] %>%
         .[gof_names %in% c("N", "N_g", "log_likelihood"), .(cbn_name, gof_names, gof_value)] %>% 
+        dt_gof_lbls[., on = .(gof_name = gof_names)] %>%
+        .[order(gof_lbl)] %>% 
+        .[, .(cbn_name, gof_names = gof_lbl, gof_value, decimal)] %>% 
         split(as.character(.$cbn_name))
+    ## list_gofs
         
 
     list_texreg <- map2(list_coefs, list_gofs,
          ~createTexreg(coef.names = as.character(.x$vrbl), coef = .x$coef, se = .x$se, pvalues = .x$pvalue,
-                       gof.names = .y$gof_names, gof = .y$gof_value))
+                       gof.names = as.character(.y$gof_names), gof = .y$gof_value, gof.decimal = .y$decimal))
     names(list_texreg) <- vvs$cbn_lbls
+
+    ## screenreg(list_texreg)
 
     ## screenreg(list_texreg[[1]], custom.coef.map = as.list(vvs$vrbl_lbls), single.row = T)
     
