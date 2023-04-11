@@ -519,6 +519,35 @@ gen_plt_reg_res_within <- function(df_anls_within, vvs, NBR_MDLS) {
               panel.background = element_rect(fill = NA, color = "black")) +
         scale_color_gradient2(low = "blue", mid = "grey", high = "red") +
         scale_shape_manual(values = c(1,4))
+
+
+
+    ## dt_hypmep_rcd <- copy(vvs$hyp_mep_dt)
+    ## dt_hypmep_rcd[, hyp := "hypx"]
+    ## dt_hypmep_rcd[hyp %in% c("h3a", "h3b"), hyp := "h3"]
+    
+
+    ## dt_anls_within <- adt(df_anls_within) %>%
+    ##     .[, .(lag_variatn, sig, coef, cbn_name, vrbl_name_unlag, lag, t_value)] %>%
+    ##     dt_hypmep_rcd[., on = .(vrbl = vrbl_name_unlag)]
+
+    ## dt_anls_within_lbls <- dt_anls_within[lag==5]
+
+    ## dt_anls_within %>% 
+    ##     ggplot(aes(x=lag, y=coef, group = vrbl)) +
+    ##     geom_line(aes(color = t_value)) +
+    ##     geom_point(aes(shape = factor(sig))) + 
+    ##     geom_hline(yintercept = 0, linetype = "dashed") +
+    ##     geom_text_repel(dt_anls_within_lbls, mapping = aes(x=lag, y=coef, label = vrbl), hjust = 0, size = 3,
+    ##                     direction= "y"
+    ##                     ) + 
+    ##     facet_grid(hyp ~ cbn_name, scales = "free", space = "free") +
+    ##     scale_color_gradient2(low = "blue", mid = "grey", high = "red") +
+    ##     scale_shape_manual(values = c(1,4)) +
+    ##     xlim(c(1,8))
+        
+
+    
     
 }
 
