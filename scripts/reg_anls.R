@@ -1173,17 +1173,45 @@ gentbl_regtbl <- function(top_coefs, gof_df_cbn, df_best_mdls) {
            leading.zero = F,
            dcolumn = T,
            use.packages = F,
+           threeparttable = T,
+           caption = "Negative binomial models of private museum founding rate",
+           label = "tbl_regres",
+           ## custom.columns = list(1:26),
+           ## custom.col.pos = 1,
            file = paste0(TABLE_DIR, "tbl_regres.tex"))
-        
+
+    ## huxtablereg(custom.co list_coefs$cbn_all)
+
+    ## library(huxtable)
+
+    ## carat_coef_map <- list(depth = "Depth", carat = "Carat but also a bunch\n of other text for linebreak")
+
+    ## lm3 <- lm(log(price) ~ carat + depth, diamonds)
+
+    ## huxtablereg(lm3, custom.coef.map = carat_coef_map) %>% 
+    ##     print_latex(tabular_only = F) %>%
+    ##     capture.output(file = paste0(TABLE_DIR, "huxtable_test.tex"))
     
+    ## carat_vec <- setNames(names(carat_coef_map), unname(carat_coef_map))
+
+    ## huxreg(lm3, coefs = carat_vec, error_pos = "same") %>% print_latex() %>%
+    ##     capture.output(file = paste0(TABLE_DIR, "huxtable_test.tex"))
     
-    
-    
-    
+    ## huxtable::set_row_height
+
+    ## tidy(lm3)
+
+    ## class(lm3)
+    ## tidy(list_coefs$cbn_all)
     
 
+    ## install.packages("gt")
+    ## install.packages("juicyjuice")
+    ## library(gt)
+    ## install.packages("gtsummary")
+    ## library(gtsummary)
 
-        
+    
 
 
 
@@ -1203,7 +1231,7 @@ gen_reg_res_tbls <- function(reg_res_objs) {
     tbl_regtbl <- gentbl_regtbl(top_coefs, gof_df_cbn, df_best_mdls)
 }
 
-gen_reg_res_tbls(reg_res_objs)
+## gen_reg_res_tbls(reg_res_objs)
 
 
 render_all_reg_res_plts <- function(reg_res, batch_version) {
