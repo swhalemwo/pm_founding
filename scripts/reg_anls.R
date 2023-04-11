@@ -1056,7 +1056,7 @@ gen_plt_lag_dens <- function(top_coefs) {
 }
 
 
-gen_reg_res_plts <- function(reg_res_objs, vvs, NBR_MDLS) {
+gen_reg_res_plts <- function(reg_res_objs, vvs, NBR_MDLS, only_priority_plts) {
     if (as.character(match.call()[[1]]) %in% fstd){browser()}
     #' generate all the plots
     
@@ -1070,41 +1070,31 @@ gen_reg_res_plts <- function(reg_res_objs, vvs, NBR_MDLS) {
     top_coefs_llrt <- reg_res_objs$top_coefs_llrt
     ou_anls <- reg_res_objs$ou_anls
     
+    l_plts <- list(
+        plt_cbn_log_likelihoods = gen_plt_cbn_log_likelihoods(gof_df_cbn),
+        plt_coef_violin = gen_plt_coef_violin(top_coefs),
+        plt_best_coefs_cloud = gen_plt_best_coefs_cloud(top_coefs),
+        plt_best_coefs_single = gen_plt_best_coefs_single(top_coefs),
+        plt_lag_dens = gen_plt_lag_dens(top_coefs),
+        plt_oneout_coefs = gen_plt_oneout_coefs(ou_anls, top_coefs_llrt),
+        plt_oneout_llrt_z = gen_plt_oneout_llrt_z(ou_anls),
+        plt_oneout_llrt_lldiff = gen_plt_oneout_llrt_lldiff(ou_anls)
+    )
+        
     
-    plt_cbn_log_likelihoods = gen_plt_cbn_log_likelihoods(gof_df_cbn)
-    plt_reg_res_within = gen_plt_reg_res_within(df_anls_within, vvs, NBR_MDLS)
-    plt_reg_res_all = gen_plt_reg_res_all(df_anls_within, vvs)
-    plt_best_models_wlag = gen_plt_best_mdls_wlag(df_best_mdls, vvs)
-    plt_best_models_condensed = gen_plt_mdl_summary(mdl_summary, vvs)
     ## plt_hyp_thld_res <- gen_plt_hyp_thld_res(top_coefs)
     ## plt_coef_krnls <- gen_plt_coef_krnls(top_coefs)
+    ## plt_best_models_condensed = gen_plt_mdl_summary(mdl_summary, vvs)
 
-    plt_coef_violin <- gen_plt_coef_violin(top_coefs)
+    if (!only_priority_plts) {
+        l_plts <- c(l_plts,
+                    list(
+                        plt_reg_res_within = gen_plt_reg_res_within(df_anls_within, vvs, NBR_MDLS),
+                        plt_reg_res_all = gen_plt_reg_res_all(df_anls_within, vvs),
+                        plt_best_models_wlag = gen_plt_best_mdls_wlag(df_best_mdls, vvs)))
+    }
     
-    plt_best_coefs_cloud <- gen_plt_best_coefs_cloud(top_coefs)
-    plt_best_coefs_single <- gen_plt_best_coefs_single(top_coefs)
 
-    plt_lag_dens <- gen_plt_lag_dens(top_coefs)
-
-    plt_oneout_coefs <- gen_plt_oneout_coefs(ou_anls, top_coefs_llrt)
-    plt_oneout_llrt_z <- gen_plt_oneout_llrt_z(ou_anls)
-    plt_oneout_llrt_lldiff <- gen_plt_oneout_llrt_lldiff(ou_anls)
-
-    l_plts <- list(plt_cbn_log_likelihoods= plt_cbn_log_likelihoods,
-                   plt_reg_res_within = plt_reg_res_within,
-                   plt_reg_res_all = plt_reg_res_all,
-                   plt_best_models_wlag = plt_best_models_wlag,
-                   plt_best_models_condensed = plt_best_models_condensed,
-                   ## plt_hyp_thld_res = plt_hyp_thld_res,
-                   ## plt_coef_krnls = plt_coef_krnls,
-                   plt_coef_violin = plt_coef_violin,
-                   plt_best_coefs_cloud = plt_best_coefs_cloud,
-                   plt_best_coefs_single = plt_best_coefs_single,
-                   plt_lag_dens = plt_lag_dens,
-                   plt_oneout_coefs = plt_oneout_coefs,
-                   plt_oneout_llrt_z = plt_oneout_llrt_z,
-                   plt_oneout_llrt_lldiff = plt_oneout_llrt_lldiff)
-                   
         
     ## only generate lag cprn plot if multiple regcmds are used
     if (all(c("menbreg", "xtnbreg") %in% df_best_mdls$regcmd)) {
@@ -1454,11 +1444,11 @@ reg_res_objs <- proc_reg_res_objs(reg_anls_base, vvs, NBR_MDLS)
 reg_res <- list()
 
 ## generate plots, construct configs
-reg_res$plts <- gen_reg_res_plts(reg_res_objs, vvs, NBR_MDLS)
+reg_res$plts <- gen_reg_res_plts(reg_res_objs, vvs, NBR_MDLS, only_priority_plts = T)
 
 plt_inspector(reg_res$plts)
 ## reg_res$plts$plt_oneout_llrt_z
-reg_res$plts$plt_best_coefs_single
+reg_res$plts$plt_reg_res_within
 
 
 reg_res$plt_cfgs <- gen_plt_cfgs()
