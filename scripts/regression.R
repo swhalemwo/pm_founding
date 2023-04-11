@@ -1231,7 +1231,7 @@ gen_vrbl_vectors <- function() {
                    "shweal992j_p90p100" = "Wealth share of top 10% (*100)",
                    "shweal992j_p99p100" = "Wealth share of top 1% (*100)",
                    "ghweal992j"= "Gini of net wealth (*100)",
-                   "smorc_dollar_fxm" = "Gvt cultural spending",
+                   "smorc_dollar_fxm" = "Gvt cultural spending (millions)",
                    "smorc_dollar_fxm_sqrd" = "Gvt cultural spending (squared)",
                    "NY.GDP.PCAP.CDk" = "GDP per cap. (thousands)",
                    "SP.POP.TOTLm" = "Population (millions)",

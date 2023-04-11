@@ -138,8 +138,8 @@ gen_cbn_plots <- function(cbn_dfs, df_reg) {
     return(list(plt_world_facet_res, plt_world_stacked_res, tile_plt_res, line_plt_res, cpltns_vrbl_plot_res))
 }
 
-cbn_plots <- gen_cbn_plots(cbn_dfs_rates_uscld, df_reg)
-lapply(cbn_plots, \(x) plt_to_pdf(x$plt, width = x$width, height=x$height, fig_name = paste0(x$name, "_v2")))
+## cbn_plots <- gen_cbn_plots(cbn_dfs_rates_uscld, df_reg)
+## lapply(cbn_plots, \(x) plt_to_pdf(x$plt, width = x$width, height=x$height, fig_name = paste0(x$name, "_v2")))
 
 ## * xtsum based descriptives
 
@@ -214,7 +214,7 @@ render_xtsum_prop_plt <- function(df_reg) {
 }
 
 
-render_xtsum_prop_plt(df_reg_rts)
+## render_xtsum_prop_plt(df_reg_rts)
 
 render_xtsum_plt2 <- function(cbn_dfsx, df_regx, vvs) {
     if (as.character(match.call()[[1]]) %in% fstd){browser()}
@@ -250,7 +250,7 @@ render_xtsum_plt2 <- function(cbn_dfsx, df_regx, vvs) {
 
 }
 
-render_xtsum_plt2(cbn_dfs_rates_uscld, df_reg_rts, vvs)
+## render_xtsum_plt2(cbn_dfs_rates_uscld, df_reg_rts, vvs)
 
 ## * descriptives per combination
 
@@ -290,8 +290,9 @@ gen_dt_splong <- function(dfs_cbnsx, df_regx) {
     dtx_cbn <- imap(dfs_cbnsx[1:3], ~adt(.x)[, cbn_name := .y]) %>% # cbn_dfds_rates_uscld go brrr
         map_dfr(~adt(select(df_regx, iso3c, year, nbr_opened))[.x, on =.(iso3c, year)]) %>% # add DV
         melt(id.vars = c("iso3c", "year", "cbn_name")) %>%
-        ## yeet obs with lag!=0, or unlagged (crscn,dv)
-        .[grepl("_lag0$", variable) | !grepl("_lag\\d$", variable)] %>% 
+        ## yeet obs with lag!=0 and keep unlagged (crscn,dv)
+        .[grepl("_lag0$", variable) | !grepl("_lag\\d$", variable)] %>%
+        .[!grepl("_sqrd", variable) & !grepl("_interact", variable)] %>% # yeet squared/interactions
         .[, variable := gsub("_lag0", "", variable)] # yeet remaining lag indication
 
     return(dtx_cbn)
@@ -304,6 +305,9 @@ gen_render_sum_stats_rates <- function(df_regx, dfs_cbnsx, vvs) {
 
     dtx_cbn <- gen_dt_splong(dfs_cbnsx, df_regx)
 
+    ## dtx_cbn[, .N, variable] %>% print(n=30)
+
+    
     ## generate statistics separately
     func_names = c("mean", "sd", "min", "max")
     funcs <- lapply(func_names, get)
@@ -323,8 +327,9 @@ gen_render_sum_stats_rates <- function(df_regx, dfs_cbnsx, vvs) {
     ## cast and reorder (matching with vvs)
     wide_tbl_sprt <- sumry_sprt_mlt %>%
         .[, .(cbn_name, variable, stat, value = value2)] %>% 
-        dcast.data.table(variable ~ cbn_name + stat) %>%
+        dcast.data.table(variable ~ cbn_name + stat) %>% 
         .[na.omit(match(names(vvs$vrbl_lbls), variable))]
+    ## wide_tbl_sprt
 
     ## use real names
     dt_vrbl_lbls <- data.table(vrbl_name = names(vvs$vrbl_lbls), vrbl_lbl =  vvs$vrbl_lbls)
@@ -352,14 +357,38 @@ gen_render_sum_stats_rates <- function(df_regx, dfs_cbnsx, vvs) {
 
 
     xtable(wide_tbl_sprt, align = c("l", "p{7cm}", rep("l", 12)),
-           label = "summary_stats") %>%
+           label = "tbl_summary_stats",
+           caption = "Summary Statistics") %>%
         print(include.rownames = F, include.colnames = F,
-              file = paste0(TABLE_DIR, "summary_stats.tex"),
+              file = paste0(TABLE_DIR, "tbl_summary_stats.tex"),
               add.to.row = clm_names,
               hline.after = c(0),
               sanitize.text.function = identity)
 
+    
+
 }
+
+## ** main
+
+if (identical(args, character(0))) {
+    stop("functions are done")
+}
+
+
+if (is.null(args[[1]])) {
+    stop("functions are DONE")
+}
+
+cbn_plots <- gen_cbn_plots(cbn_dfs_rates_uscld, df_reg)
+lapply(cbn_plots, \(x) plt_to_pdf(x$plt, width = x$width, height=x$height, fig_name = paste0(x$name, "_v2")))
+
+
+render_xtsum_prop_plt(df_reg_rts)
+
+render_xtsum_plt2(cbn_dfs_rates_uscld, df_reg_rts, vvs)
+
+
 
 gen_render_sum_stats_rates(df_reg_rts, cbn_dfs_rates_uscld, vvs)
 

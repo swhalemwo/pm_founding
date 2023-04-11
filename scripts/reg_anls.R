@@ -891,6 +891,7 @@ addline_format <- function(x,...){
     gsub(' \\* ',' *\n',x) %>% # add linebreak in ti_tmitr_interact
         gsub(' \\(\\*100\\)', "", .) %>% # yeet *100 for ginis/inequality percentages
         gsub("\\(thousands\\)", "", .) %>% # yeet thousands from GDP
+        gsub("\\(millions\\)", "", .) %>% # yeet millions from gvt cultural spending
         gsub("\\(\\%\\)", "", .) # yeet percentage sign from TMITR
 }
 
@@ -1161,7 +1162,7 @@ gentbl_regtbl <- function(top_coefs, gof_df_cbn, df_best_mdls) {
                        gof.names = as.character(.y$gof_names), gof = .y$gof_value, gof.decimal = .y$decimal))
     names(list_texreg) <- vvs$cbn_lbls
 
-    ## screenreg(list_texreg)
+    ## screenreg(list_texreg, single.row = T)
 
     ## screenreg(list_texreg[[1]], custom.coef.map = as.list(vvs$vrbl_lbls), single.row = T)
     
@@ -1174,6 +1175,8 @@ gentbl_regtbl <- function(top_coefs, gof_df_cbn, df_best_mdls) {
         .[order(hyp)] %>% copy() %>%
         .[, nbr := 1:.N]
     
+    
+
         
     ## create texreg grouping of variables by hypothesis
     texreg_groups <- dt_texreg_order[, .(list_id = list(nbr)), hyp] %>%

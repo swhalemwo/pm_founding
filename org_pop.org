@@ -519,7 +519,7 @@ While such time-frame thus makes it impossible to cover the early period of priv
 
 
 #+latex: \begin{landscape}
-#+latex: \input{./tables/summary_stats.tex}
+#+latex: \input{./tables/tbl_summary_stats.tex}
 #+latex: \end{landscape}
 
 
@@ -581,7 +581,7 @@ Given 36 variable combinations which are optimized four times with different sta
 
 *** Descriptive findings
 
-Summary statistics for all variables are provided in unscaled form in table \ref{summary_stats}.
+Summary statistics for all variables are provided in unscaled form in table \ref{tbl_summary_stats}.
 #
 A number of insights can be gained from these descriptive findings:
 #
@@ -617,7 +617,7 @@ Figure [[plt_xtsum]] shows the proportion between within-country variance and ov
 #+attr_latex: :width 18cm
 [[file:figures/plt_v62_coef_violin.pdf]]
 
-
+#+latex: \input{./tables/tbl_regres.tex}
 
 
 #+label: fig:best_models_condensed
