@@ -1129,7 +1129,7 @@ gen_plt_cfgs <- function() {
             plt_best_models_wlag = list(filename = "best_models_wlag.pdf", width = 8, height = 12),
             plt_best_models_condensed = list(filename = "best_models_condensed.pdf", width = 9, height = 8),
             plt_lag_cprn = list(filename = "lag_cprn.pdf", width = 7, height = 5),
-            plt_cvrgnc = list(filename = "crvgnc.pdf", width = 5, height = 7),
+            plt_cvrgnc = list(filename = "cvrgnc.pdf", width = 5, height = 7),
             ## plt_hyp_thld_res = list(filename = "hyp_thld_res.pdf", width = 7, height = 6),
             ## plt_coef_krnls = list(filename = "coef_krnls.pdf", width = 9, height = 6),
             plt_coef_violin = list(filename = "coef_violin.pdf", width = 9, height = 4.5),
@@ -1458,8 +1458,14 @@ reg_res$plt_cfgs <- gen_plt_cfgs()
 
 purrr::map(names(reg_res$plts), ~render_reg_res(.x, reg_res, reg_res$plt_cfgs, batch_version = batch_version))
 
-pdftk_cmd <- sprintf("cd %s && pdftk plt_%s* output plts_%s.pdf", FIG_DIR, batch_version, batch_version)
+## only render those plots that are generated (not all version plots)
+pdftk_cmd <- sprintf("cd %s && pdftk %s output plts_%s.pdf", FIG_DIR,
+                     paste0(paste0("plt_", batch_version, "_", gsub("plt_", "", names(reg_res$plts)), ".pdf"),
+                            collapse = " "),
+                     batch_version)
+
 system(pdftk_cmd)
+
 
 gen_nbrs(df_excl, df_open, cbn_dfs_rates, batch_version) %>% print(n=30)
 
