@@ -87,43 +87,36 @@ I find support for a positive effect of tax incentives, a positive effect of cul
 ** Theoretical framework
 
 
-The private museum population of a country can be thought of as the result of many different processes; for this analysis, it is most suitable to distinguish between micro and macro processes.
-#
-While the data only allows a purely macro perspective, it is still necessary to explicitly consider the microfoundations which in aggregation produce the observed macro outcome (of private museums founded per country year). 
-# 
-On a micro-level, tax incentives, inequalities, and cultural spending are hypothesized to increase or decrease the likelihood of any potential founder to establish a private museum.
-#
-Independent of the motivations on the individual level, other factors are assumed to influence/account for the size of the population of potential founders.
-#
-On a macro-level, the number of High Net Worth Individuals (HNWIs) are hypothesized to be related to the number of potential founders. 
-# 
-The necessity of considering the contribution to private museum founding of both these mechanisms can be illustrated by comparing a country with limited incentives for the individual art collectors but a large population of potential founders, which due to its large population of founders  might still see equal or more private museums foundings compared to a country with a much smaller, more incentivized population of potential founders. 
+# The private museum population of a country can be thought of as the result of many different processes; for this analysis, it is most suitable to distinguish between micro and macro processes.
+# #
+# While the data only allows a purely macro perspective, it is still necessary to explicitly consider the microfoundations which in aggregation produce the observed macro outcome (of private museums founded per country year). 
+# # 
+# On a micro-level, tax incentives, inequalities, and cultural spending are hypothesized to influence the likelihood of any potential founder to establish a private museum.
+# #
+# Independent of the motivations on the individual level, other factors are assumed to influence/account for the size of the population of potential founders.
+# #
+# On a macro-level, the number of High Net Worth Individuals (HNWIs) are hypothesized to be related to the number of potential founders. 
+# # 
+# The necessity of considering the contribution to private museum founding of both these mechanisms can be illustrated by comparing a country with limited incentives for the individual art collectors but a large population of potential founders, which due to its large population of founders  might still see equal or more private museums foundings compared to a country with a much smaller, more incentivized population of potential founders. 
 
 
+# *** Collector Level 
 
-*** Collector Level 
+*** Tax Incentives
 
-**** Tax Incentives
+**** general :ignhead:
 
 Tax incentives have been investigated as a factor for influencing various kinds of charitable or philanthropic behavior and private museum founding in particular.
 #
-Tax incentives decrease the net cost of charitable activities, and can thus expected to be shaping philanthropic behavior to the extent to which actors are not purely motivated by charitable intentions.
+Tax incentives decrease the net cost of charitable activities, and can thus be expected to shape philanthropic behavior to the extent to which these activities are not unconditional of economic considerations[fn::While themes of disinterestedness and intrinsic passion are strongly present in the self-presentations of founders [[parencite:&BMW_2016_hall;&Bechtler_Imhof_2018_future;&Duron_2020_rebaudengo]], they might constitute strategic framings to adhere to art market norms [[parencite:&Velthuis_2007_talking]] rather than real motivations guiding actual behavior.]. 
 #
-While themes of disinterestedness and intrinsic passion are strongly present in the self-presentations of founders [[parencite:&BMW_2016_hall;&BMW_2016_salsali;&Bechtler_Imhof_2018_future;&Duron_2020_rebaudengo]], they might be more strategic framings to adhere to art market norms [[parencite:&Velthuis_2007_talking]] than real motivations guiding actual behavior.
-#
-Investigating charitable donations more generally, [[textcite:&Peloza_Steel_2005_elasticities]] find in a meta-analysis (primarily of individual behavior in the US) a price-elasticity of donations, i.e. a stronger tendency to make charitable contributions in the presence of financial incentives. 
+Investigating charitable donations more generally, [[textcite:&Peloza_Steel_2005_elasticities]] find in a meta-analysis (primarily of individual behavior in the US) a price-elasticity of donations, i.e. a stronger tendency to make charitable contributions in the presence of financial incentives.
 
 
 
-I focus here on two forms of tax incentives, first the exemptions of certain taxes for charitable organizations, and second the top marginal income tax rates, i.e. the amount of tax to be paid on income in the uppermost tax bracket.
-#
-# fixme: net cost also mentioned some paragraphs before -> combine
-Higher marginal income tax rates (in combination with tax deductibility of charitable donations) decrease the net "cost" of a donation (as higher rates increase the amount returned, cf. cite:&Hemels_2017_incentives for a more detailed discussion), and are thus expected to increase the incentive to engage in charitable behavior such as the opening of private museums. 
+**** pro :ignhead:
 
-
-***** pro :ignhead:
-
-State support in the form of tax breaks, such as exemption of charitable organizations from some taxes and tax deductibility of donations to such organizations, has been argued to contribute to the founding of private museums.
+Tax incentives, such as exemption of charitable organizations from some taxes and tax deductibility of donations to such organizations, have also been argued to contribute to the founding of private museums.
 #
 textcite:&Walker_2019_collector investigates the legal frameworks and tax exemptions that private museums receive in a number of locations.[fn::A historical argument is also made regarding the precursors of private museums, as tax incentives are also seen as relevant to the establishment of art collections in the gilded age as "the accumulation of expensive European art collections at the turn of the twentieth century was aided by the reduction, and eventual abolition of import tariffs in the US" (p.27).]
 #
@@ -140,17 +133,17 @@ Nevertheless, a clear overall argument is reached in the impact of tax incentive
 
 
 
-***** contra :ignhead:
+**** contra :ignhead:
 
 # fixme: check sentence structure: list lacking verb?
-The impact of tax incentives does not exclude other motivations, thus the arguments of scholars who point towards other motivations to de-emphasize the impact of tax incentives such as "passion for art" ([[cite:&Zorloni_Resch_2016_opportunities p.7]], [[cite:&Adam_2021_rise p.12]]) or other "personal motivations" [[parencite:&Walker_2019_collector p.144]] do not contradict the argument that tax incentive play a role.
+The impact of tax incentives does not exclude other motivations, thus arguments which highlight other motivations such as "passion for art" ([[cite:&Zorloni_Resch_2016_opportunities p.7]], [[cite:&Adam_2021_rise p.12]]) or other "personal motivations" [[parencite:&Walker_2019_collector p.144]] do not contradict a facilitative role of tax incentives. 
 #
 In fact, other motivations (such as the aforementioned passion for the arts, as well as potential reputation gains; cf. [[cite:&Bekkers_Wiepking_2010_literature;&Bekkers_Wiepking_2011_philanthropic]] for motivations of philanthropic behavior generally) are required as tax incentives only /reduce/ the cost of philanthropic behavior but do not cancel it out completely, let alone result in a financial profit; tax incentives thus may play a supportive role by easing the financial burdens of running a private museum as a consequence of other motivations.
 
 
-However, an different reason why tax incentives might not have noticeable effects might be their limited knowledge and familiarity among potential beneficiaries (collectors deliberating the choice of opening a museum), a mechanism which has been argued to negatively effect private museum founding in China [[parencite:&DeNigris_2018_museums p.222]] and charitable donations in Europe generally [[parencite:&Hemels_2017_incentives;&Stanco_2014_fiscaal]].
+However, an different reason why tax incentives might not have noticeable effects might be their limited knowledge and familiarity among potential beneficiaries (collectors deliberating the choice of opening a museum), a mechanism which has been argued to negatively affect private museum founding in China [[parencite:&DeNigris_2018_museums p.222]] and charitable donations in Europe generally [[parencite:&Hemels_2017_incentives;&Stanco_2014_fiscaal]].
 #
-While lack of familiarity might prevent an effect of tax incentives that exist, it seems unlikely to be the case here as the topic of tax incentives has found substantive coverage in publications both scholarly parencite:Walker_2019_collector,Reich_2018_philantropy,Zorloni_2016_artmanagement,Zolberg_2000_privatization and journalistic (e.g. cite:Boucher_2016_private,Brown_Pes_2018_taxpayers,Boucher_2020_solow,Halperin_2018_glenstone,Cohen_2015_warhol,Honig_2016_IRS).
+While lack of familiarity might prevent an effect of tax incentives that exist, it seems unlikely to be the case here as the topic of tax incentives has found substantive coverage in publications both scholarly parencite:Walker_2019_collector,Reich_2018_philantropy,Zorloni_2016_artmanagement,Zolberg_2000_privatization and journalistic (e.g. cite:Brown_Pes_2018_taxpayers,Boucher_2020_solow,Halperin_2018_glenstone,Honig_2016_IRS).
 #
 Furthermore, the decision of opening a private museum is likely receiving more deliberation than smaller acts of philanthropy (such as donations) due to the size of the necessary planning efforts (which sometimes results in the establishment of separate foundations staffed by professionals); it is hence unlikely that during this planning process financing pathways through tax incentives are not explored.
 
@@ -296,18 +289,23 @@ This study has a global scope (it includes the large number of countries without
 *** Independent Variables
 **** Tax incentives
 #
-The report "Rules to Give - A Global Philanthropy Legal Environment Index" [[parencite:&Quick_Kruse_Pickering_2014_philanthropy]] is used to construct a time-invariant measure of tax incentives.
+For this study, I focus on top marginal income tax rates, i.e. the amount of tax to be paid on income in the uppermost tax bracket.
 #
-I use the binary indicators whether non-profits are exempt from at least some taxes, and whether individuals can receive tax deductions for donations to non-profits.
-#
-The report covers 193 countries, but only covers the state of the legal environment at its publication date.
-#
-As I have been unable to find good longitudinal data sources on tax incentives covering large numbers of countries (especially for the earlier parts of the time period) tax incentives can only be investigated in regards to between-country differences.
+Higher marginal income tax rates (in combination with tax deductibility of charitable donations) decrease the net cost of a donation (as higher rates increase the amount of taxes returned; cf. cite:&Hemels_2017_incentives for a more detailed discussion), and are thus expected to increase the incentive for founders to donate their collection (or parts of it) to their private museum and receive a tax deduction in return. 
 
 
 Top marginal income tax rate data is taken from the Index of Economic Freedom of the World parencite:&Fraser_2022_economic_freedom, of which it constitutes a sub-item.
 # 
-As top marginal income tax rates are only expected to provide an incentive if tax donations are tax-deductible, I calculate an interaction term between the tax-deductibility of donations and marginal income tax rates (as tax deductibility is a binary variable, the value of the interaction term is 0 for countries in which charitable donations are not tax-deductible, and the value of top marginal income tax rates otherwise).
+Tax deductibility of donations is measured from the report "Rules to Give - A Global Philanthropy Legal Environment Index" [[parencite:&Quick_Kruse_Pickering_2014_philanthropy]].
+#
+I use the binary indicator measuring whether individuals can receive tax deductions for donations to non-profits[fn::The report also includes a binary indicator whether non-profit organizations are exempt from at least some taxes, but as this is the case in the vast majority of countries, it does not provide sufficient variation to serve as an explantory variable.].
+#
+The report describes the situtation in 193 countries but only covers the state of the legal environment at its publication date, therefore tax deductibility of donations can only be investigated in regards to between-country differences.
+#
+# As I have been unable to find good longitudinal data sources on tax deductibility of donations that covers large numbers of countries (especially for the earlier parts of the time period) tax deductibility of donations can only be investigated in regards to between-country differences.
+
+
+As top marginal income tax rates are only expected to provide an incentive if tax donations are tax deductible, I calculate an interaction term between the tax deductibility of donations and marginal income tax rates (as tax deductibility is a binary variable, the value of the interaction term is 0 for countries in which charitable donations are not tax-deductible, and the value of top marginal income tax rates otherwise).
  
 **** Cultural Spending
 
