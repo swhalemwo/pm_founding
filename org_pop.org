@@ -157,13 +157,29 @@ It thus seems plausible to assume an influence of tax breaks, leading to the fol
 
 **** State funding
 
+
 ***** pro :ignhead:
 
-Another argument for the emergence of private museums has been the decline or absence of state support for the arts, particularly the acquisition budgets for public museums, either in absolute terms or relatively to the (ostensibly strongly increasing) prices for contemporary art [[parencite:&Bechtler_Imhof_2018_future;&Walker_2019_collector;&Song_2008_private;&StylianouLambert_etal_2014_museums;&Zorloni_Resch_2016_opportunities;&Gnyp_2015_collectors;&Clarke_1991_UK;&Brown_2019_private;&Franklin_Papastergiadis_2017_anti;&Quemin_2020_power]].
+Another argument for the emergence of private museums has been the decline or absence of state support for the arts. 
 #
-On the contrary, the acquisition budgets of private museums are characterized as much less restricted, enabling them to outbid their public counterparts [[parencite:&Durand_2018_jumex;&Bechtler_Imhof_2018_future;&Gnyp_2015_collectors]].
-# 
-Thus as public museums constitute less attractive partners for private collectors for loaning, storing, and buying their collections; it is argued that private collectors are in turn incentivized to establish their own institutions.
+Whereas in the mid-to-late 20th century "wealthy industrialist collectors [...] looked to the public museum as a suitable home for their collections" [[parencite:&Walker_2019_collector p.144]], declines in cultural spending are argued to have reduced public museum capacities, thus making them less attractive for conserving, displaying and storaging donations of private collectors, which in turn leads "many collectors [to] feel that they are better qualified to create their own museums" (ibid, p.145).
+#
+[[cite:&Boloten_Hacking_2021_foreword]]
+#
+A further pathway between low public funding and relatively high private museum founding concerns emerging art markets in developing countries, as it is argued that private collectors are more likely there to nurture a new art scene and/or satisfy public demand for art [[parencite:&Durand_2018_jumex;&Bechtler_Imhof_2018_future]].
+
+
+# only temporal link
+# While textcite:&Franklin_Papastergiadis_2017_anti also raise a relationship between declining acquisition budgets of public museums and private museum founding by arguing that the latter "became prominent once the price of contemporary art inflated beyond the means of most cash-strapped public museums to collect it systematically" (p.672), declining acquisition alone would presumably not raise a collector's likelihood of founding a private museum (
+
+# In the private museum literature more widely declining acquisition budgets (either in absolute terms or relatively to the ostensibly strongly increasing prices for contemporary art) of public museums are also discussed, but primarily related to increasing influence of private museum on canonization processes [[parencite:&Walker_2019_collector;&Gnyp_2015_collectors;&Bechtler_Imhof_2018_future;&Quemin_2020_power]]. A relationship to the founding of private museums is not made, presumably since declining acquisition alone would presumably not raise a collector's likelihood of founding a private museum. 
+
+
+# On the contrary, the acquisition budgets of private museums are characterized as much less restricted, enabling them to outbid their public counterparts [[parencite:&Durand_2018_jumex;&Bechtler_Imhof_2018_future;&Gnyp_2015_collectors]].
+
+# [[parencite:&Bechtler_Imhof_2018_future;&Walker_2019_collector;&Franklin_Papastergiadis_2017_anti]]
+#
+# [[textcite:&Walker_2019_collector]] also describes several cases of public museums selling parts of their collections to offset debts (p.146), which could also point towards declines in public spending. *but no reason why this should increase PM founding: argument could be less symbolic capital/competition*
 
 
 ***** contra :ignhead:
