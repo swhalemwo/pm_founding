@@ -164,16 +164,16 @@ Another argument for the emergence of private museums has been the decline or ab
 #
 Whereas in the mid-to-late 20th century "wealthy industrialist collectors [...] looked to the public museum as a suitable home for their collections" [[parencite:&Walker_2019_collector p.144]], declines in cultural spending are argued to have reduced public museum capacities, thus making them less attractive for conserving, displaying and storaging donations of private collectors, which in turn leads "many collectors [to] feel that they are better qualified to create their own museums" (ibid, p.145).
 #
-[[cite:&Boloten_Hacking_2021_foreword]]
+While some forms of public-private partnerships "[appear] to contradict the premise that many private museums are founded because of the weakness of the public sector and the limitations of the public museum" (p.150),  [[textcite:&Walker_2019_collector]] nevertheless argues that "the growing popularity of German private collector museums can be attributed to the difficult economic climate that is negatively impacting public museums" (p.146). 
+# 
+Similarly, textcite:&Boloten_Hacking_2021_foreword argue that "with their inevitably strained resources, public museums often struggle to satisfy the substantial demands of the collector/patron communities on which their collections, and institutions, very much rely. Against this backdrop [...] [art collectors] are increasingly turning to bespoke Private Museum solutions" (p.10). 
 #
-A further pathway between low public funding and relatively high private museum founding concerns emerging art markets in developing countries, as it is argued that private collectors are more likely there to nurture a new art scene and/or satisfy public demand for art [[parencite:&Durand_2018_jumex;&Bechtler_Imhof_2018_future]].
-
-
-# only temporal link
-# While textcite:&Franklin_Papastergiadis_2017_anti also raise a relationship between declining acquisition budgets of public museums and private museum founding by arguing that the latter "became prominent once the price of contemporary art inflated beyond the means of most cash-strapped public museums to collect it systematically" (p.672), declining acquisition alone would presumably not raise a collector's likelihood of founding a private museum (
+Additionally, textcite:&Franklin_Papastergiadis_2017_anti argue that private museums "became prominent once the price of contemporary art inflated beyond the means of most cash-strapped public museums to collect it systematically" (p.672)[fn:: While it is however not completely clear whether this refers to operations or acquisitions budgets, I argue that the general relation between public museum capacities and private museum founding is argued for clearly.]
+# 
+Another pathway between low public funding and relatively high private museum founding concerns emerging art markets in developing countries, as it is argued that private individuals are more likely dedicate philanthropic efforts to the arts there than in places where it is already supported by the state [[parencite:&Durand_2018_jumex;&Bechtler_Imhof_2018_future]], a pattern that could correspond to the founding of gilded age cultural institutions by industrialists in the late 19th/early 20th century [[parencite:&diMaggio_1982_boston;&Adam_2004_philanthropy;&Duncan_1995_civilizing]]. 
+ 
 
 # In the private museum literature more widely declining acquisition budgets (either in absolute terms or relatively to the ostensibly strongly increasing prices for contemporary art) of public museums are also discussed, but primarily related to increasing influence of private museum on canonization processes [[parencite:&Walker_2019_collector;&Gnyp_2015_collectors;&Bechtler_Imhof_2018_future;&Quemin_2020_power]]. A relationship to the founding of private museums is not made, presumably since declining acquisition alone would presumably not raise a collector's likelihood of founding a private museum. 
-
 
 # On the contrary, the acquisition budgets of private museums are characterized as much less restricted, enabling them to outbid their public counterparts [[parencite:&Durand_2018_jumex;&Bechtler_Imhof_2018_future;&Gnyp_2015_collectors]].
 
@@ -184,26 +184,21 @@ A further pathway between low public funding and relatively high private museum 
 
 ***** contra :ignhead:
 
-Such theorized substitute relations between state and private funding are more generally referred to as "crowding-out" in philanthropic studies (cf. [[cite:&Bekkers_Wiepking_2010_literature]] for a literature review;  the lack of engagement with the term and related studies thus also indicates the early state of theoretical development of the private museum literature).
+Such theorized substitutive relations between state and private funding are more generally referred to as "crowding-out" in philanthropic studies (cf. [[cite:&Bekkers_Wiepking_2010_literature]] for a literature review;  the lack of engagement with the term and related studies thus also indicates the early state of theoretical development of the private museum literature).
 #
-The term "crowding-out" originated in response to the question of how charitable behavior would change if states were to /increase/ funding, thus potentially "pushing/crowding out" private donors.
+The term "crowding-out" originated in response to the question of how charitable behavior would change if states were to /increase/ funding, thus potentially "crowding out" private donors.
 #
-While the situation is a different one here, with private museum founding being related to /decreasing/ state funding, the underlying theoretical mechanism is the same:
+While the situation is a different one here, with private museum founding being related to /decreasing/ state funding (or the absence of it), the underlying theoretical mechanism is the same:
 #
 In both cases, donors are motivated (for altruistic or other reasons) to provide of public goods, and thus allocate their donations in response to the funding choices of the government.
+#
+However, [[textcite:&DeWit_etal_2018_philanthropy]] and [[textcite:&Lena_2019_entitled]] argue that government funding could also signal valuation of an activity, which raises the possibility of a positive association between government funding and private museum founding ("crowding-in").
 # 
-However, [[textcite:&DeWit_etal_2018_philanthropy]] and [[textcite:&Lena_2019_entitled]] argue that government funding could also signal valuation of an activity, which raises the possibility of a positive association between government funding and private museum founding.
-
-
-As the literatures on private museums and philanthropy general point in different directions, it seems most plausible to formulate mutually exclusive hypotheses: 
+Nevertheless, as the crowding-in hypothesis has not been employed in the case of private museums, the hypothesized effect of government funding based on the private museum literature can be formulated as follows:  
 
 #+latex: \bigbreak
 #+latex: \noindent
-*Hypothesis 2a*: Higher government cultural spending is associated with lower rates of private museum founding.
-
-#+latex: \noindent
-*Hypothesis 2b*: Higher government cultural spending is associated with higher rates of private museum founding.
-
+*Hypothesis 2*: Higher government cultural spending is associated with lower rates of private museum founding.
 
 
 **** Inequality
