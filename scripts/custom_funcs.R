@@ -407,7 +407,7 @@ sanitize_number <- function(nbr) {
 
 
 
-pvlt <- function(dtx) {
+pvlt <- function(dtx, santz.txt.f = NULL) {
     if (as.character(match.call()[[1]]) %in% fstd){browser()}
     1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;
     #' preview table as latex table as pdf
