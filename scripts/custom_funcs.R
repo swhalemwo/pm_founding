@@ -421,20 +421,23 @@ pvlt <- function(dtx) {
 
 
     ## ps() %>% adt() %>% .[grepl("zathura", name)]
+    ## tmp <- tempfile(fileext = ".tex")
     
-    tmp <- tempfile(fileext = ".tex")
     tmp_dir <- "/tmp/"
-    tmp_file_tex <- "prvlt.tex"
+    tmp_file_tex <- "pvlt_input.tex"
     
     tmp <- paste0(tmp_dir, tmp_file_tex)
 
-    print(xtbl, file = tmp, include.rownames = F)
+    print.xtable(xtbl, file = tmp, include.rownames = F, sanitize.text.function = santz.txt.f)
         
     ## just use most barebones latex command for now
     ##  from: https://tex.stackexchange.com/questions/302788/how-to-get-the-pdf-of-a-compiled-table-only
-    cmplcmd <- "pdflatex '\\documentclass{article}\\pagestyle{empty}\\begin{document}\\input{prvlt.tex}\\end{document}'"
+    ## cmplcmd <- "pdflatex '\\documentclass{article}\\pagestyle{empty}\\begin{document}\\input{prvlt.tex}\\end{document}'"
+
+    cmplcmd <- "cp /home/johannes/Dropbox/technical_stuff_general/dotfiles/texput.tex /tmp && pdflatex texput.tex"
+
     full_cmd <- paste0("cd /tmp && ", cmplcmd)
-    
+        
     system(full_cmd)
     
     ## crop command pdfcrop needed to focus on table
