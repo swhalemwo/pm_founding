@@ -32,7 +32,6 @@ I conclude with a call for greater theoretical elaboration and measurement preci
 
 
 
-
 ** Introduction
 Private museums constitute a substantial development in the cultural sector in the last decades.
 #
@@ -72,6 +71,45 @@ Furthermore, by focusing on museums that have been founded, existing research ha
 At the same time, substantial interest in the general population of private museum exists:
 #
 Many publications refer to the first published systematic account of the overall private museum population [[parencite:&LarrysList_2015_report]], yet then can only make limited inferences/statements as the case studies only allow limited generalization to the entire population (a limitation which is further enhanced through a selective focus on high-profile private museums). 
+
+
+Thus much is to be gained from a systematic quantitative test of these different mechanisms.
+#
+As the quantitative private museum literature is still it its infancy, this paper should be understood as a first exploratory analysis that hopefully will be refined in the future. 
+#
+In the remainder of the paper, I review the literature on the causes of private museum founding, and describe the data sources used to investigate each mechanism.
+#
+I then conduct several regression analyses to investigate the impact that each of the main mechanisms (tax incentives, government spending, inequality and elite wealth).
+#
+I find support for a positive effect of tax incentives, a positive effect of cultural spending, divergent effects of different inequality measures and limited support for an effect of elite wealth.
+
+
+** Introduction2
+Private museums constitute a substantial development in the cultural sector in the last decades.
+#
+While museums have been privately founded throughout history, recent decades have seen an increase in their founding that has been coined the "private museum boom" [[parencite:&Walker_2019_collector]], which has resulted in hundreds of private museums being founded since 2000.
+#
+These institutions, often opened by extremely wealthy art collectors, have attracted substantial attention and controversy.
+#
+Evaluations can range from lauding the public-spiritedness of the founders who expend large sums of their private wealth for the provision of public goods to criticisms of the unaccountability and questions of the sustainability and quality of these institutions, as well as the status-seeking behavior of their founders.
+#
+Just as their present behavior and its consequences has aroused curiousity, so has the question of which factors led to their proliferation in the first place:
+#
+Is their founding related to a decline of public institutions which shifts decision-making further into the hands of wealthy, private individuals who use the association of public benefit to legitimate increasing inequalities?
+
+
+
+To answer these questions, I investigate in this paper  the structural conditions that resulted in the proliferation of private museums as an organizational form over the course of the last decades.
+#
+As the spread of private museums has attracted attention, a number of factors have been suggested that have facilitated their founding, namely tax incentives, (lack of) state funding, inequality and elite wealth.
+#
+However, previous research has been primarily conducted as case studies of individual museums (sometimes based on fieldwork, but often also only on media reports); systematic comparative work has so far been limited.
+#
+Furthermore, by focusing on museums that have been founded, existing research has generally sampled on the dependent variable; i.e. limited attention has been given to countries without substantial private museum founding (and to a lesser extent time periods, as previous studies often do discuss the longitudinal development of the country where the cases are located). 
+#
+At the same time, substantial interest in the general population of private museum exists:
+#
+Many publications refer to the first published systematic account of the overall private museum population [[parencite:&LarrysList_2015_report]], yet then can only make limited inferences/statements as the case studies only allow limited generalization to the entire population (a limitation which is further enhanced through a selective focus on high-profile private museums).
 
 
 Thus much is to be gained from a systematic quantitative test of these different mechanisms.
@@ -211,7 +249,7 @@ The only explicit argument regarding /inequality/ on its own (separate from the 
 Contemporary society is argued to resemble again the gilded age of the late 19th and early 20th century where  "acts of philanthropic giving [...] functioned as a means by which to maintain widespread confidence in a socio-economic system that enabled a small social cadre to accrue long-term financial advantage" (p.3). 
 #
 Rising inequality is argued to create a legitimacy deficit, to which the founding of private museums provides a not a substantial solution, but a distraction which despite being superficial seems to be effective nonetheless.
-#
+
 
 
 
