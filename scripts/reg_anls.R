@@ -1144,20 +1144,58 @@ gen_plt_cfgs <- function() {
 
 }
 
-gentbl_regtbl <- function(top_coefs, gof_df_cbn, df_best_mdls) {
-    if (as.character(match.call()[[1]]) %in% fstd){browser()}
-    1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;
 
-    list_coefs <- top_coefs %>% copy() %>%
-        .[, .SD[which.max(log_likelihood)], by = .(vrbl_name_unlag, cbn_name)] %>%
-        copy(vvs$hyp_mep_dt)[., on = .(vrbl = vrbl_name_unlag)] %>% # original
-        .[vrbl %!in% c("ln_s", "ln_r")] %>% 
-        .[, .(vrbl, hyp, cbn_name, coef, se, pvalue = pvalues)] %>% split(.$cbn_name)
-        
-    ## df_best_mdls[, .SD[which.max(log_likelihood)
+c.screenreg <- function(trl) {
+    #' custom screenreg function
+    #' takes a tex reg list object, which contains
+    #' - l: list of texreg objects
+    #' - custom.coef.map: order/labels of coefficients
+    #' - groups: group information
+    
+    do.call("screenreg", trl)
+    
+}
+
+c.texreg <- function(trl, ) {
+
+
+}
+    
+
+gen_tblcfgs <- function(TABLE_DIR) {
+
+    trstylcfg <- list(dcolumn = T, single.row = T, leading.zero = F)
+
+    list(
+        regrslts = "tbl_regrslts" %>%
+            list(label = ., file = paste0(TABLE_DIR, ., ".tex"), 
+                 caption = "Negative binomial models of private museum founding rate")
+    )
+    
+
+}
+
+
 
     
 
+gentbl_regtbl <- function(top_coefs, gof_df_cbn, df_best_mdls) {
+    #' generate the regression result table
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
+    1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;
+
+    ## split coefs into list to feed them to createTexreg
+    list_coefs_prep <- top_coefs %>% copy() %>%
+        .[, .SD[which.max(log_likelihood)], by = .(vrbl_name_unlag, cbn_name)] %>%
+        copy(vvs$hyp_mep_dt)[., on = .(vrbl = vrbl_name_unlag)] %>% # original
+        .[vrbl %!in% c("ln_s", "ln_r")] %>% 
+        .[, .(vrbl, hyp, cbn_name, coef, se, pvalue = pvalues)]
+
+    list_coefs <- list_coefs_prep %>% split(.$cbn_name)
+        
+    ## df_best_mdls[, .SD[which.max(log_likelihood)
+
+    ## set up gof label dts
     dt_gof_lbls <- list(
         list(gof_name = "N"              , gof_lbl = "N"              , decimal = F),
         list(gof_name = "N_g"            , gof_lbl = "No. countries"  , decimal = F),
@@ -1167,7 +1205,7 @@ gentbl_regtbl <- function(top_coefs, gof_df_cbn, df_best_mdls) {
         ## .[order(gof_lbl)] %>% 
         ## .[, gof_name := factor(gof_name, levels = gof_name)]
              
-
+    ## split GOFS into list to feed to createTexreg
     list_gofs <- adt(gof_df_cbn)[gof_names == "log_likelihood"] %>%
         .[, .SD[which.max(gof_value), .(mdl_id)], cbn_name] %>%
         .[adt(gof_df_cbn), on = "mdl_id", nomatch = NULL] %>%
@@ -1197,9 +1235,7 @@ gentbl_regtbl <- function(top_coefs, gof_df_cbn, df_best_mdls) {
         .[order(hyp)] %>% copy() %>%
         .[, nbr := 1:.N]
     
-    
-
-        
+            
     ## create texreg grouping of variables by hypothesis
     texreg_groups <- dt_texreg_order[, .(list_id = list(nbr)), hyp] %>%
         data.table(hyp_id = names(vvs$krnl_lbls),
@@ -1213,14 +1249,69 @@ gentbl_regtbl <- function(top_coefs, gof_df_cbn, df_best_mdls) {
            groups = texreg_groups[2:len(texreg_groups)], # don't put intercept into separate group
            single.row = T,
            leading.zero = F,
-           dcolumn = T,
+           dcolumn = T, 
            use.packages = F,
-           threeparttable = T,
+           ## threeparttable = T,
            caption = "Negative binomial models of private museum founding rate",
            label = "tbl_regres",
            ## custom.columns = list(1:26),
            ## custom.col.pos = 1,
            file = paste0(TABLE_DIR, "tbl_regres.tex"))
+
+    trl_regrslts <- list(l = list_texreg, # list of models
+                         custom.coef.map = texreg_coefmap, # order/labels of coefs
+                         groups = texreg_groups[2:len(texreg_groups)]) # groups
+
+    c.screenreg(trl_regrslts)
+    
+    library(kableExtra)
+    kbl(list_coefs[[1]], "latex") %>% kable_styling(latex_options = c("hold_position"))
+
+    kableExtra::kable_styling
+
+    fmt_pvlu <- function(p) {
+        if (p >= 0.05) stars <- ""
+        if (p < 0.05) stars <- "^{*}"
+        if (p < 0.01) stars <- "^{**}"
+        if (p < 0.001) stars <- "^{***}"
+        stars
+    }
+
+    fmt_cell <- function(coef, se, pvalue) {
+        sprintf("%s \\; (%s)%s", # \\; 
+        coeftostring(coef, lead.zero = F, digits = 2),
+        round(se,2),
+        fmt_pvlu(pvalue))
+    }
+
+    dt_coefs_fmtd <- list_coefs_prep %>% copy() %>%
+        .[, .(cell_fmtd = fmt_cell(coef, se, pvalue)), by = .(vrbl, cbn_name, hyp)] %>%
+        dcast.data.table(vrbl ~ cbn_name, value.var = "cell_fmtd") %>% # %>% print(n=30)
+        data.table(lbl = latexTranslate(unname(vvs$vrbl_lbls)), vrbl = names(vvs$vrbl_lbls))[., on = "vrbl"] %>%
+        .[, vrbl := NULL] ## yeet variable column
+        
+
+        ## Ekbl("latex") %>% #
+
+    xtable(dt_coefs_fmtd, align = c("l ", "l ", "D{)}{)}{8)3} ", "D{)}{)}{8)3} ", "D{)}{)}{8)3}")) %>% 
+        print.xtable(include.rownames = F,
+                     include.colnames = F,
+                     file = paste0(TABLE_DIR, "xtable_regrslts.tex"),
+                     sanitize.text.function = identity,
+                     add.to.row = clm_names)
+                     
+    xtable(dt_coefs_fmtd, align = c("l ", "p{7cm} ", "D{)}{)}{8)3} ", "D{)}{)}{8)3} ", "D{)}{)}{8)3}")) %>%
+        pvlt(santz.txt.f = identity)
+    
+    
+    clm_names <- list()
+    clm_names$pos <- list(-1)
+    ## loop over cbn_lbls, get their label
+    clm_names_strings <- paste0(c("\\hline \\\\ \n ",  map_chr(names(dt_coefs_fmtd)[2:ncol(dt_coefs_fmtd)],
+            ~sprintf("\\multicolumn{1}{c}{%s}", vvs$cbn_lbls[[.x]]))), collapse = " & ")
+    clm_names$command <- paste0(clm_names_strings, " \\\\") ## add linebreak at the end
+    ## (can't be in previous line because it can't be collapsed together with column names with &)
+
 
     ## huxtablereg(custom.co list_coefs$cbn_all)
 
@@ -1273,7 +1364,7 @@ gen_reg_res_tbls <- function(reg_res_objs) {
     tbl_regtbl <- gentbl_regtbl(top_coefs, gof_df_cbn, df_best_mdls)
 }
 
-## gen_reg_res_tbls(reg_res_objs)
+gen_reg_res_tbls(reg_res_objs)
 
 
 render_all_reg_res_plts <- function(reg_res, batch_version) {
