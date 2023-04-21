@@ -407,7 +407,7 @@ sanitize_number <- function(nbr) {
 
 
 
-pvlt <- function(dtx, ...) {
+pvlt <- function(dtx, crop = T, ...) {
     if (as.character(match.call()[[1]]) %in% fstd){browser()}
     1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;
     #' preview table as latex table as pdf
@@ -443,12 +443,16 @@ pvlt <- function(dtx, ...) {
 
     cmplcmd <- "cp /home/johannes/Dropbox/technical_stuff_general/dotfiles/texput.tex /tmp && pdflatex texput.tex"
 
-    full_cmd <- paste0("cd /tmp && ", cmplcmd)
+    cmplcmd2 <- paste0("cd /tmp && ", cmplcmd)
         
-    system(full_cmd)
+    system(cmplcmd2)
     
     ## crop command pdfcrop needed to focus on table
-    crop_cmd <- "cd /tmp && pdfcrop texput.pdf"
+    if (crop) {
+        crop_cmd <- "cd /tmp && pdfcrop texput.pdf"
+    } else {
+        crop_cmd <- "cd /tmp && cp texput.pdf texput-crop.pdf"
+    }
     system(crop_cmd)
 
     ## somewhat annoying check with lsof
