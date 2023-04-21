@@ -503,6 +503,170 @@ render_xtable <- function(xtable, filepath) {
     
 }
 
+genxtbl_regtbl <- function(dt_coefs, dt_gofs, vrbl_lbls, mdl_lbls, wcptbl = F, vrbl_grps = NULL, grp_lbls = NULL,
+                           wdth_grp = NULL, wdth_vrbl = NULL) {
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
+    1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;
+    #' generate regression result table for tex based on xtable
+    #' for now only single.row
+    
+    #' dt_coefs: dt of coefs: vrbl, mdl_name, coef, se, pvalue
+    
+    #' dt_gofs: dt with goodness-of-fit information:
+    #' - mdl_name: the name (already assumes to be label for now)
+    #' - gof_value: the value
+    #' - decimal: number of decimal points
+    
+    #' wcptbl: compatibility with Microsoft word (convert to html, then import to LO)
+    #' if T:
+    #' - cells are wrapped in dollar signs $ $ to ensure math mode
+    #' - no custom column types specifications allowed (use "l" instead)
+    
+    #' vrbl_lbls: labels for the variables; also provides variable order
+    #' mdl_lbls:  labels for models
+    #' vrbl_grps: optional: add some grouping of variables
+    #' grp_lbls: labels for the groups
+    
+    #' wdth_vrbl, wdth_grp: width of variable/group columns (if available) in latex specification (e.g. "6cm")
+    #' ignored if wcptl = T
+    
+    ## FIXME: add test that every vrbl and mdl has a label 
+
+
+    ## if (!is.null(substitute(group))) {
+    ##     group_vrbl <- as.character(substitute(group)) # get grouping variable 
+    ##     v_agg <- c("vrbl", "mdl_name", group_vrbl) # aggregation vector 
+
+    ## } else {
+    ##     v_agg <- c("vrbl", "mdl_name")
+    ## }
+
+    ## set up vrbl/mdl to name dts
+    dt_vrbl_lbls <- data.table(vrbl = factor(names(vrbl_lbls)), lbl = latexTranslate(unname(vrbl_lbls)))
+    dt_mdl_lbls <- data.table(mdl = names(mdl_lbls), lbl = latexTranslate(unname(mdl_lbls)))
+    dt_vrbl_grps <- data.table(vrbl = names(vrbl_grps), grp = unname(vrbl_grps))
+    dt_grp_lbls <- data.table(grp = names(grp_lbls), lbl = unname(grp_lbls))
+
+    ## format the cells 
+    dt_coefs_fmtd <- dt_coefs %>% copy() %>%
+        .[, .(cell_fmtd = fmt_cell(coef, se, pvalue, wcptbl)), by = .(vrbl, mdl_name)] %>%
+        dcast.data.table(vrbl ~ mdl_name, value.var = "cell_fmtd") %>%
+        dt_vrbl_lbls[., on = "vrbl"] %>%
+        .[, vrbl := factor(vrbl, levels = names(vrbl_lbls))] %>% # reordering variables necessaryh somehow
+        .[order(vrbl)]
+    ## %>% .[, vrbl := NULL] ## yeet variable column 
+    ## print(names(dt_coefs_fmtd))
+
+    dt_gofs_fmtd <- dt_gofs %>% copy() %>%
+        .[, .(gof_vlu_fmt = format(round(gof_value, decimal), nsmall = decimal)), by = .(mdl_name, gof_name)] %>%
+        dcast.data.table((lbl = gof_name) ~ mdl_name, value.var = "gof_vlu_fmt") %>%
+        cbind(vrbl = "")
+    
+    dt_coefs_fmtd <- rbind(dt_coefs_fmtd, dt_gofs_fmtd)
+    
+
+    ## add the group column if required
+    if (!is.null(vrbl_grps)) dt_coefs_fmtd <- cbind(grp = "", dt_coefs_fmtd)
+
+    ## generate the variable add.to.row components
+    ## generate the vector of model names; yeet vrbl clmn "temporarily" to simulate table after yeeted for good
+    chr_mdl_names <- map_chr(names(copy(dt_coefs_fmtd)[, vrbl := NULL]),
+                  ~if(.x %in% names(mdl_lbls)) {
+                       sprintf("\\multicolumn{1}{c}{%s}", chuck(mdl_lbls, .x))
+                   } else { " "}) %>% paste0(collapse = " & ") %>% # collapse column names to string
+        paste0("\\hline \n", . ," \\\\ \n") # add hline/linebreak at start, linebreak at end
+
+    ## generate sign note
+    sig_note_vlus <- paste0("standard errors in parantheses.", 
+                            "\\textsuperscript{***}p \\textless 0.001;",
+                            "\\textsuperscript{**}p \\textless 0.01;",
+                            "\\textsuperscript{*}p \\textless 0.05.")
+    
+    sig_note <- sprintf("\\hline \n \\multicolumn{4}{l}{\\footnotesize{%s}}\n", sig_note_vlus)
+
+    l_add_to_row <- list()
+    l_add_to_row$pos <- list(-1, nrow(dt_coefs_fmtd))
+    l_add_to_row$command <- c(chr_mdl_names, sig_note)
+    
+    
+    if (!is.null(vrbl_grps)) {
+        
+        dt_grp_order <- dt_coefs_fmtd %>% copy() %>% .[, .(vrbl)] %>%
+            dt_vrbl_grps[., on = "vrbl"] %>%
+            .[, nbr := 1:.N] %>%
+            .[, .(pos = min(nbr)-1), grp] %>% # gets added at end of line -> add -1
+            dt_grp_lbls[., on = "grp"] %>%
+            .[!is.na(lbl)] %>% # yeet group labels that have no labels (Intercept)
+            .[, lbl2 := sprintf("\\multicolumn{%s}{l}{\\textbf{%s}} \\\\ \n", ncol(dt_coefs_fmtd)-1, lbl)]
+        ## -1 because vrbl column still active here
+
+        ## if groups are used, add them to l_add_to_row
+        l_add_to_row$pos <- c(l_add_to_row$pos, dt_grp_order$pos)
+        l_add_to_row$command <- c(l_add_to_row$command, dt_grp_order$lbl2)
+        
+    }
+
+    dt_coefs_fmtd[, vrbl := NULL]
+
+    ## generate align cfg
+    if (wcptbl) {
+        align_cfg <- rep("l", ncol(dt_coefs_fmtd) + 1) # just use l (anything else gets ignored)
+    } else {
+                
+        if (!is.null(vrbl_grps)) {
+            align_cfg <- c("l", sprintf("p{%s}", wdth_grp), sprintf("p{%s}", wdth_vrbl),
+                           # hacky way to get column counts: count occurences of multicolumn
+                           rep("D{)}{)}{8)3} ", str_count(chr_mdl_names, "multicolumn"))) 
+        }
+        else {
+            align_cfg <- c("l", sprintf("p{%s}", wdth_vrbl),
+                           rep("D{)}{)}{8)3} ", str_count(chr_mdl_names, "multicolumn")))
+        }
+    }
+    
+
+    
+    list(dt_fmtd = dt_coefs_fmtd,
+         align_cfg = align_cfg,
+         add_to_row = l_add_to_row,
+         hline_after = c(0, nrow(dt_coefs_fmtd)-nrow(dt_gofs_fmtd)))
+
+}
+
+
+
+
+
+
+render_xtbl <- function(dt_fmtd, align_cfg, add_to_row, hline_after, caption, label, file) {
+    #' generic xtable rendering command
+
+    xtable(dt_fmtd, caption = caption, label = label, align = align_cfg) %>% 
+        print.xtable(include.rownames = F,
+                     include.colnames = F,
+                     file = file,
+                     sanitize.text.function = identity,
+                     add.to.row = add_to_row,
+                     hline.after = hline_after)
+
+}
+
+
+pvxtbl <- function(xtbl_rslt, crop = T) {
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
+    1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;
+    #' generic xtable preview command
+
+    xtable(xtbl_rslt$dt_fmtd, align = xtbl_rslt$align_cfg) %>%
+        pvlt(add.to.row = xtbl_rslt$add_to_row,
+             include.colnames = F,
+             hline.after = xtbl_rslt$hline_after,
+             crop = crop)
+    
+}
+
+
+
 ## render_xtable(reprt_tbls$tbl_age_sumry, paste0(REP_TABLE_DIR, "tbl_age_sumry.pdf"))
 ## render_xtable(reprt_tbls$tbl_close_after_death, paste0(REP_TABLE_DIR, "tbl_close_after_death.pdf"))
 

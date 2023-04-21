@@ -398,3 +398,202 @@ gen_plt_hyp_thld_res <- function(top_coefs) {
 }
 
 
+genxtbl_regres <- function(wcptbl, groups, vrbl_lbls, mdl_lbls) {
+    
+    
+    dt_coefs_fmtd <- top_coefs_prepd %>% copy() %>%
+        .[, .(cell_fmtd = fmt_cell(coef, se, pvalue, wcptbl)), by = .(vrbl, cbn_name, hyp)] %>%
+        dcast.data.table(vrbl ~ cbn_name, value.var = "cell_fmtd") %>%
+        .[dt_texreg_order[, .(vrbl)], on = "vrbl"] %>% # order coefs
+        data.table(lbl = latexTranslate(addline_format(unname(vvs$vrbl_lbls))),
+                   vrbl = names(vvs$vrbl_lbls))[., on = "vrbl"] %>%
+        .[, vrbl := NULL] %>% ## yeet variable column
+        cbind(grp = "", .) ## add group column for indented variable labels
+        
+    ## dt_coefs_fmtd[grepl("Marginal Income", lbl)]
+
+    ## generate group add.to.row stuff
+    xtbl_grps <- dt_texreg_order[, .(pos = min(nbr)-1), hyp] %>%
+        .[data.table(hyp = names(vvs$krnl_lbls),
+                     lbl = gsub("\n", " ", unname(vvs$krnl_lbls))), on = "hyp"] %>%
+        na.omit() %>%
+        .[, lbl2 := sprintf("\\multicolumn{%s}{l}{\\textbf{%s}} \\\\ \n", ncol(dt_coefs_fmtd), lbl)]
+        
+        
+    
+    ## generate the vector of model names
+    v_mdl_names <- map_chr(names(dt_coefs_fmtd)[3:ncol(dt_coefs_fmtd)], # 3 for when using groups
+                           ## loop over cbn_lbls, get their label
+                           ~sprintf("\\multicolumn{1}{c}{%s}", pluck(vvs$cbn_lbls, .x)))
+    ## collapse v_mdl_names (and hline + newline + space before for empty cell) to single string
+    chr_mdl_names <- paste0(c("\\hline \n ", " ", v_mdl_names), collapse = " & ") %>%
+        paste0(" \\\\ \n") # add linebreak at the end (needs separate command to not have & added), and newline
+    
+    ## clm_names <- list()
+    ## clm_names$pos <- list(-1)
+    ## clm_names$command <- chr_mdl_names
+    
+    l_add_to_row <- list()
+    l_add_to_row$pos <- c(list(-1), as.list(xtbl_grps$pos))
+    l_add_to_row$command <- c(chr_mdl_names, xtbl_grps$lbl2)
+    
+    xtable(dt_coefs_fmtd,
+           align = c("l ","p{1mm}", "p{6cm} ", "D{)}{)}{8)3} ", "D{)}{)}{8)3} ", "D{)}{)}{8)3}")
+           ## align = c("l ","p{1mm}", "p{6cm} ", rep("L ", 3))
+           ) %>%
+        pvlt(santitize.text.function = identity,
+             add.to.row = l_add_to_row,
+             include.colnames = F,
+             hline.after = 0, crop = T)
+
+    
+    xtable(dt_coefs_fmtd,
+           ## align = c("l ", "l ", "D{)}{)}{8)3} ", "D{)}{)}{8)3} ", "D{)}{)}{8)3}") %>%
+           align = c("l ","p{1mm}", "p{6cm} ", rep("L ", 3))
+           ) %>% 
+        ## pvlt(santz.txt.f = identity)
+        print.xtable(include.rownames = F,
+                     include.colnames = F,
+                     file = paste0(TABLE_DIR, "xtbl_regrslts.tex"),
+                     sanitize.text.function = identity,
+                     add.to.row = l_add_to_row,
+                     hline.after = c(0))
+                     
+    
+    
+    
+    
+
+        
+    
+
+    
+    ## huxtablereg(custom.co list_coefs$cbn_all)
+
+    ## library(huxtable)
+
+    ## carat_coef_map <- list(depth = "Depth", carat = "Carat but also a bunch\n of other text for linebreak")
+
+    ## lm3 <- lm(log(price) ~ carat + depth, diamonds)
+
+    ## huxtablereg(lm3, custom.coef.map = carat_coef_map) %>% 
+    ##     print_latex(tabular_only = F) %>%
+    ##     capture.output(file = paste0(TABLE_DIR, "huxtable_test.tex"))
+    
+    ## carat_vec <- setNames(names(carat_coef_map), unname(carat_coef_map))
+
+    ## huxreg(lm3, coefs = carat_vec, error_pos = "same") %>% print_latex() %>%
+    ##     capture.output(file = paste0(TABLE_DIR, "huxtable_test.tex"))
+    
+    ## huxtable::set_row_height
+
+    ## tidy(lm3)
+
+    ## class(lm3)
+    ## tidy(list_coefs$cbn_all)
+    
+
+    ## install.packages("gt")
+    ## install.packages("juicyjuice")
+    ## library(gt)
+    ## install.packages("gtsummary")
+    ## library(gtsummary)
+
+    
+
+
+
+}
+gentbl_regtbl_old <- function(top_coefs, gof_df_cbn, df_best_mdls) {
+    #' generate the regression result table
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
+    1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;
+
+    ## split coefs into list to feed them to createTexreg
+    top_coefs_prepd <- top_coefs %>% copy() %>%
+        .[, .SD[which.max(log_likelihood)], by = .(vrbl_name_unlag, cbn_name)] %>%
+        copy(vvs$hyp_mep_dt)[., on = .(vrbl = vrbl_name_unlag)] %>% # original
+        .[vrbl %!in% c("ln_s", "ln_r")] %>% 
+        .[, .(vrbl, hyp, cbn_name, coef, se, pvalue = pvalues)]
+
+    list_coefs <- top_coefs_prepd %>% split(.$cbn_name)
+        
+    ## df_best_mdls[, .SD[which.max(log_likelihood)
+
+    ## set up gof label dts
+    dt_gof_lbls <- list(
+        list(gof_name = "N"              , gof_lbl = "N"              , decimal = 0),
+        list(gof_name = "N_g"            , gof_lbl = "No. countries"  , decimal = 0),
+        list(gof_name = "log_likelihood" , gof_lbl = "Log likelihood" , decimal = 2)) %>%
+        rbindlist() %>% 
+        .[, gof_lbl := factor(gof_lbl, levels = gof_lbl)] 
+        ## .[order(gof_lbl)] %>% 
+        ## .[, gof_name := factor(gof_name, levels = gof_name)]
+             
+    ## split GOFS into list to feed to createTexreg
+    dt_gofs_prepd <- adt(gof_df_cbn)[gof_names == "log_likelihood"] %>%
+        .[, .SD[which.max(gof_value), .(mdl_id)], cbn_name] %>%
+        .[adt(gof_df_cbn), on = "mdl_id", nomatch = NULL] %>%
+        .[gof_names %in% c("N", "N_g", "log_likelihood"), .(cbn_name, gof_names, gof_value)] %>% 
+        dt_gof_lbls[., on = .(gof_name = gof_names)] %>%
+        .[order(gof_lbl)] %>% 
+        .[, .(cbn_name, gof_names = gof_lbl, gof_value, decimal)]
+
+    list_gofs <- dt_gofs_prepd %>% split(as.character(.$cbn_name))
+    ## list_gofs
+        
+
+    list_texreg <- map2(list_coefs, list_gofs,
+         ~createTexreg(coef.names = as.character(.x$vrbl), coef = .x$coef, se = .x$se, pvalues = .x$pvalue,
+                       gof.names = as.character(.y$gof_names), gof = .y$gof_value, gof.decimal = .y$decimal))
+    names(list_texreg) <- vvs$cbn_lbls
+
+    ## screenreg(list_texreg, single.row = T)
+
+    ## screenreg(list_texreg[[1]], custom.coef.map = as.list(vvs$vrbl_lbls), single.row = T)
+    
+    ## get variable labels and hypothesis membership for ordering
+    dt_texreg_order <- data.table(vrbl = names(vvs$vrbl_lbls), lbl = unname(vvs$vrbl_lbls)) %>%
+        ## use only those vvs entries that are in any list_coef
+        .[data.table(vrbl = intersect(names(vvs$vrbl_lbls), rbindlist(list_coefs)[, unique(achr(vrbl))])),
+          on="vrbl"] %>% 
+        vvs$hyp_mep_dt[., on= "vrbl"] %>% 
+        .[order(hyp)] %>% copy() %>%
+        .[, nbr := 1:.N]
+    
+            
+    ## create texreg grouping of variables by hypothesis
+    texreg_groups <- dt_texreg_order[, .(list_id = list(nbr)), hyp] %>%
+        data.table(hyp_id = names(vvs$krnl_lbls),
+                   hyp_lbl = gsub("\n", " ", unname(vvs$krnl_lbls)))[., on = .(hyp_id = hyp)] %$%
+        setNames(list_id, hyp_lbl)
+
+    texreg_coefmap <- dt_texreg_order %$% setNames(trimws(addline_format(lbl)), vrbl) %>% as.list()
+
+    texreg(list_texreg,
+           custom.coef.map = texreg_coefmap, # reorder variables into hypotheses
+           groups = texreg_groups[2:len(texreg_groups)], # don't put intercept into separate group
+           single.row = T,
+           leading.zero = F,
+           dcolumn = F, 
+           use.packages = F,
+           ## threeparttable = T,
+           caption = "Negative binomial models of private museum founding rate",
+           label = "tbl_regres",
+           ## custom.columns = list(1:26),
+           ## custom.col.pos = 1,
+           file = paste0(TABLE_DIR, "tbl_regres.tex"))
+
+    trl_regrslts <- list(l = list_texreg, # list of models
+                         custom.coef.map = texreg_coefmap, # order/labels of coefs
+                         groups = texreg_groups[2:len(texreg_groups)]) # groups
+
+    c.screenreg(trl_regrslts)
+    
+    ## library(kableExtra)
+    ## kbl(list_coefs[[1]], "latex") %>% kable_styling(latex_options = c("hold_position"))
+
+    ## kableExtra::kable_styling
+
+
+}
