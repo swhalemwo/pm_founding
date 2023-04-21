@@ -407,7 +407,7 @@ sanitize_number <- function(nbr) {
 
 
 
-pvlt <- function(dtx, santz.txt.f = NULL) {
+pvlt <- function(dtx, ...) {
     if (as.character(match.call()[[1]]) %in% fstd){browser()}
     1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;
     #' preview table as latex table as pdf
@@ -428,7 +428,14 @@ pvlt <- function(dtx, santz.txt.f = NULL) {
     
     tmp <- paste0(tmp_dir, tmp_file_tex)
 
-    print.xtable(xtbl, file = tmp, include.rownames = F, sanitize.text.function = santz.txt.f)
+    ## pvlt_list <- as.list(substitute(list(...)))
+    ## pvlt_list2 <- c(pvlt_list, list(x = xtbl, file = tmp, include.rownames = F))
+    ## pvlt_list2 <- list(x = xtbl, file = tmp, include.rownames = F, sanitize.text.function = identity)
+    pvlt_list <- c(list(...), list(x = xtbl, file = tmp, include.rownames = F, sanitize.text.function = identity))
+    
+    do.call("print.xtable", pvlt_list)
+
+    ## print.xtable(xtbl, file = tmp, include.rownames = F, ...)
         
     ## just use most barebones latex command for now
     ##  from: https://tex.stackexchange.com/questions/302788/how-to-get-the-pdf-of-a-compiled-table-only
