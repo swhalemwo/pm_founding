@@ -669,7 +669,13 @@ Figure [[plt_xtsum]] shows the proportion between within-country variance and ov
 #+attr_latex: :width 18cm
 [[file:figures/plt_v62_coef_violin.pdf]]
 
-#+latex: \input{./tables/tbl_regres.tex}
+# #+latex: \input{./tables/tbl_regres.tex}
+
+# the xtable result
+#+INCLUDE: "./tables/xtbl_regrslts.tex" export latex
+
+# the texreg result: renders properly to html
+# #+INCLUDE: "./tables/tbl_regres.tex" export latex
 
 
 #+label: fig:best_models_condensed
