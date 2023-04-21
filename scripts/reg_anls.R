@@ -1177,7 +1177,23 @@ gen_tblcfgs <- function(TABLE_DIR) {
 
 
 
+fmt_pvlu <- function(p) {
+    if (p >= 0.05) stars <- ""
+    if (p < 0.05) stars <- "^{*}"
+    if (p < 0.01) stars <- "^{**}"
+    if (p < 0.001) stars <- "^{***}"
+    stars
+}
+
+fmt_cell <- function(coef, se, pvalue) {
+    sprintf("%s \\; (%s)%s", # \\; 
+            coeftostring(coef, lead.zero = F, digits = 2),
+            round(se,2),
+            fmt_pvlu(pvalue))
+}
     
+
+
 
 gentbl_regtbl <- function(top_coefs, gof_df_cbn, df_best_mdls) {
     #' generate the regression result table
@@ -1269,20 +1285,6 @@ gentbl_regtbl <- function(top_coefs, gof_df_cbn, df_best_mdls) {
 
     kableExtra::kable_styling
 
-    fmt_pvlu <- function(p) {
-        if (p >= 0.05) stars <- ""
-        if (p < 0.05) stars <- "^{*}"
-        if (p < 0.01) stars <- "^{**}"
-        if (p < 0.001) stars <- "^{***}"
-        stars
-    }
-
-    fmt_cell <- function(coef, se, pvalue) {
-        sprintf("%s \\; (%s)%s", # \\; 
-        coeftostring(coef, lead.zero = F, digits = 2),
-        round(se,2),
-        fmt_pvlu(pvalue))
-    }
 
     dt_coefs_fmtd <- list_coefs_prep %>% copy() %>%
         .[, .(cell_fmtd = fmt_cell(coef, se, pvalue)), by = .(vrbl, cbn_name, hyp)] %>%
@@ -1291,28 +1293,39 @@ gentbl_regtbl <- function(top_coefs, gof_df_cbn, df_best_mdls) {
         .[, vrbl := NULL] ## yeet variable column
         
 
-        ## Ekbl("latex") %>% #
-
-    xtable(dt_coefs_fmtd, align = c("l ", "l ", "D{)}{)}{8)3} ", "D{)}{)}{8)3} ", "D{)}{)}{8)3}")) %>% 
-        print.xtable(include.rownames = F,
-                     include.colnames = F,
-                     file = paste0(TABLE_DIR, "xtable_regrslts.tex"),
-                     sanitize.text.function = identity,
-                     add.to.row = clm_names)
-                     
-    xtable(dt_coefs_fmtd, align = c("l ", "p{7cm} ", "D{)}{)}{8)3} ", "D{)}{)}{8)3} ", "D{)}{)}{8)3}")) %>%
-        pvlt(santz.txt.f = identity)
-    
-    
     clm_names <- list()
     clm_names$pos <- list(-1)
     ## loop over cbn_lbls, get their label
-    clm_names_strings <- paste0(c("\\hline \\\\ \n ",  map_chr(names(dt_coefs_fmtd)[2:ncol(dt_coefs_fmtd)],
-            ~sprintf("\\multicolumn{1}{c}{%s}", vvs$cbn_lbls[[.x]]))), collapse = " & ")
-    clm_names$command <- paste0(clm_names_strings, " \\\\") ## add linebreak at the end
-    ## (can't be in previous line because it can't be collapsed together with column names with &)
+    ## generate the vector of model names
+    v_mdl_names <- map_chr(names(dt_coefs_fmtd)[2:ncol(dt_coefs_fmtd)],
+                           ~sprintf("\\multicolumn{1}{c}{%s}", pluck(vvs$cbn_lbls, .x)))
+    ## collapse v_mdl_names (and hline + newline + space before for empty cell) to single string
+    chr_mdl_names <- paste0(c("\\hline \n ", v_mdl_names), collapse = " & ") %>%
+        paste0(" \\\\ \n") # add linebreak at the end (needs separate command to not have & added), and newline
+    clm_names$command <- chr_mdl_names
 
+    xtable(dt_coefs_fmtd, align = c("l ", "l ", "D{)}{)}{8)3} ", "D{)}{)}{8)3} ", "D{)}{)}{8)3}")) %>%
+        ## pvlt(santz.txt.f = identity)
+        print.xtable(include.rownames = F,
+                     include.colnames = F,
+                     file = paste0(TABLE_DIR, "xtbl_regrslts.tex"),
+                     sanitize.text.function = identity,
+                     add.to.row = clm_names,
+                     hline.after = c(0))
+                     
+    xtable(dt_coefs_fmtd, align = c("l ", "p{7cm} ", "D{)}{)}{8)3} ", "D{)}{)}{8)3} ", "D{)}{)}{8)3}")) %>%
+        pvlt(santitize.text.function = identity,
+             add.to.row = clm_names,
+             include.colnames = F,
+             hline.after = 0)
+    
+    
+    
 
+        
+    
+
+    
     ## huxtablereg(custom.co list_coefs$cbn_all)
 
     ## library(huxtable)
