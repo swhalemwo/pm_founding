@@ -305,6 +305,27 @@ gen_render_sum_stats_rates <- function(df_regx, dfs_cbnsx, vvs) {
 
     dtx_cbn <- gen_dt_splong(dfs_cbnsx, df_regx)
 
+    ## ## get variable classes
+    ## dt_vrblcls <- sapply(dfs_cbnsx$cbn_all, class) %>%
+    ##     data.table(vrbl = names(.), cls = unname(.)) %>% .[, .(vrbl, cls)]
+    ## dt_vrblcls[, .N, cls] %>% print(n=1000)
+
+    ## dtx <- dfs_cbnsx$cbn_all %>% adt()
+    ## class(as.numeric(dtx$pm_density_global_lag0))
+    ## ## class(dtx$year)
+    ## as.numeric
+    ## as.integer(dtx$gptinc992j_lag0)
+
+    ## sapply(dtx[, 2:ncol(dtx)], \(x) all(x %% 1 == 0))
+    ## dtx[, 2:ncol(dtx)]
+     
+    ## adt(dfs_cbnsx$cbn_all)[, lapply(.SD, \(x) is.integer(x))]
+
+    ## dtx_cbn %>% copy() %>%
+    ##     .[, is.int := all(value %% 1 == 0), variable] %>%
+    ##     .[is.int == T] %>% 
+    ##     .[, .N, variable]
+
     ## dtx_cbn[, .N, variable] %>% print(n=30)
 
     
