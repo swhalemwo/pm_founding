@@ -1209,6 +1209,7 @@ gen_vrbl_vectors <- function() {
                    )
 
     vrbl_lbls <- c("nbr_opened" = "Number of Private Museums opened",
+                   "nbr_opened_prop" = "Private Museum openings", 
                    "cons" = "Intercept",
                    ## "sum_core" = "Tax incentives",
                    "hdi" = "Human Development Index", 

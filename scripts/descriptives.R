@@ -288,7 +288,7 @@ gen_dt_splong <- function(dfs_cbnsx, df_regx) {
     #' useful for summary descriptives across combinations
     
     dtx_cbn <- imap(dfs_cbnsx[1:3], ~adt(.x)[, cbn_name := .y]) %>% # cbn_dfds_rates_uscld go brrr
-        map_dfr(~adt(select(df_regx, iso3c, year, nbr_opened))[.x, on =.(iso3c, year)]) %>% # add DV
+        map_dfr(~adt(select(df_regx, iso3c, year, nbr_opened_prop))[.x, on =.(iso3c, year)]) %>% # add DV
         melt(id.vars = c("iso3c", "year", "cbn_name")) %>%
         ## yeet obs with lag!=0 and keep unlagged (crscn,dv)
         .[grepl("_lag0$", variable) | !grepl("_lag\\d$", variable)] %>%
