@@ -1413,6 +1413,18 @@ gen_nbrs <- function(df_excl, df_open, cbn_dfs_rates, batch_version) {
     nbr_mdl_started <- fread(fldr_infox$MDL_START_FILE, header = F)[, .N]
     nbr_mld_ended <- fread(fldr_infox$MDL_END_FILE, header = F)[, .N]
 
+    ## overall rates
+    ## of all country years
+    rate_opng_glbl <- map(cbn_dfs_rates, ~adt(.x)[, round(sum(nbr_opened)/sum(SP_POP_TOTLm_lag0_uscld), 5)]) %>%
+        setNames(paste0("rate_opng_glbl_", names(.)))
+
+    ## first aggregate to year 
+    rate_opng_glbl_yearly <- map(cbn_dfs_rates, ~adt(.x)[, .(nbr_opened_year = sum(nbr_opened),
+                                    pop_year = sum(SP_POP_TOTLm_lag0_uscld)), year][
+                          ## , sum(nbr_opened_year)/sum(pop_year)])
+                                                 , round(mean(nbr_opened_year/pop_year), 5)]) %>%
+        setNames(paste0("rate_opng_glbl_yearly_", names(.)))
+
     
     res <- c(list(
         nbr_muem_in_pmdb = nbr_muem_in_pmdb,
@@ -1424,7 +1436,10 @@ gen_nbrs <- function(df_excl, df_open, cbn_dfs_rates, batch_version) {
       list(
           nbr_mdl_started = nbr_mdl_started,
           nbr_mld_ended = nbr_mld_ended
-      ))
+      ),
+      rate_opng_glbl,
+      rate_opng_glbl_yearly
+      )
 
     data.table(nbr_name = names(res), value = as.character(unname(res))) %>% ## %>% print(n=100)
         .[, nbr_name := factor(nbr_name, levels = nbr_name)]
@@ -1468,7 +1483,7 @@ pdftk_cmd <- sprintf("cd %s && pdftk %s output plts_%s.pdf", FIG_DIR,
 system(pdftk_cmd)
 
 
-gen_nbrs(df_excl, df_open, cbn_dfs_rates, batch_version) %>% print(n=30)
+gen_nbrs(df_excl, df_open, cbn_dfs_rates, batch_version) %>% print(n=300)
 
 
 mutate(cbn_dfs_rates$cbn_all, region = countrycode(iso3c, "iso3c", "un.region.name")) %>%
