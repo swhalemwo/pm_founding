@@ -571,10 +571,12 @@ While such time-frame thus makes it impossible to cover the early period of priv
 
 
 #+latex: \begin{landscape}
-#+latex: \input{./tables/tbl_summary_stats.tex}
+#+latex: \input{./tables/tbl:descs.tex}
 #+latex: \end{landscape}
 
-
+# #+latex: \begin{adjustbox}{angle=90}
+# #+INCLUDE: "./tables/tbl:descs.tex" export latex
+# #+latex: \end{adjustbox}
 
 *** Variable selection
 While theoretical relations involving the number of HNWIs and inequality have been proposed, concrete operationalizations have been missing.
@@ -633,7 +635,7 @@ Given 36 variable combinations which are optimized four times with different sta
 
 *** Descriptive findings
 
-Summary statistics for all variables are provided in unscaled form in table \ref{tbl_summary_stats}.
+Summary statistics for all variables are provided in unscaled form in table \ref{tbl:descs}.
 #
 A number of insights can be gained from these descriptive findings:
 #
@@ -669,7 +671,7 @@ Figure [[plt_xtsum]] shows the proportion between within-country variance and ov
 #+attr_latex: :width 18cm
 [[file:figures/plt_v62_coef_violin.pdf]]
 
-#+INCLUDE: "./tables/tbl_regrslts_wcptblF.tex" export latex
+#+INCLUDE: "./tables/tbl:regrslts_wcptblF.tex" export latex
 
 
 

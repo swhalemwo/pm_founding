@@ -1172,11 +1172,11 @@ gen_tblcfgs <- function(TABLE_DIR) {
     ## trstylcfg <- list(dcolumn = T, single.row = T, leading.zero = F)
 
     list(
-        tbl_regrslts_wcptblF = gen_tblcfg(label = "tbl_regrslts_wcptblF", TABLE_DIR = TABLE_DIR,
+        tbl_regrslts_wcptblF = gen_tblcfg(label = "tbl:regrslts_wcptblF", TABLE_DIR = TABLE_DIR,
                                           caption = "Negative binomial models of private museum founding rate"),
-        tbl_regrslts_wcptblT = gen_tblcfg(label = "tbl_regrslts_wcptblT", TABLE_DIR = TABLE_DIR,
+        tbl_regrslts_wcptblT = gen_tblcfg(label = "tbl:regrslts_wcptblT", TABLE_DIR = TABLE_DIR,
                                           caption = "Negative binomial models of private museum founding rate"),
-        tbl_descs = gen_tblcfg(label = "tbl_descs", TABLE_DIR = TABLE_DIR,
+        tbl_descs = gen_tblcfg(label = "tbl:descs", TABLE_DIR = TABLE_DIR,
                                caption = "Summary Statistics")
     )
 }
@@ -1273,7 +1273,8 @@ gen_res_tbls <- function(reg_res_objs) {
     
     tbl_descs <- gentbl_sum_stats_rates(df_reg_rts, cbn_dfs_rates_uscld, vvs)
     ## pvxtbl(tbl_descs, crop = T, landscape = T)
-
+    
+    
     ## do.call("render_xtbl", c(tbl_descs, list(label = "descs2", caption = "descs2",
     ##                                          file = paste0(TABLE_DIR, "descs2.tex"))))
 
@@ -1285,10 +1286,6 @@ gen_res_tbls <- function(reg_res_objs) {
 
 
 
-res_tbls <- gen_res_tbls(reg_res_objs)
-## pvxtbl(res_tbls$tbl_regrslt_wcptblT, landscape = T)
-
-iwalk(res_tbls, ~do.call("render_xtbl", c(.x, gen_tblcfgs(TABLE_DIR)[[.y]])))
 
 
 render_all_reg_res_plts <- function(reg_res, batch_version) {
@@ -1495,6 +1492,13 @@ pdftk_cmd <- sprintf("cd %s && pdftk %s output plts_%s.pdf", FIG_DIR,
                      batch_version)
 
 system(pdftk_cmd)
+
+## tables
+res_tbls <- gen_res_tbls(reg_res_objs)
+## pvxtbl(res_tbls$tbl_regrslt_wcptblT, landscape = T)
+
+iwalk(res_tbls, ~do.call("render_xtbl", c(.x, gen_tblcfgs(TABLE_DIR)[[.y]])))
+
 
 
 gen_nbrs(df_excl, df_open, cbn_dfs_rates, batch_version) %>% print(n=300)
