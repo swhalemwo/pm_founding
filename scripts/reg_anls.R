@@ -1160,17 +1160,25 @@ c.screenreg <- function(trl) {
 ## }
     
 
-gen_tblcfgs <- function(TABLE_DIR) {
-
-    trstylcfg <- list(dcolumn = T, single.row = T, leading.zero = F)
-
-    list(
-        regrslts = "tbl_regrslts" %>%
-            list(label = ., file = paste0(TABLE_DIR, ., ".tex"), 
-                 caption = "Negative binomial models of private museum founding rate")
-    )
+gen_tblcfg <- function(label, TABLE_DIR, caption) {
+    list(label = label,
+         file = paste0(TABLE_DIR, label, ".tex"),
+         caption = caption)
+}
     
 
+gen_tblcfgs <- function(TABLE_DIR) {
+
+    ## trstylcfg <- list(dcolumn = T, single.row = T, leading.zero = F)
+
+    list(
+        tbl_regrslts_wcptblF = gen_tblcfg(label = "tbl_regrslts_wcptblF", TABLE_DIR = TABLE_DIR,
+                                          caption = "Negative binomial models of private museum founding rate"),
+        tbl_regrslts_wcptblT = gen_tblcfg(label = "tbl_regrslts_wcptblT", TABLE_DIR = TABLE_DIR,
+                                          caption = "Negative binomial models of private museum founding rate"),
+        tbl_descs = gen_tblcfg(label = "tbl_descs", TABLE_DIR = TABLE_DIR,
+                               caption = "Summary Statistics")
+    )
 }
 
 
@@ -1197,7 +1205,7 @@ fmt_cell <- function(coef, se, pvalue, wcptbl) {
 
 }
     
-gentbl_regtbl <- function(top_coefs, gof_df_cbn, df_best_mdls) {
+gentbl_regrslts <- function(top_coefs, gof_df_cbn, df_best_mdls, wcptbl) {
     if (as.character(match.call()[[1]]) %in% fstd){browser()}
     #' generate the regression result table:
     #' first generate the coefficient and gof dts
@@ -1235,7 +1243,7 @@ gentbl_regtbl <- function(top_coefs, gof_df_cbn, df_best_mdls) {
                                    dt_gofs = dt_gofs_prepd,
                                    mdl_lbls = vvs$cbn_lbls,
                                    wdth_vrbl = "6cm",
-                                   wcptbl = F,
+                                   wcptbl = wcptbl,
                                    vrbl_grps = vvs$hyp_mep_dt[order(hyp)] %$% setNames(hyp, vrbl),
                                    grp_lbls = gsub("\n", " ", vvs$krnl_lbls),
                                    wdth_grp = "0.5mm"
@@ -1258,23 +1266,29 @@ gen_res_tbls <- function(reg_res_objs) {
     gof_df_cbn <- reg_res_objs$gof_df_cbn
 
 
-    tbl_regtbl <- gentbl_regtbl(top_coefs, gof_df_cbn, df_best_mdls)
-    pvxtbl(tbl_regtbl)
+    tbl_regrslts_wcptblF <- gentbl_regrslts(top_coefs, gof_df_cbn, df_best_mdls, wcptbl = F)
+    tbl_regrslts_wcptblT <- gentbl_regrslts(top_coefs, gof_df_cbn, df_best_mdls, wcptbl = T)
+    ## pvxtbl(tbl_regtbl)
     ## do.call("render_xtbl", c(gen_tblcfgs(TABLE_DIR)$regrslts, xtbl_regrslt))
     
     tbl_descs <- gentbl_sum_stats_rates(df_reg_rts, cbn_dfs_rates_uscld, vvs)
-    pvxtbl(tbl_descs, crop = T, landscape = T)
+    ## pvxtbl(tbl_descs, crop = T, landscape = T)
 
     ## do.call("render_xtbl", c(tbl_descs, list(label = "descs2", caption = "descs2",
     ##                                          file = paste0(TABLE_DIR, "descs2.tex"))))
 
-    
-    
-
-    
+    list(tbl_regrslts_wcptblF = tbl_regrslts_wcptblF,
+         tbl_regrslts_wcptblT = tbl_regrslts_wcptblT, 
+         tbl_descs = tbl_descs)
 }
 
-gen_reg_res_tbls(reg_res_objs)
+
+
+
+res_tbls <- gen_res_tbls(reg_res_objs)
+## pvxtbl(res_tbls$tbl_regrslt_wcptblT, landscape = T)
+
+iwalk(res_tbls, ~do.call("render_xtbl", c(.x, gen_tblcfgs(TABLE_DIR)[[.y]])))
 
 
 render_all_reg_res_plts <- function(reg_res, batch_version) {
