@@ -1248,7 +1248,7 @@ gentbl_regtbl <- function(top_coefs, gof_df_cbn, df_best_mdls) {
 
 
 
-gen_reg_res_tbls <- function(reg_res_objs) {
+gen_res_tbls <- function(reg_res_objs) {
     if (as.character(match.call()[[1]]) %in% fstd){browser()}
     1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;
 
@@ -1259,10 +1259,10 @@ gen_reg_res_tbls <- function(reg_res_objs) {
 
 
     tbl_regtbl <- gentbl_regtbl(top_coefs, gof_df_cbn, df_best_mdls)
-    ## pvxtbl(tbl_regtbl)
+    pvxtbl(tbl_regtbl)
     ## do.call("render_xtbl", c(gen_tblcfgs(TABLE_DIR)$regrslts, xtbl_regrslt))
     
-    tbl_descs <- gen_render_sum_stats_rates(df_reg_rts, cbn_dfs_rates_uscld, vvs)
+    tbl_descs <- gentbl_sum_stats_rates(df_reg_rts, cbn_dfs_rates_uscld, vvs)
     pvxtbl(tbl_descs, crop = T, landscape = T)
 
     ## do.call("render_xtbl", c(tbl_descs, list(label = "descs2", caption = "descs2",

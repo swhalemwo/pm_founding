@@ -299,11 +299,18 @@ gen_dt_splong <- function(dfs_cbnsx, df_regx) {
 }
 
 
-gen_render_sum_stats_rates <- function(df_regx, dfs_cbnsx, vvs) {
+gentbl_sum_stats_rates <- function(df_regx, dfs_cbnsx, vvs) {
     if (as.character(match.call()[[1]]) %in% fstd){browser()}
     #' create and render summary stats
 
     dtx_cbn <- gen_dt_splong(dfs_cbnsx, df_regx)
+
+    ## adt(df_regx)[, .(iso3c, year, nbr_opened, nbr_opened_prop, SP.POP.TOTLm)] %>% copy() %>%
+    ##     .[, rate_opened := nbr_opened/SP.POP.TOTLm] %>% 
+    ##     ## .[nbr_opened_prop != 0]
+    ##     .[nbr_opened_prop != rate_opened]
+        ## .[, .(mean_old = mean(nbr_opened_prop, na.rm = T), mean_new = mean(rate_opened, na.rm = T))]
+    
 
     ## ## get variable classes
     ## dt_vrblcls <- sapply(dfs_cbnsx$cbn_all, class) %>%
@@ -343,7 +350,8 @@ gen_render_sum_stats_rates <- function(df_regx, dfs_cbnsx, vvs) {
     ## nicely format; have to move to second value column to convert to character
     ## also need some ugly filtering in by to apply nicely_fmt_number row-wise: 
     sumry_sprt_mlt <- melt(sumry_sprt, id.vars = c("cbn_name", "variable"), variable.name = "stat") %>%
-         .[!is.na(value)] %>% .[, rnbr := .I] %>% .[, value2 := nicely_fmt_number(value), by = rnbr]
+        .[!is.na(value)] %>% .[, rnbr := .I] %>%
+        .[, value2 := nicely_fmt_number(value), by = rnbr]
  
     ## cast and reorder (matching with vvs)
     wide_tbl_sprt <- sumry_sprt_mlt %>%
@@ -374,7 +382,7 @@ gen_render_sum_stats_rates <- function(df_regx, dfs_cbnsx, vvs) {
         ## gen stat headers1
         paste0(paste0(c(" \n Variable", rep(stat_dt_sprt$stat_lbl, 3)), collapse = " & "), " \\\\ \n"),
         sprintf("\\hline \\multicolumn{%s}{l}{\\footnotesize{%s}}\n", ncol(wide_tbl_sprt),
-               "all country-level count predictors are per million population; all monetary amounts are 2021 USD"))
+               "all country-level count variables are per million population; all monetary amounts are 2021 USD"))
 
 
     ## xtable(wide_tbl_sprt, align = c("l", "p{7cm}", rep("l", 12)),
@@ -417,7 +425,7 @@ render_xtsum_plt2(cbn_dfs_rates_uscld, df_reg_rts, vvs)
 
 
 
-gen_render_sum_stats_rates(df_reg_rts, cbn_dfs_rates_uscld, vvs)
+## gen_render_sum_stats_rates(df_reg_rts, cbn_dfs_rates_uscld, vvs)
 
 print("all descriptives done")
 
