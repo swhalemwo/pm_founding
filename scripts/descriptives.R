@@ -356,14 +356,20 @@ gen_render_sum_stats_rates <- function(df_regx, dfs_cbnsx, vvs) {
                "all country-level count predictors are per million population; all monetary amounts are 2021 USD"))
 
 
-    xtable(wide_tbl_sprt, align = c("l", "p{7cm}", rep("l", 12)),
-           label = "tbl_summary_stats",
-           caption = "Summary Statistics") %>%
-        print(include.rownames = F, include.colnames = F,
-              file = paste0(TABLE_DIR, "tbl_summary_stats.tex"),
-              add.to.row = clm_names,
-              hline.after = c(0),
-              sanitize.text.function = identity)
+    ## xtable(wide_tbl_sprt, align = c("l", "p{7cm}", rep("l", 12)),
+    ##        label = "tbl_summary_stats",
+    ##        caption = "Summary Statistics") %>%
+    ##     print(include.rownames = F, include.colnames = F,
+    ##           file = paste0(TABLE_DIR, "tbl_summary_stats.tex"),
+    ##           add.to.row = clm_names,
+    ##           hline.after = c(0),
+    ##           sanitize.text.function = identity)
+
+    list(dt_fmtd = wide_tbl_sprt,
+         align_cfg = c("l", "p{7cm}", rep("l", 12)),
+         add_to_row = clm_names,
+         hline_after = 0)
+
 
     
 
