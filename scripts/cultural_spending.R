@@ -487,6 +487,7 @@ get_imf_data <- function() {
 ## ** merging all
 
 gen_cult_spending <- function() {
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
     #' combine everything into nice function
     
 
@@ -556,7 +557,7 @@ gen_cult_spending <- function() {
                                 iso3c != "QAT",
                                 iso3c != "GEO") ## weirdly high now after changing to constant prices too 
     
-    ## viz_lines(un_df_smorc_clean, y="pct_fx", facets = "region")
+    viz_lines(un_df_smorc_clean, y="pct_fx", facets = "region")
 
     return(select(un_df_smorc_clean, iso3c, year, smorc_dollar_fxm, pct_fx))
 
@@ -1047,9 +1048,37 @@ gen_cult_spending_imptd <- function() {
 
     df_tlycg_fnl <- select_proper_tlycg_series(df_cult_cbn)
 
-    df_tlycg_fnl %>%
+    df_tlycg_fnl2 <- df_tlycg_fnl %>%
         mutate(smorc_dollar_fxm = value/1e6,
                smorc_dollar_fxm_sqrd = smorc_dollar_fxm^2) %>%
         select(iso3c, year, smorc_dollar_fxm, smorc_dollar_fxm_sqrd)
+
+    ## first convert to constant LCU, then to constant USD PPP? 
+    df_tlycg_fnl3 <- left_join(df_tlycg_fnl2, cur_df, by = c("iso3c", "year")) %>%
+        mutate(smorc_dollar_fxm_ppp = (smorc_dollar_fxm*xlcusx999i)/xlcusp999i) %>%
+        select(iso3c, year, smorc_dollar_fxm = smorc_dollar_fxm_ppp) %>%
+        mutate(smorc_dollar_fxm_sqrd = smorc_dollar_fxm^2) %>% na.omit()
+
+    ## anti_join(select(df_tlycg_fnl2, iso3c, year), df_tlycg_fnl3, on = c("iso3c", "year"))
+
+
+    ## df_tlycg_fnl3 %>% copy() %>%
+    ##     .[, ratio := smorc_dollar_fxm/smorc_dollar_fxm_ppp] %>%
+    ##     .[, .(ratio_mean = mean(ratio), ratio_sd = sd(ratio)), iso3c] %$%
+    ##     ## .[, mean(ratio_mean, na.rm = T)]
+    ##     hist(ratio_mean)
     
+    ##     ggplot(aes(x=ratio_mean, y=iso3c)) +
+    ##     geom_col()
+    ##     ## hist(ratio_sd)
+ 
+
+    ## df_tlycg_fnl3 %>% melt(id.vars = c("iso3c", "year")) %>%
+    ##     ggplot(aes(x=year, y=value, color = variable)) +
+    ##     geom_line(show.legend = F) +
+    ##     facet_wrap(~iso3c, scales = "free")
+        
+    return(df_tlycg_fnl3)
+
+
 }
