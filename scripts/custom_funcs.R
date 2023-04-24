@@ -407,7 +407,7 @@ sanitize_number <- function(nbr) {
 
 
 
-pvlt <- function(dtx, crop = T, ...) {
+pvlt <- function(dtx, crop = T, landscape = F, ...) {
     if (as.character(match.call()[[1]]) %in% fstd){browser()}
     1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;
     #' preview table as latex table as pdf
@@ -441,7 +441,17 @@ pvlt <- function(dtx, crop = T, ...) {
     ##  from: https://tex.stackexchange.com/questions/302788/how-to-get-the-pdf-of-a-compiled-table-only
     ## cmplcmd <- "pdflatex '\\documentclass{article}\\pagestyle{empty}\\begin{document}\\input{prvlt.tex}\\end{document}'"
 
-    cmplcmd <- "cp /home/johannes/Dropbox/technical_stuff_general/dotfiles/texput.tex /tmp && pdflatex texput.tex"
+    ## if landscape option: use different base file with landscaped setting
+    texput_file <- "texput.tex"
+    if (landscape) {
+        texput_file <- "texput_landscape.tex"
+    }
+
+    print(texput_file)
+
+    cmplcmd <- sprintf("cp /home/johannes/Dropbox/technical_stuff_general/dotfiles/%s /tmp/texput.tex %s",
+                       texput_file,
+                       " && pdflatex texput.tex")
 
     cmplcmd2 <- paste0("cd /tmp && ", cmplcmd)
         
@@ -623,6 +633,7 @@ genxtbl_regtbl <- function(dt_coefs, dt_gofs, vrbl_lbls, mdl_lbls, wcptbl = F, v
                            rep("D{)}{)}{8)3} ", str_count(chr_mdl_names, "multicolumn")))
         }
     }
+
     
 
     
@@ -652,7 +663,7 @@ render_xtbl <- function(dt_fmtd, align_cfg, add_to_row, hline_after, caption, la
 }
 
 
-pvxtbl <- function(xtbl_rslt, crop = T) {
+pvxtbl <- function(xtbl_rslt, crop = T, landscape = F) {
     if (as.character(match.call()[[1]]) %in% fstd){browser()}
     1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;
     #' generic xtable preview command
@@ -661,7 +672,8 @@ pvxtbl <- function(xtbl_rslt, crop = T) {
         pvlt(add.to.row = xtbl_rslt$add_to_row,
              include.colnames = F,
              hline.after = xtbl_rslt$hline_after,
-             crop = crop)
+             crop = crop,
+             landscape = landscape)
     
 }
 
