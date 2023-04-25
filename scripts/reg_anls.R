@@ -1507,7 +1507,7 @@ system(pdftk_cmd)
 
 ## tables
 res_tbls <- gen_res_tbls(reg_res_objs)
-pvxtbl(res_tbls$tbl_descs, landscape = T)
+pvxtbl(res_tbls$tbl_regrslts_wcptblF, landscape = T)
 
 iwalk(res_tbls, ~do.call("render_xtbl", c(.x, gen_tblcfgs(TABLE_DIR)[[.y]])))
 
