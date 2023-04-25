@@ -708,7 +708,7 @@ Tax deductibility of donations are found to be positive and significant in "DS -
 #
 In "DS -CuSp" the interaction between top marginal income rate and tax deductibility of donations is significant, which indicates that higher top marginal income tax rate have a larger effect when charitable donations are tax deductible:
 #
-A 1 SD deviation increase of the top marginal income tax rate (14.1 percentage points) increases the effect of tax deductibility of donations by a factor of exp(0.75) = 2.117.
+A 1 SD increase of the top marginal income tax rate (14.1 percentage points) increases the effect of tax deductibility of donations by a factor of exp(0.75) = 2.117.
 #
 In "DS all IVs", the interaction is still positive, but no longer significant, presumably since "DS all IVs" is primarily composed of countries in which charitable donations are tax deductible (table \ref{tbl:descs}) and hence little variation exists.
 #
@@ -721,22 +721,35 @@ Government cultural spending is found to have a significant inverse-U shaped ass
 #
 While at lower values the association is positive, the effect decreases at higher levels and eventually turns negative.
 #
-In particular, up to a value of 0.36/(2*0.64) = 0.28 (on the standardized government spending variable, which corresponds to cultural spending of 460 USD per capita, approximately the 2020 government cultural spending of Canada (452 USD) or Ireland (469 USD)) an increase in government spending corresponds to a higher predicted likelihood of private museum founding. 
+In particular, up to a value of 0.36/(2*0.64) = 0.28 (on the standardized government spending variable, which corresponds to cultural spending of 432 USD per capita, approximately the 2020 government cultural spending of Slovakia (415 USD), the United Arab Emirates (440 USD) or New Zealand (469 USD)) an increase in government spending corresponds to a higher predicted likelihood of private museum founding. 
 #
-Given the skewed distribution of cultural spending, 957 (76%) the country-years belong to this range of a positive association between government spending and private museum founding; this range also contains 63% of private museum foundings covered by "DS all IVs".
+This range of a positive association between government spending and private museum founding consists of 815 (65%) of the country-years belong of "DS all IVs"; it also contains 59% of covered private museum foundings.
 #
-However above this range which (in 2020) includes countries prominent for their private museum populations such as Germany (560 USD), France (591 USD), the Nethelands (711 USD) or Switzerland (962 USD) increases in government spending are associated with lower rates of private museum founding (and conversely, decreases in government spending with higher rates of private museum founding).
+It is furthermore worth to consider that "DS all IVs" consists disproportionately of wealthy countries, the true proportion of country-years in which higher government expenditure is associated with higher private museum is presumably even higher.
+#
+Nevertheless, in the range above this turning point which (in 2020) includes countries prominent for their private museum populations such as Germany (560 USD), France (591 USD), the Nethelands (711 USD) or Switzerland (962 USD) increases in government spending are associated with lower rates of private museum founding (and conversely, decreases in government spending with higher rates of private museum founding).
 # 
-The data thus supports both the the crowding-out argument of the private museum literature of private museum founding as a consequence of declining government spending as well as the crowding in argument raised by philanthropy scholars. 
+The data thus supports both the the crowding-out argument of the private museum literature which considers private museum founding  a consequence of declining government spending (H2) as well as the crowding in argument raised by philanthropy scholars. 
 #
-However, little evidence is found for lack of government spending facilitating private museum founding in emerging art market, as these are located in the region in which government spending is positively associated with private museum founding. 
+However, little evidence is found for a lack of government spending facilitating private museum founding in countries  with emerging art scenes, as these are located in the range in which government spending is positively associated with private museum founding. 
 
 
-
-
-For the inequality variables (H3), results are mixed:
+The association between inequality variables and private museum founding is mixed.
 #
-While income inequality is associated with lower founding, wealth inequality variables are positively associated with the establishment of new private museums.
+While wealth inequality variables are positively and significantly associated with the establishment of new private museums, income inequality is significantly associated with lower founding. 
+#
+For example, a 1 SD increase of the wealth share of the top 10% (7.6% in 2020 in "DS all IVs", which corresponds approximately to the difference between Denmark (50.2%) and the Czech Republic (57.9)) corresponds to an increase in private museum founding rate by a factor of exp(0.28) = 1.32.
+#
+Conversely, a 1 SD decrease of the income share of the top 10% (8.9% in 2020 in "DS all IVs", which corresponds approximately to the difference between Sweden (30.8%) and Canada (39.7)) is associated with a decrease in private museum founding rate by a factor of exp(-0.39) = 0.68.
+# 
+Furthermore, Effects are smaller in "DS all IVs" than in the other datasets, which leads to the gini coefficients not being significant.
+#
+
+
+
+
+
+
 
 Finally, the effect of HNWIs (H4) is mostly negative and relatively small in the two larger datasets, but evenly centered around 0 in "DS all IVs". 
 

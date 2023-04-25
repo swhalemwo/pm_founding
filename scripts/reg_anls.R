@@ -1511,7 +1511,7 @@ pvxtbl(res_tbls$tbl_regrslts_wcptblF, landscape = T)
 
 iwalk(res_tbls, ~do.call("render_xtbl", c(.x, gen_tblcfgs(TABLE_DIR)[[.y]])))
 
-
+## ** predicting
 ## predicted impact of tax deductibility 
 expand.grid(tax_ddctblt = c(0,1), tmitr = seq(-2, 2.5, 0.5)) %>% adt() %>%
     .[, pred := 0.46* tax_ddctblt + -0.36*tmitr + 0.75 * tax_ddctblt * tmitr] %>%
@@ -1523,8 +1523,7 @@ expand.grid(tax_ddctblt = c(0,1), tmitr = seq(-2, 2.5, 0.5)) %>% adt() %>%
 expand.grid(gvt_spending = seq(-0.9, 5, by = 0.01)) %>% adt() %>%
     .[, gvt_spending_sqrd := gvt_spending^2] %>%
     .[, pred := 0.36 * gvt_spending + -0.64 * gvt_spending_sqrd] %>% 
-    .[, .SD[which.max(pred)]]
-
+    ## .[, .SD[which.max(pred)]]
     ggplot(aes(x=gvt_spending, y = pred)) +
     geom_line()
 
@@ -1534,7 +1533,12 @@ smorc_top_point_std <- 0.36/(2*0.64)
 smorc_scale <- scale(cbn_dfs_rates_uscld$cbn_all$smorc_dollar_fxm_lag0)
 
 smorc_top_point <- (smorc_top_point_std * attr(smorc_scale, "scaled:scale")) + attr(smorc_scale, "scaled:center")
-filter(cbn_dfs_rates_uscld$cbn_all, smorc_dollar_fxm_lag0 < smorc_top_point)
+
+filter(cbn_dfs_rates_uscld$cbn_all, smorc_dollar_fxm_lag0 < smorc_top_point * 1.2,
+       smorc_dollar_fxm_lag0 > smorc_top_point * 0.8, year == 2020) %>%
+    select(iso3c, smorc_dollar_fxm_lag0) %>% arrange(smorc_dollar_fxm_lag0)
+
+
 
 adt(cbn_dfs_rates_uscld$cbn_all)[, above_smorc_top_point := smorc_dollar_fxm_lag0 > smorc_top_point] %>%
     adt(df_reg)[, .(iso3c, year, nbr_opened)][., on = .(iso3c, year)] %>% 
@@ -1545,7 +1549,39 @@ adt(cbn_dfs_rates_uscld$cbn_all)[, above_smorc_top_point := smorc_dollar_fxm_lag
 filter(cbn_dfs_rates_uscld$cbn_all, smorc_dollar_fxm_lag0 > smorc_top_point) %>%
     select(iso3c, year, smorc_dollar_fxm_lag0) %>%
     filter(year == 2020) %>% arrange(smorc_dollar_fxm_lag0)
-    
+
+
+## comparison for inequality variables
+## need some difference between countries
+
+shweal_scale <- scale(cbn_dfs_rates_uscld$cbn_all$shweal992j_p90p100_lag0)
+
+filter(cbn_dfs_rates_uscld$cbn_all, year == 2020) %>%
+    select(iso3c, shweal992j_p90p100_lag0) %>% adt() %>%
+    .[, mrg := "a"] %>%
+    .[., on = "mrg", allow.cartesian = T] %>%
+    .[, .(iso3c_1 = iso3c, iso3c_2 = i.iso3c,
+          shweal1 = shweal992j_p90p100_lag0, shweal2 = i.shweal992j_p90p100_lag0)] %>%
+    .[, diff := shweal2 - shweal1] %>%
+    .[diff > attr(shweal_scale, "scaled:scale")*0.97 & diff < attr(shweal_scale, "scaled:scale")*1.03] %>%
+    print(n=200)
+
+sptinc_scale <- scale(cbn_dfs_rates_uscld$cbn_all$sptinc992j_p90p100_lag0)
+
+filter(cbn_dfs_rates_uscld$cbn_all, year == 2020) %>%
+    select(iso3c, sptinc992j_p90p100_lag0) %>% adt() %>%
+    .[, mrg := "a"] %>%
+    .[., on = "mrg", allow.cartesian = T] %>%
+    .[, .(iso3c_1 = iso3c, iso3c_2 = i.iso3c,
+          sptinc1 = sptinc992j_p90p100_lag0, sptinc2 = i.sptinc992j_p90p100_lag0)] %>%
+    .[, diff := sptinc2 - sptinc1] %>%
+    .[diff > attr(sptinc_scale, "scaled:scale")*0.97 & diff < attr(sptinc_scale, "scaled:scale")*1.03] %>%
+    print(n=200)
+
+
+
+
+
     
 
 
