@@ -1512,6 +1512,43 @@ pvxtbl(res_tbls$tbl_regrslts_wcptblF, landscape = T)
 iwalk(res_tbls, ~do.call("render_xtbl", c(.x, gen_tblcfgs(TABLE_DIR)[[.y]])))
 
 
+## predicted impact of tax deductibility 
+expand.grid(tax_ddctblt = c(0,1), tmitr = seq(-2, 2.5, 0.5)) %>% adt() %>%
+    .[, pred := 0.46* tax_ddctblt + -0.36*tmitr + 0.75 * tax_ddctblt * tmitr] %>%
+    ggplot(aes(x=tmitr, y=pred, color = factor(tax_ddctblt))) +
+    geom_line()
+
+
+## predicted numbers for government spending 
+expand.grid(gvt_spending = seq(-0.9, 5, by = 0.01)) %>% adt() %>%
+    .[, gvt_spending_sqrd := gvt_spending^2] %>%
+    .[, pred := 0.36 * gvt_spending + -0.64 * gvt_spending_sqrd] %>% 
+    .[, .SD[which.max(pred)]]
+
+    ggplot(aes(x=gvt_spending, y = pred)) +
+    geom_line()
+
+hist(cbn_dfs_rates$cbn_all$smorc_dollar_fxm_lag0)
+smorc_top_point_std <- 0.36/(2*0.64)
+
+smorc_scale <- scale(cbn_dfs_rates_uscld$cbn_all$smorc_dollar_fxm_lag0)
+
+smorc_top_point <- (smorc_top_point_std * attr(smorc_scale, "scaled:scale")) + attr(smorc_scale, "scaled:center")
+filter(cbn_dfs_rates_uscld$cbn_all, smorc_dollar_fxm_lag0 < smorc_top_point)
+
+adt(cbn_dfs_rates_uscld$cbn_all)[, above_smorc_top_point := smorc_dollar_fxm_lag0 > smorc_top_point] %>%
+    adt(df_reg)[, .(iso3c, year, nbr_opened)][., on = .(iso3c, year)] %>% 
+    .[, .(.N, sum_nbr_opened = sum(nbr_opened)), above_smorc_top_point] %>%
+    melt(id.vars = "above_smorc_top_point") %>%
+    .[, prop := value/sum(value), variable]
+
+filter(cbn_dfs_rates_uscld$cbn_all, smorc_dollar_fxm_lag0 > smorc_top_point) %>%
+    select(iso3c, year, smorc_dollar_fxm_lag0) %>%
+    filter(year == 2020) %>% arrange(smorc_dollar_fxm_lag0)
+    
+    
+
+
 
 gen_nbrs(df_excl, df_open, cbn_dfs_rates, reg_anls_base$df_reg_anls_cfgs_wide, batch_version) %>% print(n=300)
 

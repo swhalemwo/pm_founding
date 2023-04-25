@@ -698,20 +698,39 @@ increase, respectively.
 
 The Intercept correspond to the predicted (logged) founding rate for a country-year with values of 0 on all independent variables, which given the standardization of the variables, corresponds to a country at the means of the variables (and without tax deductibility of charitable donations).
 #
-Thus they also illustrate the highly skewed distribution of the variables, as predicted opening count at the means e.g. for "DS all IVs" with exp(-2.22)=0.10 is around one order of magnitude higher than average founding rate within the sample (0.011, table \ref{tbl:descs}).
+Thus they also illustrate the highly skewed distribution of the variables, as predicted opening count at the means for e.g. "DS all IVs" with exp(-2.22)=0.10 is around one order of magnitude higher than average founding rate within the dataset (0.011, table \ref{tbl:descs}); a pattern of similar magnitude is present in the other datasets as well. 
 
 
 
-The results for tax incentives (H1) are mixed:
+The results for tax incentives largely support H1: 
 #
-While the tax exemption of non-profits has a negative coefficient across all datasets, tax deductibility of donations is positively associated with private museum founding in all datasets.
+Tax deductibility of donations are found to be positive and significant in "DS -CuSp/TMITR", indicating a exp(0.74) = 2.09 times higher rate of private museum founding in countries where charitable deductions are tax deductible.
+#
+In "DS -CuSp" the interaction between top marginal income rate and tax deductibility of donations is significant, which indicates that higher top marginal income tax rate have a larger effect when charitable donations are tax deductible:
+#
+A 1 SD deviation increase of the top marginal income tax rate (14.1 percentage points) increases the effect of tax deductibility of donations by a factor of exp(0.75) = 2.117.
+#
+In "DS all IVs", the interaction is still positive, but no longer significant, presumably since "DS all IVs" is primarily composed of countries in which charitable donations are tax deductible (table \ref{tbl:descs}) and hence little variation exists.
+#
+Thus overall the data indicates substantial support for an association between tax incentives and private museum founding (H1). 
 
 
 
 
-Government cultural spending is found to have a positive association with private museum founding.
+Government cultural spending is found to have a significant inverse-U shaped association with private museum founding.
+#
+While at lower values the association is positive, the effect decreases at higher levels and eventually turns negative.
+#
+In particular, up to a value of 0.36/(2*0.64) = 0.28 (on the standardized government spending variable, which corresponds to cultural spending of 460 USD per capita, approximately the 2020 government cultural spending of Canada (452 USD) or Ireland (469 USD)) an increase in government spending corresponds to a higher predicted likelihood of private museum founding. 
+#
+Given the skewed distribution of cultural spending, 957 (76%) the country-years belong to this range of a positive association between government spending and private museum founding; this range also contains 63% of private museum foundings covered by "DS all IVs".
+#
+However above this range which (in 2020) includes countries prominent for their private museum populations such as Germany (560 USD), France (591 USD), the Nethelands (711 USD) or Switzerland (962 USD) increases in government spending are associated with lower rates of private museum founding (and conversely, decreases in government spending with higher rates of private museum founding).
 # 
-This finding thus does not support the crowding-out argument of the private museum literature of private museum founding as a consequence of declining government spending (H2a). 
+The data thus supports both the the crowding-out argument of the private museum literature of private museum founding as a consequence of declining government spending as well as the crowding in argument raised by philanthropy scholars. 
+#
+However, little evidence is found for lack of government spending facilitating private museum founding in emerging art market, as these are located in the region in which government spending is positively associated with private museum founding. 
+
 
 
 
