@@ -597,3 +597,77 @@ gentbl_regtbl_old <- function(top_coefs, gof_df_cbn, df_best_mdls) {
 
 
 }
+
+## ** some regression test
+
+library(glmmTMB)
+
+r1 <- glmmTMB(nbr_opened ~ shweal992j_p90p100_lag0 + (1 | iso3c) + offset(log(SP_POP_TOTLm_lag0_uscld)),
+        cbn_dfs_rates$cbn_all, family = nbinom2)
+
+r2 <- glmmTMB(nbr_opened ~ shweal992j_p90p100_lag0 + NY.GDP.PCAP.CDk_lag0  + (1 | iso3c) +
+            offset(log(SP_POP_TOTLm_lag0_uscld)),
+        cbn_dfs_rates$cbn_all, family = nbinom2)
+
+r3 <- glmmTMB(nbr_opened ~ shweal992j_p90p100_lag0 + NY.GDP.PCAP.CDk_lag0  + (1 | iso3c) + hnwi_nbr_30M_lag0 + 
+                  offset(log(SP_POP_TOTLm_lag0_uscld)),
+            cbn_dfs_rates$cbn_all, family = nbinom2)
+
+r4 <- glmmTMB(nbr_opened ~ shweal992j_p90p100_lag0 + NY.GDP.PCAP.CDk_lag0  + (1 | iso3c) + hnwi_nbr_30M_lag0 + 
+                  sptinc992j_p99p100_lag0 + offset(log(SP_POP_TOTLm_lag0_uscld)),
+            cbn_dfs_rates$cbn_all, family = nbinom2)
+
+r5 <- glmmTMB(nbr_opened ~ shweal992j_p90p100_lag0 + NY.GDP.PCAP.CDk_lag0  + (1 | iso3c) + hnwi_nbr_30M_lag0 +
+                  Ind.tax.incentives + tmitr_approx_linear20step_lag0 + ti_tmitr_interact_lag0 + 
+                  sptinc992j_p99p100_lag0 + offset(log(SP_POP_TOTLm_lag0_uscld)),
+            cbn_dfs_rates$cbn_all, family = nbinom2)
+
+r6 <- glmmTMB(nbr_opened ~ shweal992j_p90p100_lag0 + NY.GDP.PCAP.CDk_lag0  + (1 | iso3c) + hnwi_nbr_30M_lag0 +
+                  Ind.tax.incentives + tmitr_approx_linear20step_lag0 + ti_tmitr_interact_lag0 + 
+                  sptinc992j_p99p100_lag0 +
+                  pm_density_lag0 + pm_density_sqrd_lag0 + 
+                  offset(log(SP_POP_TOTLm_lag0_uscld)),
+            cbn_dfs_rates$cbn_all, family = nbinom2)
+
+r7 <- glmmTMB(nbr_opened ~ shweal992j_p90p100_lag0 + NY.GDP.PCAP.CDk_lag0  + (1 | iso3c) + hnwi_nbr_30M_lag0 +
+                  Ind.tax.incentives + tmitr_approx_linear20step_lag0 + ti_tmitr_interact_lag0 + 
+                  sptinc992j_p99p100_lag0 +
+                  pm_density_lag0 + pm_density_sqrd_lag0 +
+                  pm_density_global_sqrd_lag0 + pm_density_global_lag0 + 
+                  offset(log(SP_POP_TOTLm_lag0_uscld)),
+            cbn_dfs_rates$cbn_all, family = nbinom2)
+
+r8 <- glmmTMB(nbr_opened ~ shweal992j_p90p100_lag0 + NY.GDP.PCAP.CDk_lag0  + (1 | iso3c) + hnwi_nbr_30M_lag0 +
+                  Ind.tax.incentives + tmitr_approx_linear20step_lag0 + ti_tmitr_interact_lag0 + 
+                  sptinc992j_p99p100_lag0 +
+                  pm_density_lag0 + pm_density_sqrd_lag0 +
+                  cnt_contemp_1990 + cnt_contemp_1990_sqrd + clctr_cnt_cpaer_lag0 + 
+                  pm_density_global_sqrd_lag0 + pm_density_global_lag0 + 
+                  offset(log(SP_POP_TOTLm_lag0_uscld)),
+            cbn_dfs_rates$cbn_all, family = nbinom2)
+
+r9 <- glmmTMB(nbr_opened ~ shweal992j_p90p100_lag0 + NY.GDP.PCAP.CDk_lag0  + (1 | iso3c) + hnwi_nbr_30M_lag0 +
+                  Ind.tax.incentives + tmitr_approx_linear20step_lag0 + ti_tmitr_interact_lag0 + 
+                  sptinc992j_p99p100_lag0 +
+                  pm_density_lag0 + pm_density_sqrd_lag0 +
+                  cnt_contemp_1990 + cnt_contemp_1990_sqrd + clctr_cnt_cpaer_lag0 + 
+                  pm_density_global_sqrd_lag0 + pm_density_global_lag0 +
+                  nbr_closed_cum_global_lag0 + 
+                  offset(log(SP_POP_TOTLm_lag0_uscld)),
+            cbn_dfs_rates$cbn_all, family = nbinom2)
+
+r10 <- glmmTMB(nbr_opened ~ shweal992j_p90p100_lag0 + NY.GDP.PCAP.CDk_lag0  + (1 | iso3c) + hnwi_nbr_30M_lag0 +
+                  Ind.tax.incentives + tmitr_approx_linear20step_lag0 + ti_tmitr_interact_lag0 + 
+                  sptinc992j_p99p100_lag0 +
+                  smorc_dollar_fxm_lag0 + smorc_dollar_fxm_sqrd_lag0 + 
+                  pm_density_lag0 + pm_density_sqrd_lag0 +
+                  cnt_contemp_1990 + cnt_contemp_1990_sqrd + clctr_cnt_cpaer_lag0 + 
+                  pm_density_global_sqrd_lag0 + pm_density_global_lag0 +
+                  nbr_closed_cum_global_lag0 + 
+                  offset(log(SP_POP_TOTLm_lag0_uscld)),
+            cbn_dfs_rates$cbn_all, family = nbinom2)
+
+
+screenreg(list(r1,r2,r3, r4, r5, r6, r7, r8, r9, r10))
+
+
