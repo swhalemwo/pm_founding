@@ -1381,7 +1381,7 @@ gen_reg_res <- function(fldr_info) {
     return(reg_res)
 }
 
-gen_nbrs <- function(df_excl, df_open, cbn_dfs_rates, batch_version) {
+gen_nbrs <- function(df_excl, df_open, cbn_dfs_rates, df_reg_anls_cfgs_wide, batch_version) {
     if (as.character(match.call()[[1]]) %in% fstd){browser()}
     1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;
     
@@ -1436,6 +1436,13 @@ gen_nbrs <- function(df_excl, df_open, cbn_dfs_rates, batch_version) {
                                                  , round(mean(nbr_opened_year/pop_year), 5)]) %>%
         setNames(paste0("rate_opng_glbl_yearly_", names(.)))
 
+    ## model succesrate
+    l_cvrgnc <- df_reg_anls_cfgs_wide %>% adt() %>%
+        .[, .N, cvrgd] %$%
+        setNames(N, paste0("cvrgd", cvrgd)) %>% as.list()
+    
+    l_cvrgnc$mdlcnt_ttl <- l_cvrgnc$cvrgd1 + l_cvrgnc$cvrgd0
+    l_cvrgnc$cvrgnc_rate <- round((l_cvrgnc$cvrgd1 / l_cvrgnc$mdlcnt_ttl)*100,3)
     
     res <- c(list(
         nbr_muem_in_pmdb = nbr_muem_in_pmdb,
@@ -1449,7 +1456,8 @@ gen_nbrs <- function(df_excl, df_open, cbn_dfs_rates, batch_version) {
           nbr_mld_ended = nbr_mld_ended
       ),
       rate_opng_glbl,
-      rate_opng_glbl_yearly
+      rate_opng_glbl_yearly,
+      l_cvrgnc
       )
 
     data.table(nbr_name = names(res), value = as.character(unname(res))) %>% ## %>% print(n=100)
@@ -1496,13 +1504,13 @@ system(pdftk_cmd)
 
 ## tables
 res_tbls <- gen_res_tbls(reg_res_objs)
-## pvxtbl(res_tbls$tbl_regrslt_wcptblT, landscape = T)
+pvxtbl(res_tbls$tbl_descs, landscape = T)
 
 iwalk(res_tbls, ~do.call("render_xtbl", c(.x, gen_tblcfgs(TABLE_DIR)[[.y]])))
 
 
 
-gen_nbrs(df_excl, df_open, cbn_dfs_rates, batch_version) %>% print(n=300)
+gen_nbrs(df_excl, df_open, cbn_dfs_rates, reg_anls_base$df_reg_anls_cfgs_wide, batch_version) %>% print(n=300)
 
 
 mutate(cbn_dfs_rates$cbn_all, region = countrycode(iso3c, "iso3c", "un.region.name")) %>%
