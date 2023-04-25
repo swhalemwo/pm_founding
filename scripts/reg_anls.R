@@ -1443,6 +1443,9 @@ gen_nbrs <- function(df_excl, df_open, cbn_dfs_rates, df_reg_anls_cfgs_wide, bat
     
     l_cvrgnc$mdlcnt_ttl <- l_cvrgnc$cvrgd1 + l_cvrgnc$cvrgd0
     l_cvrgnc$cvrgnc_rate <- round((l_cvrgnc$cvrgd1 / l_cvrgnc$mdlcnt_ttl)*100,3)
+
+    l_cvrgnc$nbr_runs_p_cbn_spec <- adt(df_reg_anls_cfgs_wide)[, .N, .(cbn_name, base_lag_spec)][, mean(N)]
+
     
     res <- c(list(
         nbr_muem_in_pmdb = nbr_muem_in_pmdb,
