@@ -257,27 +257,7 @@ render_xtsum_plt2 <- function(cbn_dfsx, df_regx, vvs) {
 ## ** summary table
 
 
-nicely_fmt_number <- function(vlu) {
-    if (as.character(match.call()[[1]]) %in% fstd){browser()}
-    #' round number to nice looking number of decimal places
-    #' depends on size
 
-
-    nbr_digits_before_comma <- floor(log10(vlu))
-    
-    ## need to use convoluted if-block because switch only allows integer/string matching
-    if (nbr_digits_before_comma < 0) {rnd <- 3
-    } else if (nbr_digits_before_comma == 0) {rnd <- 2
-    } else if (nbr_digits_before_comma == 1) {rnd <- 1
-    } else if (nbr_digits_before_comma > 1) {rnd <- 0}
-
-    ## add some special cases for 0 and 1: don't need decimal places
-    if (vlu %!in% c(0,1)) {
-        format(round(vlu, rnd), nsmall = rnd, big.mark = " ")
-    } else {
-        format(vlu, nsmall = 0)
-    }
-}
 
 
 ## nicely_fmt_number(28123.21)
