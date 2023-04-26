@@ -12,8 +12,53 @@ dt_nbrs <- fread("/home/johannes/Dropbox/phd/papers/org_pop/tables/tbl_nbrs.csv"
 dt_nbrs[, .(sprintf("#+MACRO: %s %s", nbr_name, value))]
 #+END_SRC
 
-
-
+#+RESULTS:
+:results:
+#+MACRO: string_ensurer asdf
+#+MACRO: nbr_muem_in_pmdb 547
+#+MACRO: nbr_opnd_wld 516
+#+MACRO: nbr_clsd_wld 78
+#+MACRO: nbr_cry_wal1pm_all 64
+#+MACRO: regsub_cnt_Western Europe 136
+#+MACRO: regsub_cnt_Eastern Asia 97
+#+MACRO: regsub_cnt_Northern America 77
+#+MACRO: regsub_cnt_Southern Europe 71
+#+MACRO: regsub_cnt_Northern Europe 27
+#+MACRO: nbr_cy_cbn_all 1258
+#+MACRO: nbr_cy_cbn_no_cult_spending 2574
+#+MACRO: nbr_cy_cbn_no_cult_spending_and_mitr 3405
+#+MACRO: nbr_crys_cbn_all 86
+#+MACRO: nbr_crys_cbn_no_cult_spending 153
+#+MACRO: nbr_crys_cbn_no_cult_spending_and_mitr 164
+#+MACRO: nbr_opngs_cbn_all 360
+#+MACRO: nbr_opngs_cbn_no_cult_spending 409
+#+MACRO: nbr_opngs_cbn_no_cult_spending_and_mitr 411
+#+MACRO: prop_opngs_cvrd_cbn_all 0.658
+#+MACRO: prop_opngs_cvrd_cbn_no_cult_spending 0.748
+#+MACRO: prop_opngs_cvrd_cbn_no_cult_spending_and_mitr 0.751
+#+MACRO: nbr_mdl_started 76715
+#+MACRO: nbr_mld_ended 76715
+#+MACRO: rate_opng_glbl_cbn_all 0.00433
+#+MACRO: rate_opng_glbl_cbn_no_cult_spending 0.003
+#+MACRO: rate_opng_glbl_cbn_no_cult_spending_and_mitr 0.00283
+#+MACRO: rate_opng_glbl_cbn_controls 0.00231
+#+MACRO: rate_opng_glbl_yearly_cbn_all 0.00404
+#+MACRO: rate_opng_glbl_yearly_cbn_no_cult_spending 0.00292
+#+MACRO: rate_opng_glbl_yearly_cbn_no_cult_spending_and_mitr 0.00279
+#+MACRO: rate_opng_glbl_yearly_cbn_controls 0.00223
+#+MACRO: cvrgd1 76 455
+#+MACRO: cvrgd0 260
+#+MACRO: mdlcnt_ttl 76 715
+#+MACRO: cvrgnc_rate 99.7
+#+MACRO: nbr_runs_p_cbn_spec 142
+#+MACRO: txdctblt_cbn3 0.74
+#+MACRO: txdctblt_cbn2 0.46
+#+MACRO: tmitr_cbn2 -0.36
+#+MACRO: txdctblt_tmitr_interact_cbn2 0.75
+#+MACRO: smorc_lin 0.36
+#+MACRO: smorc_sqrd -0.64
+#+MACRO: txdctblt_cbn3_exp 2.1
+:end:
 
 
 

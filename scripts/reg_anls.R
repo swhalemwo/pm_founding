@@ -1681,7 +1681,6 @@ filter(cbn_dfs_rates_uscld$cbn_all, year == 2020) %>%
 dt_nbrs <- gen_nbrs(df_excl, df_open, cbn_dfs_rates, cbn_dfs_rates_uscld,
                     reg_anls_base$df_reg_anls_cfgs_wide, batch_version)
 dt_nbrs %>% print(n=300)
-
 fwrite(dt_nbrs, paste0(TABLE_DIR, "tbl_nbrs.csv")) 
 
 
