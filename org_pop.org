@@ -7,7 +7,13 @@
 #+OPTIONS: toc:nil
 #+OPTIONS: h:5
 
-# -*- org-export-babel-evaluate: nil -*-
+#+BEGIN_SRC R :session calc :exports none :results values drawer
+dt_nbrs <- fread("/home/johannes/Dropbox/phd/papers/org_pop/tables/tbl_nbrs.csv")
+dt_nbrs[, .(sprintf("#+MACRO: %s %s", nbr_name, value))]
+#+END_SRC
+
+
+
 
 
 * Investigating causes of private museum funding
@@ -713,6 +719,8 @@ A 1 SD increase of the top marginal income tax rate (14.1 percentage points) inc
 In "DS all IVs", the interaction is still positive, but no longer significant, presumably since "DS all IVs" is primarily composed of countries in which charitable donations are tax deductible (table \ref{tbl:descs}) and hence little variation exists.
 #
 Thus overall the data indicates substantial support for an association between tax incentives and private museum founding (H1). 
+
+
 
 
 
