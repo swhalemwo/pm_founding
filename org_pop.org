@@ -16,6 +16,8 @@ dt_nbrs[, .(sprintf("#+MACRO: %s %s", nbr_name, value))]
 
 
 
+
+
 * Investigating causes of private museum funding
 
 ** abstract
@@ -645,9 +647,9 @@ I furthermore use population as an offset (which estimates founding rate per cap
 #
 To facilitate convergence and interpretation, all variables except the binary variable of tax deductibility of charitable donations are also rescaled to a mean of 0 and a standard deviation of 1 (the interaction between tax deductibility of charitable donations and top marginal income tax rate and the squared terms of other variables are calculated after rescaling).
 #
-76 715 models are run, of which 76455 (99.7%) converge successfully. 
+{{{mdlcnt_ttl}}} models are run, of which {{{cvrgd1}}} ({{{cvrgnc_rate}}}%) converge successfully. 
 #
-Given 36 variable combinations which are optimized five times with different starting values each per three datasets this results in an average of 142 regression models per variable combination.
+Given 36 variable combinations which are optimized five times with different starting values each per three datasets this results in an average of {{{nbr_runs_p_cbn_spec}}} regression models per variable combination.
 
 
 ** Results
@@ -710,7 +712,7 @@ Thus they also illustrate the highly skewed distribution of the variables, as pr
 
 The results for tax incentives largely support H1: 
 #
-Tax deductibility of donations are found to be positive and significant in "DS -CuSp/TMITR", indicating a exp(0.74) = 2.09 times higher rate of private museum founding in countries where charitable deductions are tax deductible.
+Tax deductibility of donations is found to be positive and significantly related to private museum founding in "DS -CuSp/TMITR", indicating a private museum founding rate e\textsuperscript{{{{txdctblt_cbn3}}}} = {{{txdctblt_cbn3_exp}}} times higher in countries where charitable deductions are tax deductible than in countries where these donations are not tax deductible.
 #
 In "DS -CuSp" the interaction between top marginal income rate and tax deductibility of donations is significant, which indicates that higher top marginal income tax rate have a larger effect when charitable donations are tax deductible:
 #
