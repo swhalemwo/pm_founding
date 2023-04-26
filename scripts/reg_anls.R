@@ -1520,24 +1520,36 @@ expand.grid(tax_ddctblt = c(0,1), tmitr = seq(-2, 2.5, 0.5)) %>% adt() %>%
 
 
 ## predicted numbers for government spending 
-expand.grid(gvt_spending = seq(-0.9, 5, by = 0.01)) %>% adt() %>%
+expand.grid(gvt_spending = seq(-1.1, 5, by = 0.01)) %>% adt() %>%
     .[, gvt_spending_sqrd := gvt_spending^2] %>%
     .[, pred := 0.36 * gvt_spending + -0.64 * gvt_spending_sqrd] %>% 
     ## .[, .SD[which.max(pred)]]
     ggplot(aes(x=gvt_spending, y = pred)) +
     geom_line()
 
+
+smorc_lin <- reg_res_objs$top_coefs[vrbl_name_unlag == "smorc_dollar_fxm", .SD[which.max(log_likelihood), coef]]
+smorc_sqrd <- reg_res_objs$top_coefs[vrbl_name_unlag == "smorc_dollar_fxm_sqrd", .SD[which.max(log_likelihood), coef]]
+
 hist(cbn_dfs_rates$cbn_all$smorc_dollar_fxm_lag0)
 smorc_top_point_std <- 0.36/(2*0.64)
+
+smorc_top_point_std <- -smorc_lin/(2*smorc_sqrd)
+
 
 smorc_scale <- scale(cbn_dfs_rates_uscld$cbn_all$smorc_dollar_fxm_lag0)
 
 smorc_top_point <- (smorc_top_point_std * attr(smorc_scale, "scaled:scale")) + attr(smorc_scale, "scaled:center")
 
+## get countries around smorc_top_point
+
 filter(cbn_dfs_rates_uscld$cbn_all, smorc_dollar_fxm_lag0 < smorc_top_point * 1.2,
        smorc_dollar_fxm_lag0 > smorc_top_point * 0.8, year == 2020) %>%
     select(iso3c, smorc_dollar_fxm_lag0) %>% arrange(smorc_dollar_fxm_lag0)
 
+## get countries above smorc_top_point
+filter(cbn_dfs_rates_uscld$cbn_all, smorc_dollar_fxm_lag0 > smorc_top_point * 1.2, year == 2020) %>%
+    select(iso3c, smorc_dollar_fxm_lag0) %>% arrange(smorc_dollar_fxm_lag0) %>% print(n=30)
 
 
 adt(cbn_dfs_rates_uscld$cbn_all)[, above_smorc_top_point := smorc_dollar_fxm_lag0 > smorc_top_point] %>%
@@ -1552,7 +1564,7 @@ filter(cbn_dfs_rates_uscld$cbn_all, smorc_dollar_fxm_lag0 > smorc_top_point) %>%
 
 
 ## comparison for inequality variables
-## need some difference between countries
+## cross-sectional 2020 change for shweal992j_p90p100_lag0
 
 shweal_scale <- scale(cbn_dfs_rates_uscld$cbn_all$shweal992j_p90p100_lag0)
 
@@ -1566,8 +1578,24 @@ filter(cbn_dfs_rates_uscld$cbn_all, year == 2020) %>%
     .[diff > attr(shweal_scale, "scaled:scale")*0.97 & diff < attr(shweal_scale, "scaled:scale")*1.03] %>%
     print(n=200)
 
+## look at some longitudinal change
+
+
+## self-join
+adt(cbn_dfs_rates_uscld$cbn_all)[, .(iso3c, year, shweal992j_p90p100_lag0)] %>%
+    .[., on = "iso3c", allow.cartesian = T] %>%
+    .[i.year > year] %>%
+    .[, diff := i.shweal992j_p90p100_lag0 - shweal992j_p90p100_lag0] %>%
+    ## ggplot(aes(x=diff, y = ..density..)) + geom_density()
+    .[diff > attr(shweal_scale, "scaled:scale")*0.97 & diff < attr(shweal_scale, "scaled:scale")*1.03] %>%
+    print(n=200)
+    
+
+
 sptinc_scale <- scale(cbn_dfs_rates_uscld$cbn_all$sptinc992j_p90p100_lag0)
 
+
+## cross-sectional 2020 change for sptinc992j_p90p100_lag0
 filter(cbn_dfs_rates_uscld$cbn_all, year == 2020) %>%
     select(iso3c, sptinc992j_p90p100_lag0) %>% adt() %>%
     .[, mrg := "a"] %>%
@@ -1586,7 +1614,12 @@ filter(cbn_dfs_rates_uscld$cbn_all, year == 2020) %>%
 
 
 
-gen_nbrs(df_excl, df_open, cbn_dfs_rates, reg_anls_base$df_reg_anls_cfgs_wide, batch_version) %>% print(n=300)
+dt_nbrs <- gen_nbrs(df_excl, df_open, cbn_dfs_rates, reg_anls_base$df_reg_anls_cfgs_wide, batch_version)
+dt_nbrs %>% print(n=300)
+fwrite(dt_nbrs, paste0(TABLE_DIR, "tbl_nbrs.csv")) 
+
+
+
 
 
 mutate(cbn_dfs_rates$cbn_all, region = countrycode(iso3c, "iso3c", "un.region.name")) %>%
