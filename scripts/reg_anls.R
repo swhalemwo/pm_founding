@@ -1381,10 +1381,19 @@ gen_reg_res <- function(fldr_info) {
     return(reg_res)
 }
 
+lnbr <- function(nbr, digits) {
+            #' generate list number: make sure numbers are properly handled and rounded
+            nbr_name = achr(substitute(nbr))
+            list(nbr_name = nbr_name, nbr = nbr, digits = digits)
+        }
+
 gen_nbrs_pred <- function(top_coefs, cbn_dfs_rates_uscld) {
     #' generate the numbers related to prediction 
     if (as.character(match.call()[[1]]) %in% fstd){browser()}
     1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;
+
+    intcpt <- top_coefs[vrbl_name_unlag == "cons" & cbn_name == "cbn_all", .SD[which.max(log_likelihood), coef]]
+    intcpt_exp <- exp(intcpt)
 
     ## predicted impact of tax deductibility, just visually cause no time for proper prediction
     txdctblt_cbn2 <- top_coefs[vrbl_name_unlag == "Ind.tax.incentives" & cbn_name == "cbn_no_cult_spending",
@@ -1398,9 +1407,7 @@ gen_nbrs_pred <- function(top_coefs, cbn_dfs_rates_uscld) {
     txdctblt_cbn3 <- top_coefs[vrbl_name_unlag == "Ind.tax.incentives" &
                                cbn_name == "cbn_no_cult_spending_and_mitr",
                                .SD[which.max(log_likelihood), coef]]
-
-    vlus_to_exp <- c("txdctblt_cbn3")
-
+    txdctblt_cbn3_exp <- exp(txdctblt_cbn3)
 
     ## top_coefs[, .N, vrbl_name_unlag] %>% print(n=200)
         
@@ -1424,23 +1431,20 @@ gen_nbrs_pred <- function(top_coefs, cbn_dfs_rates_uscld) {
         geom_line()
 
     
+    list(
+        lnbr(txdctblt_cbn3, 2),
+        lnbr(txdctblt_cbn3_exp, 2),
+        lnbr(txdctblt_cbn2, 2),
+        lnbr(tmitr_cbn2,2),
+        lnbr(txdctblt_tmitr_interact_cbn2, 2),
+        lnbr(smorc_lin, 2),
+        lnbr(smorc_sqrd, 2),
+        lnbr(intcpt, 3),
+        lnbr(intcpt_exp, 3)
+    ) %>% rbindlist() %>%
+        .[, nbr_fmt := nicely_fmt_number_v(nbr, max_digits = digits)] %$%
+        setNames(nbr_fmt, nbr_name)
 
-    res_prep <- list(
-        txdctblt_cbn3 = txdctblt_cbn3,
-        txdctblt_cbn2 = txdctblt_cbn2,
-        tmitr_cbn2 = tmitr_cbn2,
-        txdctblt_tmitr_interact_cbn2 = txdctblt_tmitr_interact_cbn2,         
-        smorc_lin = smorc_lin,
-        smorc_sqrd = smorc_sqrd)
-    
-    
-    ## exponentiate some numbers
-    res_exp <- purrr::map(vlus_to_exp, ~setNames(exp(res_prep[[.x]]), paste0(.x, "_exp")))
-
-    res <- c(res_prep, flatten(res_exp))
-
-    ## map(res, ~format(round(.x,2), nsmall = 2))
-    map(res, ~nicely_fmt_number(.x, max_digits = 2))
     
     ## return(res)
     
