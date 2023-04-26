@@ -1497,7 +1497,20 @@ gen_nbrs <- function(df_excl, df_open, cbn_dfs_rates, cbn_dfs_rates_uscld,  df_r
     nbr_mdl_started <- fread(fldr_infox$MDL_START_FILE, header = F)[, .N]
     nbr_mld_ended <- fread(fldr_infox$MDL_END_FILE, header = F)[, .N]
 
-    ## overall rates
+    ## average country-level rates
+    
+    opng_rates_vlus <- map(cbn_dfs_rates, ~adt(.x)[, mean(nbr_opened/SP_POP_TOTLm_lag0_uscld)])
+
+    opng_rates_fmt <- c(
+        opng_rate_cbn1 = nicely_fmt_number(opng_rates_vlus$cbn_all,3),
+        opng_rate_cbn2 = nicely_fmt_number(opng_rates_vlus$cbn_no_cult_spending,4),
+        opng_rate_cbn3 = nicely_fmt_number(opng_rates_vlus$cbn_no_cult_spending_and_mitr,4)) %>% as.list()
+        
+    popnbrs_p1pm <- map(cbn_dfs_rates, ~adt(.x)[, 1/mean(nbr_opened/SP_POP_TOTLm_lag0_uscld)]) %>%
+        nicely_fmt_number_v() %>% setNames(., paste0("nbr_pop_p_1pm_", names(.))) %>% as.list()
+
+
+    ## global rates
     ## of all country years
     rate_opng_glbl <- map(cbn_dfs_rates, ~adt(.x)[, round(sum(nbr_opened)/sum(SP_POP_TOTLm_lag0_uscld), 5)]) %>%
         setNames(paste0("rate_opng_glbl_", names(.)))
@@ -1535,6 +1548,8 @@ gen_nbrs <- function(df_excl, df_open, cbn_dfs_rates, cbn_dfs_rates_uscld,  df_r
           nbr_mdl_started = nbr_mdl_started,
           nbr_mld_ended = nbr_mld_ended
       ),
+      opng_rates_fmt,
+      popnbrs_p1pm,
       rate_opng_glbl,
       rate_opng_glbl_yearly,
       ## as.list(nicely_fmt_number(l_cvrgnc)),
@@ -1587,6 +1602,7 @@ system(pdftk_cmd)
 ## tables
 res_tbls <- gen_res_tbls(reg_res_objs)
 pvxtbl(res_tbls$tbl_regrslts_wcptblF, landscape = T)
+pvxtbl(res_tbls$tbl_descs, landscape = T)
 
 iwalk(res_tbls, ~do.call("render_xtbl", c(.x, gen_tblcfgs(TABLE_DIR)[[.y]])))
 
