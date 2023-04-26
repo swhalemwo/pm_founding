@@ -38,6 +38,13 @@ dt_nbrs[, .(sprintf("#+MACRO: %s %s", nbr_name, value))]
 #+MACRO: prop_opngs_cvrd_cbn_no_cult_spending_and_mitr 0.751
 #+MACRO: nbr_mdl_started 76715
 #+MACRO: nbr_mld_ended 76715
+#+MACRO: opng_rate_cbn1 0.011
+#+MACRO: opng_rate_cbn2 0.0060
+#+MACRO: opng_rate_cbn3 0.0046
+#+MACRO: nbr_pop_p_1pm_cbn_all 89.7
+#+MACRO: nbr_pop_p_1pm_cbn_no_cult_spending 165
+#+MACRO: nbr_pop_p_1pm_cbn_no_cult_spending_and_mitr 215
+#+MACRO: nbr_pop_p_1pm_cbn_controls 85.0
 #+MACRO: rate_opng_glbl_cbn_all 0.00433
 #+MACRO: rate_opng_glbl_cbn_no_cult_spending 0.003
 #+MACRO: rate_opng_glbl_cbn_no_cult_spending_and_mitr 0.00283
@@ -52,12 +59,14 @@ dt_nbrs[, .(sprintf("#+MACRO: %s %s", nbr_name, value))]
 #+MACRO: cvrgnc_rate 99.7
 #+MACRO: nbr_runs_p_cbn_spec 142
 #+MACRO: txdctblt_cbn3 0.74
+#+MACRO: txdctblt_cbn3_exp 2.1
 #+MACRO: txdctblt_cbn2 0.46
 #+MACRO: tmitr_cbn2 -0.36
 #+MACRO: txdctblt_tmitr_interact_cbn2 0.75
 #+MACRO: smorc_lin 0.36
 #+MACRO: smorc_sqrd -0.64
-#+MACRO: txdctblt_cbn3_exp 2.1
+#+MACRO: intcpt -2.22
+#+MACRO: intcpt_exp 0.108
 :end:
 
 
@@ -709,7 +718,7 @@ First, private museum founding is more prevalent in the smaller datasets in whic
 #
 Consequently, the less country-years are included in a dataset, the stronger it is characterized by higher private museum founding rates (and consequently densities), higher rates of HNWIs, lower inequalities, higher GDP per capita and larger (per capita) populations of museums and collectors of modern and contemporary art.
 #
-For example, while in "DS all IVs" each year on average 1 private museum is founded per 90.9 million inhabitants (1/0.011), this rate is substantially lower in "DS --CuSP" and "DS -CuSp/TMITR" with 1 private museum founding per 166.6 and 200 million inhabitants, respectively.
+For example, while in "DS all IVs" each year on average 1 private museum is founded per {{{nbr_pop_p_1pm_cbn_all}}} million inhabitants (1/{{{opng_rate_cbn1}}}), this rate is substantially lower in "DS --CuSP" and "DS -CuSp/TMITR" with 1 private museum founding per {{{nbr_pop_p_1pm_cbn_no_cult_spending}}} and {{{nbr_pop_p_1pm_cbn_no_cult_spending_and_mitr}}} million inhabitants, respectively.
 #
 Additionally, several variables show substantial skew (indicated by high standard deviations compared to the mean), such as the dependent variable of private museum openings (and consequently private museum density measures), as well as cultural spending, GDP and the HNWI, art museum and collector counts. 
 
@@ -738,9 +747,11 @@ Additionally, several variables show substantial skew (indicated by high standar
 
 #+INCLUDE: "./tables/tbl:regrslts_wcptblF.tex" export latex
 
-Table \ref{tbl:regrslts_wcptblF} displays the regression results (as the estimation procedure involves the calculation of multiple models from different variable sets, table X displays for each variable the coefficients of the best-fitting models; the log likelihoods similarly correspond to the best-fitting model. As the coefficient variation resulting from different variable choice (e.g. the difference between the coefficients of cultural spending between a model with income inequality measured via the Gini coefficient and a model with income measured as 10% concentration) is generally not substantial, it is discussed only in the Appendix). 
+Table \ref{tbl:regrslts_wcptblF} displays the regression results.
+#
+As the estimation procedure involves the calculation of multiple models from different variable sets, table \ref{tbl:regrslts_wcptblF} displays for each variable the coefficients of the best-fitting models; the log likelihoods similarly correspond to the best-fitting model (since the coefficient variation resulting from different variable choice (e.g. the difference between the coefficients of cultural spending between a model with income inequality measured via the Gini coefficient and a model with income measured as 10% concentration) is generally not substantial, it is discussed only in the Appendix). 
 # 
-Coefficients can be interpreted as logged multipliers of a country's founding rate [[parencite:&Coxe_West_Aiken_2009_count]], therefore a coefficient of 0.2 corresponds to a exp(0.25) = 1.28 multiplier, i.e. a 28% increase in average country founding rate given a 1 standard deviation change in the independent variable (as the independent variables are standardized).
+Coefficients can be interpreted as logged multipliers of a country's founding rate [[parencite:&Coxe_West_Aiken_2009_count]], therefore a coefficient of 0.2 corresponds to a e\textsuperscript{0.25} = 1.28 multiplier, i.e. a 28% increase in average predicted country founding rate given a 1 standard deviation change in the independent variable (the independent variables are standardized).
 #
 Coefficients above 0 indicate multipliers above 1, while coefficients below 0 indicate multipliers below 1.
 #
@@ -751,7 +762,8 @@ increase, respectively.
 
 The Intercept correspond to the predicted (logged) founding rate for a country-year with values of 0 on all independent variables, which given the standardization of the variables, corresponds to a country at the means of the variables (and without tax deductibility of charitable donations).
 #
-Thus they also illustrate the highly skewed distribution of the variables, as predicted opening count at the means for e.g. "DS all IVs" with exp(-2.22)=0.10 is around one order of magnitude higher than average founding rate within the dataset (0.011, table \ref{tbl:descs}); a pattern of similar magnitude is present in the other datasets as well. 
+Thus they also illustrate the highly skewed distribution of the variables, as predicted opening count at the means for "DS all IVs" with e\textsuperscript{{{{intcpt}}}}= {{{intcpt_exp}}} is around one order of magnitude higher than average founding rate in the dataset ({{{opng_rate_cbn1}}} table \ref{tbl:descs}); a pattern of similar magnitude is present in the other datasets as well. 
+
 
 
 
