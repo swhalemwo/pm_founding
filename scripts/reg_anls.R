@@ -1721,6 +1721,7 @@ filter(cbn_dfs_rates_uscld$cbn_all, year == 2020) %>%
     
 
 
+gen_nbrs_pred(reg_res_objs$top_coefs, cbn_dfs_rates_uscld)
 
 dt_nbrs <- gen_nbrs(df_excl, df_open, cbn_dfs_rates, cbn_dfs_rates_uscld,
                     reg_anls_base$df_reg_anls_cfgs_wide, batch_version)
