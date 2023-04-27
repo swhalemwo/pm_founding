@@ -810,7 +810,7 @@ Coefficients above 0 indicate multipliers above 1, while coefficients below 0 in
 Thus, coefficients of -0.5, 0.1, 0.5 and 1 correspond to 40% decrease, 10% increase, 64% increase and 171%
 increase, respectively.
 
-
+**** intercepts (yeet?) :ignhead:
 
 The intercepts correspond to the predicted (logged) founding rate for a country-year with values of zero on all independent variables.
 #
@@ -819,7 +819,7 @@ Given the standardization of the variables, this corresponds to a country at the
 Thus they also illustrate the highly skewed distribution of the variables, as predicted opening count at the means for "DS all IVs" with e\textsuperscript{{{{intcpt}}}}= {{{intcpt_exp}}} is around one order of magnitude higher than average founding rate in the dataset ({{{opng_rate_cbn1}}}, cf. table \ref{tbl:descs}); a pattern of similar magnitude is present in the other datasets as well. 
 
 
-
+**** tax incentives :ignhead:
 
 The results for tax incentives largely support H1: 
 #
@@ -834,7 +834,7 @@ In "DS all IVs", the interaction is still positive, but no longer significant, p
 Thus despite significant effects not being present in every dataset, the data overall indicates substantial support for an association between tax incentives and private museum founding (H1). 
 
 
-
+**** cultural spending :ignhead:
 
 
 Government cultural spending is found to have a significant inverse-U shaped association with private museum founding.
@@ -853,6 +853,8 @@ The data thus supports both the the crowding-out argument of the private museum 
 #
 However, little evidence is found for a lack of government spending facilitating private museum founding in countries  with emerging art scenes, as these are located in the range in which government spending is positively associated with private museum founding. 
 
+**** inequality :ignhead:
+
 
 The association between inequality variables and private museum founding is mixed.
 #
@@ -868,7 +870,7 @@ Furthermore, Effects are smaller in "DS all IVs" than in the other datasets, whi
 #
 
 
-
+**** HNWI :ignhead:
 
 
 
@@ -880,56 +882,14 @@ Finally, the effect of HNWIs (H4) is mostly negative and relatively small in the
 # #
 # This can be seen in the identical selection of variables for HNWI and inequality as well as similar coefficient signs, sizes and significances:
 # #
-# The only substantial difference is that in cbn_no_cult_spending cumulative openings squared is significant whereas it is only marginally significant in cbn_no_cult_spending_and_mitr (the difference in significance of Tax incentives is not comparable as in cbn_no_cult_spending it is part of an interaction term which changes the substantive interpretation).
-# #
-# This could indicate either that government cultural spending is a very influential variable as its inclusion impacts the selection and values of other variables; or alternatively that the effects differ substantially between the populations (note: further analysis (running cbn_all without government spending) will be able to at least partially investigate this further).
 
-
-# *** tax incentives (H1)
-
-
-
-# # *interaction interpretation*
-# Tax incentives are found to be positive significant in the dataset without cultural spending and marginal income tax rates (right-most column), thus lending some support to H1.
-# #
-# In cbn_all and cbn_no_cult_spending, the coefficients of Tax incentives and the Marginal income tax rate refer (due to additional of the interaction between the variables) to the value when the value of the other variable is 0 (which due to standardization refers to the mean).
-# #
-# Both variable coefficients are positive (yet insignificant) in both datasets, thus indicating positive effects if the other variable is at the mean.
-# #
-# As the interaction is positive in both cases as well, higher top income tax rates have a larger effect when the tax incentive index is higher (and vice versa: tax incentives have a larger effect when top income tax rates are higher).
-# #
-# Given that one indicator per dataset is marginally significant (tax incentives for cbn_no_cult_spending and Marginal income tax rate for cbn_all), these findings give further tentative support to H1. 
-
- 
-# *** cultural spending (H2)
-
-# Cultural spending has a significant positive effect, which rejects the crowding-out argument of the private museum literature of private museum founding as a consequence of declining government spending (H2a).
-# #
-# Thus, a more plausible mechanism to be a place seems to be the signaling effect of government spending   [[parencite:&DeWit_etal_2018_philanthropy]] according to which government spending for the arts legitimates and thus encourages private initiative in this sector (H2b).
-# #
-# Such a mechanism would also explain the significant positive coefficients for the number of private museums founded until 1995 across all datasets.
-
-# *** inequalities (H3)
-
-# Inequalities paint a complex picture:
-# #
-# In cbn_no_cult_spending and cbn_no_cult_spending_and_mitr there are marginally significant negative income inequality and positive significant wealth inequality coefficients, while the pattern is reversed in cbn_all with a positive income inequality and negative wealth inequality coefficient (both marginally significant).
-# #
-# Furthermore, the variable selection differs between cbn_all and the other datasets as well, with cbn_all selecting gini of tax income and wealth, while the other datasets select the top 10% income share and top 1% wealth share.
-# #
-# As these conflicting findings are hard to combine under a single statement they make one thing clear:
-# #
-# Clear directional statements about the relations between inequality and philanthropy (such as those found in the current philanthropy literature) do not replicate under systematic investigation, thus giving no support to H3.
 
 
 # *** HNWIs (H4)
-# Regarding the effect of HNWIs, the choice of the variable differs between models with "cbn_all" choosing the number of 5 million USD, and the other two datasets selecting 1 million USD as the variable in the best-fitting models.
-# #
+
 # The coefficients are positive in the "cbn_no_cult_spending" and "cbn_no_cult_spending_and_mitr", but they are small and insignificant, thus lending no support to H4, as does the coefficient in "cbn_all", which is virtually indistinguishable from 0.
 # #
 # Thus there is little support for the hypothesis that the private museum founding is associated with an increasing number of super-rich.
-
-
 
 
 
