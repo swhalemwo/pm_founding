@@ -1426,18 +1426,53 @@ gen_nbrs_pred <- function(top_coefs, cbn_dfs_rates_uscld) {
 
     ## predicted numbers for government spending 
 
+    ## hist(cbn_dfs_rates$cbn_all$smorc_dollar_fxm_lag0)
+
     smorc_lin <- top_coefs[vrbl_name_unlag == "smorc_dollar_fxm", .SD[which.max(log_likelihood), coef]]
+    smorc_lin_flipped <- -smorc_lin
     smorc_sqrd <- top_coefs[vrbl_name_unlag == "smorc_dollar_fxm_sqrd", .SD[which.max(log_likelihood), coef]]
     
-    expand.grid(gvt_spending = seq(-1.1, 5, by = 0.01)) %>% adt() %>%
+    smorc_top_point_std <- smorc_lin_flipped/(2*smorc_sqrd)
+
+    smorc_scale <- scale(cbn_dfs_rates_uscld$cbn_all$smorc_dollar_fxm_lag0)
+    
+    smorc_top_point <- (smorc_top_point_std * attr(smorc_scale, "scaled:scale")) +
+        attr(smorc_scale, "scaled:center")
+
+    ## plotting predicted values (
+    expand.grid(gvt_spending = seq(min(smorc_scale), max(smorc_scale), by = 0.01)) %>% adt() %>%
         .[, gvt_spending_sqrd := gvt_spending^2] %>%
         .[, pred := smorc_lin * gvt_spending + smorc_sqrd * gvt_spending_sqrd] %>% 
         ## .[, .SD[which.max(pred)]]
         ggplot(aes(x=gvt_spending, y = pred)) +
         geom_line()
+    
+    ## get countries around smorc_top_point (0.2 around), also at least 1.4 of those
+
+    smorc_vlus_2020 <- filter(cbn_dfs_rates_uscld$cbn_all, year == 2020) %>% 
+        filter((smorc_dollar_fxm_lag0 < smorc_top_point * 1.2 & smorc_dollar_fxm_lag0 > smorc_top_point * 0.8) |
+               smorc_dollar_fxm_lag0 > smorc_top_point * 1.4) %>%
+        select(iso3c, smorc_dollar_fxm_lag0) %>% arrange(smorc_dollar_fxm_lag0) %$%
+        setNames(smorc_dollar_fxm_lag0, paste0("smorc_2020_", iso3c))
+
+    ## get statistics of how many CY are above/below smorc_top_point
+    smorc_top_point_stats <- adt(cbn_dfs_rates_uscld$cbn_all)[
+      , above_smorc_top_point := ifelse(smorc_dollar_fxm_lag0 > smorc_top_point, "above", "below")] %>%
+        adt(df_reg)[, .(iso3c, year, nbr_opened)][., on = .(iso3c, year)] %>% 
+        .[, .(CYs = .N*1.0, nbr_opened = sum(nbr_opened)), above_smorc_top_point] %>%
+        melt(id.vars = "above_smorc_top_point", value.name = "cnt") %>% 
+        .[, prop := cnt/sum(cnt), variable] %>% 
+        melt(id.vars = c("above_smorc_top_point", "variable"), variable.name = "measure") %>%
+        .[measure == "cnt", value_fmt := fmt_nbr_flex(value, 0)] %>% # counts get formated with zero digits
+        .[measure == "prop", value_fmt := fmt_nbr_flex(value*100, 1)] %>% # proportions with 1
+        .[, name_fmt := sprintf("smorctop_%s_%s_%s", above_smorc_top_point, variable, measure)] %$% 
+        setNames(value_fmt, name_fmt)
+        
+        
+
 
     
-    list(
+    l_res <- list(
         lnbr(txdctblt_cbn3, 2),
         lnbr(txdctblt_cbn3_exp, 1),
         lnbr(txdctblt_cbn2, 2),
@@ -1446,7 +1481,10 @@ gen_nbrs_pred <- function(top_coefs, cbn_dfs_rates_uscld) {
         lnbr(txdctblt_tmitr_interact_cbn2_exp, 1),
         lnbr(tmitr_1SD_cbn_all, 1),
         lnbr(smorc_lin, 2),
+        lnbr(smorc_lin_flipped, 2),
         lnbr(smorc_sqrd, 2),
+        lnbr(smorc_top_point_std, 2),
+        lnbr(smorc_top_point,0),
         lnbr(intcpt, 2),
         lnbr(intcpt_exp, 3)
     ) %>% rbindlist() %>%
@@ -1454,6 +1492,9 @@ gen_nbrs_pred <- function(top_coefs, cbn_dfs_rates_uscld) {
         ## .[, nbr_fmt := nicely_fmt_number_v(nbr, max_digits = digits)] %$%
         setNames(nbr_fmt, nbr_name)
 
+    c(l_res,
+      map(smorc_vlus_2020, ~fmt_nbr_flex(.x, digits = 0)),
+      smorc_top_point_stats)
     
     ## return(res)
     
@@ -1633,38 +1674,9 @@ iwalk(res_tbls, ~do.call("render_xtbl", c(.x, gen_tblcfgs(TABLE_DIR)[[.y]])))
 ## ** predicting
 
 
-
-
-
-
-
-
-hist(cbn_dfs_rates$cbn_all$smorc_dollar_fxm_lag0)
-smorc_top_point_std <- 0.36/(2*0.64)
-
-smorc_top_point_std <- -smorc_lin/(2*smorc_sqrd)
-
-
-smorc_scale <- scale(cbn_dfs_rates_uscld$cbn_all$smorc_dollar_fxm_lag0)
-
-smorc_top_point <- (smorc_top_point_std * attr(smorc_scale, "scaled:scale")) + attr(smorc_scale, "scaled:center")
-
-## get countries around smorc_top_point
-
-filter(cbn_dfs_rates_uscld$cbn_all, smorc_dollar_fxm_lag0 < smorc_top_point * 1.2,
-       smorc_dollar_fxm_lag0 > smorc_top_point * 0.8, year == 2020) %>%
-    select(iso3c, smorc_dollar_fxm_lag0) %>% arrange(smorc_dollar_fxm_lag0)
-
 ## get countries above smorc_top_point
-filter(cbn_dfs_rates_uscld$cbn_all, smorc_dollar_fxm_lag0 > smorc_top_point * 1.2, year == 2020) %>%
-    select(iso3c, smorc_dollar_fxm_lag0) %>% arrange(smorc_dollar_fxm_lag0) %>% print(n=30)
 
 
-adt(cbn_dfs_rates_uscld$cbn_all)[, above_smorc_top_point := smorc_dollar_fxm_lag0 > smorc_top_point] %>%
-    adt(df_reg)[, .(iso3c, year, nbr_opened)][., on = .(iso3c, year)] %>% 
-    .[, .(.N, sum_nbr_opened = sum(nbr_opened)), above_smorc_top_point] %>%
-    melt(id.vars = "above_smorc_top_point") %>%
-    .[, prop := value/sum(value), variable]
 
 filter(cbn_dfs_rates_uscld$cbn_all, smorc_dollar_fxm_lag0 > smorc_top_point) %>%
     select(iso3c, year, smorc_dollar_fxm_lag0) %>%
