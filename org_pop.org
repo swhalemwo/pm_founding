@@ -75,6 +75,8 @@ dt_nbrs[, .(sprintf("#+MACRO: %s %s", nbr_name, value))]
 #+MACRO: txdctblt_cbn2 0.46
 #+MACRO: tmitr_cbn2 -0.36
 #+MACRO: txdctblt_tmitr_interact_cbn2 0.75
+#+MACRO: txdctblt_tmitr_interact_cbn2_exp 2.1
+#+MACRO: tmitr_1SD_cbn_all 14.2
 #+MACRO: smorc_lin 0.36
 #+MACRO: smorc_sqrd -0.64
 #+MACRO: intcpt -2.22
@@ -791,12 +793,11 @@ Tax deductibility of donations is found to be positive and significantly related
 #
 In "DS -CuSp" the interaction between top marginal income rate and tax deductibility of donations is significant, which indicates that higher top marginal income tax rate have a larger effect when charitable donations are tax deductible:
 #
-A 1 SD increase of the top marginal income tax rate (14.1 percentage points) increases the effect of tax deductibility of donations by a factor of exp(0.75) = 2.117.
+A 1 SD increase of the top marginal income tax rate ({{{tmitr_1SD_cbn_all}}} percentage points) increases the effect of tax deductibility of donations by a factor of e\textsuperscript{{{{txdctblt_tmitr_interact_cbn2}}}} = {{{txdctblt_tmitr_interact_cbn2_exp}}}.
 #
 In "DS all IVs", the interaction is still positive, but no longer significant, presumably since "DS all IVs" is primarily composed of countries in which charitable donations are tax deductible (table \ref{tbl:descs}) and hence little variation exists.
 #
-Thus overall the data indicates substantial support for an association between tax incentives and private museum founding (H1). 
-
+Thus despite significant effects not being present in every dataset, the data overall indicates substantial support for an association between tax incentives and private museum founding (H1). 
 
 
 

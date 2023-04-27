@@ -1400,9 +1400,12 @@ gen_nbrs_pred <- function(top_coefs, cbn_dfs_rates_uscld) {
               .SD[which.max(log_likelihood), coef]]
     tmitr_cbn2 <- top_coefs[vrbl_name_unlag == "tmitr_approx_linear20step" & cbn_name == "cbn_no_cult_spending",
                             .SD[which.max(log_likelihood), coef]]
+        
     txdctblt_tmitr_interact_cbn2 <- top_coefs[vrbl_name_unlag == "ti_tmitr_interact" &
                                          cbn_name == "cbn_no_cult_spending",
                                          .SD[which.max(log_likelihood), coef]]
+
+    txdctblt_tmitr_interact_cbn2_exp <- exp(txdctblt_tmitr_interact_cbn2)
 
     txdctblt_cbn3 <- top_coefs[vrbl_name_unlag == "Ind.tax.incentives" &
                                cbn_name == "cbn_no_cult_spending_and_mitr",
@@ -1410,7 +1413,10 @@ gen_nbrs_pred <- function(top_coefs, cbn_dfs_rates_uscld) {
     txdctblt_cbn3_exp <- exp(txdctblt_cbn3)
 
     ## top_coefs[, .N, vrbl_name_unlag] %>% print(n=200)
-        
+    
+    tmitr_1SD_cbn_all <- sd(cbn_dfs_rates_uscld$cbn_all$tmitr_approx_linear20step_lag0)
+
+    
     expand.grid(tax_ddctblt = c(0,1), tmitr = seq(-2, 2.5, 0.5)) %>% adt() %>%
         .[, pred := txdctblt_cbn2 * tax_ddctblt + tmitr_cbn2 *tmitr +
                 txdctblt_tmitr_interact_cbn2 * tax_ddctblt * tmitr] %>%
@@ -1433,16 +1439,19 @@ gen_nbrs_pred <- function(top_coefs, cbn_dfs_rates_uscld) {
     
     list(
         lnbr(txdctblt_cbn3, 2),
-        lnbr(txdctblt_cbn3_exp, 2),
+        lnbr(txdctblt_cbn3_exp, 1),
         lnbr(txdctblt_cbn2, 2),
         lnbr(tmitr_cbn2,2),
         lnbr(txdctblt_tmitr_interact_cbn2, 2),
+        lnbr(txdctblt_tmitr_interact_cbn2_exp, 1),
+        lnbr(tmitr_1SD_cbn_all, 1),
         lnbr(smorc_lin, 2),
         lnbr(smorc_sqrd, 2),
-        lnbr(intcpt, 3),
+        lnbr(intcpt, 2),
         lnbr(intcpt_exp, 3)
     ) %>% rbindlist() %>%
-        .[, nbr_fmt := nicely_fmt_number_v(nbr, max_digits = digits)] %$%
+        .[, nbr_fmt := fmt_nbr_flex(nbr, digits = digits)] %$%
+        ## .[, nbr_fmt := nicely_fmt_number_v(nbr, max_digits = digits)] %$%
         setNames(nbr_fmt, nbr_name)
 
     
