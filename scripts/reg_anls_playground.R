@@ -670,4 +670,33 @@ r10 <- glmmTMB(nbr_opened ~ shweal992j_p90p100_lag0 + NY.GDP.PCAP.CDk_lag0  + (1
 
 screenreg(list(r1,r2,r3, r4, r5, r6, r7, r8, r9, r10))
 
+rp1 <- pglm(nbr_opened ~ shweal992j_p90p100_lag0 + NY.GDP.PCAP.CDk_lag0 + offset(log(SP_POP_TOTLm_lag0_uscld)),
+     cbn_dfs_rates$cbn_all,
+     family = poisson, model = "within", effect = "individual", index = "iso3c")
 
+rp2 <- pglm(nbr_opened ~ shweal992j_p90p100_lag0 + NY.GDP.PCAP.CDk_lag0 +hnwi_nbr_30M_lag0 +
+                  # Ind.tax.incentives + tmitr_approx_linear20step_lag0 + ti_tmitr_interact_lag0 + 
+                  sptinc992j_p99p100_lag0 +
+                  smorc_dollar_fxm_lag0 + smorc_dollar_fxm_sqrd_lag0 + 
+                  pm_density_lag0 + pm_density_sqrd_lag0 +
+                   clctr_cnt_cpaer_lag0 + 
+                  pm_density_global_sqrd_lag0 + pm_density_global_lag0 +
+                  nbr_closed_cum_global_lag0 + 
+                  offset(log(SP_POP_TOTLm_lag0_uscld)),
+     cbn_dfs_rates$cbn_all,
+     family = negbin, model = "within", effect = "individual", index = "iso3c")
+
+rp3 <- pglm(nbr_opened ~ shweal992j_p90p100_lag0 + NY.GDP.PCAP.CDk_lag0 +hnwi_nbr_30M_lag0 +
+                  # Ind.tax.incentives + tmitr_approx_linear20step_lag0 + ti_tmitr_interact_lag0 + 
+                  sptinc992j_p99p100_lag0 +
+                  smorc_dollar_fxm_lag0 + smorc_dollar_fxm_sqrd_lag0 + 
+                  ## pm_density_lag0 + pm_density_sqrd_lag0 +
+                  ## pm_density_global_sqrd_lag0 + pm_density_global_lag0 +
+                   clctr_cnt_cpaer_lag0 + 
+                   nbr_closed_cum_global_lag0 + 
+                  offset(log(SP_POP_TOTLm_lag0_uscld)),
+     cbn_dfs_rates$cbn_all,
+     family = negbin, model = "within", effect = "individual", index = "iso3c")
+
+
+screenreg(list(rp1, rp2, rp3))
