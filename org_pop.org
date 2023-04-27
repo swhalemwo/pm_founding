@@ -776,7 +776,9 @@ increase, respectively.
 
 
 
-The intercepts correspond to the predicted (logged) founding rate for a country-year with values of zero on all independent variables, which given the standardization of the variables, corresponds to a country at the means of the variables (and without tax deductibility of charitable donations).
+The intercepts correspond to the predicted (logged) founding rate for a country-year with values of zero on all independent variables.
+#
+Given the standardization of the variables, this corresponds to a country at the means of the variables and without tax deductibility of charitable donations.
 #
 Thus they also illustrate the highly skewed distribution of the variables, as predicted opening count at the means for "DS all IVs" with e\textsuperscript{{{{intcpt}}}}= {{{intcpt_exp}}} is around one order of magnitude higher than average founding rate in the dataset ({{{opng_rate_cbn1}}}, cf. table \ref{tbl:descs}); a pattern of similar magnitude is present in the other datasets as well. 
 
