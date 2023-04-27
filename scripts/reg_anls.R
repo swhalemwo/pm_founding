@@ -1568,8 +1568,12 @@ gen_nbrs <- function(df_excl, df_open, cbn_dfs_rates, cbn_dfs_rates_uscld,  df_r
       nbrs_pred
       )
 
-    data.table(nbr_name = names(res), value = as.character(unname(res))) %>% ## %>% print(n=100)
+    dt_res <- data.table(nbr_name = names(res), value = as.character(unname(res))) %>% ## %>% print(n=100)
         .[, nbr_name := factor(nbr_name, levels = nbr_name)]
+
+    if (dt_res[, .N, nbr_name][, max(N)] > 1) {stop("nbr_name not not unique")}
+
+    return(dt_res)
 
 }
 
