@@ -1501,6 +1501,16 @@ gen_nbrs <- function(df_excl, df_open, cbn_dfs_rates, cbn_dfs_rates_uscld,  df_r
     
     opng_rates_vlus <- map(cbn_dfs_rates, ~adt(.x)[, mean(nbr_opened/SP_POP_TOTLm_lag0_uscld)])
 
+    ## number of CYs with zero/non-zero
+    opng_prop_vlus <- imap_dfr(cbn_dfs_rates, ~adt(.x)[, .(nbr_zero = 1.0*sum(nbr_opened == 0),
+                                         nbr_nzero = 1.0*sum(nbr_opened != 0))] %>%
+                                .[, `:=`(prop_nzero = nbr_nzero/(nbr_zero + nbr_nzero)*100)] %>% 
+                                         melt(id.vars = NULL, measure.vars = names(.)) %>%
+                                .[, cbn_name := .y]) %>% 
+        .[, `:=`(nbr_name = paste0(variable, "_", cbn_name), value_fmt = fmt_nbr_flex(value, digits = 1))] %$%
+        setNames(value_fmt, nbr_name)
+        
+                            
     opng_rates_fmt <- c(
         opng_rate_cbn1 = nicely_fmt_number(opng_rates_vlus$cbn_all,3),
         opng_rate_cbn2 = nicely_fmt_number(opng_rates_vlus$cbn_no_cult_spending,4),
@@ -1549,6 +1559,7 @@ gen_nbrs <- function(df_excl, df_open, cbn_dfs_rates, cbn_dfs_rates_uscld,  df_r
           nbr_mld_ended = nbr_mld_ended
       ),
       opng_rates_fmt,
+      opng_prop_vlus,
       popnbrs_p1pm,
       rate_opng_glbl,
       rate_opng_glbl_yearly,

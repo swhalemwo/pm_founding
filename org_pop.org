@@ -41,6 +41,18 @@ dt_nbrs[, .(sprintf("#+MACRO: %s %s", nbr_name, value))]
 #+MACRO: opng_rate_cbn1 0.011
 #+MACRO: opng_rate_cbn2 0.0060
 #+MACRO: opng_rate_cbn3 0.0046
+#+MACRO: nbr_zero_cbn_all 1 043
+#+MACRO: nbr_nzero_cbn_all 215
+#+MACRO: prop_nzero_cbn_all 17.1
+#+MACRO: nbr_zero_cbn_no_cult_spending 2 316
+#+MACRO: nbr_nzero_cbn_no_cult_spending 258
+#+MACRO: prop_nzero_cbn_no_cult_spending 10.0
+#+MACRO: nbr_zero_cbn_no_cult_spending_and_mitr 3 145
+#+MACRO: nbr_nzero_cbn_no_cult_spending_and_mitr 260
+#+MACRO: prop_nzero_cbn_no_cult_spending_and_mitr 7.6
+#+MACRO: nbr_zero_cbn_controls 5 931
+#+MACRO: nbr_nzero_cbn_controls 301
+#+MACRO: prop_nzero_cbn_controls 4.8
 #+MACRO: nbr_pop_p_1pm_cbn_all 89.7
 #+MACRO: nbr_pop_p_1pm_cbn_no_cult_spending 165
 #+MACRO: nbr_pop_p_1pm_cbn_no_cult_spending_and_mitr 215
@@ -720,7 +732,11 @@ Consequently, the less country-years are included in a dataset, the stronger it 
 #
 For example, while in "DS all IVs" each year on average 1 private museum is founded per {{{nbr_pop_p_1pm_cbn_all}}} million inhabitants (1/{{{opng_rate_cbn1}}}), this rate is substantially lower in "DS --CuSP" and "DS -CuSp/TMITR" with 1 private museum founding per {{{nbr_pop_p_1pm_cbn_no_cult_spending}}} and {{{nbr_pop_p_1pm_cbn_no_cult_spending_and_mitr}}} million inhabitants, respectively.
 #
-Additionally, several variables show substantial skew (indicated by high standard deviations compared to the mean), such as the dependent variable of private museum openings (and consequently private museum density measures), as well as cultural spending, GDP and the HNWI, art museum and collector counts. 
+Additionally, several variables show substantial skew (indicated by high standard deviations compared to the mean), such as the dependent variable of private museum openings (and consequently private museum density measures), as well as cultural spending, GDP and the HNWI, art museum and collector counts.
+#
+In particular, private museum founding is concentrated in a number of country-years:
+#
+Only {{{nbr_nzero_cbn_all}}} country-years see show at least one private museum founding in "DS all IVs" ({{{prop_nzero_cbn_all}}}%), while the other datasets see even lower proportions ({{{prop_nzero_cbn_no_cult_spending}}}% for "DS --CuSP" and {{{prop_nzero_cbn_no_cult_spending_and_mitr}}}% for "DS --CuSP/TMTIR", respectively).
 
 
 
