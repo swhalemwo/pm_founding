@@ -720,3 +720,28 @@ rp4 <- pglm(dens_uscld ~ shweal992j_p90p100_lag0 + NY.GDP.PCAP.CDk_lag0 + hnwi_n
 
 
 screenreg(list(rp1, rp2, rp3, rp4))
+
+
+## ** variance debug
+
+dt_vrnc <- data.table(id = sort(rep(c("a", "b", "c", "d"),3)),
+                      dens = c(31,32,33, 10,10,10, 20,21,22, 5,4,3)) %>%
+    .[, dens_lag := shift(dens), id] %>%
+    .[is.na(dens_lag), dens_lag := dens-1] %>%
+    .[, nbr_opnd :=  dens - dens_lag]
+
+
+dt_vrnc[, .(mean_dens = mean(dens)), id][, sd(mean_dens)]
+
+
+## overall
+xtsum(dt_vrnc, dens, id) %>% adt() %>% .[Comparison %in% c("Overall", "Within"), .(Comparison, sd)] %>%
+    dcast.data.table(.~Comparison, value.var = "sd") %>%
+    .[, .(dens = Within/Overall)]
+## within
+xtsum(dt_vrnc, nbr_opnd, id) %>% adt() %>% .[Comparison %in% c("Overall", "Within"), .(Comparison, sd)] %>%
+    dcast.data.table(.~Comparison, value.var = "sd") %>%
+    .[, .(nbr_opnd = Within/Overall)]
+
+xtsum(dt_vrnc, nbr_opnd, id) %>% adt() %>% .[Comparison != "Between", .(Comparison, sd)]
+
