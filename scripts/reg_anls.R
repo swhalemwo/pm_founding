@@ -1507,7 +1507,111 @@ gen_nbrs_pred <- function(top_coefs, cbn_dfs_rates_uscld) {
         .[, name_fmt := sprintf("smorctop_%s_%s_%s", above_smorc_top_point, variable, measure)] %$% 
         setNames(value_fmt, name_fmt)
         
+
+    
+    ## comparison for inequality variables
+    ## cross-sectional 2020 change for shweal992j_p90p100_lag0
+
+    shweal_scale <- scale(cbn_dfs_rates_uscld$cbn_all$shweal992j_p90p100_lag0)
+    shweal_1SD_cbn_all <- attr(shweal_scale, "scaled:scale")
+
+    ## inspect which countries are interesting to compare
+    dt_shweal_cprn <- filter(cbn_dfs_rates_uscld$cbn_all, year == 2020) %>%
+        select(iso3c, shweal992j_p90p100_lag0) %>% adt() %>%
+        .[, mrg := "a"] %>% .[., on = "mrg", allow.cartesian = T] %>% # self-join to get country-comparisons
+        .[, .(iso3c_1 = iso3c, iso3c_2 = i.iso3c,
+              shweal1 = shweal992j_p90p100_lag0, shweal2 = i.shweal992j_p90p100_lag0)] %>%
+        .[, diff := shweal2 - shweal1] %>%
+        .[diff > shweal_1SD_cbn_all *0.97 & diff < shweal_1SD_cbn_all *1.03] %>%
+        print(n=200)
+
+    ## select some countries after inspection
+    shweal_cprn_iso3c1 <- "DNK"
+    shweal_cprn_iso3c2 <- "CZE"
+
+    ## check there's data on them 
+    dt_shweal_cprn_fltrd <- dt_shweal_cprn[iso3c_1 == shweal_cprn_iso3c1 &  iso3c_2 == shweal_cprn_iso3c2]
+    if (nrow(dt_shweal_cprn_fltrd) != 1) {stop("wealth comparison doesn't have exactly one row")}
+
+    shweal_iso3c1 <- dt_shweal_cprn_fltrd$shweal1
+    shweal_iso3c2 <- dt_shweal_cprn_fltrd$shweal2
+    
+    ## longitudinal comparison with self-join
+    dt_shweal_cprn_lngtd <- adt(cbn_dfs_rates_uscld$cbn_all)[, .(iso3c, year, shweal = shweal992j_p90p100_lag0)] %>%
+        .[., on = "iso3c", allow.cartesian = T] %>%
+        .[i.year > year] %>%
+        .[, diff := i.shweal - shweal] %>%
+        ## ggplot(aes(x=diff, y = ..density..)) + geom_density()
+        .[diff > shweal_1SD_cbn_all *0.97 & diff < shweal_1SD_cbn_all*1.03] %>%
+        print(n=200)
+
+    ## select country and years
+    shweal_iso_lngtd <- "USA"
+    shweal_lngtd_year1 <- 1991
+    shweal_lngtd_year2 <- 2011
+
+    dt_shweal_cprn_lngtd_fltrd <- dt_shweal_cprn_lngtd[iso3c == shweal_iso_lngtd &
+                                                       year == shweal_lngtd_year1 & i.year == shweal_lngtd_year2]
+
+    if (nrow(dt_shweal_cprn_lngtd_fltrd) != 1) {stop("dt_shweal_cprn_lngtd_fltrd doesn't have exactly 1 row")}
+
+    shweal_lngtd_vlu_year1 <- dt_shweal_cprn_lngtd_fltrd$shweal
+    shweal_lngtd_vlu_year2 <- dt_shweal_cprn_lngtd_fltrd$i.shweal
+
+    shweal_cbn_all <- top_coefs[vrbl_name_unlag == "shweal992j_p90p100", .SD[which.max(log_likelihood), coef]]
+    shweal_cbn_all_exp <- exp(shweal_cbn_all)
+
+    ## income inequality 
+    sptinc_scale <- scale(cbn_dfs_rates_uscld$cbn_all$sptinc992j_p90p100_lag0)
+    sptinc_1SD_cbn_all <- attr(sptinc_scale, "scaled:scale")
+
+    ## cross-sectional 2020 change for sptinc992j_p90p100_lag0
+    dt_sptinc_cprn <- filter(cbn_dfs_rates_uscld$cbn_all, year == 2020) %>%
+        select(iso3c, sptinc992j_p90p100_lag0) %>% adt() %>%
+        .[, mrg := "a"] %>%
+        .[., on = "mrg", allow.cartesian = T] %>%
+        .[, .(iso3c_1 = iso3c, iso3c_2 = i.iso3c,
+              sptinc1 = sptinc992j_p90p100_lag0, sptinc2 = i.sptinc992j_p90p100_lag0)] %>%
+        .[, diff := sptinc2 - sptinc1] %>%
+        .[diff > sptinc_1SD_cbn_all*0.97 & diff < sptinc_1SD_cbn_all*1.03]
+        ## print(n=200)
+
+    sptinc_cprn_iso3c1 <- "SWE"
+    sptinc_cprn_iso3c2 <- "CAN"
+    
+    dt_sptinc_cprn_fltrd <- dt_sptinc_cprn[iso3c_1 == sptinc_cprn_iso3c1 & iso3c_2 == sptinc_cprn_iso3c2]
+
+    if (nrow(dt_sptinc_cprn_fltrd) != 1) {stop("dt_sptinc_cprn_fltrd doesn't have exactly 1 row")}
+
+    sptinc_iso3c1 <- dt_sptinc_cprn_fltrd$sptinc1
+    sptinc_iso3c2 <- dt_sptinc_cprn_fltrd$sptinc2
+
+    dt_sptinc_cprn_lngtd <- adt(cbn_dfs_rates_uscld$cbn_all)[, .(iso3c, year, sptinc = sptinc992j_p90p100_lag0)] %>%
+        .[., on = "iso3c", allow.cartesian = T] %>%
+        .[i.year > year] %>%
+        .[, diff := i.sptinc - sptinc] %>%
+        ## ggplot(aes(x=diff, y = ..density..)) + geom_density()
+        .[diff > sptinc_1SD_cbn_all *0.9 & diff < sptinc_1SD_cbn_all*1.1] %>%
+        print(n=200)
+
+    ## income inequality hasn't actually increased much...
+    adt(cbn_dfs_rates_uscld$cbn_all)[iso3c %in% c("DEU", "USA", "FRA", "CHN"),
+                                     .(iso3c, year, vlu = sptinc992j_p90p100_lag0)] %>%
+        ggplot(aes(x=year, y=vlu, color = iso3c)) +
+        geom_line()
+
         
+    
+    
+    
+            
+            
+
+
+    ## CJ
+    
+                                                                                         
+
 
 
     
@@ -1525,7 +1629,14 @@ gen_nbrs_pred <- function(top_coefs, cbn_dfs_rates_uscld) {
         lnbr(smorc_top_point_std, 2),
         lnbr(smorc_top_point,0),
         lnbr(intcpt, 2),
-        lnbr(intcpt_exp, 3)
+        lnbr(intcpt_exp, 3),
+        lnbr(shweal_1SD_cbn_all, 1),
+        lnbr(shweal_iso3c1, 1),
+        lnbr(shweal_iso3c2, 1),
+        lnbr(shweal_lngtd_vlu_year1,1),
+        lnbr(shweal_lngtd_vlu_year2,1),
+        lnbr(shweal_cbn_all, 2),
+        lnbr(shweal_cbn_all_exp, 2)
     ) %>% rbindlist() %>%
         .[, nbr_fmt := fmt_nbr_flex(nbr, digits = digits)] %$%
         ## .[, nbr_fmt := nicely_fmt_number_v(nbr, max_digits = digits)] %$%
@@ -1533,7 +1644,10 @@ gen_nbrs_pred <- function(top_coefs, cbn_dfs_rates_uscld) {
 
     c(l_res,
       map(smorc_vlus_2020, ~fmt_nbr_flex(.x, digits = 0)),
-      smorc_top_point_stats)
+      smorc_top_point_stats,
+      list(shweal_lngtd_year1 = shweal_lngtd_year1, 
+           shweal_lngtd_year2 = shweal_lngtd_year2)      
+      )
     
     ## return(res)
     
@@ -1712,64 +1826,6 @@ iwalk(res_tbls, ~do.call("render_xtbl", c(.x, gen_tblcfgs(TABLE_DIR)[[.y]])))
 
 ## ** predicting
 
-
-## get countries above smorc_top_point
-
-
-
-filter(cbn_dfs_rates_uscld$cbn_all, smorc_dollar_fxm_lag0 > smorc_top_point) %>%
-    select(iso3c, year, smorc_dollar_fxm_lag0) %>%
-    filter(year == 2020) %>% arrange(smorc_dollar_fxm_lag0)
-
-
-## comparison for inequality variables
-## cross-sectional 2020 change for shweal992j_p90p100_lag0
-
-shweal_scale <- scale(cbn_dfs_rates_uscld$cbn_all$shweal992j_p90p100_lag0)
-
-filter(cbn_dfs_rates_uscld$cbn_all, year == 2020) %>%
-    select(iso3c, shweal992j_p90p100_lag0) %>% adt() %>%
-    .[, mrg := "a"] %>%
-    .[., on = "mrg", allow.cartesian = T] %>%
-    .[, .(iso3c_1 = iso3c, iso3c_2 = i.iso3c,
-          shweal1 = shweal992j_p90p100_lag0, shweal2 = i.shweal992j_p90p100_lag0)] %>%
-    .[, diff := shweal2 - shweal1] %>%
-    .[diff > attr(shweal_scale, "scaled:scale")*0.97 & diff < attr(shweal_scale, "scaled:scale")*1.03] %>%
-    print(n=200)
-
-## look at some longitudinal change
-
-
-## self-join
-adt(cbn_dfs_rates_uscld$cbn_all)[, .(iso3c, year, shweal992j_p90p100_lag0)] %>%
-    .[., on = "iso3c", allow.cartesian = T] %>%
-    .[i.year > year] %>%
-    .[, diff := i.shweal992j_p90p100_lag0 - shweal992j_p90p100_lag0] %>%
-    ## ggplot(aes(x=diff, y = ..density..)) + geom_density()
-    .[diff > attr(shweal_scale, "scaled:scale")*0.97 & diff < attr(shweal_scale, "scaled:scale")*1.03] %>%
-    print(n=200)
-    
-
-
-sptinc_scale <- scale(cbn_dfs_rates_uscld$cbn_all$sptinc992j_p90p100_lag0)
-
-
-## cross-sectional 2020 change for sptinc992j_p90p100_lag0
-filter(cbn_dfs_rates_uscld$cbn_all, year == 2020) %>%
-    select(iso3c, sptinc992j_p90p100_lag0) %>% adt() %>%
-    .[, mrg := "a"] %>%
-    .[., on = "mrg", allow.cartesian = T] %>%
-    .[, .(iso3c_1 = iso3c, iso3c_2 = i.iso3c,
-          sptinc1 = sptinc992j_p90p100_lag0, sptinc2 = i.sptinc992j_p90p100_lag0)] %>%
-    .[, diff := sptinc2 - sptinc1] %>%
-    .[diff > attr(sptinc_scale, "scaled:scale")*0.97 & diff < attr(sptinc_scale, "scaled:scale")*1.03] %>%
-    print(n=200)
-
-
-
-
-
-    
 
 
 gen_nbrs_pred(reg_res_objs$top_coefs, cbn_dfs_rates_uscld)
