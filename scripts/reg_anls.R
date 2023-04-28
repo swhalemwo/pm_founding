@@ -1387,6 +1387,45 @@ lnbr <- function(nbr, digits) {
             list(nbr_name = nbr_name, nbr = nbr, digits = digits)
         }
 
+
+gen_plt_chng <- function(l_cbndfs) {
+    #' generate some stuff of average change over time
+    #' issue is basically that there's not so much change
+    #' output can be table, violin, boxbplot, density, spaghetti, 
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
+
+    dt_grwth <- l_cbndfs$cbn_all %>% adt() %>% melt(id.vars = c("iso3c", "year")) %>%
+        .[grepl("_lag0", variable) & !grepl("sqrd", variable)]
+    
+        
+    dt_chng <- dt_grwth[, .SD[(year == max(year) | year == min(year)) & max(year) != min(year), # filter out 1 CYs
+                   .(value, year)], .(iso3c, variable)] %>% 
+        .[, year_abs := fifelse(year > mean(year), "vlu_end", "vlu_start"), .(iso3c)] %>%
+        dcast.data.table(iso3c + variable ~ year_abs) %>%
+        .[, chng := vlu_end - vlu_start]
+    
+    dt_chng %>% copy() %>%
+            ggplot(aes(x=chng)) + geom_density() + facet_wrap(~variable, scales = "free")
+        ## .[!grepl("SP.POP", variable)] %>% ggplot(aes(y=variable, x= chng)) + geom_boxplot()
+
+    dt_chng[, .(mean_chng = mean(chng), sd_chng = sd(chng)), variable] %>% print(n=200)
+
+    dt_chng[, .(iso3c, variable, vlu_start, vlu_end)] %>%
+        melt(id.vars = c("iso3c", "variable"), variable.name = "timepoint") %>%
+        .[, timepoint := factor(timepoint, levels = c("vlu_start", "vlu_end"))] %>% 
+        ggplot(aes(x=timepoint, y = value, group = iso3c)) +
+        geom_line(alpha = 0.2) +
+        facet_wrap(~variable, scales = "free")
+
+    ## dt_chng %>% copy() %>% .[variable == "pm_density_lag0"] %>% .[, chng := vlu_end - vlu_start] %>%
+        ## .[chng < 0]
+    
+}
+
+## gen_plt_chng(cbn_dfs_rates_uscld)
+
+
+
 gen_nbrs_pred <- function(top_coefs, cbn_dfs_rates_uscld) {
     #' generate the numbers related to prediction 
     if (as.character(match.call()[[1]]) %in% fstd){browser()}
