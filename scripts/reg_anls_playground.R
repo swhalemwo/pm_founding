@@ -699,4 +699,24 @@ rp3 <- pglm(nbr_opened ~ shweal992j_p90p100_lag0 + NY.GDP.PCAP.CDk_lag0 +hnwi_nb
      family = negbin, model = "within", effect = "individual", index = "iso3c")
 
 
-screenreg(list(rp1, rp2, rp3))
+## dfx_krappa <- adt(cbn_dfs_rates_uscld$cbn_all) %>%
+##     ## .[, lapply(.SD, \(x) scale(x))]
+##     melt(id.vars = c("iso3c", "year")) %>%
+##     .[, vlu_scaled := scale(value), variable] %>%
+##     dcast.data.table(iso3c + year ~ variable, value.var = "vlu_scaled") %>%
+##     .[, dens_uscld := pm_density_lag0*SP.POP.TOTLm_lag0]
+
+## some attempt to use FE with density rather than nbr_opened, doesn't work at all atm 
+rp4 <- pglm(dens_uscld ~ shweal992j_p90p100_lag0 + NY.GDP.PCAP.CDk_lag0 + hnwi_nbr_30M_lag0 +
+                  # Ind.tax.incentives + tmitr_approx_linear20step_lag0 + ti_tmitr_interact_lag0 + 
+                  sptinc992j_p99p100_lag0 +
+                  smorc_dollar_fxm_lag0 + smorc_dollar_fxm_sqrd_lag0 + 
+                  ## pm_density_lag0 + pm_density_sqrd_lag0 +
+                  ## pm_density_global_sqrd_lag0 + pm_density_global_lag0 +
+                  clctr_cnt_cpaer_lag0 + nbr_closed_cum_global_lag0 + offset(log(SP.POP.TOTLm_lag0)),
+            dfx_krappa,
+            ## mtcars,
+            family = negbin, model = "within", effect = "individual", index = "iso3c")
+
+
+screenreg(list(rp1, rp2, rp3, rp4))
