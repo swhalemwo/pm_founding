@@ -598,6 +598,34 @@ gentbl_regtbl_old <- function(top_coefs, gof_df_cbn, df_best_mdls) {
 
 }
 
+## ** rprofiling
+    ## data.table(asdf=1, yyy= 2)
+    ## lm(mpg ~ cyl + hp + disp, mtcars)
+    ## lm(cyl ~ hp + mpg, mtcars)
+    
+    Rprof(memory.profiling = T, append = F, gc.profiling = T, line.profiling = T, filter.callframes = T)
+    format("asdf")
+    ## lm(asdf ~ jj)
+    ## paste0("jj", "kk")
+    Rprof(memory.profiling = T, append = T, gc.profiling = T, line.profiling = T, filter.callframes = T)
+
+    fmt <- format
+
+    
+    ## ggplot(iris, aes(x=Sepal.Width, y = Petal.Width, color = Species)) + geom_point()
+
+    ## lm(mpg ~ cyl + hp + disp + drat + hp + krappa + matrix + gigachad + caitlin + little dragon)
+    ## plus some other stuff
+
+    ## lm(mpg ~ cyl + hp + disp + drat + hp + krappa + giga + fucking nooobs)
+    ## lm(mpg ~ cyl + hp + disp + drat + hp + krappa + giga + wtf + is + wrong + with + this + program)
+    ## ok(this, looks, already, somewhat, better, but , not-by , much)
+
+    ## what(happens, if, i disable, font, lock, mode, completely?)
+    ## even(then, the, R, process 
+
+
+
 ## ** some regression test
 
 library(glmmTMB)
@@ -744,4 +772,6 @@ xtsum(dt_vrnc, nbr_opnd, id) %>% adt() %>% .[Comparison %in% c("Overall", "Withi
     .[, .(nbr_opnd = Within/Overall)]
 
 xtsum(dt_vrnc, nbr_opnd, id) %>% adt() %>% .[Comparison != "Between", .(Comparison, sd)]
+
+
 
