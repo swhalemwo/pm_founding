@@ -1426,7 +1426,7 @@ gen_plt_chng <- function(l_cbndfs) {
 
 
 
-gen_nbrs_pred <- function(top_coefs, cbn_dfs_rates_uscld) {
+gen_nbrs_pred <- function(top_coefs, cbn_dfs_rates_uscld, print_examples = print_examples) {
     #' generate the numbers related to prediction 
     if (as.character(match.call()[[1]]) %in% fstd){browser()}
     1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;
@@ -1523,7 +1523,8 @@ gen_nbrs_pred <- function(top_coefs, cbn_dfs_rates_uscld) {
               shweal1 = shweal992j_p90p100_lag0, shweal2 = i.shweal992j_p90p100_lag0)] %>%
         .[, diff := shweal2 - shweal1] %>%
         .[diff > shweal_1SD_cbn_all *0.97 & diff < shweal_1SD_cbn_all *1.03]
-        ## print(n=200)
+
+    if (print_examples) print(dt_shweal_cprn, n=200)
 
     ## select some countries after inspection
     shweal_cprn_iso3c1 <- "DNK"
@@ -1576,6 +1577,8 @@ gen_nbrs_pred <- function(top_coefs, cbn_dfs_rates_uscld) {
         .[, diff := sptinc2 - sptinc1] %>%
         .[diff > sptinc_1SD_cbn_all*0.97 & diff < sptinc_1SD_cbn_all*1.03]
     ## print(n=200)
+
+    if (print_examples) print(dt_sptinc_cprn, n = 2000)
 
     sptinc_cbn_all <- top_coefs[vrbl_name_unlag == "sptinc992j_p90p100" & cbn_name == "cbn_all",
                                 .SD[which.max(log_likelihood), coef]]
@@ -1721,7 +1724,8 @@ gen_nbrs_pred <- function(top_coefs, cbn_dfs_rates_uscld) {
 
 
 
-gen_nbrs <- function(df_excl, df_open, cbn_dfs_rates, cbn_dfs_rates_uscld,  df_reg_anls_cfgs_wide, batch_version) {
+gen_nbrs <- function(df_excl, df_open, cbn_dfs_rates, cbn_dfs_rates_uscld,  df_reg_anls_cfgs_wide, batch_version,
+                     print_examples = F) {
     if (as.character(match.call()[[1]]) %in% fstd){browser()}
     1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;
     
@@ -1810,7 +1814,7 @@ gen_nbrs <- function(df_excl, df_open, cbn_dfs_rates, cbn_dfs_rates_uscld,  df_r
     l_cvrgnc$nbr_runs_p_cbn_spec <- adt(df_reg_anls_cfgs_wide)[, .N, .(cbn_name, base_lag_spec)][, round(mean(N),0)]
 
     
-    nbrs_pred <- gen_nbrs_pred(reg_res_objs$top_coefs, cbn_dfs_rates_uscld)
+    nbrs_pred <- gen_nbrs_pred(reg_res_objs$top_coefs, cbn_dfs_rates_uscld, print_examples)
 
     
     res <- c(list(
@@ -1892,14 +1896,15 @@ iwalk(res_tbls, ~do.call("render_xtbl", c(.x, gen_tblcfgs(TABLE_DIR)[[.y]])))
 
 
 
-gen_nbrs_pred(reg_res_objs$top_coefs, cbn_dfs_rates_uscld)
+gen_nbrs_pred(reg_res_objs$top_coefs, cbn_dfs_rates_uscld, print_examples = F)
 
 dt_nbrs <- gen_nbrs(df_excl, df_open, cbn_dfs_rates, cbn_dfs_rates_uscld,
-                    reg_anls_base$df_reg_anls_cfgs_wide, batch_version)
+                    reg_anls_base$df_reg_anls_cfgs_wide, batch_version, print_examples = F)
+
 dt_nbrs %>% print(n=300)
 
 ## run again after v75, then I get all changes in one commit
-## fwrite(dt_nbrs, paste0(TABLE_DIR, "tbl_nbrs.csv")) 
+fwrite(dt_nbrs, paste0(TABLE_DIR, "tbl_nbrs_", batch_version, ".csv")) 
 
 
 
