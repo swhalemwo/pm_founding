@@ -1558,7 +1558,8 @@ gen_nbrs_pred <- function(top_coefs, cbn_dfs_rates_uscld) {
     shweal_lngtd_vlu_year1 <- dt_shweal_cprn_lngtd_fltrd$shweal
     shweal_lngtd_vlu_year2 <- dt_shweal_cprn_lngtd_fltrd$i.shweal
 
-    shweal_cbn_all <- top_coefs[vrbl_name_unlag == "shweal992j_p90p100", .SD[which.max(log_likelihood), coef]]
+    shweal_cbn_all <- top_coefs[vrbl_name_unlag == "shweal992j_p90p100" & cbn_name == "cbn_all",
+                                .SD[which.max(log_likelihood), coef]]
     shweal_cbn_all_exp <- exp(shweal_cbn_all)
 
     ## income inequality 
@@ -1576,7 +1577,8 @@ gen_nbrs_pred <- function(top_coefs, cbn_dfs_rates_uscld) {
         .[diff > sptinc_1SD_cbn_all*0.97 & diff < sptinc_1SD_cbn_all*1.03]
     ## print(n=200)
 
-    sptinc_cbn_all <- top_coefs[vrbl_name_unlag == "sptinc992j_p90p100", .SD[which.max(log_likelihood), coef]]
+    sptinc_cbn_all <- top_coefs[vrbl_name_unlag == "sptinc992j_p90p100" & cbn_name == "cbn_all",
+                                .SD[which.max(log_likelihood), coef]]
     sptinc_cbn_all_exp <- exp(sptinc_cbn_all)
 
 
