@@ -491,11 +491,12 @@ get_ginis <- function(wid_vx) {
     gini_cmnd <- sprintf("select year, iso3c, value, variable from %s where variable in ['gptinc992j', 'ghweal992j'] and year >= '%s'", wid_vx, STARTING_YEAR)
 
     gini_long <- as_tibble(dbGetQuery(con, gini_cmnd))
+    filter(gini_long, value > 0.9)
 
-    ## filter(gini_long, value > 0.99)
+    ## filter(gini_long, value > 0.9) %>% adt() %>% .[, .N, iso3c]
 
     ## "correct" ginis > 0.99 by restricting them to 0.99
-    gini_long2 <- gini_long %>% mutate(value = ifelse(value > 0.99, 0.99, value))
+    gini_long2 <- gini_long %>% mutate(value = ifelse(value > 0.95, 0.95, value))
 
     gini_df <- as_tibble(reshape2::dcast(gini_long2, iso3c + year ~ variable))
     
@@ -519,6 +520,10 @@ get_all_ineqs <- function(wid_vx) {
     
     gini_df <- get_ginis(wid_vx)
     all_ineqs <- as_tibble(Reduce(\(x,y,...) merge(x,y, all = T), list(wealth_ineq_df, inc_ineq_df, gini_df)))
+
+    ## adt(all_ineqs)[ghweal992j > 0.95, .N, iso3c]
+    ## adt(all_ineqs)[ghweal992j > 0.93, .N, iso3c]
+    
 
     all_ineqs[,3:ncol(all_ineqs)] <- all_ineqs[,3:ncol(all_ineqs)]*100
 
