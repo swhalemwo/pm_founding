@@ -229,21 +229,75 @@ create_anls_df <- function(df_wb, df_open) {
                                by=c("iso3c", "year"),
                                all.x = TRUE))
 
-    df_anls2 <- df_anls %>% mutate(
-                    region = countrycode(iso3c, "iso3c", "un.region.name"),
-                    nbr_opened = ifelse(is.na(nbr_opened), 0, nbr_opened),
-                    nbr_closed = ifelse(is.na(nbr_closed), 0, nbr_closed),
-                    nbr_opened_cum = ave(nbr_opened, iso3c, FUN= cumsum),
-                    nbr_closed_cum = ave(nbr_closed, iso3c, FUN= cumsum),
-                    pm_density = nbr_opened_cum - nbr_closed_cum,
-                    pm_density_sqrd = pm_density^2) %>%
-        group_by(year) %>%
-        mutate(nbr_opened_cum_global = sum(nbr_opened_cum),
-               nbr_closed_cum_global = sum(nbr_closed_cum),
-               nbr_opened_global = sum(nbr_opened),
-               pm_density_global = nbr_opened_cum_global - nbr_closed_cum_global,
-               pm_density_global_sqrd = pm_density_global^2)
-               ## prop_closed = nbr_closed_cum/nbr_opened_cum)
+    
+    ## global density calculations
+    df_glbl <- adt(df_open) %>%
+        ## na.rm = T for yeeting CYs with some closed but no opened
+        .[, .(nbr_opened_global = sum(nbr_opened, na.rm = T),
+              nbr_closed_global = sum(nbr_closed, na.rm = T)), year] %>%
+        .[CJ(year = min(year):max(year)), on = "year"] %>% 
+        setnafill(fill = 0) %>% # fill up year gaps with 0 (probably not needed but still)
+        .[order(year)] %>% 
+        .[, `:=`(nbr_opened_cum_global = cumsum(nbr_opened_global),
+                 nbr_closed_cum_global = cumsum(nbr_closed_global))] %>%
+        .[, pm_density_global := nbr_opened_cum_global - nbr_closed_cum_global] %>%
+        .[, .(year, pm_density_global, pm_density_global_sqrd = pm_density_global^2, nbr_closed_cum_global)]
+
+    ## country level density calculations
+    df_cry <- adt(df_open)[, .(iso3c, year, nbr_opened = nbr_opened, nbr_closed)] %>%
+        .[CJ(year = min(year):max(year), iso3c = unique(iso3c)), on = .(year, iso3c)] %>% 
+        setnafill(fill = 0, cols = c("nbr_opened", "nbr_closed")) %>%
+        .[order(iso3c, year)] %>% 
+        .[, `:=`(nbr_opened_cum = cumsum(nbr_opened), nbr_closed_cum = cumsum(nbr_closed)), iso3c] %>%
+        .[, pm_density := nbr_opened_cum - nbr_closed_cum] %>%
+        .[, .(iso3c, year, nbr_opened, pm_density, pm_density_sqrd = pm_density^2)]
+            
+    
+    
+    df_anls3 <- left_join(df_wb, atb(df_cry), by = c("iso3c", "year")) %>%
+        left_join(atb(df_glbl), by = "year") %>% adt() %>%
+        ## fill density variables here already
+        setnafill(fill = 0, cols = c("nbr_opened", "pm_density", "pm_density_sqrd")) %>%
+        atb() 
+        ## .[, lapply(.SD, \(x) sum(is.na(x)))] %>% melt()
+ 
+
+    ## df_anls2 <- df_anls %>% mutate(
+    ##                 region = countrycode(iso3c, "iso3c", "un.region.name"),
+    ##                 nbr_opened = ifelse(is.na(nbr_opened), 0, nbr_opened),
+    ##                 nbr_closed = ifelse(is.na(nbr_closed), 0, nbr_closed),
+    ##                 nbr_opened_cum = ave(nbr_opened, iso3c, FUN= cumsum),
+    ##                 nbr_closed_cum = ave(nbr_closed, iso3c, FUN= cumsum),
+    ##                 pm_density = nbr_opened_cum - nbr_closed_cum,
+    ##                 pm_density_sqrd = pm_density^2) %>%
+    ##     group_by(year) %>%
+    ##     mutate(nbr_opened_cum_global = sum(nbr_opened_cum),
+    ##            nbr_closed_cum_global = sum(nbr_closed_cum),
+    ##            nbr_opened_global = sum(nbr_opened),
+    ##            pm_density_global = nbr_opened_cum_global - nbr_closed_cum_global,
+    ##            pm_density_global_sqrd = pm_density_global^2)
+    ##            ## prop_closed = nbr_closed_cum/nbr_opened_cum)
+
+
+    ## ## comparison of country between old and new
+    ## ## old method garbage
+    ## rbind(df_cry[, .(iso3c, year, nbr_opened, pm_density, source = "new")],
+    ##       adt(df_anls2)[, .(iso3c, year, nbr_opened, pm_density, source = "old")]) %>%
+    ##     melt(id.vars = c("year","iso3c", "source")) %>%
+    ##     dcast.data.table(variable + year + iso3c ~ source) %>%
+    ##     .[complete.cases(.)] %>%
+    ##     .[, diff := old - new] %>%
+    ##     ## .[, .N, .(diff, variable)] %>% print(n=1000)
+    ##     .[diff != 0] %>% .[order(diff)] %>% print(n=700)
+            
+
+    ## ## comparison of global between old and new
+    ## ## old method garbage
+    ## rbind(
+    ##     unique(adt(df_anls2)[, .(year, pm_density_global, nbr_closed_cum_global, source = "old")]),
+    ##     df_glbl[year >= 1985, .(year, pm_density_global, nbr_closed_cum_global, source = "new")]) %>%
+    ##     melt(id.vars = c("year", "source")) %>%
+    ##     dcast.data.table(variable + year ~ source) %>% print(n=200)
 
     ## df_anls2 %>% group_by(iso3c) %>%
     ##     mutate(any_closed = sum(nbr_closed) > 0) %>%
@@ -305,7 +359,7 @@ create_anls_df <- function(df_wb, df_open) {
     ## df_anls$wv <- 0
     ## df_anls$nbr_opened_cum <- ave(df_anls$nbr_opened, df_anls$iso3c, FUN = cumsum)
 
-    return(df_anls2)
+    return(df_anls3)
 }
 
 

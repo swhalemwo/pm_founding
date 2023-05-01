@@ -70,7 +70,7 @@ gen_df_reg_rts <- function(df_reg) {
     #' generate the df_reg with rates instead of counts
 
     ## list the count variables manually... i love getting into tech debt
-    cnt_vrbls1 <- c("pm_density", "nbr_closed_cum",
+    cnt_vrbls1 <- c("pm_density", # "nbr_closed_cum",
                     ## "pm_density_global", "pm_density_global_sqrd", "nbr_closed_cum_global", 
                     "cnt_contemp", "cnt_art", "cnt_all",
                     "clctr_cnt_cpaer", "clctr_cnt_all", "smorc_dollar_fxm",
