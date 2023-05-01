@@ -1538,18 +1538,27 @@ gen_nbrs_pred <- function(top_coefs, cbn_dfs_rates_uscld, print_examples = print
     shweal_iso3c2 <- dt_shweal_cprn_fltrd$shweal2
     
     ## longitudinal comparison with self-join
-    dt_shweal_cprn_lngtd <- adt(cbn_dfs_rates_uscld$cbn_all)[, .(iso3c, year, shweal = shweal992j_p90p100_lag0)] %>%
+    
+
+    dt_shweal_cprn_lngtd <- get_wealth_ineq("p90p100", WID_VX) %>% adt() %>%
+        .[, .(iso3c, year, shweal = shweal992j_p90p100*100)] %>% 
+        ## adt(cbn_dfs_rates_uscld$cbn_all)[, .(iso3c, year, shweal = shweal992j_p90p100_lag0)] %>%
         .[., on = "iso3c", allow.cartesian = T] %>%
         .[i.year > year] %>%
         .[, diff := i.shweal - shweal] %>%
+        ## .[, max(diff)]
+        ## .[iso3c == "USA" & year == 1991] %>% print(n=200)
         ## ggplot(aes(x=diff, y = ..density..)) + geom_density()
-        .[diff > shweal_1SD_cbn_all *0.97 & diff < shweal_1SD_cbn_all*1.03] 
-        ## print(n=200)
+        .[diff > shweal_1SD_cbn_all *0.97 & diff < shweal_1SD_cbn_all*1.03]
+
+    if (print_examples) print(dt_shweal_cprn_lngtd, n = 2000)
+        
 
     ## select country and years
     shweal_iso_lngtd <- "USA"
     shweal_lngtd_year1 <- 1991
     shweal_lngtd_year2 <- 2011
+    
 
     dt_shweal_cprn_lngtd_fltrd <- dt_shweal_cprn_lngtd[iso3c == shweal_iso_lngtd &
                                                        year == shweal_lngtd_year1 & i.year == shweal_lngtd_year2]
