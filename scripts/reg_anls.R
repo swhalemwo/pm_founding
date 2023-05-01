@@ -1708,7 +1708,9 @@ gen_nbrs_pred <- function(top_coefs, cbn_dfs_rates_uscld) {
       map(smorc_vlus_2020, ~fmt_nbr_flex(.x, digits = 0)),
       smorc_top_point_stats,
       list(shweal_lngtd_year1 = shweal_lngtd_year1, 
-           shweal_lngtd_year2 = shweal_lngtd_year2)      
+           shweal_lngtd_year2 = shweal_lngtd_year2,
+           sptinc_lngtd_year1 = sptinc_lngtd_year1,
+           sptinc_lngtd_year2 = sptinc_lngtd_year2)      
       )
     
     ## return(res)
