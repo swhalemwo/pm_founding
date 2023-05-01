@@ -1618,7 +1618,56 @@ gen_nbrs_pred <- function(top_coefs, cbn_dfs_rates_uscld) {
     ##     geom_line()
 
         
+    ## density numbers
+    pm_density <- top_coefs[vrbl_name_unlag == "pm_density" & cbn_name == "cbn_all",
+                            .SD[which.max(log_likelihood), coef]]
+    pm_density_sqrd <- top_coefs[vrbl_name_unlag == "pm_density_sqrd" & cbn_name == "cbn_all",
+                               .SD[which.max(log_likelihood), coef]]
+
+    pm_density_glbl <- top_coefs[vrbl_name_unlag == "pm_density_global" & cbn_name == "cbn_all",
+                               .SD[which.max(log_likelihood), coef]]
+    pm_density_glbl_sqrd <- top_coefs[vrbl_name_unlag == "pm_density_global_sqrd" & cbn_name == "cbn_all",
+                                      .SD[which.max(log_likelihood), coef]]
     
+    dens_cry_top_point_std <- -pm_density/(2*pm_density_sqrd)
+    dens_glbl_top_point_std <- -pm_density_glbl/(2*pm_density_glbl_sqrd)
+
+    dens_cry_scale <- scale(cbn_dfs_rates_uscld$cbn_all$pm_density_lag0)
+    dens_glbl_scale <- scale(cbn_dfs_rates_uscld$cbn_all$pm_density_global_lag0)
+
+    dens_cry_top_point <- (dens_cry_top_point_std * attr(dens_cry_scale, "scaled:scale")) +
+        attr(dens_cry_scale, "scaled:center")
+
+    dens_glbl_top_point <- (dens_glbl_top_point_std * attr(dens_glbl_scale, "scaled:scale")) +
+        attr(dens_glbl_scale, "scaled:center")
+
+    dens_cry_top_point_stats <- adt(cbn_dfs_rates_uscld$cbn_all)[
+      , above_dens_cry_top_point := ifelse(pm_density_lag0 > dens_cry_top_point, "above", "below")] %>%
+        adt(df_reg)[, .(iso3c, year, nbr_opened)][., on = .(iso3c, year)] %>% 
+        .[, .(CYs = .N*1.0, nbr_opened = sum(nbr_opened)), above_dens_cry_top_point]  %>%
+        melt(id.vars = "above_dens_cry_top_point", value.name = "cnt") %>% 
+        .[, prop := cnt/sum(cnt), variable] %>% 
+        melt(id.vars = c("above_dens_cry_top_point", "variable"), variable.name = "measure") %>%
+        .[measure == "cnt", value_fmt := fmt_nbr_flex(value, 0)] %>% # counts get formated with zero digits
+        .[measure == "prop", value_fmt := fmt_nbr_flex(value*100, 1)] %>% # proportions with 1
+        .[, name_fmt := sprintf("dens_cry_top_%s_%s_%s", above_dens_cry_top_point, variable, measure)] %$% 
+        setNames(value_fmt, name_fmt)
+
+    
+    dens_glbl_top_point_stats <- adt(cbn_dfs_rates_uscld$cbn_all)[
+      , above_dens_glbl_top_point := ifelse(pm_density_global_lag0 > dens_glbl_top_point, "above", "below")] %>%
+        adt(df_reg)[, .(iso3c, year, nbr_opened)][., on = .(iso3c, year)] %>% 
+        .[, .(CYs = .N*1.0, nbr_opened = sum(nbr_opened)), above_dens_glbl_top_point]  %>%
+        melt(id.vars = "above_dens_glbl_top_point", value.name = "cnt") %>% 
+        .[, prop := cnt/sum(cnt), variable] %>% 
+        melt(id.vars = c("above_dens_glbl_top_point", "variable"), variable.name = "measure") %>%
+        .[measure == "cnt", value_fmt := fmt_nbr_flex(value, 0)] %>% # counts get formated with zero digits
+        .[measure == "prop", value_fmt := fmt_nbr_flex(value*100, 1)] %>% # proportions with 1
+        .[, name_fmt := sprintf("dens_glbl_top_%s_%s_%s", above_dens_glbl_top_point, variable, measure)] %$% 
+        setNames(value_fmt, name_fmt)
+
+    ## fix the density measures first
+
     
         
     l_res <- list(
