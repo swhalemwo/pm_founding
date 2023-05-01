@@ -897,9 +897,13 @@ Investigating the mechanisms behind patterns constitutes fruitful approaches for
 
 **** HNWI :ignhead:
 
+Increases in the number of HNWI do not seem to be substantially associated with private museum founding as after controlling for other variables, the HNWI coefficients are both comparatively small relative to to those of other indicators and generally not statistically significant.
+# 
+The point estimate are furthermore often negative, as are the two HNWI coefficients who do reach statistical significance (HNWI >= 5M in "DS -CuSp" and "DS -CuSp/TMITR").
+#
+While thus some evidence might even point to a slight negative association between HNWI numbers and private museum founding, the small and often insignificant coefficients as well as the inconsistencies of coefficient signs does for now not provide substantial evidence in either direction. 
 
 
-Finally, the effect of HNWIs (H4) is mostly negative and relatively small in the two larger datasets, but evenly centered around 0 in "DS all IVs". 
 
 
 # Overall, cbn_no_cult_spending and cbn_no_cult_spending_and_mitr are more similar in coefficient results than either is to cbn_all. 
