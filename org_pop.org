@@ -922,26 +922,36 @@ While thus some evidence might even point to a slight negative association betwe
 
 
 
-# *** Controls 
+**** Controls :ignhead:
 
-# **** GDP and population size
+***** GDP and population size :ignhead:
 
-# The controls for GDP per capita and population size are positive and significant in cbn_no_cult_spending and cbn_no_cult_spending_and_mitr, but become marginally significant in cbn_all.
+The coefficient of GDP per capita is positive and significant in all datasets, and is furthermore substantially larger in "DS -CuSp" and "DS -CuSP/TMITR". 
+#
+Given that in these datasets GDP per capita has a smaller standard deviation (table \ref{tbl:descs}), and hence lower variations of GDP are associated with larger changes, there is substantial support for a so far not theorized role of country features such as productivity or education.
+#
+It thus constitutes a worthwile approach to consider in more detail how private museum founding is related to the institutional environment. 
+
 # #
 # As these are rather crude measures, them becoming insignificant could indicate again a strong influence of cultural spending, or different effects being present in the different datasets.
 
+***** density dependence 
 
-# **** density dependence 
-# In all datasets, cumulative openings (legitimacy) and cumulative openings squared (competition) correspond to the density-dependence hypotheses, namely a positive effect of legitimacy and a negative of competition; however legitimacy is only significant in the "all variables" dataset, and competition only in "all variables" and "all variables except cultural spending".
+In all datasets,  measures of density (legitimacy) and density squared (competition) correspond to the density-dependence hypotheses, namely a reverse U-shaped relationship between density and private museum founding.
+#
+Indicated by the negative coefficient of the squared density measure (which significant everywhere except for the global coefficient in "DS all IVs";  where however it is marginally significant), this is the case for density measures on the level of both the country and the world.
+# 
+Thus following the density dependence paradigm, potential founders were motivated by their peers' decision to establish a private musuem up to the point where private museum numbers increased to the extent that additional founding did not appear advantageous to them anymore. 
+#
+However, while collectors ultapparently were ultimately disincentivized by growing private museum numbers, they were not influenced by the number of museum closures, as the coefficient of the cumulative number of museum closures is not significant and varies in sign between datasets. 
+
+# density dependence also has large model improvement
 
 
-# **** Artnews collector ranking 
-# Suprisingly, the number of collectors in the Artnews collector ranking has a negative effect on private museum founding, which is significant in cbn_all and marginally significant elsewhere.
-# #
-# At the moment I do not have a plausible interpretation, but it could be an artifact of still including collectors with a private museum in the computation of the variable.
-
-
-
+***** Art field indicators
+#
+The coefficients of the number of museums of modern and contemporary art and of the number of collectors in the Artnews top collector ranking are relatively small and insignificant.
+#
 
 
 
