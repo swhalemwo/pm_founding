@@ -1574,7 +1574,11 @@ gen_nbrs_pred <- function(top_coefs, cbn_dfs_rates_uscld) {
               sptinc1 = sptinc992j_p90p100_lag0, sptinc2 = i.sptinc992j_p90p100_lag0)] %>%
         .[, diff := sptinc2 - sptinc1] %>%
         .[diff > sptinc_1SD_cbn_all*0.97 & diff < sptinc_1SD_cbn_all*1.03]
-        ## print(n=200)
+    ## print(n=200)
+
+    sptinc_cbn_all <- top_coefs[vrbl_name_unlag == "sptinc992j_p90p100", .SD[which.max(log_likelihood), coef]]
+    sptinc_cbn_all_exp <- exp(sptinc_cbn_all)
+
 
     sptinc_cprn_iso3c1 <- "SWE"
     sptinc_cprn_iso3c2 <- "CAN"
@@ -1591,30 +1595,30 @@ gen_nbrs_pred <- function(top_coefs, cbn_dfs_rates_uscld) {
         .[i.year > year] %>%
         .[, diff := i.sptinc - sptinc] %>%
         ## ggplot(aes(x=diff, y = ..density..)) + geom_density()
-        .[diff > sptinc_1SD_cbn_all *0.9 & diff < sptinc_1SD_cbn_all*1.1] %>%
+        .[diff > sptinc_1SD_cbn_all *0.95 & diff < sptinc_1SD_cbn_all*1.05] %>%
         print(n=200)
 
+    sptinc_iso_lngtd <- "LTU"
+    sptinc_lngtd_year1 <- 2000
+    sptinc_lngtd_year2 <- 2014
+
+    dt_sptinc_cprn_lngtd_fltrd <- dt_sptinc_cprn_lngtd[iso3c == sptinc_iso_lngtd &
+                                                       year == sptinc_lngtd_year1 & i.year == sptinc_lngtd_year2]
+    
+    sptinc_lngtd_vlu_year1 <- dt_sptinc_cprn_lngtd_fltrd$sptinc
+    sptinc_lngtd_vlu_year2 <- dt_sptinc_cprn_lngtd_fltrd$i.sptinc
+    
+    
     ## income inequality hasn't actually increased much...
-    adt(cbn_dfs_rates_uscld$cbn_all)[iso3c %in% c("DEU", "USA", "FRA", "CHN"),
-                                     .(iso3c, year, vlu = sptinc992j_p90p100_lag0)] %>%
-        ggplot(aes(x=year, y=vlu, color = iso3c)) +
-        geom_line()
+    ## adt(cbn_dfs_rates_uscld$cbn_all)[iso3c %in% c("DEU", "USA", "FRA", "CHN"),
+    ##                                  .(iso3c, year, vlu = sptinc992j_p90p100_lag0)] %>%
+    ##     ggplot(aes(x=year, y=vlu, color = iso3c)) +
+    ##     geom_line()
 
         
     
     
-    
-            
-            
-
-
-    ## CJ
-    
-                                                                                         
-
-
-
-    
+        
     l_res <- list(
         lnbr(txdctblt_cbn3, 2),
         lnbr(txdctblt_cbn3_exp, 1),
@@ -1636,7 +1640,14 @@ gen_nbrs_pred <- function(top_coefs, cbn_dfs_rates_uscld) {
         lnbr(shweal_lngtd_vlu_year1,1),
         lnbr(shweal_lngtd_vlu_year2,1),
         lnbr(shweal_cbn_all, 2),
-        lnbr(shweal_cbn_all_exp, 2)
+        lnbr(shweal_cbn_all_exp, 2),
+        lnbr(sptinc_1SD_cbn_all, 1),
+        lnbr(sptinc_iso3c1, 1),
+        lnbr(sptinc_iso3c2, 1),
+        lnbr(sptinc_lngtd_vlu_year1, 1),
+        lnbr(sptinc_lngtd_vlu_year2, 1),
+        lnbr(sptinc_cbn_all,2),
+        lnbr(sptinc_cbn_all_exp,2)
     ) %>% rbindlist() %>%
         .[, nbr_fmt := fmt_nbr_flex(nbr, digits = digits)] %$%
         ## .[, nbr_fmt := nicely_fmt_number_v(nbr, max_digits = digits)] %$%
