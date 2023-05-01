@@ -1522,8 +1522,8 @@ gen_nbrs_pred <- function(top_coefs, cbn_dfs_rates_uscld) {
         .[, .(iso3c_1 = iso3c, iso3c_2 = i.iso3c,
               shweal1 = shweal992j_p90p100_lag0, shweal2 = i.shweal992j_p90p100_lag0)] %>%
         .[, diff := shweal2 - shweal1] %>%
-        .[diff > shweal_1SD_cbn_all *0.97 & diff < shweal_1SD_cbn_all *1.03] %>%
-        print(n=200)
+        .[diff > shweal_1SD_cbn_all *0.97 & diff < shweal_1SD_cbn_all *1.03]
+        ## print(n=200)
 
     ## select some countries after inspection
     shweal_cprn_iso3c1 <- "DNK"
@@ -1542,8 +1542,8 @@ gen_nbrs_pred <- function(top_coefs, cbn_dfs_rates_uscld) {
         .[i.year > year] %>%
         .[, diff := i.shweal - shweal] %>%
         ## ggplot(aes(x=diff, y = ..density..)) + geom_density()
-        .[diff > shweal_1SD_cbn_all *0.97 & diff < shweal_1SD_cbn_all*1.03] %>%
-        print(n=200)
+        .[diff > shweal_1SD_cbn_all *0.97 & diff < shweal_1SD_cbn_all*1.03] 
+        ## print(n=200)
 
     ## select country and years
     shweal_iso_lngtd <- "USA"
@@ -1597,8 +1597,8 @@ gen_nbrs_pred <- function(top_coefs, cbn_dfs_rates_uscld) {
         .[i.year > year] %>%
         .[, diff := i.sptinc - sptinc] %>%
         ## ggplot(aes(x=diff, y = ..density..)) + geom_density()
-        .[diff > sptinc_1SD_cbn_all *0.95 & diff < sptinc_1SD_cbn_all*1.05] %>%
-        print(n=200)
+        .[diff > sptinc_1SD_cbn_all *0.95 & diff < sptinc_1SD_cbn_all*1.05] 
+        ## print(n=200) 
 
     sptinc_iso_lngtd <- "LTU"
     sptinc_lngtd_year1 <- 2000
@@ -1897,7 +1897,9 @@ gen_nbrs_pred(reg_res_objs$top_coefs, cbn_dfs_rates_uscld)
 dt_nbrs <- gen_nbrs(df_excl, df_open, cbn_dfs_rates, cbn_dfs_rates_uscld,
                     reg_anls_base$df_reg_anls_cfgs_wide, batch_version)
 dt_nbrs %>% print(n=300)
-fwrite(dt_nbrs, paste0(TABLE_DIR, "tbl_nbrs.csv")) 
+
+## run again after v75, then I get all changes in one commit
+## fwrite(dt_nbrs, paste0(TABLE_DIR, "tbl_nbrs.csv")) 
 
 
 
