@@ -148,7 +148,7 @@ While multiple hypotheses for the spread of this new form have been raised, syst
 #
 In particular, the rise of private museums has been hypothesized to be associated to tax incentives, reductions in government spending, increasing inequality and increasing elite wealth. 
 #
-Combining various socio-economic and art field data sources, I conduct a quantitative test of these hypotheses of datasets of 1258, 2574 and 3400 country years using random effects negative binomial regression models.
+Combining various socio-economic and art field data sources, I conduct a quantitative test of these hypotheses of datasets of {{{nbr_cy_cbn_all}}}, {{{nbr_cy_cbn_no_cult_spending}}} and {{{nbr_cy_cbn_no_cult_spending_and_mitr}}} country years using random effects negative binomial regression models.
 #
 While I find moderate support for a role of tax incentives, government spending is found to be associated primarily positively (not, as hypothesized, negatively) with private museum founding.
 #
@@ -454,7 +454,7 @@ Ideally collector-level data would be used to construct collector-year as the un
 #
 However, no such databases exist of the art collector population, in particular regarding its longitudinal development, to make such an analysis feasible.
 # 
-Therefore the more aggregate unit country-years is used as the unit of analysis, which results in a panel data analysis.
+Therefore the more aggregate unit of country-years is used as the unit of analysis (with countries being defined through the ISO 3166 standard). 
 #
 
 
@@ -473,7 +473,7 @@ After recording the names and deleting duplicates, it was investigated using pub
 #
 Following this, additional information about each museum was collected by student assistants, the most relevant for this research being country and opening year.
 #
-Currently, the database includes 547 museums (of which 446 are currently open), located in 63 countries, with the majority being located in Western Europe (136), East Asia (97) and North America (77).
+Currently, the database includes {{{nbr_muem_in_pmdb}}} museums (of which *446* are currently open), located in {{{nbr_cry_wal1pm_all}}} countries, with the majority being located in Western Europe (*136*), East Asia (*97*) and North America (*77*).
 #
 Information on country and opening year is used to construct a count indicator of the number of private museums opened in each country-year.
 #
@@ -548,9 +548,9 @@ The top 0.1% and 0.01% (the 99.9th and 99.99th quantile) are also similarly subd
 #
 Amounts are reported in local currencies and are therefore converted into 2021 USD using market exchange rates provided by the WID.
 #
-I use these thresholds to calculate the percentage of people above a certain threshold (I use thresholds of 1 million, 5 million, 30 million, 200 million USD[fn::Despite the large number of thresholds and the increases of resolution in the higher percentiles, I do not consider it adequate to measure numbers at higher thresholds than 200M. It it is thus unfortunately not possible to measure the effect of billionaires which receive much media attention.]) by linearly interpolating between the two nearest percentiles above and below the respective threshold.
+I use these thresholds to calculate the percentage of people above a certain threshold (I use thresholds of 1 million, 5 million, 30 million, 200 million USD[fn::Despite the large number of thresholds and the increases of resolution in the higher percentiles, I do not consider it adequate to measure numbers at thresholds higher than 200M. It it is thus not possible to measure the effect of billionaires which receive much media attention.]) by linearly interpolating between the two nearest percentiles above and below the respective threshold.
 #
-If the threshold exceeds the value of the highest quantile, I assign a zero.[fn::Linear interpolation likely overestimates the percentage of HNWIs for cases where data on at least one higher threshold exists (as the wealth distribution probably does not increase linearly), and underestimates it when no higher threshold exists (as necessarily 0 is assigned). Nevertheless, I argue that the possibility to set arbitrary wealth thresholds provides valuable insights.]
+If the threshold exceeds the value of the highest quantile, I assign a zero.[fn::Linear interpolation likely overestimates the percentage of HNWIs for cases where data on at least one higher threshold exists (as the wealth distribution probably does not increase linearly), and underestimates it when no higher threshold exists (as necessarily 0 is assigned). I argue that given the high number of thresholds this procedure still produces useful approximations.]
 #
 The so-obtained proportion of HNWIs is converted into a count using World Bank population size data.
 
@@ -570,7 +570,7 @@ As private museums are founded by collectors, they are more likely to be founded
 #
 While a complete measure of the art collector population is not feasible (which necessitated the choice of country-year instead of collector-year as the unit of analysis), it is still possible to construct a proxy. 
 #
-For this purpose I construct an indicator of the population of art collectors from the Artnews magazine collector ranking, a index published yearly since 1992 of the 200 art collectors the magazine considers most important.
+For this purpose I construct an indicator of the population of art collectors from the Artnews magazine collector ranking, a index published yearly since 1990 of the 200 art collectors the magazine considers most important.
 #
 As Artnews includes the country of residence of each collector, I construct the collector population indicator for a country-year as the number of collectors included in the Artnews ranking for that country-year (thus if no collector is included for a given country-year, the value of this index is 0). 
 #
@@ -616,7 +616,7 @@ Given to the transnational nature of the art field (due which legitimation and c
 
 Another key variable of the organizational population concerns closures:
 # 
-While in the popular imaginary a museum might be seen as permanent, the private museum population has seen substantial closures with 71 institutions having been closed until now (cf. [[cite:&Velthuis_Gera_forthcoming_fragility]]), and growing awareness of the fragility of these institutions might in turn make their founding less attractive to founders keen of leaving a mark in history.
+While in the popular imaginary a museum might be seen as permanent, the private museum population has seen substantial closures with {{{nbr_clsd_wld}}} institutions having been closed until now (cf. [[cite:&Velthuis_Gera_forthcoming_fragility]]), and growing awareness of the fragility of these institutions might in turn make their founding less attractive to founders keen of leaving a mark in history.
 #
 I therefore add a global variable of the number of cumulative museum closures to capture the potential delegitimating effect of the closing of institutions that often are planned as personal legacies [[parencite:&Walker_2019_collector]].[fn::While the data would allow to measure this variable also on a country-level, the fact that seven of these closures have taken place in Switzerland would turn this country into a very large outlier (the only country with more closures, the United States where 12 private museums closed, has a much larger population) which in turn would bias coefficient estimates into disproportionately reflecting the Swiss case. Using an alternative measurement of the proportion between museums opened and closed would result in a similar outlier situation for the United States and Netherlands, as these countries had seen private museum closures in the 1990s. Since the private museum population was small compared to what it would later grow towards in the 2000s and 2010s, the high closing/opening ratios for these country years would dominate the coefficient estimates. Until a more effective solution is found, I thus limit myself to a measuring the global effect of museum closures.]
 
