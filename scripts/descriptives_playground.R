@@ -2014,3 +2014,20 @@ nbr_years_open := predict(lm_pred, dt_topred)] %>%
     .[, closing_year]
 
 ggplot(dt_topred, aes(x=opening_year, y=closing_year)) + geom_point()
+
+
+## ** check higher density in cbn_no_cult_spending
+
+adt(cbn_dfs_rates_uscld$cbn_all)[, .(mean_year =  mean(year), mean_dens_glbl = mean(pm_density_global_lag0))]
+adt(cbn_dfs_rates_uscld$cbn_no_cult_spending)[, .(mean_year = mean(year),
+                                                  mean_dens_glbl = mean(pm_density_global_lag0))]
+
+
+rbind(
+    adt(cbn_dfs_rates_uscld$cbn_all)[, .(iso3c, year, pm_density_global_lag0, source = "cbn_all")],
+    adt(cbn_dfs_rates_uscld$cbn_no_cult_spending)[, .(iso3c, year, pm_density_global_lag0,
+                                                      source = "cbn_no_cult_spending")]) %>%
+    .[, .N, .(year, source)] %>%
+    .[, prop := N/sum(N), source] %>%     
+    ggplot(aes(x=year, y=N, color = source)) +
+    geom_line()
