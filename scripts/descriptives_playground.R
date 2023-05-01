@@ -2031,3 +2031,34 @@ rbind(
     .[, prop := N/sum(N), source] %>%     
     ggplot(aes(x=year, y=N, color = source)) +
     geom_line()
+
+
+## ** debug CY with AN filtering
+map(cbn_dfs_rates_uscld, ~nrow(.x))
+## no AN filtering
+
+$cbn_all
+[1] 1258
+
+$cbn_no_cult_spending
+[1] 2574
+
+$cbn_no_cult_spending_and_mitr
+[1] 3405
+
+$cbn_controls
+[1] 6232
+
+## AN FILTERING
+$cbn_all
+[1] 1250
+
+$cbn_no_cult_spending
+[1] 2562
+
+$cbn_no_cult_spending_and_mitr
+[1] 3393
+
+$cbn_controls
+[1] 5313
+

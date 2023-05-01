@@ -47,7 +47,11 @@ df_wb <- get_WB_data(c("NY.GDP.PCAP.CD", "SP.POP.TOTL", "NY.GDP.MKTP.CN"))
 df_anls <- create_anls_df(df_wb, df_open)
 df_reg_pre_impt <- get_df_reg(df_anls)
 df_reg <- impute_df_reg_vrbls(df_reg_pre_impt)
-df_reg_rts <- gen_df_reg_rts(df_reg)
+min_AN_year <- adt(df_reg)[clctr_cnt_cpaer != 0, min(year)] # yeet CYs before AN ranking existed
+df_reg_rts <- gen_df_reg_rts(df_reg)  %>% filter(year >= min_AN_year)
+
+
+
 
 ## source(paste0(SCRIPT_DIR, "descriptives.R"))
 
