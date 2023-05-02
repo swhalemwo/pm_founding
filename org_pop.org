@@ -45,7 +45,7 @@ dt_nbrs[, .(macro_str = sprintf("#+MACRO: %s %s", nbr_name, nbr_fmt)), grp] %>%
 #+MACRO: nbr_opngs_cbn_no_cult_spending 405
 #+MACRO: nbr_opngs_cbn_no_cult_spending_and_mitr 407
 #+MACRO: prop_opngs_cvrd_cbn_all 0.651
-#+MACRO: prop_opngs_cvrd_cbn_no_cult_spending 0.74
+#+MACRO: prop_opngs_cvrd_cbn_no_cult_spending 0.740
 #+MACRO: prop_opngs_cvrd_cbn_no_cult_spending_and_mitr 0.744
 
 
@@ -741,7 +741,7 @@ However coefficient estimates could also be biased by omitting key variables.
 #
 To partly remedy these shortcomings, I construct multiple datasets which vary in their inclusion of variables and country years (the more variables are included, the fewer country years can be covered).
 #
-In particular, I construct one dataset with all variables (1258 country years, 86 countries; referred to as "DS all IVs"), one with all variables except cultural spending (2574 country years, 153 countries; "DS --CuSp"), and one with all variables except cultural spending and marginal income tax rates (3400 country years, 163 countries; "DS --CuSp/TMITR").
+In particular, I construct one dataset with all variables ({{{nbr_cy_cbn_all}}} country years, {{{nbr_crys_cbn_all}}} countries; referred to as "DS all IVs"), one with all variables except cultural spending ({{{nbr_cy_cbn_no_cult_spending}}} country years, {{{nbr_crys_cbn_no_cult_spending}}} countries; "DS --CuSp"), and one with all variables except cultural spending and marginal income tax rates ({{{nbr_cy_cbn_no_cult_spending_and_mitr}}} country years, {{{nbr_crys_cbn_no_cult_spending_and_mitr}}} countries; "DS --CuSp/TMITR").
 #
 While this approach does not solve completely either omitted variable bias (as variables with limited coverage can not be included in the datasets with more country-years) nor data missing not-at-random (still possibly present in the datasets with fewer country-years), it uses the data most effectively by including as many variables and country-years in at least one analysis, leading to a more complete picture adequate for an exploratory approach. 
 

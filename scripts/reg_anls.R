@@ -1812,7 +1812,7 @@ gen_nbrs <- function(df_excl, df_open, cbn_dfs_rates, cbn_dfs_rates_uscld,  df_r
          ~list(nbr_cy = nrow(.x),
                nbr_crys = n_distinct(.x$iso3c),
                nbr_opngs = sum(.x$nbr_opened),
-               prop_opngs_cvrd = round(sum(.x$nbr_opened, na.rm = T)/nbr_muem_in_pmdb,3)
+               prop_opngs_cvrd = fmt_nbr_flex(round(sum(.x$nbr_opened, na.rm = T)/nbr_muem_in_pmdb,3), digits = 3)
                )) %>% rbindlist(idcol = T) %>% melt(id.vars = ".id") %>%
         .[, vrbl := paste0(variable, "_", .id)] %$%
         setNames(value, vrbl)
