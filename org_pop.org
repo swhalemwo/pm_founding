@@ -8,96 +8,121 @@
 #+OPTIONS: h:5
 
 #+BEGIN_SRC R :session calc :exports none :results values drawer
-dt_nbrs <- fread("/home/johannes/Dropbox/phd/papers/org_pop/tables/tbl_nbrs.csv")
-dt_nbrs[, .(sprintf("#+MACRO: %s %s", nbr_name, value))]
+dt_nbrs <- fread("/home/johannes/Dropbox/phd/papers/org_pop/tables/tbl_nbrs_v75.csv")
+
+dt_nbrs[, .(macro_str = sprintf("#+MACRO: %s %s", nbr_name, nbr_fmt)), grp] %>%
+  .[, .(grp_str = paste(macro_str, collapse = "\n")), grp] %>%
+  .[, .(grp_str2 = paste0("# ", grp, "\n", grp_str))] %>% 
+  .[, paste0(grp_str2, collapse = "\n\n\n")]
+  
 #+END_SRC
 
 #+RESULTS:
 :results:
-#+MACRO: string_ensurer asdf
+# pmdb_stats
 #+MACRO: nbr_muem_in_pmdb 547
 #+MACRO: nbr_opnd_wld 516
 #+MACRO: nbr_clsd_wld 78
 #+MACRO: nbr_cry_wal1pm_all 64
-#+MACRO: regsub_cnt_Western Europe 136
-#+MACRO: regsub_cnt_Eastern Asia 97
-#+MACRO: regsub_cnt_Northern America 77
-#+MACRO: regsub_cnt_Southern Europe 71
-#+MACRO: regsub_cnt_Northern Europe 27
-#+MACRO: nbr_cy_cbn_all 1258
-#+MACRO: nbr_cy_cbn_no_cult_spending 2574
-#+MACRO: nbr_cy_cbn_no_cult_spending_and_mitr 3405
+
+
+# nbr_pm_regsub
+#+MACRO: regsub_cnt_Western_Europe 136
+#+MACRO: regsub_cnt_Eastern_Asia 97
+#+MACRO: regsub_cnt_Northern_America 77
+#+MACRO: regsub_cnt_Southern_Europe 71
+#+MACRO: regsub_cnt_Northern_Europe 27
+
+
+# cbn_info
+#+MACRO: nbr_cy_cbn_all 1250
+#+MACRO: nbr_cy_cbn_no_cult_spending 2562
+#+MACRO: nbr_cy_cbn_no_cult_spending_and_mitr 3393
 #+MACRO: nbr_crys_cbn_all 86
 #+MACRO: nbr_crys_cbn_no_cult_spending 153
 #+MACRO: nbr_crys_cbn_no_cult_spending_and_mitr 164
-#+MACRO: nbr_opngs_cbn_all 360
-#+MACRO: nbr_opngs_cbn_no_cult_spending 409
-#+MACRO: nbr_opngs_cbn_no_cult_spending_and_mitr 411
-#+MACRO: prop_opngs_cvrd_cbn_all 0.658
-#+MACRO: prop_opngs_cvrd_cbn_no_cult_spending 0.748
-#+MACRO: prop_opngs_cvrd_cbn_no_cult_spending_and_mitr 0.751
-#+MACRO: nbr_mdl_started 76715
-#+MACRO: nbr_mld_ended 76715
+#+MACRO: nbr_opngs_cbn_all 356
+#+MACRO: nbr_opngs_cbn_no_cult_spending 405
+#+MACRO: nbr_opngs_cbn_no_cult_spending_and_mitr 407
+#+MACRO: prop_opngs_cvrd_cbn_all 0.651
+#+MACRO: prop_opngs_cvrd_cbn_no_cult_spending 0.74
+#+MACRO: prop_opngs_cvrd_cbn_no_cult_spending_and_mitr 0.744
+
+
+# opng_rates_fmt
 #+MACRO: opng_rate_cbn1 0.011
-#+MACRO: opng_rate_cbn2 0.0060
-#+MACRO: opng_rate_cbn3 0.0046
-#+MACRO: nbr_zero_cbn_all 1 043
-#+MACRO: nbr_nzero_cbn_all 215
-#+MACRO: prop_nzero_cbn_all 17.1
-#+MACRO: nbr_zero_cbn_no_cult_spending 2 316
-#+MACRO: nbr_nzero_cbn_no_cult_spending 258
+#+MACRO: opng_rate_cbn2 0.0061
+#+MACRO: opng_rate_cbn3 0.0047
+
+
+# opng_prop_vlus
+#+MACRO: nbr_zero_cbn_all 1 038
+#+MACRO: nbr_nzero_cbn_all 212
+#+MACRO: prop_nzero_cbn_all 17.0
+#+MACRO: nbr_zero_cbn_no_cult_spending 2 307
+#+MACRO: nbr_nzero_cbn_no_cult_spending 255
 #+MACRO: prop_nzero_cbn_no_cult_spending 10.0
-#+MACRO: nbr_zero_cbn_no_cult_spending_and_mitr 3 145
-#+MACRO: nbr_nzero_cbn_no_cult_spending_and_mitr 260
+#+MACRO: nbr_zero_cbn_no_cult_spending_and_mitr 3 136
+#+MACRO: nbr_nzero_cbn_no_cult_spending_and_mitr 257
 #+MACRO: prop_nzero_cbn_no_cult_spending_and_mitr 7.6
-#+MACRO: nbr_zero_cbn_controls 5 931
-#+MACRO: nbr_nzero_cbn_controls 301
-#+MACRO: prop_nzero_cbn_controls 4.8
-#+MACRO: nbr_pop_p_1pm_cbn_all 89.7
+#+MACRO: nbr_zero_cbn_controls 5 032
+#+MACRO: nbr_nzero_cbn_controls 281
+#+MACRO: prop_nzero_cbn_controls 5.3
+
+
+# popnbrs_p1pm
+#+MACRO: nbr_pop_p_1pm_cbn_all 89.2
 #+MACRO: nbr_pop_p_1pm_cbn_no_cult_spending 165
 #+MACRO: nbr_pop_p_1pm_cbn_no_cult_spending_and_mitr 215
-#+MACRO: nbr_pop_p_1pm_cbn_controls 85.0
-#+MACRO: rate_opng_glbl_cbn_all 0.00433
+#+MACRO: nbr_pop_p_1pm_cbn_controls 75.1
+
+
+# rate_opng_glbl
+#+MACRO: rate_opng_glbl_cbn_all 0.00434
 #+MACRO: rate_opng_glbl_cbn_no_cult_spending 0.003
 #+MACRO: rate_opng_glbl_cbn_no_cult_spending_and_mitr 0.00283
-#+MACRO: rate_opng_glbl_cbn_controls 0.00231
-#+MACRO: rate_opng_glbl_yearly_cbn_all 0.00404
-#+MACRO: rate_opng_glbl_yearly_cbn_no_cult_spending 0.00292
-#+MACRO: rate_opng_glbl_yearly_cbn_no_cult_spending_and_mitr 0.00279
-#+MACRO: rate_opng_glbl_yearly_cbn_controls 0.00223
-#+MACRO: cvrgd1 76 455
-#+MACRO: cvrgd0 260
-#+MACRO: mdlcnt_ttl 76 715
-#+MACRO: cvrgnc_rate 99.7
-#+MACRO: nbr_runs_p_cbn_spec 142
-#+MACRO: txdctblt_cbn3 0.74
+#+MACRO: rate_opng_glbl_cbn_controls 0.00253
+
+
+# rate_opng_glbl_yearly
+#+MACRO: rate_opng_glbl_yearly_cbn_all 0.00407
+#+MACRO: rate_opng_glbl_yearly_cbn_no_cult_spending 0.00289
+#+MACRO: rate_opng_glbl_yearly_cbn_no_cult_spending_and_mitr 0.00275
+#+MACRO: rate_opng_glbl_yearly_cbn_controls 0.00248
+
+
+# cvrgnc
+#+MACRO: cvrgd1 79 339
+#+MACRO: cvrgd0 1 166
+#+MACRO: mdlcnt_ttl 80 505
+#+MACRO: cvrgnc_rate 98.6
+#+MACRO: nbr_runs_p_cbn_spec 149
+
+
+# intcpt_info
+#+MACRO: intcpt -2.50
+#+MACRO: intcpt_exp 0.082
+
+
+# txinctvs
+#+MACRO: txdctblt_cbn3 0.72
 #+MACRO: txdctblt_cbn3_exp 2.1
-#+MACRO: txdctblt_cbn2 0.46
-#+MACRO: tmitr_cbn2 -0.36
-#+MACRO: txdctblt_tmitr_interact_cbn2 0.75
-#+MACRO: txdctblt_tmitr_interact_cbn2_exp 2.1
-#+MACRO: tmitr_1SD_cbn_all 14.2
-#+MACRO: smorc_lin 0.36
-#+MACRO: smorc_lin_flipped -0.36
-#+MACRO: smorc_sqrd -0.64
-#+MACRO: smorc_top_point_std 0.28
-#+MACRO: smorc_top_point 433
-#+MACRO: intcpt -2.22
-#+MACRO: intcpt_exp 0.108
-#+MACRO: shweal_1SD_cbn_all 7.6
-#+MACRO: shweal_iso3c1 50.2
-#+MACRO: shweal_iso3c2 57.9
-#+MACRO: shweal_lngtd_vlu_year1 64.1
-#+MACRO: shweal_lngtd_vlu_year2 71.7
-#+MACRO: shweal_cbn_all 0.28
-#+MACRO: shweal_cbn_all_exp 1.32
-#+MACRO: sptinc_1SD_cbn_all 8.9
-#+MACRO: sptinc_iso3c1 30.8
-#+MACRO: sptinc_iso3c2 39.7
-#+MACRO: sptinc_lngtd_vlu_year1 32.5
-#+MACRO: sptinc_lngtd_vlu_year2 41.1
-#+MACRO: sptinc_cbn_all -0.39
-#+MACRO: sptinc_cbn_all_exp 0.68
+#+MACRO: txdctblt_cbn2 0.48
+#+MACRO: tmitr_cbn2 -0.38
+#+MACRO: txdctblt_tmitr_interact_cbn2 0.77
+#+MACRO: txdctblt_tmitr_interact_cbn2_exp 2.2
+#+MACRO: tmitr_1SD_cbn_all 14.1
+
+
+# smorc_stats
+#+MACRO: smorc_lin 0.37
+#+MACRO: smorc_lin_flipped -0.37
+#+MACRO: smorc_sqrd -0.62
+#+MACRO: smorc_top_point_std 0.30
+#+MACRO: smorc_top_point 438
+
+
+# smorc_vlus_2020
 #+MACRO: smorc_2020_ITA 362
 #+MACRO: smorc_2020_SVK 415
 #+MACRO: smorc_2020_ARE 440
@@ -107,6 +132,7 @@ dt_nbrs[, .(sprintf("#+MACRO: %s %s", nbr_name, value))]
 #+MACRO: smorc_2020_AUS 499
 #+MACRO: smorc_2020_ESP 501
 #+MACRO: smorc_2020_CAN 513
+#+MACRO: smorc_2020_HRV 521
 #+MACRO: smorc_2020_CZE 634
 #+MACRO: smorc_2020_DEU 660
 #+MACRO: smorc_2020_FRA 680
@@ -121,16 +147,39 @@ dt_nbrs[, .(sprintf("#+MACRO: %s %s", nbr_name, value))]
 #+MACRO: smorc_2020_HUN 1 410
 #+MACRO: smorc_2020_NOR 1 544
 #+MACRO: smorc_2020_LUX 1 559
-#+MACRO: smorctop_below_CYs_cnt 815
-#+MACRO: smorctop_above_CYs_cnt 443
-#+MACRO: smorctop_below_nbr_opened_cnt 214
-#+MACRO: smorctop_above_nbr_opened_cnt 146
-#+MACRO: smorctop_below_CYs_prop 64.8
-#+MACRO: smorctop_above_CYs_prop 35.2
-#+MACRO: smorctop_below_nbr_opened_prop 59.4
-#+MACRO: smorctop_above_nbr_opened_prop 40.6
+
+
+# smorc_top_point_stats
+#+MACRO: smorctop_below_CYs_cnt 819
+#+MACRO: smorctop_above_CYs_cnt 431
+#+MACRO: smorctop_below_nbr_opened_cnt 212
+#+MACRO: smorctop_above_nbr_opened_cnt 144
+#+MACRO: smorctop_below_CYs_prop 65.5
+#+MACRO: smorctop_above_CYs_prop 34.5
+#+MACRO: smorctop_below_nbr_opened_prop 59.6
+#+MACRO: smorctop_above_nbr_opened_prop 40.4
+
+
+# shweal_stats
+#+MACRO: shweal_1SD_cbn_all 7.6
+#+MACRO: shweal_iso3c1 50.2
+#+MACRO: shweal_iso3c2 57.9
+#+MACRO: shweal_lngtd_vlu_year1 64.1
+#+MACRO: shweal_lngtd_vlu_year2 71.7
+#+MACRO: shweal_cbn_all 0.33
+#+MACRO: shweal_cbn_all_exp 1.39
 #+MACRO: shweal_lngtd_year1 1991
 #+MACRO: shweal_lngtd_year2 2011
+
+
+# sptinc_stats
+#+MACRO: sptinc_1SD_cbn_all 8.9
+#+MACRO: sptinc_iso3c1 30.8
+#+MACRO: sptinc_iso3c2 39.7
+#+MACRO: sptinc_lngtd_vlu_year1 32.5
+#+MACRO: sptinc_lngtd_vlu_year2 41.1
+#+MACRO: sptinc_cbn_all -0.45
+#+MACRO: sptinc_cbn_all_exp 0.64
 #+MACRO: sptinc_lngtd_year1 2000
 #+MACRO: sptinc_lngtd_year2 2014
 :end:
