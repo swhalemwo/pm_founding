@@ -1431,8 +1431,13 @@ gen_nbrs_pred <- function(top_coefs, cbn_dfs_rates_uscld, print_examples = print
     if (as.character(match.call()[[1]]) %in% fstd){browser()}
     1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;
 
+    ## intercept numbers
     intcpt <- top_coefs[vrbl_name_unlag == "cons" & cbn_name == "cbn_all", .SD[which.max(log_likelihood), coef]]
     intcpt_exp <- exp(intcpt)
+
+    intcpt_info <- list(
+        lnbr(intcpt, 2),
+        lnbr(intcpt_exp, 3))
 
     ## predicted impact of tax deductibility, just visually cause no time for proper prediction
     txdctblt_cbn2 <- top_coefs[vrbl_name_unlag == "Ind.tax.incentives" & cbn_name == "cbn_no_cult_spending",
@@ -1463,6 +1468,16 @@ gen_nbrs_pred <- function(top_coefs, cbn_dfs_rates_uscld, print_examples = print
         geom_line()
     
 
+    txinctvs <- list(
+        lnbr(txdctblt_cbn3, 2),
+        lnbr(txdctblt_cbn3_exp, 1),
+        lnbr(txdctblt_cbn2, 2),
+        lnbr(tmitr_cbn2,2),
+        lnbr(txdctblt_tmitr_interact_cbn2, 2),
+        lnbr(txdctblt_tmitr_interact_cbn2_exp, 1),
+        lnbr(tmitr_1SD_cbn_all, 1))
+
+
     ## predicted numbers for government spending 
 
     ## hist(cbn_dfs_rates$cbn_all$smorc_dollar_fxm_lag0)
@@ -1491,8 +1506,18 @@ gen_nbrs_pred <- function(top_coefs, cbn_dfs_rates_uscld, print_examples = print
     smorc_vlus_2020 <- filter(cbn_dfs_rates_uscld$cbn_all, year == 2020) %>% 
         filter((smorc_dollar_fxm_lag0 < smorc_top_point * 1.2 & smorc_dollar_fxm_lag0 > smorc_top_point * 0.8) |
                smorc_dollar_fxm_lag0 > smorc_top_point * 1.4) %>%
-        select(iso3c, smorc_dollar_fxm_lag0) %>% arrange(smorc_dollar_fxm_lag0) %$%
-        setNames(smorc_dollar_fxm_lag0, paste0("smorc_2020_", iso3c))
+        select(iso3c, smorc_dollar_fxm_lag0) %>% arrange(smorc_dollar_fxm_lag0) %>% adt() %>%
+        ## converting to list in lnbr format with apply 
+        apply(1, \(x) list(nbr_name = paste0("smorc_2020_", x[["iso3c"]]),
+                           nbr = as.numeric(x[["smorc_dollar_fxm_lag0"]]),
+                           digits = 0))
+    
+    
+    
+        
+
+ ## %$%
+ ##        setNames(smorc_dollar_fxm_lag0, paste0("smorc_2020_", iso3c))
 
     ## get statistics of how many CY are above/below smorc_top_point
     smorc_top_point_stats <- adt(cbn_dfs_rates_uscld$cbn_all)[
@@ -1500,15 +1525,28 @@ gen_nbrs_pred <- function(top_coefs, cbn_dfs_rates_uscld, print_examples = print
         adt(df_reg)[, .(iso3c, year, nbr_opened)][., on = .(iso3c, year)] %>% 
         .[, .(CYs = .N*1.0, nbr_opened = sum(nbr_opened)), above_smorc_top_point] %>%
         melt(id.vars = "above_smorc_top_point", value.name = "cnt") %>% 
-        .[, prop := cnt/sum(cnt), variable] %>% 
+        .[, prop := (cnt/sum(cnt))*100, variable] %>% 
         melt(id.vars = c("above_smorc_top_point", "variable"), variable.name = "measure") %>%
-        .[measure == "cnt", value_fmt := fmt_nbr_flex(value, 0)] %>% # counts get formated with zero digits
-        .[measure == "prop", value_fmt := fmt_nbr_flex(value*100, 1)] %>% # proportions with 1
-        .[, name_fmt := sprintf("smorctop_%s_%s_%s", above_smorc_top_point, variable, measure)] %$% 
-        setNames(value_fmt, name_fmt)
+        .[, digits := fifelse(measure == "cnt", 0, 1)] %>%
+        apply(1, \(x) list(
+                          nbr_name = sprintf("smorctop_%s_%s_%s", x[["above_smorc_top_point"]], x[["variable"]],
+                                             x[["measure"]]),
+                          nbr = as.numeric(x[["value"]]),
+                          digits = as.numeric(x[["digits"]])))
+
+        ## .[measure == "cnt", value_fmt := fmt_nbr_flex(value, 0)] %>% # counts get formated with zero digits
+        ## .[measure == "prop", value_fmt := fmt_nbr_flex(value*100, 1)] # proportions with 1
+        ## .[, name_fmt := sprintf("smorctop_%s_%s_%s", above_smorc_top_point, variable, measure)] %$% 
+        ## setNames(value_fmt, name_fmt)
+
+    smorc_stats <- list(
+        lnbr(smorc_lin, 2),
+        lnbr(smorc_lin_flipped, 2),
+        lnbr(smorc_sqrd, 2),
+        lnbr(smorc_top_point_std, 2),
+        lnbr(smorc_top_point,0))
         
 
-    
     ## comparison for inequality variables
     ## cross-sectional 2020 change for shweal992j_p90p100_lag0
 
@@ -1572,6 +1610,16 @@ gen_nbrs_pred <- function(top_coefs, cbn_dfs_rates_uscld, print_examples = print
                                 .SD[which.max(log_likelihood), coef]]
     shweal_cbn_all_exp <- exp(shweal_cbn_all)
 
+    shweal_stats <- list(
+        lnbr(shweal_1SD_cbn_all, 1),
+        lnbr(shweal_iso3c1, 1),
+        lnbr(shweal_iso3c2, 1),
+        lnbr(shweal_lngtd_vlu_year1,1),
+        lnbr(shweal_lngtd_vlu_year2,1),
+        lnbr(shweal_cbn_all, 2),
+        lnbr(shweal_cbn_all_exp, 2))
+
+
     ## income inequality 
     sptinc_scale <- scale(cbn_dfs_rates_uscld$cbn_all$sptinc992j_p90p100_lag0)
     sptinc_1SD_cbn_all <- attr(sptinc_scale, "scaled:scale")
@@ -1629,6 +1677,15 @@ gen_nbrs_pred <- function(top_coefs, cbn_dfs_rates_uscld, print_examples = print
     ##     ggplot(aes(x=year, y=vlu, color = iso3c)) +
     ##     geom_line()
 
+    sptinc_stats <- list(
+        lnbr(sptinc_1SD_cbn_all, 1),
+        lnbr(sptinc_iso3c1, 1),
+        lnbr(sptinc_iso3c2, 1),
+        lnbr(sptinc_lngtd_vlu_year1, 1),
+        lnbr(sptinc_lngtd_vlu_year2, 1),
+        lnbr(sptinc_cbn_all,2),
+        lnbr(sptinc_cbn_all_exp,2))
+
         
     ## density numbers
     pm_density <- top_coefs[vrbl_name_unlag == "pm_density" & cbn_name == "cbn_all",
@@ -1681,49 +1738,31 @@ gen_nbrs_pred <- function(top_coefs, cbn_dfs_rates_uscld, print_examples = print
     ## fix the density measures first
 
     
-        
+    ## numbers that can get formated comfily with lnbr/fmt_nbr_flex
     l_res <- list(
-        lnbr(txdctblt_cbn3, 2),
-        lnbr(txdctblt_cbn3_exp, 1),
-        lnbr(txdctblt_cbn2, 2),
-        lnbr(tmitr_cbn2,2),
-        lnbr(txdctblt_tmitr_interact_cbn2, 2),
-        lnbr(txdctblt_tmitr_interact_cbn2_exp, 1),
-        lnbr(tmitr_1SD_cbn_all, 1),
-        lnbr(smorc_lin, 2),
-        lnbr(smorc_lin_flipped, 2),
-        lnbr(smorc_sqrd, 2),
-        lnbr(smorc_top_point_std, 2),
-        lnbr(smorc_top_point,0),
-        lnbr(intcpt, 2),
-        lnbr(intcpt_exp, 3),
-        lnbr(shweal_1SD_cbn_all, 1),
-        lnbr(shweal_iso3c1, 1),
-        lnbr(shweal_iso3c2, 1),
-        lnbr(shweal_lngtd_vlu_year1,1),
-        lnbr(shweal_lngtd_vlu_year2,1),
-        lnbr(shweal_cbn_all, 2),
-        lnbr(shweal_cbn_all_exp, 2),
-        lnbr(sptinc_1SD_cbn_all, 1),
-        lnbr(sptinc_iso3c1, 1),
-        lnbr(sptinc_iso3c2, 1),
-        lnbr(sptinc_lngtd_vlu_year1, 1),
-        lnbr(sptinc_lngtd_vlu_year2, 1),
-        lnbr(sptinc_cbn_all,2),
-        lnbr(sptinc_cbn_all_exp,2)
-    ) %>% rbindlist() %>%
-        .[, nbr_fmt := fmt_nbr_flex(nbr, digits = digits)] %$%
-        ## .[, nbr_fmt := nicely_fmt_number_v(nbr, max_digits = digits)] %$%
-        setNames(nbr_fmt, nbr_name)
+        intcpt_info = intcpt_info,
+        txinctvs = txinctvs,
+        smorc_stats = smorc_stats,
+        smorc_vlus_2020 = smorc_vlus_2020,
+        smorc_top_point_stats = smorc_top_point_stats,
+        shweal_stats = shweal_stats,
+        sptinc_stats = sptinc_stats)
+    
+    dt_nbrs_pred <- imap_dfr(l_res, ~rbindlist(.x)[, grp := .y]) %>%
+        .[, nbr_fmt := fmt_nbr_flex(nbr, digits)] %>%
+        .[, .(nbr_name, nbr_fmt, grp)]
 
-    c(l_res,
-      map(smorc_vlus_2020, ~fmt_nbr_flex(.x, digits = 0)),
-      smorc_top_point_stats,
-      list(shweal_lngtd_year1 = shweal_lngtd_year1, 
-           shweal_lngtd_year2 = shweal_lngtd_year2,
-           sptinc_lngtd_year1 = sptinc_lngtd_year1,
-           sptinc_lngtd_year2 = sptinc_lngtd_year2)      
-      )
+    
+    ## year numbers that get formated separately 
+    dt_yearnbrs <- list(      
+      c(lnbr(shweal_lngtd_year1, 0), list(grp = "shweal_stats")),
+      c(lnbr(shweal_lngtd_year2, 0), list(grp = "shweal_stats")),
+      c(lnbr(sptinc_lngtd_year1, 0), list(grp = "sptinc_stats")),
+      c(lnbr(sptinc_lngtd_year2, 0), list(grp = "sptinc_stats"))) %>% rbindlist() %>%
+        .[, .(nbr_name, nbr_fmt = as.character(nbr), grp)]
+      
+    rbind(dt_nbrs_pred, dt_yearnbrs)
+
     
     ## return(res)
     
@@ -1748,6 +1787,12 @@ gen_nbrs <- function(df_excl, df_open, cbn_dfs_rates, cbn_dfs_rates_uscld,  df_r
 
     ## number of those countries that have at least 1 pm, based on all PMs in database
     nbr_cry_wal1pm_all <- dt_excl[, uniqueN(na.omit(countrycode))]
+
+    pmdb_stats <- list(nbr_muem_in_pmdb = nbr_muem_in_pmdb,
+                       nbr_opnd_wld = nbr_opnd_wld,
+                       nbr_clsd_wld = nbr_clsd_wld,
+                       nbr_cry_wal1pm_all = nbr_cry_wal1pm_all)
+
 
     ## number of those countries that have at least 1 pm, based on PMs with complete information
     ## nbr_cry_wal1pm_cplt <- df_open %>% adt() %>% .[, uniqueN(na.omit(iso3c))]
@@ -1823,35 +1868,27 @@ gen_nbrs <- function(df_excl, df_open, cbn_dfs_rates, cbn_dfs_rates_uscld,  df_r
     l_cvrgnc$nbr_runs_p_cbn_spec <- adt(df_reg_anls_cfgs_wide)[, .N, .(cbn_name, base_lag_spec)][, round(mean(N),0)]
 
     
-    nbrs_pred <- gen_nbrs_pred(reg_res_objs$top_coefs, cbn_dfs_rates_uscld, print_examples)
+    res_desc <- c(list(
+        pmdb_stats = pmdb_stats,
+        nbr_pm_regsub = nbr_pm_regsub,
+        cbn_info = cbn_info,
+        opng_rates_fmt = opng_rates_fmt,
+        opng_prop_vlus = opng_prop_vlus,
+        popnbrs_p1pm = popnbrs_p1pm,
+        rate_opng_glbl = rate_opng_glbl,
+        rate_opng_glbl_yearly = rate_opng_glbl_yearly,
+        cvrgnc = lapply(l_cvrgnc, nicely_fmt_number)))
 
     
-    res <- c(list(
-        string_ensurer = "asdf",
-        nbr_muem_in_pmdb = nbr_muem_in_pmdb,
-        nbr_opnd_wld = nbr_opnd_wld,
-        nbr_clsd_wld = nbr_clsd_wld,
-        nbr_cry_wal1pm_all = nbr_cry_wal1pm_all),
-      nbr_pm_regsub,
-      cbn_info,
-      list(
-          nbr_mdl_started = nbr_mdl_started,
-          nbr_mld_ended = nbr_mld_ended
-      ),
-      opng_rates_fmt,
-      opng_prop_vlus,
-      popnbrs_p1pm,
-      rate_opng_glbl,
-      rate_opng_glbl_yearly,
-      ## as.list(nicely_fmt_number(l_cvrgnc)),
-      lapply(l_cvrgnc, nicely_fmt_number),      
-      nbrs_pred
-      )
-
-    dt_res <- data.table(nbr_name = names(res), value = as.character(unname(res))) %>% ## %>% print(n=100)
+    dt_nbrs_desc <- imap_dfr(res_desc, ~data.table(nbr_name = names(.x),
+                                                    nbr_fmt = as.character(unname(.x)), grp = .y)) %>%
         .[, nbr_name := factor(nbr_name, levels = nbr_name)]
 
-    if (dt_res[, .N, nbr_name][, max(N)] > 1) {stop("nbr_name not not unique")}
+    dt_nbrs_pred <- gen_nbrs_pred(reg_res_objs$top_coefs, cbn_dfs_rates_uscld, print_examples)
+
+    dt_res <- rbind(dt_nbrs_desc, dt_nbrs_pred)
+
+    if (dt_res[, .N, nbr_name][, max(N)] != 1) {stop("nbr_name not not unique")}
 
     return(dt_res)
 
