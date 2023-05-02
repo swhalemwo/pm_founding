@@ -1805,17 +1805,25 @@ gen_nbrs <- function(df_excl, df_open, cbn_dfs_rates, cbn_dfs_rates_uscld,  df_r
                                                      custom_match = c("TWN" = "South-eastern Asia"))] %>%
         .[, .N, region] %>% .[order(-N)] %>% .[1:5] %$%
         setNames(N, paste0("regsub_cnt_", gsub(" ", "_", region)))
-
+    
     
     ## combination info: nbr CYs, nbr countries, percentage of foundings covered
     cbn_info <- imap(cbn_dfs_rates[1:3],
          ~list(nbr_cy = nrow(.x),
                nbr_crys = n_distinct(.x$iso3c),
                nbr_opngs = sum(.x$nbr_opened),
-               prop_opngs_cvrd = fmt_nbr_flex(round(sum(.x$nbr_opened, na.rm = T)/nbr_muem_in_pmdb,3), digits = 3)
-               )) %>% rbindlist(idcol = T) %>% melt(id.vars = ".id") %>%
+               prop_opngs_cvrd = fmt_nbr_flex(round(sum(.x$nbr_opened, na.rm = T)/nbr_muem_in_pmdb,3), digits = 3),
+               )) %>%
+        rbindlist(idcol = T) %>% melt(id.vars = ".id") %>%
         .[, vrbl := paste0(variable, "_", .id)] %$%
         setNames(value, vrbl)
+
+    ## look at within/between iso3c/dataset variation in year coverage, is both within/between
+    ## imap_dfr(cbn_dfs_rates[1:3], ~adt(.x)[, .(N = .N, cbn = .y), iso3c]) %>%
+    ##     .[, .(meanN = mean(N)), cbn]
+    ##     ## xtsum(N, iso3c) %>% adt()
+    ##     ## dcast.data.table(iso3c ~ cbn, value.var = "N") %>% na.omit() %>% print(n=200)
+        
         
     ## average country-level rates
     
