@@ -1817,11 +1817,6 @@ gen_nbrs <- function(df_excl, df_open, cbn_dfs_rates, cbn_dfs_rates_uscld,  df_r
         .[, vrbl := paste0(variable, "_", .id)] %$%
         setNames(value, vrbl)
         
-    ## number of models started and finished
-    fldr_infox <- setup_regression_folders_and_files(batch_version)
-    nbr_mdl_started <- fread(fldr_infox$MDL_START_FILE, header = F)[, .N]
-    nbr_mld_ended <- fread(fldr_infox$MDL_END_FILE, header = F)[, .N]
-
     ## average country-level rates
     
     opng_rates_vlus <- map(cbn_dfs_rates, ~adt(.x)[, mean(nbr_opened/SP_POP_TOTLm_lag0_uscld)])
