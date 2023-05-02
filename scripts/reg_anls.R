@@ -1832,7 +1832,7 @@ gen_nbrs <- function(df_excl, df_open, cbn_dfs_rates, cbn_dfs_rates_uscld,  df_r
         
                             
     opng_rates_fmt <- c(
-        opng_rate_cbn1 = nicely_fmt_number(opng_rates_vlus$cbn_all,3),
+        opng_rate_cbn1 = nicely_fmt_number(opng_rates_vlus$cbn_all,4),
         opng_rate_cbn2 = nicely_fmt_number(opng_rates_vlus$cbn_no_cult_spending,4),
         opng_rate_cbn3 = nicely_fmt_number(opng_rates_vlus$cbn_no_cult_spending_and_mitr,4)) %>% as.list()
         

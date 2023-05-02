@@ -50,7 +50,7 @@ dt_nbrs[, .(macro_str = sprintf("#+MACRO: %s %s", nbr_name, nbr_fmt)), grp] %>%
 
 
 # opng_rates_fmt
-#+MACRO: opng_rate_cbn1 0.011
+#+MACRO: opng_rate_cbn1 0.0112
 #+MACRO: opng_rate_cbn2 0.0061
 #+MACRO: opng_rate_cbn3 0.0047
 
@@ -522,7 +522,7 @@ After recording the names and deleting duplicates, it was investigated using pub
 #
 Following this, additional information about each museum was collected by student assistants, the most relevant for this research being country and opening year.
 #
-Currently, the database includes {{{nbr_muem_in_pmdb}}} museums (of which *446* are currently open), located in {{{nbr_cry_wal1pm_all}}} countries, with the majority being located in Western Europe (*136*), East Asia (*97*) and North America (*77*).
+Currently, the database includes {{{nbr_muem_in_pmdb}}} museums (of which *446* are currently open), located in {{{nbr_cry_wal1pm_all}}} countries, with the majority being located in Western Europe ({{{regsub_cnt_Western_Europe}}}), East Asia ({{{regsub_cnt_Eastern_Asia}}}) and North America ({{{regsub_cnt_Northern_America}}}).
 #
 Information on country and opening year is used to construct a count indicator of the number of private museums opened in each country-year.
 #
@@ -883,7 +883,7 @@ The intercepts correspond to the predicted (logged) founding rate for a country-
 #
 Given the standardization of the variables, this corresponds to a country at the means of the variables and without tax deductibility of charitable donations.
 #
-Thus they also illustrate the highly skewed distribution of the variables, as predicted opening count at the means for "DS all IVs" with e\textsuperscript{{{{intcpt}}}}= {{{intcpt_exp}}} is around one order of magnitude higher than average founding rate in the dataset ({{{opng_rate_cbn1}}}, cf. table \ref{tbl:descs}); a pattern of similar magnitude is present in the other datasets as well. 
+Thus they also illustrate the highly skewed distribution of the variables, as predicted opening count at the means for "DS all IVs" with e\textsuperscript{{{{intcpt}}}}= {{{intcpt_exp}}} is almost one order of magnitude higher than average founding rate in the dataset ({{{opng_rate_cbn1}}}, cf. table \ref{tbl:descs}); a pattern of similar magnitude is present in the other datasets as well. 
 
 
 **** tax incentives :ignhead:
@@ -914,7 +914,7 @@ This range of a positive association between government spending and private mus
 #
 It is furthermore worth to consider that "DS all IVs" consists disproportionately of developed countries, the true proportion of country-years in which higher government expenditure is associated with higher private museum is likely even higher.
 #
-Nevertheless, in the range above this turning point which (in 2020) includes countries prominent for their private museum populations such as Germany ({{{smorc_2020_DEU}}} USD), France ({{{smorc_2020_FRA}}} USD), the Nethelands ({{{smorc_2020_NLD}}} USD) or Switzerland ({{{smorc_2020_CHE}}} USD) increases in government spending are associated with lower rates of private museum founding (and conversely, decreases in government spending with higher rates of private museum founding).
+Nevertheless, in the range above this turning point which (in 2020) includes countries prominent for their private museum populations such as Germany ({{{smorc_2020_DEU}}} USD), France ({{{smorc_2020_FRA}}} USD), the Netherlands ({{{smorc_2020_NLD}}} USD) or Switzerland ({{{smorc_2020_CHE}}} USD) increases in government spending are associated with lower rates of private museum founding (and conversely, decreases in government spending with higher rates of private museum founding).
 # 
 The data thus supports both the the crowding-out argument of the private museum literature which considers private museum founding  a consequence of declining government spending (H2) as well as the crowding in argument raised by philanthropy scholars. 
 #
@@ -929,7 +929,7 @@ While income inequality is significantly associated with lower founding, wealth 
 #
 Thus, a 1 SD increase of the income share of the top 10% ({{{sptinc_1SD_cbn_all}}}% in 2020 in "DS all IVs", which corresponds approximately to the difference between Sweden ({{{sptinc_iso3c1}}}%) and Canada ({{{sptinc_iso3c2}}}%), or the within-country change in Lithuania from {{{sptinc_lngtd_year1}}} ({{{sptinc_lngtd_vlu_year1}}}%) to {{{sptinc_lngtd_year2}}} ({{{sptinc_lngtd_vlu_year2}}}%)) is associated with a decrease in private museum founding rate by a factor of e\textsuperscript{{{{sptinc_cbn_all}}}} = {{{sptinc_cbn_all_exp}}}. 
 # 
-Conversely, a 1 SD increase of the wealth share of the top 10% ({{{shweal_1SD_cbn_all}}}% in 2020 in "DS all IVs", a difference in size similar to that between Denmark ({{{shweal_iso3c1}}}%) and the Czech Republic ({{{shweal_iso3c2}}}%) in 2020, or to the longitudinal change in the United States from {{{shweal_lngtd_year1}}} ({{{shweal_lngtd_vlu_year1}}}%) to {{{shweal_lngtd_year2}}} ({{{shweal_lngtd_vlu_year2}}}%)) is associated with an increase in private museum founding rate by a factor of e\textsuperscript{{{{shweal_cbn_all}}}} = {{{shweal_cbn_all_exp}}}.
+Conversely, a 1 SD increase of the wealth share of the top 10% ({{{shweal_1SD_cbn_all}}}%; a difference in size similar to that between Denmark ({{{shweal_iso3c1}}}%) and the Czech Republic ({{{shweal_iso3c2}}}%) in 2020 in "DS all IVs", or to the longitudinal change in the United States from {{{shweal_lngtd_year1}}} ({{{shweal_lngtd_vlu_year1}}}%) to {{{shweal_lngtd_year2}}} ({{{shweal_lngtd_vlu_year2}}}%)) is associated with an increase in private museum founding rate by a factor of e\textsuperscript{{{{shweal_cbn_all}}}} = {{{shweal_cbn_all_exp}}}.
 #
 There is thus substantial evidence for H3 in regards of wealth inequality, but also strong empirial evidence against a positive association between income inequality and private museum founding. 
 
@@ -940,9 +940,7 @@ Firstly, the effects of wealth inequality are substantially larger in "DS -CuSP"
 #
 Secondly, in all datasets the coefficients of the top percentile shares are larger (in absolute terms) than those of the gini coefficients.
 #
-Either or both of these patterns possibly lead to the gini coefficients in "DS all IVs" to become not significant.
-# 
-Investigating the mechanisms behind patterns constitutes fruitful approaches for future research. 
+Either one or both of these patterns possibly lead to the gini coefficients in "DS all IVs" to become not significant; investigating the mechanisms behind these patterns constitutes fruitful approaches for future research. 
 
 
 
@@ -950,16 +948,12 @@ Investigating the mechanisms behind patterns constitutes fruitful approaches for
 
 Increases in the number of HNWI do not seem to be substantially associated with private museum founding as after controlling for other variables, the HNWI coefficients are firstly comparatively small relative to to those of other indicators, secondly not statistically significant and thirdly occasionally even negative. 
 #
-Consequently, there is little evidence that HNWI rates are substantially associated with private museum founding in either direction. 
-
-
-
+Consequently, there is little evidence that HNWI rates are substantially associated with private museum founding in either direction (H4). 
 
 # Overall, cbn_no_cult_spending and cbn_no_cult_spending_and_mitr are more similar in coefficient results than either is to cbn_all. 
 # #
 # This can be seen in the identical selection of variables for HNWI and inequality as well as similar coefficient signs, sizes and significances:
 # #
-
 
 
 # *** HNWIs (H4)
@@ -986,9 +980,9 @@ It thus constitutes a worthwile approach to consider in more detail how private 
 
 ***** density dependence 
 
-In all datasets,  measures of density (legitimacy) and density squared (competition) correspond to the density-dependence hypotheses, namely a reverse U-shaped relationship between density and private museum founding.
+In all datasets,  measures of density (legitimacy) and density squared (competition) correspond to the density-dependence hypothesis, namely a inverted U-shaped relationship between density and private museum founding.
 #
-Indicated by the negative coefficient of the squared density measure (which significant everywhere except for the global coefficient in "DS all IVs";  where however it is marginally significant), this is the case for density measures on the level of both the country and the world.
+Indicated by the negative coefficient of the squared density measure (which significant everywhere except for the global coefficient in "DS all IVs"; where however it is marginally significant), this is the case for density measures on the level of both the country and the world.
 # 
 Thus following the density dependence paradigm, potential founders were motivated by their peers' decision to establish a private musuem up to the point where private museum numbers increased to the extent that additional founding did not appear advantageous to them anymore. 
 #
