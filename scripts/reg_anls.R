@@ -1862,7 +1862,7 @@ stop("functions done")
 
 ## ** main analysis
 NBR_MDLS <- 1
-batch_version <- "v74"
+batch_version <- "v75"
 ## fldr_info <- fldr_info_optmz
 fldr_info <- setup_regression_folders_and_files(batch_version)
 reg_anls_base <- read_reg_anls_files(fldr_info)
