@@ -1759,7 +1759,7 @@ gen_nbrs <- function(df_excl, df_open, cbn_dfs_rates, cbn_dfs_rates_uscld,  df_r
     nbr_pm_regsub <- dt_excl %>% copy() %>% .[, region := countrycode(countrycode, "iso3c", "un.regionsub.name",
                                                      custom_match = c("TWN" = "South-eastern Asia"))] %>%
         .[, .N, region] %>% .[order(-N)] %>% .[1:5] %$%
-        setNames(N, paste0("regsub_cnt_", region))
+        setNames(N, paste0("regsub_cnt_", gsub(" ", "_", region)))
 
     
     ## combination info: nbr CYs, nbr countries, percentage of foundings covered
