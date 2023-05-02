@@ -1458,15 +1458,61 @@ gen_nbrs_pred <- function(top_coefs, cbn_dfs_rates_uscld, df_reg, print_examples
 
     ## top_coefs[, .N, vrbl_name_unlag] %>% print(n=200)
     
-    tmitr_1SD_cbn_all <- sd(cbn_dfs_rates_uscld$cbn_all$tmitr_approx_linear20step_lag0)
+    tmitr_scale_cbn2 <- scale(cbn_dfs_rates_uscld$cbn_no_cult_spending$tmitr_approx_linear20step_lag0)
+    tmitr_1SD_cbn_no_cult_spending <- attr(tmitr_scale_cbn2, "scaled:scale")
+    
+    
+    dt_ti_pred <- expand.grid(tax_ddctblt = c(0,1),
+                              tmitr = seq(round(min(tmitr_scale_cbn2),2),
+                                          round(max(tmitr_scale_cbn2),2), 0.05)) %>% adt() %>%
+        .[, pred := txdctblt_cbn2 * tax_ddctblt + tmitr_cbn2 *tmitr +
+                txdctblt_tmitr_interact_cbn2 * tax_ddctblt * tmitr]
+
+    ggplot(dt_ti_pred, aes(x=tmitr, y=pred, color = factor(tax_ddctblt))) +
+        geom_line()
+
+    ## some more comparison
+    ## CHL <- txdctblt_cbn2 * 1 + tmitr_cbn2 * 0 + txdctblt_tmitr_interact_cbn2 * 1 * 0 # "Chile"
+    ## NLD <- txdctblt_cbn2 * 1 + tmitr_cbn2 * 1 + txdctblt_tmitr_interact_cbn2 * 1 * 1 #
+
+    ## NLD-CHL
+    ## y = x0 + a + b + x
+    ## x0: y if a and b are 0
+    ## a: where b = 0, difference between a = 0 and a = 1
+    ## at mean TMITR, countries with txdctblt have 0.48 higher log-rates
+    ## b: where a = 0, difference between b = 0 and b = 1
+    ## at group with no tax deductibility of donations, countries with tmitr = 1 have -0.38 lower log rate than countries with tmitr = 0
+    ## interaction of x shows that 1 unit increase of a/b increases effect of b/a on y by x
+    ## interaction x: difference in effectiveness of tmitr between countries with tax deductibility and those without (1 unit change in tax deductibility)
+    ## in countries with tax deductibility, the effect of 1 unit increase (1SD) tmitr is 0.77 larger
+    
+    ## rbind(
+    ##     dt_ti_pred[tax_ddctblt == 1 & tmitr %in% c(0,1)] %>%
+    ##     dcast.data.table(tax_ddctblt ~ tmitr, value.var = "pred"),
+    ##     dt_ti_pred[tax_ddctblt == 0 & tmitr %in% c(0,1)] %>%
+    ##     dcast.data.table(tax_ddctblt ~ tmitr, value.var = "pred")) %>%
+    ##     .[, diff := `1` - `0`] %>%
+    ##     dcast.data.table(.~tax_ddctblt, value.var = "diff") %>%
+    ##     .[, diff2 := `1` - `0`]
+        
 
     
-    expand.grid(tax_ddctblt = c(0,1), tmitr = seq(-2, 2.5, 0.5)) %>% adt() %>%
-        .[, pred := txdctblt_cbn2 * tax_ddctblt + tmitr_cbn2 *tmitr +
-                txdctblt_tmitr_interact_cbn2 * tax_ddctblt * tmitr] %>%
-        ggplot(aes(x=tmitr, y=pred, color = factor(tax_ddctblt))) +
-        geom_line()
-    
+    dt_tmitr_exmpl <- adt(cbn_dfs_rates_uscld$cbn_no_cult_spending) %>%
+        .[year == 2020, .(iso3c, tmitr = tmitr_approx_linear20step_lag0, mrg = "mrg")] %>% 
+        .[., on = "mrg", allow.cartesian = T] %>%
+        ## .[iso3c > i.iso3c] %>%
+        .[, diff := tmitr - i.tmitr] %>%
+        .[diff > tmitr_1SD_cbn_no_cult_spending * 0.95 & diff < tmitr_1SD_cbn_no_cult_spending*1.05]
+        
+    if (print_examples) print(dt_tmitr_exmpl, n = 200)
+
+    tmitr_cprn_iso3c1 <- "NLD"
+    tmitr_cprn_iso3c2 <- "CHL"
+
+    dt_tmitr_exmpl_fltrd <- dt_tmitr_exmpl[iso3c == tmitr_cprn_iso3c1 & i.iso3c == tmitr_cprn_iso3c2]
+    tmitr_iso3c1 <- dt_tmitr_exmpl_fltrd$tmitr
+    tmitr_iso3c2 <- dt_tmitr_exmpl_fltrd$i.tmitr
+
 
     txinctvs <- list(
         lnbr(txdctblt_cbn3, 2),
@@ -1474,8 +1520,10 @@ gen_nbrs_pred <- function(top_coefs, cbn_dfs_rates_uscld, df_reg, print_examples
         lnbr(txdctblt_cbn2, 2),
         lnbr(tmitr_cbn2,2),
         lnbr(txdctblt_tmitr_interact_cbn2, 2),
-        lnbr(txdctblt_tmitr_interact_cbn2_exp, 1),
-        lnbr(tmitr_1SD_cbn_all, 1))
+        lnbr(txdctblt_tmitr_interact_cbn2_exp, 2),
+        lnbr(tmitr_1SD_cbn_no_cult_spending, 1),
+        lnbr(tmitr_iso3c1, 0),
+        lnbr(tmitr_iso3c2, 0))
 
 
     ## predicted numbers for government spending 
