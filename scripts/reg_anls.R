@@ -1749,7 +1749,26 @@ gen_nbrs_pred <- function(top_coefs, cbn_dfs_rates_uscld, df_reg, print_examples
         pmap(~with(list(...), list(nbr_name = name_fmt, nbr = value, digits = digits)))
 
     ## fix the density measures first: fixed now 
+
+    ## GDP stuff
+    ## coefs
+    gdp_stats1 <- copy(top_coefs)[vrbl_name_unlag == "NY.GDP.PCAP.CDk",
+                    .SD[which.max(log_likelihood), .(coef)], cbn_name] %>%
+        .[, name_fmt := paste0("gdp_coef_", cbn_name)] %>%
+        pmap(~with(list(...), list(nbr_name = name_fmt, nbr = coef, digits = 2)))
+
+    ## 1 SD 
+    gdp_stats2 <- imap(cbn_dfs_rates_uscld[1:3], ~adt(.x) %$% scale(NY.GDP.PCAP.CDk_lag0) %>%
+                                       attr(., "scaled:scale") %>% 
+                                       list(nbr_name = paste0("gdp_1SD_", .y),
+                                            nbr = .,
+                                            digits = 2)) %>% unname()
+
+    gdp_stats <- c(gdp_stats1, gdp_stats2)
     
+        
+
+
     
     ## numbers that can get formated comfily with lnbr/fmt_nbr_flex
     l_res <- list(
@@ -1762,7 +1781,8 @@ gen_nbrs_pred <- function(top_coefs, cbn_dfs_rates_uscld, df_reg, print_examples
         sptinc_stats = sptinc_stats,
         dens_coef_stats = dens_coef_stats,
         dens_cry_top_point_stats = dens_cry_top_point_stats,
-        dens_glbl_top_point_stats = dens_glbl_top_point_stats)
+        dens_glbl_top_point_stats = dens_glbl_top_point_stats,
+        gdp_stats = gdp_stats)
     
     dt_nbrs_pred_prep <- imap_dfr(l_res, ~rbindlist(.x)[, grp := .y]) %>%
         .[, nbr_fmt := fmt_nbr_flex(nbr, digits)] %>%

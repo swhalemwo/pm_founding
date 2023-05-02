@@ -215,6 +215,15 @@ dt_nbrs[, .(macro_str = sprintf("#+MACRO: %s %s", nbr_name, nbr_fmt)), grp] %>%
 #+MACRO: dens_glbl_top_below_CYs_prop 32.5
 #+MACRO: dens_glbl_top_above_nbr_opened_prop 67.7
 #+MACRO: dens_glbl_top_below_nbr_opened_prop 32.3
+
+
+# gdp_stats
+#+MACRO: gdp_coef_cbn_no_cult_spending_and_mitr 0.88
+#+MACRO: gdp_coef_cbn_no_cult_spending 0.79
+#+MACRO: gdp_coef_cbn_all 0.39
+#+MACRO: gdp_1SD_cbn_all 24.87
+#+MACRO: gdp_1SD_cbn_no_cult_spending 21.33
+#+MACRO: gdp_1SD_cbn_no_cult_spending_and_mitr 19.74
 :end:
 
 
@@ -1002,14 +1011,13 @@ Consequently, there is little evidence that HNWI rates are substantially associa
 
 ***** GDP and population size :ignhead:
 
-The coefficient of GDP per capita is positive and significant in all datasets, and is furthermore substantially larger in "DS -CuSp" and "DS -CuSP/TMITR". 
+The coefficient of GDP per capita is positive and significant in all datasets. 
 #
-Given that in these datasets GDP per capita has a smaller standard deviation (table \ref{tbl:descs}), and hence lower variations of GDP are associated with larger changes, there is substantial support for a so far not theorized role of country features such as productivity or education.
-#
-It thus constitutes a worthwile approach to consider in more detail how private museum founding is related to the institutional environment. 
+It is furthermore substantially larger in "DS -CuSp" ({{{gdp_coef_cbn_no_cult_spending}}}) and "DS -CuSP/TMITR" ({{{gdp_coef_cbn_no_cult_spending_and_mitr}}}) than in "DS all IVs" ({{{gdp_coef_cbn_all}}}), which is substantial especially when considering that in datasets with more country years GDP per capita has a smaller standard deviation ({{{gdp_1SD_cbn_no_cult_spending}}}, {{{gdp_1SD_cbn_no_cult_spending_and_mitr}}} and {{{gdp_1SD_cbn_all}}} in "DS -CuSp", "DS -CuSp/TMTIR and "DS all IVs", respectively).
+# 
+This between-dataset variation in coefficient size possibly indicates moderation of GDP through cultural spending; however further research would be required to more clearly determine the mechanism at play. 
 
-# #
-# As these are rather crude measures, them becoming insignificant could indicate again a strong influence of cultural spending, or different effects being present in the different datasets.
+
 
 ***** density dependence :ignhead:
 
