@@ -948,11 +948,9 @@ Investigating the mechanisms behind patterns constitutes fruitful approaches for
 
 **** HNWI :ignhead:
 
-Increases in the number of HNWI do not seem to be substantially associated with private museum founding as after controlling for other variables, the HNWI coefficients are both comparatively small relative to to those of other indicators and generally not statistically significant.
-# 
-The point estimate are furthermore often negative, as are the two HNWI coefficients who do reach statistical significance (HNWI >= 5M in "DS -CuSp" and "DS -CuSp/TMITR").
+Increases in the number of HNWI do not seem to be substantially associated with private museum founding as after controlling for other variables, the HNWI coefficients are firstly comparatively small relative to to those of other indicators, secondly not statistically significant and thirdly occasionally even negative. 
 #
-While thus some evidence might even point to a slight negative association between HNWI numbers and private museum founding, the small and often insignificant coefficients as well as the inconsistencies of coefficient signs does for now not provide substantial evidence in either direction. 
+Consequently, there is little evidence that HNWI rates are substantially associated with private museum founding in either direction. 
 
 
 
