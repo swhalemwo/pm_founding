@@ -182,6 +182,39 @@ dt_nbrs[, .(macro_str = sprintf("#+MACRO: %s %s", nbr_name, nbr_fmt)), grp] %>%
 #+MACRO: sptinc_cbn_all_exp 0.64
 #+MACRO: sptinc_lngtd_year1 2000
 #+MACRO: sptinc_lngtd_year2 2014
+
+
+# dens_coef_stats
+#+MACRO: pm_density_cbn_all 1.20
+#+MACRO: pm_density_sqrd_cbn_all -0.29
+#+MACRO: pm_density_glbl_cbn_all -0.38
+#+MACRO: pm_density_glbl_sqrd_cbn_all -0.28
+#+MACRO: dens_cry_top_point_std_cbn_all 2.05
+#+MACRO: dens_glbl_top_point_std_cbn_all -0.69
+#+MACRO: dens_cry_top_point_cbn_all 0.74
+#+MACRO: dens_glbl_top_point_cbn_all 221.05
+
+
+# dens_cry_top_point_stats
+#+MACRO: dens_cry_top_below_CYs_cnt 1 156
+#+MACRO: dens_cry_top_above_CYs_cnt 94
+#+MACRO: dens_cry_top_below_nbr_opened_cnt 316
+#+MACRO: dens_cry_top_above_nbr_opened_cnt 40
+#+MACRO: dens_cry_top_below_CYs_prop 92.5
+#+MACRO: dens_cry_top_above_CYs_prop 7.5
+#+MACRO: dens_cry_top_below_nbr_opened_prop 88.8
+#+MACRO: dens_cry_top_above_nbr_opened_prop 11.2
+
+
+# dens_glbl_top_point_stats
+#+MACRO: dens_glbl_top_above_CYs_cnt 844
+#+MACRO: dens_glbl_top_below_CYs_cnt 406
+#+MACRO: dens_glbl_top_above_nbr_opened_cnt 241
+#+MACRO: dens_glbl_top_below_nbr_opened_cnt 115
+#+MACRO: dens_glbl_top_above_CYs_prop 67.5
+#+MACRO: dens_glbl_top_below_CYs_prop 32.5
+#+MACRO: dens_glbl_top_above_nbr_opened_prop 67.7
+#+MACRO: dens_glbl_top_below_nbr_opened_prop 32.3
 :end:
 
 
@@ -978,7 +1011,7 @@ It thus constitutes a worthwile approach to consider in more detail how private 
 # #
 # As these are rather crude measures, them becoming insignificant could indicate again a strong influence of cultural spending, or different effects being present in the different datasets.
 
-***** density dependence 
+***** density dependence :ignhead:
 
 In all datasets,  measures of density (legitimacy) and density squared (competition) correspond to the density-dependence hypothesis, namely a inverted U-shaped relationship between density and private museum founding.
 #
@@ -986,7 +1019,19 @@ Indicated by the negative coefficient of the squared density measure (which sign
 # 
 Thus following the density dependence paradigm, potential founders were motivated by their peers' decision to establish a private musuem up to the point where private museum numbers increased to the extent that additional founding did not appear advantageous to them anymore. 
 #
-However, while collectors ultapparently were ultimately disincentivized by growing private museum numbers, they were not influenced by the number of museum closures, as the coefficient of the cumulative number of museum closures is not significant and varies in sign between datasets. 
+However, while collectors ultapparently were ultimately disincentivized by growing private museum numbers, they were not influenced by the number of museum closures, as the coefficient of the cumulative number of museum closures is not significant and varies in sign between datasets.
+
+
+# While the general pattern thus follows the density-dependence literature, the particular values of the coefficients indicate additional complexities.
+# #
+# Whereas in "DS all IVs" the maximum of the private museum country density curve is reached at a value of {{{dens_cry_top_point_std_cbn_all}}}, correponding to a density of {{{dens_cry_top_point_cbn_all}}} private museums per million inhabitants, which constitutes a value higher than observed in {{{dens_cry_top_below_CYs_prop}}}% of country years, the maxium of the global density curve is already reached at a value of {{{dens_glbl_top_point_std_cbn_all}}}, corresponding to the global private museum count of {{{dens_glbl_top_point_cbn_all}}}, which is a value only higher than {{{dens_glbl_top_below_CYs_prop}}}% of country years.
+# #
+# In other words, the country-level capacity appears to be higher than the global carrying capacity, as on the country-level increasing private museum densities are associated with higher chances of private museum foundings for a substantially larger section of the data than on the global level.
+# # this is 92% made up
+# A possible reason for this phenomenon could be that unobserved variables limit the founding chances for a number of countries, as a consequence of which the country-level carrying capacity is disproportionally based on the countries in which foundings take place and therefore constitutes a level which can't be reached in most countries. 
+# #
+# However, more research is needed to investigate this phenomenon further. 
+
 
 # density dependence also has large model improvement
 

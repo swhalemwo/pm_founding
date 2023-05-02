@@ -1426,7 +1426,7 @@ gen_plt_chng <- function(l_cbndfs) {
 
 
 
-gen_nbrs_pred <- function(top_coefs, cbn_dfs_rates_uscld, print_examples = print_examples) {
+gen_nbrs_pred <- function(top_coefs, cbn_dfs_rates_uscld, df_reg, print_examples = print_examples) {
     #' generate the numbers related to prediction 
     if (as.character(match.call()[[1]]) %in% fstd){browser()}
     1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;
@@ -1534,6 +1534,7 @@ gen_nbrs_pred <- function(top_coefs, cbn_dfs_rates_uscld, print_examples = print
                           nbr = as.numeric(x[["value"]]),
                           digits = as.numeric(x[["digits"]])))
 
+    
         ## .[measure == "cnt", value_fmt := fmt_nbr_flex(value, 0)] %>% # counts get formated with zero digits
         ## .[measure == "prop", value_fmt := fmt_nbr_flex(value*100, 1)] # proportions with 1
         ## .[, name_fmt := sprintf("smorctop_%s_%s_%s", above_smorc_top_point, variable, measure)] %$% 
@@ -1688,55 +1689,67 @@ gen_nbrs_pred <- function(top_coefs, cbn_dfs_rates_uscld, print_examples = print
 
         
     ## density numbers
-    pm_density <- top_coefs[vrbl_name_unlag == "pm_density" & cbn_name == "cbn_all",
+    pm_density_cbn_all <- top_coefs[vrbl_name_unlag == "pm_density" & cbn_name == "cbn_all",
                             .SD[which.max(log_likelihood), coef]]
-    pm_density_sqrd <- top_coefs[vrbl_name_unlag == "pm_density_sqrd" & cbn_name == "cbn_all",
+    pm_density_sqrd_cbn_all <- top_coefs[vrbl_name_unlag == "pm_density_sqrd" & cbn_name == "cbn_all",
                                .SD[which.max(log_likelihood), coef]]
 
-    pm_density_glbl <- top_coefs[vrbl_name_unlag == "pm_density_global" & cbn_name == "cbn_all",
+    pm_density_glbl_cbn_all <- top_coefs[vrbl_name_unlag == "pm_density_global" & cbn_name == "cbn_all",
                                .SD[which.max(log_likelihood), coef]]
-    pm_density_glbl_sqrd <- top_coefs[vrbl_name_unlag == "pm_density_global_sqrd" & cbn_name == "cbn_all",
+    pm_density_glbl_sqrd_cbn_all <- top_coefs[vrbl_name_unlag == "pm_density_global_sqrd" & cbn_name == "cbn_all",
                                       .SD[which.max(log_likelihood), coef]]
     
-    dens_cry_top_point_std <- -pm_density/(2*pm_density_sqrd)
-    dens_glbl_top_point_std <- -pm_density_glbl/(2*pm_density_glbl_sqrd)
-
+    dens_cry_top_point_std_cbn_all <- -pm_density_cbn_all/(2*pm_density_sqrd_cbn_all)
+    dens_glbl_top_point_std_cbn_all <- -pm_density_glbl_cbn_all/(2*pm_density_glbl_sqrd_cbn_all)
+    
+    
     dens_cry_scale <- scale(cbn_dfs_rates_uscld$cbn_all$pm_density_lag0)
     dens_glbl_scale <- scale(cbn_dfs_rates_uscld$cbn_all$pm_density_global_lag0)
 
-    dens_cry_top_point <- (dens_cry_top_point_std * attr(dens_cry_scale, "scaled:scale")) +
+    dens_cry_top_point_cbn_all <- (dens_cry_top_point_std_cbn_all * attr(dens_cry_scale, "scaled:scale")) +
         attr(dens_cry_scale, "scaled:center")
 
-    dens_glbl_top_point <- (dens_glbl_top_point_std * attr(dens_glbl_scale, "scaled:scale")) +
+    dens_glbl_top_point_cbn_all <- (dens_glbl_top_point_std_cbn_all * attr(dens_glbl_scale, "scaled:scale")) +
         attr(dens_glbl_scale, "scaled:center")
 
-    dens_cry_top_point_stats <- adt(cbn_dfs_rates_uscld$cbn_all)[
-      , above_dens_cry_top_point := ifelse(pm_density_lag0 > dens_cry_top_point, "above", "below")] %>%
-        adt(df_reg)[, .(iso3c, year, nbr_opened)][., on = .(iso3c, year)] %>% 
-        .[, .(CYs = .N*1.0, nbr_opened = sum(nbr_opened)), above_dens_cry_top_point]  %>%
-        melt(id.vars = "above_dens_cry_top_point", value.name = "cnt") %>% 
-        .[, prop := cnt/sum(cnt), variable] %>% 
-        melt(id.vars = c("above_dens_cry_top_point", "variable"), variable.name = "measure") %>%
-        .[measure == "cnt", value_fmt := fmt_nbr_flex(value, 0)] %>% # counts get formated with zero digits
-        .[measure == "prop", value_fmt := fmt_nbr_flex(value*100, 1)] %>% # proportions with 1
-        .[, name_fmt := sprintf("dens_cry_top_%s_%s_%s", above_dens_cry_top_point, variable, measure)] %$% 
-        setNames(value_fmt, name_fmt)
+    dens_coef_stats <- list(
+        lnbr(pm_density_cbn_all, 2),
+        lnbr(pm_density_sqrd_cbn_all, 2),
+        lnbr(pm_density_glbl_cbn_all, 2),
+        lnbr(pm_density_glbl_sqrd_cbn_all, 2),
+        lnbr(dens_cry_top_point_std_cbn_all, 2),
+        lnbr(dens_glbl_top_point_std_cbn_all, 2),
+        lnbr(dens_cry_top_point_cbn_all, 2),
+        lnbr(dens_glbl_top_point_cbn_all, 2))
 
     
+        
+    dens_cry_top_point_stats <- adt(cbn_dfs_rates_uscld$cbn_all)[
+      , above_dens_cry_top_point := ifelse(pm_density_lag0 > dens_cry_top_point_cbn_all, "above", "below")] %>% 
+        adt(df_reg)[, .(iso3c, year, nbr_opened)][., on = .(iso3c, year)] %>% # merge nbr_opened
+        .[, .(CYs = .N*1.0, nbr_opened = sum(nbr_opened)), above_dens_cry_top_point]  %>%
+        melt(id.vars = "above_dens_cry_top_point", value.name = "cnt") %>% 
+        .[, prop := 100*cnt/sum(cnt), variable] %>% 
+        melt(id.vars = c("above_dens_cry_top_point", "variable"), variable.name = "measure") %>%
+        .[, digits := fifelse(measure == "cnt", 0, 1)] %>%
+        .[, name_fmt := sprintf("dens_cry_top_%s_%s_%s", above_dens_cry_top_point, variable, measure)] %>%
+        pmap(~with(list(...), list(nbr_name = name_fmt, nbr = value, digits = digits)))
+        
+    
+
     dens_glbl_top_point_stats <- adt(cbn_dfs_rates_uscld$cbn_all)[
-      , above_dens_glbl_top_point := ifelse(pm_density_global_lag0 > dens_glbl_top_point, "above", "below")] %>%
+      , above_dens_glbl_top_point := ifelse(pm_density_global_lag0 > dens_glbl_top_point_cbn_all, "above", "below")] %>%
         adt(df_reg)[, .(iso3c, year, nbr_opened)][., on = .(iso3c, year)] %>% 
         .[, .(CYs = .N*1.0, nbr_opened = sum(nbr_opened)), above_dens_glbl_top_point]  %>%
         melt(id.vars = "above_dens_glbl_top_point", value.name = "cnt") %>% 
-        .[, prop := cnt/sum(cnt), variable] %>% 
+        .[, prop := 100*cnt/sum(cnt), variable] %>% 
         melt(id.vars = c("above_dens_glbl_top_point", "variable"), variable.name = "measure") %>%
-        .[measure == "cnt", value_fmt := fmt_nbr_flex(value, 0)] %>% # counts get formated with zero digits
-        .[measure == "prop", value_fmt := fmt_nbr_flex(value*100, 1)] %>% # proportions with 1
-        .[, name_fmt := sprintf("dens_glbl_top_%s_%s_%s", above_dens_glbl_top_point, variable, measure)] %$% 
-        setNames(value_fmt, name_fmt)
+        .[, digits := fifelse(measure == "cnt", 0, 1)] %>%
+        .[, name_fmt := sprintf("dens_glbl_top_%s_%s_%s", above_dens_glbl_top_point, variable, measure)] %>%
+        pmap(~with(list(...), list(nbr_name = name_fmt, nbr = value, digits = digits)))
 
-    ## fix the density measures first
-
+    ## fix the density measures first: fixed now 
+    
     
     ## numbers that can get formated comfily with lnbr/fmt_nbr_flex
     l_res <- list(
@@ -1746,9 +1759,12 @@ gen_nbrs_pred <- function(top_coefs, cbn_dfs_rates_uscld, print_examples = print
         smorc_vlus_2020 = smorc_vlus_2020,
         smorc_top_point_stats = smorc_top_point_stats,
         shweal_stats = shweal_stats,
-        sptinc_stats = sptinc_stats)
+        sptinc_stats = sptinc_stats,
+        dens_coef_stats = dens_coef_stats,
+        dens_cry_top_point_stats = dens_cry_top_point_stats,
+        dens_glbl_top_point_stats = dens_glbl_top_point_stats)
     
-    dt_nbrs_pred <- imap_dfr(l_res, ~rbindlist(.x)[, grp := .y]) %>%
+    dt_nbrs_pred_prep <- imap_dfr(l_res, ~rbindlist(.x)[, grp := .y]) %>%
         .[, nbr_fmt := fmt_nbr_flex(nbr, digits)] %>%
         .[, .(nbr_name, nbr_fmt, grp)]
 
@@ -1760,8 +1776,13 @@ gen_nbrs_pred <- function(top_coefs, cbn_dfs_rates_uscld, print_examples = print
       c(lnbr(sptinc_lngtd_year1, 0), list(grp = "sptinc_stats")),
       c(lnbr(sptinc_lngtd_year2, 0), list(grp = "sptinc_stats"))) %>% rbindlist() %>%
         .[, .(nbr_name, nbr_fmt = as.character(nbr), grp)]
-      
-    rbind(dt_nbrs_pred, dt_yearnbrs)
+
+    dt_nbrs_pred <- rbind(dt_nbrs_pred_prep, dt_yearnbrs)
+
+    if (dt_nbrs_pred[, .N, nbr_name][, max(N)] != 1) print("dt_nbrs_pred$nbr_name not unique")
+
+    return(dt_nbrs_pred)
+
 
     
     ## return(res)
@@ -1772,8 +1793,8 @@ gen_nbrs_pred <- function(top_coefs, cbn_dfs_rates_uscld, print_examples = print
 
 
 
-gen_nbrs <- function(df_excl, df_open, cbn_dfs_rates, cbn_dfs_rates_uscld,  df_reg_anls_cfgs_wide, batch_version,
-                     print_examples = F) {
+gen_nbrs <- function(df_excl, df_open, cbn_dfs_rates, cbn_dfs_rates_uscld,  df_reg_anls_cfgs_wide, df_reg,
+                     batch_version, print_examples = F) {
     if (as.character(match.call()[[1]]) %in% fstd){browser()}
     1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;
     
@@ -1812,7 +1833,7 @@ gen_nbrs <- function(df_excl, df_open, cbn_dfs_rates, cbn_dfs_rates_uscld,  df_r
          ~list(nbr_cy = nrow(.x),
                nbr_crys = n_distinct(.x$iso3c),
                nbr_opngs = sum(.x$nbr_opened),
-               prop_opngs_cvrd = fmt_nbr_flex(round(sum(.x$nbr_opened, na.rm = T)/nbr_muem_in_pmdb,3), digits = 3),
+               prop_opngs_cvrd = fmt_nbr_flex(round(sum(.x$nbr_opened, na.rm = T)/nbr_muem_in_pmdb,3), digits = 3)
                )) %>%
         rbindlist(idcol = T) %>% melt(id.vars = ".id") %>%
         .[, vrbl := paste0(variable, "_", .id)] %$%
@@ -1887,7 +1908,7 @@ gen_nbrs <- function(df_excl, df_open, cbn_dfs_rates, cbn_dfs_rates_uscld,  df_r
                                                     nbr_fmt = as.character(unname(.x)), grp = .y)) %>%
         .[, nbr_name := factor(nbr_name, levels = nbr_name)]
 
-    dt_nbrs_pred <- gen_nbrs_pred(reg_res_objs$top_coefs, cbn_dfs_rates_uscld, print_examples)
+    dt_nbrs_pred <- gen_nbrs_pred(reg_res_objs$top_coefs, cbn_dfs_rates_uscld, df_reg, print_examples)
 
     dt_res <- rbind(dt_nbrs_desc, dt_nbrs_pred)
 
@@ -1945,10 +1966,10 @@ iwalk(res_tbls, ~do.call("render_xtbl", c(.x, gen_tblcfgs(TABLE_DIR)[[.y]])))
 
 
 
-gen_nbrs_pred(reg_res_objs$top_coefs, cbn_dfs_rates_uscld, print_examples = F)
+gen_nbrs_pred(reg_res_objs$top_coefs, cbn_dfs_rates_uscld, df_reg, print_examples = F)
 
 dt_nbrs <- gen_nbrs(df_excl, df_open, cbn_dfs_rates, cbn_dfs_rates_uscld,
-                    reg_anls_base$df_reg_anls_cfgs_wide, batch_version, print_examples = F)
+                    reg_anls_base$df_reg_anls_cfgs_wide, df_reg, batch_version, print_examples = F)
 
 dt_nbrs %>% print(n=300)
 
