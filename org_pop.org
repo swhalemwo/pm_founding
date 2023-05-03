@@ -918,7 +918,7 @@ Table \ref{tbl:regrslts_wcptblF} displays the regression results.
 #
 As the estimation procedure involves the calculation of multiple models from different variable sets, table \ref{tbl:regrslts_wcptblF} displays for each variable the coefficients of the best-fitting models; the log likelihoods similarly correspond to the best-fitting model (since the coefficient variation resulting from different variable choice (e.g. the difference between the coefficients of cultural spending between a model with income inequality measured via the Gini coefficient and a model with income measured as 10% concentration) is generally not substantial, it is discussed only in the Appendix). 
 # 
-Coefficients can be interpreted as logged multipliers of a country's founding rate [[parencite:&Coxe_West_Aiken_2009_count]], therefore a coefficient of 0.2 corresponds to a e\textsuperscript{0.25} = 1.28 multiplier, i.e. a 28% increase in average predicted country founding rate given a 1 standard deviation change in the independent variable (the independent variables are standardized).
+Coefficients can be interpreted as logged multipliers of a country's founding rate [[parencite:&Coxe_West_Aiken_2009_count]], therefore a coefficient of 0.2 corresponds to a $e$^{0.25} = 1.28 multiplier, i.e. a 28% increase in average predicted country founding rate given a 1 standard deviation change in the independent variable (the independent variables are standardized).
 #
 Coefficients above 0 indicate multipliers above 1, while coefficients below 0 indicate multipliers below 1.
 #
@@ -931,7 +931,7 @@ increase, respectively.
 # #
 # Given the standardization of the variables, this corresponds to a country at the means of the variables and without tax deductibility of charitable donations.
 # #
-# Thus they also illustrate the highly skewed distribution of the variables, as predicted opening count at the means for "DS all IVs" with e\textsuperscript{{{{intcpt}}}}= {{{intcpt_exp}}} is almost one order of magnitude higher than average founding rate in the dataset ({{{opng_rate_cbn1}}}, cf. table \ref{tbl:descs}); a pattern of similar magnitude is present in the other datasets as well. 
+# Thus they also illustrate the highly skewed distribution of the variables, as predicted opening count at the means for "DS all IVs" with $e$^{{{{intcpt}}}}= {{{intcpt_exp}}} is almost one order of magnitude higher than average founding rate in the dataset ({{{opng_rate_cbn1}}}, cf. table \ref{tbl:descs}); a pattern of similar magnitude is present in the other datasets as well. 
 
 
 
@@ -981,13 +981,13 @@ The coefficients of the art field indicators, the number of museums of modern an
 
 The results for tax incentives largely support H1: 
 #
-Tax deductibility of donations is found to be positive and significantly related to private museum founding in "DS -CuSp/TMITR", indicating a private museum founding rate e\textsuperscript{{{{txdctblt_cbn3}}}} = {{{txdctblt_cbn3_exp}}} times higher in countries where charitable deductions are tax deductible than in countries where these donations are not tax deductible.
+Tax deductibility of donations is found to be positive and significantly related to private museum founding in "DS -CuSp/TMITR", indicating a private museum founding rate $e$^{{{{txdctblt_cbn3}}}} = {{{txdctblt_cbn3_exp}}} times higher in countries where charitable deductions are tax deductible than in countries where these donations are not tax deductible.
 #
 In "DS -CuSp" the interaction between top marginal income rate and tax deductibility of donations is positive and significant, which indicates that higher top marginal income tax rate have a larger effect when charitable donations are tax deductible:
 #
-A 1 SD increase of the top marginal income tax rate ({{{tmitr_1SD_cbn_no_cult_spending}}} percentage points, corresponding approximately to the difference between the Netherlands ({{{tmitr_iso3c1}}}%) and Chile ({{{tmitr_iso3c2}}}%) in 2020) is associated with a difference in founding rate that is e\textsuperscript{{{{txdctblt_tmitr_interact_cbn2}}}} = {{{txdctblt_tmitr_interact_cbn2_exp}}} times larger in countries with tax deductibility of donations than in countries without. e\textsuperscript{{{{opng_p1m_glbl_yearly_cbn_no_cult_spending_and_mitr}}}} e^{{{{opng_p1m_glbl_yearly_cbn_no_cult_spending_and_mitr}}}} $e$^{{{{opng_p1m_glbl_yearly_cbn_no_cult_spending_and_mitr}}}}
+A 1 SD increase of the top marginal income tax rate ({{{tmitr_1SD_cbn_no_cult_spending}}} percentage points, corresponding approximately to the difference between the Netherlands ({{{tmitr_iso3c1}}}%) and Chile ({{{tmitr_iso3c2}}}%) in 2020) is associated with a difference in founding rate that is $e$^{{{{txdctblt_tmitr_interact_cbn2}}}} = {{{txdctblt_tmitr_interact_cbn2_exp}}} times larger in countries with tax deductibility of donations than in countries without.
 # 
-Given that the effect of an additional 1 SD top marginal income tax rate for countries without tax deductibility of donations is {{{tmitr_cbn2}}}, a 1 SD increase in top marginal income tax rate in countries with tax deductibility of donations corresponds to an increase in log-founding by {{{tmitr_cbn2}}} + {{{txdctblt_tmitr_interact_cbn2}}} = {{{tmitr_neteffct_txdctblt1_cbn_no_cult_spending}}}, or an increase in founding rate by a factor of e\textsuperscript{{{{tmitr_neteffct_txdctblt1_cbn_no_cult_spending}}}} = {{{tmitr_neteffct_txdctblt1_cbn_no_cult_spending_exp}}}. 
+Given that the effect of an additional 1 SD top marginal income tax rate for countries without tax deductibility of donations is {{{tmitr_cbn2}}}, a 1 SD increase in top marginal income tax rate in countries with tax deductibility of donations corresponds to an increase in log-founding by {{{tmitr_cbn2}}} + {{{txdctblt_tmitr_interact_cbn2}}} = {{{tmitr_neteffct_txdctblt1_cbn_no_cult_spending}}}, or an increase in founding rate by a factor of $e$^{{{{tmitr_neteffct_txdctblt1_cbn_no_cult_spending}}}} = {{{tmitr_neteffct_txdctblt1_cbn_no_cult_spending_exp}}}. 
 # 
 # increases the effect of tax deductibility of donations by a factor of .
 #
@@ -1022,9 +1022,9 @@ The association between inequality variables and private museum founding is mixe
 #
 While income inequality is significantly associated with lower founding, wealth inequality variables are positively and significantly associated with the establishment of new private museums. 
 #
-Thus, a 1 SD increase of the income share of the top 10% ({{{sptinc_1SD_cbn_all}}}% in 2020 in "DS all IVs", which corresponds approximately to the difference between Sweden ({{{sptinc_iso3c1}}}%) and Canada ({{{sptinc_iso3c2}}}%), or the within-country change in Lithuania from {{{sptinc_lngtd_year1}}} ({{{sptinc_lngtd_vlu_year1}}}%) to {{{sptinc_lngtd_year2}}} ({{{sptinc_lngtd_vlu_year2}}}%)) is associated with a decrease in private museum founding rate by a factor of e\textsuperscript{{{{sptinc_cbn_all}}}} = {{{sptinc_cbn_all_exp}}}. 
+Thus, a 1 SD increase of the income share of the top 10% ({{{sptinc_1SD_cbn_all}}}% in 2020 in "DS all IVs", which corresponds approximately to the difference between Sweden ({{{sptinc_iso3c1}}}%) and Canada ({{{sptinc_iso3c2}}}%), or the within-country change in Lithuania from {{{sptinc_lngtd_year1}}} ({{{sptinc_lngtd_vlu_year1}}}%) to {{{sptinc_lngtd_year2}}} ({{{sptinc_lngtd_vlu_year2}}}%)) is associated with a decrease in private museum founding rate by a factor of $e$^{{{{sptinc_cbn_all}}}} = {{{sptinc_cbn_all_exp}}}. 
 # 
-Conversely, a 1 SD increase of the wealth share of the top 10% ({{{shweal_1SD_cbn_all}}}%; a difference in size similar to that between Denmark ({{{shweal_iso3c1}}}%) and the Czech Republic ({{{shweal_iso3c2}}}%) in 2020 in "DS all IVs", or to the longitudinal change in the United States from {{{shweal_lngtd_year1}}} ({{{shweal_lngtd_vlu_year1}}}%) to {{{shweal_lngtd_year2}}} ({{{shweal_lngtd_vlu_year2}}}%)) is associated with an increase in private museum founding rate by a factor of e\textsuperscript{{{{shweal_cbn_all}}}} = {{{shweal_cbn_all_exp}}}.
+Conversely, a 1 SD increase of the wealth share of the top 10% ({{{shweal_1SD_cbn_all}}}%; a difference in size similar to that between Denmark ({{{shweal_iso3c1}}}%) and the Czech Republic ({{{shweal_iso3c2}}}%) in 2020 in "DS all IVs", or to the longitudinal change in the United States from {{{shweal_lngtd_year1}}} ({{{shweal_lngtd_vlu_year1}}}%) to {{{shweal_lngtd_year2}}} ({{{shweal_lngtd_vlu_year2}}}%)) is associated with an increase in private museum founding rate by a factor of $e$^{{{{shweal_cbn_all}}}} = {{{shweal_cbn_all_exp}}}.
 #
 There is thus substantial evidence for H3 in regards of wealth inequality, but also strong empirial evidence against a positive association between income inequality and private museum founding. 
 
