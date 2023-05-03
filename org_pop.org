@@ -330,7 +330,7 @@ Is their founding related to a decline of public institutions which shifts decis
 
 
 
-To answer these questions, I investigate in this paper  the structural conditions that resulted in the proliferation of private museums as an organizational form over the course of the last decades.
+To answer these questions, I investigate in this paper the structural conditions that resulted in the proliferation of private museums as an organizational form over the course of the last decades.
 #
 As the spread of private museums has attracted attention, a number of factors have been suggested that have facilitated their founding, namely tax incentives, (lack of) state funding, inequality and elite wealth.
 #
@@ -378,7 +378,7 @@ I find support for a positive effect of tax incentives, a positive effect of cul
 
 Tax incentives have been investigated as a factor for influencing various kinds of charitable or philanthropic behavior and private museum founding in particular.
 #
-Tax incentives decrease the net cost of charitable activities, and can thus be expected to shape philanthropic behavior to the extent to which these activities are not unconditional of economic considerations[fn::While themes of disinterestedness and intrinsic passion are strongly present in the self-presentations of founders [[parencite:&BMW_2016_hall;&Bechtler_Imhof_2018_future;&Duron_2020_rebaudengo]], they might constitute strategic framings to adhere to art market norms [[parencite:&Velthuis_2007_talking]] rather than real motivations guiding actual behavior.]. 
+Tax incentives decrease the net cost of charitable activities, and can thus be expected to shape philanthropic behavior to the extent to which these activities are not unconditional of economic considerations[fn::While themes of disinterestedness and intrinsic passion are strongly present in the self-presentations of founders [[parencite:&Bechtler_Imhof_2018_future;&Duron_2020_rebaudengo]], they might constitute strategic framings to adhere to art market norms [[parencite:&Velthuis_2007_talking]] rather than real motivations guiding actual behavior.]. 
 #
 Investigating charitable donations more generally, [[textcite:&Peloza_Steel_2005_elasticities]] find in a meta-analysis (primarily of individual behavior in the US) a price-elasticity of donations, i.e. a stronger tendency to make charitable contributions in the presence of financial incentives.
 
@@ -411,9 +411,9 @@ The impact of tax incentives does not exclude other motivations, thus arguments 
 In fact, other motivations (such as the aforementioned passion for the arts, as well as potential reputation gains; cf. [[cite:&Bekkers_Wiepking_2010_literature;&Bekkers_Wiepking_2011_philanthropic]] for motivations of philanthropic behavior generally) are required as tax incentives only /reduce/ the cost of philanthropic behavior but do not cancel it out completely, let alone result in a financial profit; tax incentives thus may play a supportive role by easing the financial burdens of running a private museum as a consequence of other motivations.
 
 
-However, an different reason why tax incentives might not have noticeable effects might be their limited knowledge and familiarity among potential beneficiaries (collectors deliberating the choice of opening a museum), a mechanism which has been argued to negatively affect private museum founding in China [[parencite:&DeNigris_2018_museums p.222]] and charitable donations in Europe generally [[parencite:&Hemels_2017_incentives;&Stanco_2014_fiscaal]].
+However, an different reason why tax incentives might not have noticeable effects might be their limited knowledge and familiarity among potential beneficiaries (collectors deliberating the choice of opening a museum), a mechanism which has been argued to negatively affect private museum founding in China [[parencite:&DeNigris_2018_museums p.222]] and charitable donations in Europe generally [[parencite:&Hemels_2017_incentives]].
 #
-While lack of familiarity might prevent an effect of tax incentives that exist, it seems unlikely to be the case here as the topic of tax incentives has found substantive coverage in publications both scholarly [[parencite:Walker_2019_collector,Reich_2018_philantropy,Zolberg_2000_privatization,Zorloni_Resch_2016_opportunities]] and journalistic (e.g. cite:Brown_Pes_2018_taxpayers,Boucher_2020_solow,Halperin_2018_glenstone,Honig_2016_IRS).
+While lack of familiarity might prevent an effect of tax incentives that exist, it seems unlikely to be the case here as the topic of tax incentives has found substantive coverage in publications both scholarly [[parencite:Walker_2019_collector,Reich_2018_philantropy,Zorloni_Resch_2016_opportunities]] and journalistic (e.g. cite:Brown_Pes_2018_taxpayers,Boucher_2020_solow,Honig_2016_IRS).
 #
 Furthermore, the decision of opening a private museum is likely receiving more deliberation than smaller acts of philanthropy (such as donations) due to the size of the necessary planning efforts (which sometimes results in the establishment of separate foundations staffed by professionals); it is hence unlikely that during this planning process financing pathways through tax incentives are not explored.
 
@@ -442,9 +442,9 @@ Similarly, textcite:&Boloten_Hacking_2021_foreword argue that "with their inevit
 #
 In particular, limited exhibition space in public museums has been argued to have been contributed to the rise of private museums ([[cite:&Walker_2019_collector p.217]], [[cite:&Zorloni_Resch_2016_opportunities p.1]]). 
 #
-Additionally, textcite:&Franklin_Papastergiadis_2017_anti argue that private museums "became prominent once the price of contemporary art inflated beyond the means of most cash-strapped public museums to collect it systematically" (p.672)[fn:: While it is however not completely clear whether this refers to operations or acquisitions budgets, I argue that the general relation between public museum capacities and private museum founding is argued for clearly.]
+# Additionally, textcite:&Franklin_Papastergiadis_2017_anti argue that private museums "became prominent once the price of contemporary art inflated beyond the means of most cash-strapped public museums to collect it systematically" (p.672)[fn:: While it is however not completely clear whether this refers to operations or acquisitions budgets, I argue that the general relation between public museum capacities and private museum founding is argued for clearly.]
 #
-Another pathway between low public funding and relatively high private museum founding concerns emerging art markets in developing countries, as it is argued that private individuals are more likely dedicate philanthropic efforts to the arts there than in places where it is already supported by the state [[parencite:&Durand_2018_jumex;&Bechtler_Imhof_2018_future;&Boloten_Hacking_2021_foreword]], a pattern that could correspond to the founding of gilded age cultural institutions by industrialists in the late 19th/early 20th century [[parencite:&diMaggio_1982_boston;&Adam_2004_philanthropy;&Duncan_1995_civilizing]]. 
+Another pathway between low public funding and relatively high private museum founding concerns emerging art markets in developing countries, as it is argued that private individuals are more likely dedicate philanthropic efforts to the arts there than in places where it is already supported by the state [[parencite:&Durand_2018_jumex;&Bechtler_Imhof_2018_future;&Boloten_Hacking_2021_foreword]], a pattern that could correspond to the founding of gilded age cultural institutions by industrialists in the late 19th/early 20th century [[parencite:&diMaggio_1982_boston;&Adam_2004_philanthropy]]. 
  
 
 # In the private museum literature more widely declining acquisition budgets (either in absolute terms or relatively to the ostensibly strongly increasing prices for contemporary art) of public museums are also discussed, but primarily related to increasing influence of private museum on canonization processes [[parencite:&Walker_2019_collector;&Gnyp_2015_collectors;&Bechtler_Imhof_2018_future;&Quemin_2020_power]]. A relationship to the founding of private museums is not made, presumably since declining acquisition alone would presumably not raise a collector's likelihood of founding a private museum. 
@@ -559,7 +559,7 @@ Ideally collector-level data would be used to construct collector-year as the un
 #
 However, no such databases exist of the art collector population, in particular regarding its longitudinal development, to make such an analysis feasible.
 # 
-Therefore the more aggregate unit of country-years is used as the unit of analysis (with countries being defined through the ISO 3166 standard). 
+Therefore the more aggregate unit of country-years is used as the unit of analysis (with countries being defined according to the ISO 3166 standard). 
 #
 
 
@@ -667,7 +667,8 @@ GDP is included to account for potentially imperfect measurement of government s
 #
 Furthermore, given he stratified character of art consumption [[parencite:&Bourdieu_1984_distinction]] within countries, controlling for GDP also includes a demand dimension as more developed countries potentially host larger population shares interested in (post-material) art consumption.
 #
-Population size is included as an offset (cf. section [[id:d2d676fc-e644-4815-a06d-906a30c823f0][Analysis]]).
+Population size is included as an offset (cf. section Regression specification). 
+
 
 
 **** Artnews collectors
@@ -921,14 +922,14 @@ Only {{{nbr_nzero_cbn_all}}} country-years see show at least one private museum 
 
 Table \ref{tbl:regrslts_wcptblF} displays the regression results.
 #
-As the estimation procedure involves the calculation of multiple models from different variable sets, table \ref{tbl:regrslts_wcptblF} displays for each variable the coefficients of the best-fitting models; the log likelihoods similarly correspond to the best-fitting model (since the coefficient variation resulting from different variable choice (e.g. the difference between the coefficients of cultural spending between a model with income inequality measured via the Gini coefficient and a model with income measured as 10% concentration) is generally not substantial, it is discussed only in the Appendix). 
+As the estimation procedure involves the calculation of multiple models from different variable sets, table \ref{tbl:regrslts_wcptblF} displays for each variable the coefficients of the best-fitting models; the log likelihoods similarly correspond to the best-fitting model (the coefficient variation resulting from different variable choice (e.g. the difference between the coefficients of cultural spending between a model with income inequality measured once via the Gini coefficient and once via 10% concentration) is generally not substantial). 
 # 
-Coefficients can be interpreted as logged multipliers of a country's founding rate [[parencite:&Coxe_West_Aiken_2009_count]], therefore a coefficient of 0.2 corresponds to a $e$^{0.25} = 1.28 multiplier, i.e. a 28% increase in average predicted country founding rate given a 1 standard deviation change in the independent variable (the independent variables are standardized).
+Coefficients can be interpreted as logged multipliers of a country's founding rate [[parencite:&Coxe_West_Aiken_2009_count]], therefore a coefficient of 0.25 corresponds to a $e$^{0.25} = 1.28 multiplier, i.e. a 28% increase in average predicted country founding rate given a 1 standard deviation change in the independent variable (the independent variables are standardized), while a coefficient of -0.25 corresponds to a $e$^{-0.25} = 0.78 multiplier.
 #
-Coefficients above 0 indicate multipliers above 1, while coefficients below 0 indicate multipliers below 1.
-#
-Thus, coefficients of -0.5, 0.1, 0.5 and 1 correspond to 40% decrease, 10% increase, 64% increase and 171%
-increase, respectively.
+# Coefficients above 0 indicate multipliers above 1, while coefficients below 0 indicate multipliers below 1.
+# #
+# Thus, coefficients of -0.5, 0.1, 0.5 and 1 correspond to 40% decrease, 10% increase, 64% increase and 171%
+# increase, respectively.
 
 # **** intercepts (yeet?) :ignhead:
 
@@ -1148,8 +1149,6 @@ Further disentangling of these effects and improving measurements thus constitut
 
 
 
-* appendix
 
-#+label: fig:plt_v62_reg_res_within
-#+caption: Coefficients of the 3 best-fittin models per lag and variable combination, lines indicate stability of other variables as the lag of the variable on the line is varied, minor variation around x-axis added to improve legibility
-[[file:figures/plt_v62_reg_res_within.pdf]]
+
+
