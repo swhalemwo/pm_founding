@@ -1461,6 +1461,9 @@ gen_nbrs_pred <- function(top_coefs, cbn_dfs_rates_uscld, df_reg, print_examples
     tmitr_scale_cbn2 <- scale(cbn_dfs_rates_uscld$cbn_no_cult_spending$tmitr_approx_linear20step_lag0)
     tmitr_1SD_cbn_no_cult_spending <- attr(tmitr_scale_cbn2, "scaled:scale")
     
+    tmitr_neteffct_txdctblt1_cbn_no_cult_spending <- tmitr_cbn2 + txdctblt_tmitr_interact_cbn2
+    tmitr_neteffct_txdctblt1_cbn_no_cult_spending_exp <- exp(tmitr_neteffct_txdctblt1_cbn_no_cult_spending)
+
     
     dt_ti_pred <- expand.grid(tax_ddctblt = c(0,1),
                               tmitr = seq(round(min(tmitr_scale_cbn2),2),
@@ -1522,6 +1525,8 @@ gen_nbrs_pred <- function(top_coefs, cbn_dfs_rates_uscld, df_reg, print_examples
         lnbr(txdctblt_tmitr_interact_cbn2, 2),
         lnbr(txdctblt_tmitr_interact_cbn2_exp, 2),
         lnbr(tmitr_1SD_cbn_no_cult_spending, 1),
+        lnbr(tmitr_neteffct_txdctblt1_cbn_no_cult_spending,2),
+        lnbr(tmitr_neteffct_txdctblt1_cbn_no_cult_spending_exp,2),
         lnbr(tmitr_iso3c1, 0),
         lnbr(tmitr_iso3c2, 0))
 

@@ -110,8 +110,10 @@ dt_nbrs[, .(macro_str = sprintf("#+MACRO: %s %s", nbr_name, nbr_fmt)), grp] %>%
 #+MACRO: txdctblt_cbn2 0.48
 #+MACRO: tmitr_cbn2 -0.38
 #+MACRO: txdctblt_tmitr_interact_cbn2 0.77
-#+MACRO: txdctblt_tmitr_interact_cbn2_exp 2.2
-#+MACRO: tmitr_1SD_cbn_all 14.1
+#+MACRO: txdctblt_tmitr_interact_cbn2_exp 2.17
+#+MACRO: tmitr_1SD_cbn_no_cult_spending 14.1
+#+MACRO: tmitr_neteffct_txdctblt1_cbn_no_cult_spending 0.39
+#+MACRO: tmitr_neteffct_txdctblt1_cbn_no_cult_spending_exp 1.48
 #+MACRO: tmitr_iso3c1 50
 #+MACRO: tmitr_iso3c2 36
 
@@ -938,13 +940,13 @@ Tax deductibility of donations is found to be positive and significantly related
 #
 In "DS -CuSp" the interaction between top marginal income rate and tax deductibility of donations is significant, which indicates that higher top marginal income tax rate have a larger effect when charitable donations are tax deductible:
 #
-A 1 SD increase of the top marginal income tax rate ({{{tmitr_1SD_cbn_all}}} percentage points, corresponding approximately to the difference between the Netherlands ({{{tmitr_iso3c1}}}%) and Chile ({{{tmitr_iso3c2}}}%) in 2020) is associated with a difference in founding rate that is e\textsuperscript{{{{txdctblt_tmitr_interact_cbn2}}}} = {{{txdctblt_tmitr_interact_cbn2_exp}}} times larger in countries with tax deductibility of donations than in countries without.
+A 1 SD increase of the top marginal income tax rate ({{{tmitr_1SD_cbn_no_cult_spending}}} percentage points, corresponding approximately to the difference between the Netherlands ({{{tmitr_iso3c1}}}%) and Chile ({{{tmitr_iso3c2}}}%) in 2020) is associated with a difference in founding rate that is e\textsuperscript{{{{txdctblt_tmitr_interact_cbn2}}}} = {{{txdctblt_tmitr_interact_cbn2_exp}}} times larger in countries with tax deductibility of donations than in countries without.
 # 
-Given that the effect of an additional 1 SD top marginal income tax rate for countries without tax deductibility of donations is *-0.38*, a 1 SD increase in top marginal income tax rate in countries with tax deductibility of donations corresponds to an increase in founding rate by a factor of *-0.38 + 0.77*.
-
+Given that the effect of an additional 1 SD top marginal income tax rate for countries without tax deductibility of donations is {{{tmitr_cbn2}}}, a 1 SD increase in top marginal income tax rate in countries with tax deductibility of donations corresponds to an increase in log-founding by {{{tmitr_cbn2}}} + {{{txdctblt_tmitr_interact_cbn2}}} = {{{tmitr_neteffct_txdctblt1_cbn_no_cult_spending}}}, or an increase in founding rate by a factor of e\textsuperscript{{{{tmitr_neteffct_txdctblt1_cbn_no_cult_spending}}}} = {{{tmitr_neteffct_txdctblt1_cbn_no_cult_spending_exp}}}. 
+# 
 # increases the effect of tax deductibility of donations by a factor of .
 #
-In "DS all IVs", the interaction is still positive, but no longer significant, presumably since "DS all IVs" is primarily composed of countries in which charitable donations are tax deductible (table \ref{tbl:descs}) and hence little variation exists.
+In "DS all IVs", the interaction is still positive, but no longer significant, possibly because "DS all IVs" is primarily composed of countries in which charitable donations are tax deductible (table \ref{tbl:descs}) and hence little variation exists.
 #
 Thus despite significant effects not being present in every dataset, the data overall indicates substantial support for an association between tax incentives and private museum founding, supporting H1. 
 
