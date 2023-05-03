@@ -412,7 +412,7 @@ In fact, other motivations (such as the aforementioned passion for the arts, as 
 
 However, an different reason why tax incentives might not have noticeable effects might be their limited knowledge and familiarity among potential beneficiaries (collectors deliberating the choice of opening a museum), a mechanism which has been argued to negatively affect private museum founding in China [[parencite:&DeNigris_2018_museums p.222]] and charitable donations in Europe generally [[parencite:&Hemels_2017_incentives;&Stanco_2014_fiscaal]].
 #
-While lack of familiarity might prevent an effect of tax incentives that exist, it seems unlikely to be the case here as the topic of tax incentives has found substantive coverage in publications both scholarly parencite:Walker_2019_collector,Reich_2018_philantropy,Zorloni_2016_artmanagement,Zolberg_2000_privatization and journalistic (e.g. cite:Brown_Pes_2018_taxpayers,Boucher_2020_solow,Halperin_2018_glenstone,Honig_2016_IRS).
+While lack of familiarity might prevent an effect of tax incentives that exist, it seems unlikely to be the case here as the topic of tax incentives has found substantive coverage in publications both scholarly [[parencite:Walker_2019_collector,Reich_2018_philantropy,Zolberg_2000_privatization,Zorloni_Resch_2016_opportunities]] and journalistic (e.g. cite:Brown_Pes_2018_taxpayers,Boucher_2020_solow,Halperin_2018_glenstone,Honig_2016_IRS).
 #
 Furthermore, the decision of opening a private museum is likely receiving more deliberation than smaller acts of philanthropy (such as donations) due to the size of the necessary planning efforts (which sometimes results in the establishment of separate foundations staffed by professionals); it is hence unlikely that during this planning process financing pathways through tax incentives are not explored.
 
@@ -422,6 +422,8 @@ It thus seems plausible to assume an influence of tax breaks, leading to the fol
 #+latex: \bigbreak
 #+latex: \noindent
 *Hypothesis 1*: Tax incentives are associated with higher rates of private museum founding.
+
+
 
 
 *** State funding
@@ -1082,12 +1084,12 @@ Consequently, there is little evidence that HNWI rates are substantially associa
 ** Discussion and conclusion
 #
 
-The previous exploratory analysis shows mixed results:
+# The previous exploratory analysis shows mixed results:
+# # #
+# # While moderate support can be found for a positive effect of tax incentives, effects for inequality are too divergent to allow clear conclusions.
+# While moderate support can be found for a positive effect of tax deductibility of donations, the effect of tax exemption for non-profits is negative.
 # #
-# While moderate support can be found for a positive effect of tax incentives, effects for inequality are too divergent to allow clear conclusions.
-While moderate support can be found for a positive effect of tax deductibility of donations, the effect of tax exemption for non-profits is negative.
-#
-Given that tax-exemption for non-profits exhibit only very little variance, its negative effect might be more due to multi-variate outliers or other regression particularities.
+# Given that tax-exemption for non-profits exhibit only very little variance, its negative effect might be more due to multi-variate outliers or other regression particularities.
 #
 
 # Furthermore, while government funding has a significant effect, it is positive and thus contradicting the argument in the private museum literature (yet supporting the signaling theory of government spending from philanthropy literature).
@@ -1095,39 +1097,47 @@ Given that tax-exemption for non-profits exhibit only very little variance, its 
 # Finally, no support is found for elite wealth.
 
 
-These findings first and foremost point to the need of theoretical development in particular in regards to the effects of inequality as well as the role of government spending.
+# These findings first and foremost point to the need of theoretical development in particular in regards to the effects of inequality as well as the role of government spending.
+# #
+# Furthermore, additional work is necessary in the measurement of some of the concepts.
+# #
+# Despite such limitations, this exploratory research constitutes a substantial contribution to the studies of private museums, and opens the ground for further systematic studies into the dynamics of this new organizational population.
+
+
+As the first quantitative analysis of private museum proliferation, this study has critically examined several factors that have been suggested as explanations for the rise of private museums in recent decades.
 #
-Furthermore, additional work is necessary in the measurement of some of the concepts.
+To some extent the findings are in line with the literature, in particular in the case of tax incentives, which are found to positively contribute to private museum founding.
 #
-Despite such limitations, this exploratory research constitutes a substantial contribution to the studies of private museums, and opens the ground for further systematic studies into the dynamics of this new organizational population.
+In other domains, this research complicates existing arguments, such as in the case of government spending, which shows an inverse-U shaped relationship (and thus corresponds to crowding-in at lower levels, and crowding out at higher levels), and inequality, where wealth disparities are found to be positively, and income inequalities negatively with private museum opening.
+#
+In yet another area, the increase in numbers of the very wealthy, no substantial relation to private museum founding has been found. 
+#
+This study thus substantially advances the understanding of a major art world development of the recent decades.
 
 
 *** limitations :ignhead:
 
-# Furthermore, given that the magazine has for all years collected the top 200 collectors and therefore cannot capture changes in the total art collector population, the constructed indicator measures the relative propensity of art collecting compared to other countries/time periods.
 
-
-The current study is limited by a number of factors:
+Despite the combination of multiple data sources and an innovative modelling strategy sensitive to variations in the time predictors take to act on the independent variable this study is limited by a number of factors. 
 #
 As interest in the organizational form of private museums has risen only recently, data collection has been both retrospective (which might be less inclusive than continuous measurements based on for example industry directories) and primarily based on english-language media.
 #
-Furthermore, private museums are here treated as uniform, yet as they have been shown to exhibit substantial variation cite:&LarrysList_2015_report, different kinds of private museum might be subject to different social forces (yet more detailed analysis could also complicate the analysis as already in the current datasets where all private museums are pooled the founding of one constitutes a relatively rare event which most countries don't experience even once).
+Furthermore, multiple predictors are exhibiting substantial limitations in measuring their intended concepts, such as the tax incentives and non-private art museum populations variables (which are only cross-sectional and in the former case not art-sector specific), the WID HNWI data (making HNWI estimation beyond 200 million USD infeasible) and the Artnews top 200 collector ranking data (which does not capture absolute changes collector populations).
 #
-Also, multiple predictors are exhibiting substantial limitations in measuring their intended concepts, such as the tax incentives and non-private art museum populations variables (which are only cross-sectional and in the former case not art-sector specific), the WID HNWI data (which make aggregation beyond 200m USD infeasible) and the collector data (which does not capture absolute changes collector populations).
+Additionally, substantial gaps in data coverage of cultural spending and top marginal income tax rates has so far necessitated the use of multiple datasets.
+# 
+While this approach was of substantial value, as it allowed to investigate variables with varying coverage (and thus enabled findings of the impact of both tax incentives and cultural spending which would have been unable with a single dataset), better coverage of some variables would nevertheless provide even further insights.
 #
-Furthermore substantial gaps in data coverage of cultural spending (which might also be affected by limited standardization) and top marginal income tax rates has so far necessitated the use of multiple datasets (and given that the former is reported by national statistical agencies, it is unlikely that the present country-year gaps are will filled in the foreseeable future).
+Finally, further relationships between variables (such as mediation or moderation) as well as nonlinear relationships to private museum foundings might be present which if not taken into account might bias coefficient estimates.
 #
-A potentially influential phenomenon which might influence private museum founding, the exchange of ideas between art collectors, is completely unobservable on a systematic level. 
+Mediation in particular might be present for density estimates, as the effect of structural factors might be mediated through the private museum population.
 #
-Finally, further relationships between variables (such as mediation or moderation) as well as nonlinear relationships to private museum foundings might be present which if not taken into account might bias coefficient estimates. 
+Further disentangling of these effects and improving measurements thus constitute promising approaches for future research. 
 
-
-
-Nevertheless, *some more about contributions*
+# Nevertheless, *some more about contributions*
 
   
 ** References
-# \hypertarget{refs}{}
 
 #+Latex: \begin{sloppypar}
 #+Latex: \printbibliography
