@@ -241,7 +241,7 @@ dt_nbrs[, .(macro_str = sprintf("#+MACRO: %s %s", nbr_name, nbr_fmt)), grp] %>%
 
 
 
-* Investigating causes of private museum funding
+* Structural determinants of private museum founding
 
 ** abstract
 #
@@ -253,11 +253,11 @@ In particular, the rise of private museums has been hypothesized to be associate
 #
 Combining various socio-economic and art field data sources, I conduct a quantitative test of these hypotheses of datasets of {{{nbr_cy_cbn_all}}}, {{{nbr_cy_cbn_no_cult_spending}}} and {{{nbr_cy_cbn_no_cult_spending_and_mitr}}} country years using random effects negative binomial regression models.
 #
-While I find moderate support for a role of tax incentives, government spending is found to be associated primarily positively (not, as hypothesized, negatively) with private museum founding.
+While I find moderate support for a role of tax incentives, government spending is found to be associated non-monotonically (reverse U-shaped) with private museum founding (not, as hypothesized, negatively). 
 #
 Furthermore the effects of inequality are divergent, as a positive association with private museum founding is found for wealth inequality and a negative one for income inequality.
 #
-Finally, elite wealth effects are primarily negative (some although are positive) as well as small.
+Finally, elite wealth effects are primarily small and insignificant. 
 #
 I conclude with a call for greater theoretical elaboration and measurement precision to further investigate founding causes.
 
