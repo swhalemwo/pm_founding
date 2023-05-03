@@ -1879,8 +1879,8 @@ gen_nbrs <- function(df_excl, df_open, cbn_dfs_rates, cbn_dfs_rates_uscld,  df_r
 
     ## number of opened/closed PMs (based on PMs with complete info)
     nbr_opnd_wld <- sum(df_open$nbr_opened, na.rm = T)
-    nbr_clsd_wld <- sum(df_open$nbr_closed, na.rm = T)
-
+    ## nbr_clsd_wld <- ## sum(df_open$nbr_closed, na.rm = T)
+    nbr_clsd_wld <- dt_excl[museum_status != "private museum", .N]
     ## number of those countries that have at least 1 pm, based on all PMs in database
     nbr_cry_wal1pm_all <- dt_excl[, uniqueN(na.omit(countrycode))]
 

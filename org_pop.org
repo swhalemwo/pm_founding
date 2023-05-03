@@ -22,7 +22,7 @@ dt_nbrs[, .(macro_str = sprintf("#+MACRO: %s %s", nbr_name, nbr_fmt)), grp] %>%
 # pmdb_stats
 #+MACRO: nbr_muem_in_pmdb 547
 #+MACRO: nbr_opnd_wld 516
-#+MACRO: nbr_clsd_wld 78
+#+MACRO: nbr_clsd_wld 101
 #+MACRO: nbr_cry_wal1pm_all 64
 #+MACRO: nbr_pm_openatm 446
 
@@ -713,20 +713,22 @@ Furthermore, the marginal value of a private museum as an instrument of distinct
 
 
 
-While the non-profit character of private museum might lead to weaker density effect sizes than in other for-profit organizational populations, it is still worth to control for.
+# While the non-profit character of private museum might lead to weaker density effect sizes than in other for-profit organizational populations, it is still worth to control for.
 #
 I therefore include for each country-year measures based on the number of private museums open at that year, in particular a linear term (which measures legitimacy) and a squared term (which measures competition).
 #
-Both these operationalizations follow the density-dependence literature, and result in competition growing slowly at first, but outpacing legitimacy as the organizational population increases.
+# Both these operationalizations follow the density-dependence literature, and result in competition growing slowly at first, but outpacing legitimacy as the organizational population increases.
 # 
 Given to the transnational nature of the art field (due which legitimation and competition might not be limited to country borders) I also add global linear and squared density measures which are the same for every country in a given year and describe the number of museums open worldwide in a given year.
 
 
-Another key variable of the organizational population concerns closures:
+Another variable of the organizational population concerns closures:
 # 
-While in the popular imaginary a museum might be seen as permanent, the private museum population has seen substantial closures with {{{nbr_clsd_wld}}} institutions having been closed until now (cf. [[cite:&Velthuis_Gera_forthcoming_fragility]]), and growing awareness of the fragility of these institutions might in turn make their founding less attractive to founders keen of leaving a mark in history.
+While in the popular imaginary a museum might be seen as permanent, the private museum population has seen substantial closures with {{{nbr_clsd_wld}}} institutions having been closed or transformed (cf. [[cite:&Velthuis_Gera_forthcoming_fragility]]), and growing awareness of the fragility of these institutions might in turn make their founding less attractive to founders keen of leaving a mark in history.
 #
-I therefore add a global variable of the number of cumulative museum closures to capture the potential delegitimating effect of the closing of institutions that often are planned as personal legacies [[parencite:&Walker_2019_collector]].[fn::While the data would allow to measure this variable also on a country-level, the fact that seven of these closures have taken place in Switzerland would turn this country into a very large outlier (the only country with more closures, the United States where 12 private museums closed, has a much larger population) which in turn would bias coefficient estimates into disproportionately reflecting the Swiss case. Using an alternative measurement of the proportion between museums opened and closed would result in a similar outlier situation for the United States and Netherlands, as these countries had seen private museum closures in the 1990s. Since the private museum population was small compared to what it would later grow towards in the 2000s and 2010s, the high closing/opening ratios for these country years would dominate the coefficient estimates. Until a more effective solution is found, I thus limit myself to a measuring the global effect of museum closures.]
+I therefore add a global variable of the number of cumulative museum closures to capture the potential delegitimating effect of the closing of institutions that often are planned as personal legacies [[parencite:&Walker_2019_collector]].[fn::While the data would allow to measure this variable also on a country-level, the low number of closings would lead to a highly skewed variable, and therefore to coefficients disproportionately reflecting a few countries (in particular Switzerland, the United States and Netherlands, depending on a whether the estimator measures closing numbers or proporitions). I therefore limit myself to measuring the global effect of museum closures.] 
+
+
 
 
 **** Museum population
