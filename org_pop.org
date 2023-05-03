@@ -580,7 +580,7 @@ Following this, additional information about each museum was collected by studen
 #
 Currently, the database includes {{{nbr_muem_in_pmdb}}} museums (of which {{{nbr_pm_openatm}}} are currently open, the remainder having closed or transformed to the extent to no longer constituting a private museum), located in {{{nbr_cry_wal1pm_all}}} countries, with the majority being located in Western Europe ({{{regsub_cnt_Western_Europe}}}), East Asia ({{{regsub_cnt_Eastern_Asia}}}) and North America ({{{regsub_cnt_Northern_America}}}).
 #
-Information on country and opening year is used to construct a count indicator of the number of private museums opened in each country-year.
+Information on country and opening year is used to construct a count indicator of the number of private museums opened in each country-year, the typical operationalization for studying organizational populations [[parencite:&Bogaert_etal_2014_ecological]]. 
 #
 This study has a global scope (it includes the large number of countries without private museums to avoid sampling on the dependent variable), however both the time period and number of countries that can be investigated are limited by the coverage of the independent variables. 
 
@@ -696,7 +696,9 @@ The reference has lead to the label density-dependence for this paradigm.
 
 
 # [[cite:&Bogaert_etal_2014_ecological]] only focuses on first-order effects on founding/survival, but not negative effect of second order effect
-# -> just argue weaker 
+# -> just argue weaker
+# also feels wrong: first-order effect doesn't tell you much, just value if x = 0
+# although i guess if first-order effect is smaller, peak is reached sooner -> legitimacy overall weaker..
 
 However, density effects may be limited by the non-profit character of the private museum population:
 # 
@@ -706,7 +708,7 @@ As such "direct" competition is absent for private museums which are predominant
 # 
 Nevertheless, private museums may still compete over audiences [[parencite:&Adam_2021_rise p.14]], which [[textcite:&Frey_Meier_2002_beyeler]] argues are valued both economically (through ticket prices) and symbolically (as validating exhibition choices).
 # 
-Furthermore, the marginal value of a private museum as an instrument of distinction might decrease as more and more founders establish their museums; in this view the symbolic capital to be gained by private museum founding constitutes a resource that is being struggled over.
+Furthermore, the marginal value of a private museum as an instrument of distinction might decrease as more and more founders establish their museums; in this view the symbolic capital to be gained by private museum founding constitutes the objective to compete for. 
 
 
 
@@ -787,7 +789,7 @@ I address these challenges as follows:
 #
 Despite substantial efforts to collect complete data for the relevant variables, it was not possible to collect data for all country-years.
 #
-As figure [[fig:cpltns_vrbl_plot_v2]] shows, in particular cultural spending and marginal income tax rate have coverage gaps.
+As figure [[fig:cpltns_vrbl_plot_v2]] shows, in particular cultural spending and marginal income tax rate have substantial coverage gaps.
 #
 I therefore choose an approach that attempts to (at least partly) address two competing limitations, namely omitted variable bias and data missing not-at-random:
 #
