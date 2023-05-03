@@ -1871,9 +1871,11 @@ gen_nbrs <- function(df_excl, df_open, cbn_dfs_rates, cbn_dfs_rates_uscld,  df_r
     if (as.character(match.call()[[1]]) %in% fstd){browser()}
     1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;
     
-    dt_excl <- df_excl %>% adt() %>% .[, .(ID, year_opened_int, year_closed, countrycode)]
+    dt_excl <- df_excl %>% adt() %>% .[, .(ID, museum_status, year_opened_int, year_closed, countrycode)]
     ## number of museums in database as a whole 
     nbr_muem_in_pmdb <- dt_excl[, .N]
+
+    nbr_pm_openatm <- dt_excl[museum_status == "private museum", .N]
 
     ## number of opened/closed PMs (based on PMs with complete info)
     nbr_opnd_wld <- sum(df_open$nbr_opened, na.rm = T)
@@ -1885,7 +1887,8 @@ gen_nbrs <- function(df_excl, df_open, cbn_dfs_rates, cbn_dfs_rates_uscld,  df_r
     pmdb_stats <- list(nbr_muem_in_pmdb = nbr_muem_in_pmdb,
                        nbr_opnd_wld = nbr_opnd_wld,
                        nbr_clsd_wld = nbr_clsd_wld,
-                       nbr_cry_wal1pm_all = nbr_cry_wal1pm_all)
+                       nbr_cry_wal1pm_all = nbr_cry_wal1pm_all,
+                       nbr_pm_openatm = nbr_pm_openatm)
 
 
     ## number of those countries that have at least 1 pm, based on PMs with complete information

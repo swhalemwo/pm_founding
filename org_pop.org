@@ -24,6 +24,7 @@ dt_nbrs[, .(macro_str = sprintf("#+MACRO: %s %s", nbr_name, nbr_fmt)), grp] %>%
 #+MACRO: nbr_opnd_wld 516
 #+MACRO: nbr_clsd_wld 78
 #+MACRO: nbr_cry_wal1pm_all 64
+#+MACRO: nbr_pm_openatm 446
 
 
 # nbr_pm_regsub
@@ -577,11 +578,11 @@ After recording the names and deleting duplicates, it was investigated using pub
 #
 Following this, additional information about each museum was collected by student assistants, the most relevant for this research being country and opening year.
 #
-Currently, the database includes {{{nbr_muem_in_pmdb}}} museums (of which *446* are currently open), located in {{{nbr_cry_wal1pm_all}}} countries, with the majority being located in Western Europe ({{{regsub_cnt_Western_Europe}}}), East Asia ({{{regsub_cnt_Eastern_Asia}}}) and North America ({{{regsub_cnt_Northern_America}}}).
+Currently, the database includes {{{nbr_muem_in_pmdb}}} museums (of which {{{nbr_pm_openatm}}} are currently open, the remainder having closed or transformed to the extent to no longer constituting a private museum), located in {{{nbr_cry_wal1pm_all}}} countries, with the majority being located in Western Europe ({{{regsub_cnt_Western_Europe}}}), East Asia ({{{regsub_cnt_Eastern_Asia}}}) and North America ({{{regsub_cnt_Northern_America}}}).
 #
 Information on country and opening year is used to construct a count indicator of the number of private museums opened in each country-year.
 #
-This study has a global scope (it includes the large number of countries without private museums to avoid sampling on the dependent variable) and while ideally it would cover all country-years from 1985 onwards (which is approximately when the current wave of founding started; see figure [[fig:openings]]), however both the time period and number of countries that can be investigated are limited by the coverage of the independent variables. 
+This study has a global scope (it includes the large number of countries without private museums to avoid sampling on the dependent variable), however both the time period and number of countries that can be investigated are limited by the coverage of the independent variables. 
 
 
 *** Independent Variables
@@ -666,7 +667,7 @@ GDP is included to account for potentially imperfect measurement of government s
 #
 Furthermore, given he stratified character of art consumption [[parencite:&Bourdieu_1984_distinction]] within countries, controlling for GDP also includes a demand dimension as more developed countries potentially host larger population shares interested in (post-material) art consumption.
 #
-Population size is included as an offset (see section [[id:d2d676fc-e644-4815-a06d-906a30c823f0][Analysis]]).
+Population size is included as an offset (cf. section [[id:d2d676fc-e644-4815-a06d-906a30c823f0][Analysis]]).
 
 
 **** Artnews collectors
@@ -701,7 +702,7 @@ However, density effects may be limited by the non-profit character of the priva
 # 
 The traditional density dependence approach focuses on for-profit companies, where competition takes place over material inputs and or market shares.
 #
-As such "direct" competition is absent for private museums which are predominantly non-profits and generally operate at a loss [[parencite:&Gnyp_2015_shift]], density effects may be weaker (cite:&Bogaert_etal_2014_ecological argue this for non-profit organizational populations generally). 
+As such "direct" competition is absent for private museums which are predominantly non-profits and generally operate at a loss [[parencite:&Gnyp_2015_collectors]], density effects may be weaker (cite:&Bogaert_etal_2014_ecological argue this for non-profit organizational populations generally). 
 # 
 Nevertheless, private museums may still compete over audiences [[parencite:&Adam_2021_rise p.14]], which [[textcite:&Frey_Meier_2002_beyeler]] argues are valued both economically (through ticket prices) and symbolically (as validating exhibition choices).
 # 
@@ -709,7 +710,7 @@ Furthermore, the marginal value of a private museum as an instrument of distinct
 
 
 
-Thus while the non-profit character of private museum might lead to weaker density effect sizes than in other for-profit organizational populations, it is still worth to control for.
+While the non-profit character of private museum might lead to weaker density effect sizes than in other for-profit organizational populations, it is still worth to control for.
 #
 I therefore include for each country-year measures based on the number of private museums open at that year, in particular a linear term (which measures legitimacy) and a squared term (which measures competition).
 #
