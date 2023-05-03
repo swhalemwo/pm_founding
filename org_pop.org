@@ -878,24 +878,21 @@ Given 36 variable combinations which are optimized five times with different sta
 
 *** Descriptive findings
 
-Summary statistics for all variables are provided in unscaled form in table \ref{tbl:descs}.
+Summary statistics for all variables are provided in unscaled form in table \ref{tbl:descs}, providing two relevant insights. 
 #
-A number of insights can be gained from these descriptive findings:
+Firstly it can be seen that the smaller datasets, especially "DS all IVs", where countries of the Global North are overrepresented, are characterized disproportionately by higher rates of HNWIs, lower inequalities, higher GDP per capita and larger populations of museums and collectors of modern and contemporary art.
 #
-Given that the smaller datasets, especially "DS all IVs", countries of the Global North are overrepresented, these datasets are characterized disproportionately by higher rates of HNWIs, lower inequalities, higher GDP per capita and larger (per capita) populations of museums and collectors of modern and contemporary art.
+The main variable of interest, private museum founding (and consequently private museum densities), is more prevalent in "DS all IVs" as well: 
 #
-Furthermore the main variable of interest, private museum founding (and consequently private museum densities), is more prevalent in "DS all IVs" as well. 
+For example, while in "DS all IVs" on average each country-year one private museum is founded per {{{nbr_pop_p_1pm_cbn_all}}} million inhabitants (1/{{{opng_rate_cbn1}}}), this rate is substantially lower in "DS --CuSP" and "DS -CuSp/TMITR" with 1 private museum founding per {{{nbr_pop_p_1pm_cbn_no_cult_spending}}} and {{{nbr_pop_p_1pm_cbn_no_cult_spending_and_mitr}}} million inhabitants, respectively.[fn::These rates refer to country-year averages which weigh all units evenly regardless of population size. The dataset-year private museum founding rates are lower at on average one private museum founding per {{{opng_p1m_glbl_yearly_cbn_all}}}, {{{opng_p1m_glbl_yearly_cbn_no_cult_spending}}}, {{{opng_p1m_glbl_yearly_cbn_no_cult_spending_and_mitr}}} million inhabitants in "DS all IVs", "DS --CuSP", and "DS -CuSp/TMITR", respectively, indicating that private museum founding takes place disproportionally in country-years with below average population size.]
 #
-For example, while in "DS all IVs" each year on average 1 private museum is founded per {{{nbr_pop_p_1pm_cbn_all}}} million inhabitants (1/{{{opng_rate_cbn1}}}), this rate is substantially lower in "DS --CuSP" and "DS -CuSp/TMITR" with 1 private museum founding per {{{nbr_pop_p_1pm_cbn_no_cult_spending}}} and {{{nbr_pop_p_1pm_cbn_no_cult_spending_and_mitr}}} million inhabitants, respectively.[fn::These rates refer to country-year averages which weigh all countries evenly regardless of population size. The dataset-year private museum founding rates are lower at on average one private museum founding per {{{opng_p1m_glbl_yearly_cbn_all}}}, {{{opng_p1m_glbl_yearly_cbn_no_cult_spending}}}, {{{opng_p1m_glbl_yearly_cbn_no_cult_spending_and_mitr}}} million inhabitants in "DS all IVs", "DS --CuSP", and "DS -CuSp/TMITR", respectively, indicating that private museum founding takes place disproportionally in country-years with population size below average]
-#
-Additionally, several variables show substantial skew (indicated by high standard deviations compared to the mean), such as cultural spending, GDP and the HNWI, art museum and collector rates, as well as the dependent variable of private museum openings: 
+Secondly, several variables show substantial skew (indicated by high standard deviations compared to the mean), such as cultural spending, GDP and the HNWI, art museum and collector rates, as well as the dependent variable of private museum openings: 
 #
 Only {{{nbr_nzero_cbn_all}}} country-years see show at least one private museum founding in "DS all IVs" ({{{prop_nzero_cbn_all}}}%), while the other datasets see even lower proportions ({{{prop_nzero_cbn_no_cult_spending}}}% for "DS --CuSP" and {{{prop_nzero_cbn_no_cult_spending_and_mitr}}}% for "DS --CuSP/TMTIR", respectively).
 
 
 
-
-*** general introduction :ignhead:
+*** Regression results
 # #+label: plt_v62_coef_krnls
 # #+caption: distribution of main coefficients
 # #+attr_latex: :width 16cm
