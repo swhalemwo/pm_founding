@@ -1944,16 +1944,23 @@ gen_nbrs <- function(df_excl, df_open, cbn_dfs_rates, cbn_dfs_rates_uscld,  df_r
 
     ## global rates
     ## of all country years
-    rate_opng_glbl <- map(cbn_dfs_rates, ~adt(.x)[, round(sum(nbr_opened)/sum(SP_POP_TOTLm_lag0_uscld), 5)]) %>%
-        setNames(paste0("rate_opng_glbl_", names(.)))
+    rate_opng_glbl <- map(cbn_dfs_rates, ~adt(.x)[, sum(nbr_opened)/sum(SP_POP_TOTLm_lag0_uscld)]) %>%
+        imap(~list(nbr_name = paste0("rate_opng_glbl_", .y), nbr = .x, digits = 5))
+
+    ## setNames(paste0("rate_opng_glbl_", names(.)))
 
     ## first aggregate to year 
     rate_opng_glbl_yearly <- map(cbn_dfs_rates, ~adt(.x)[, .(nbr_opened_year = sum(nbr_opened),
                                     pop_year = sum(SP_POP_TOTLm_lag0_uscld)), year][
-                          ## , sum(nbr_opened_year)/sum(pop_year)])
-                                                 , round(mean(nbr_opened_year/pop_year), 5)]) %>%
-        setNames(paste0("rate_opng_glbl_yearly_", names(.)))
+                                                 , mean(nbr_opened_year/pop_year)]) %>%
+        imap(~list(nbr_name = paste0("rate_opng_glbl_yearly_", .y), nbr = .x, digits = 5))
 
+    opng_p1m_glbl_yearly <- map(rate_opng_glbl_yearly,
+                                ~list(nbr_name = paste0("opng_p1m_glbl_yearly_cbn_",
+                                                        str_split(.x$nbr_name,  "cbn_")[[1]][2]),
+                                      nbr = 1/.x$nbr, digits = 0))
+
+    
     ## model succesrate
     l_cvrgnc <- df_reg_anls_cfgs_wide %>% adt() %>%
         .[, .N, cvrgd] %$%
@@ -1965,6 +1972,7 @@ gen_nbrs <- function(df_excl, df_open, cbn_dfs_rates, cbn_dfs_rates_uscld,  df_r
     l_cvrgnc$nbr_runs_p_cbn_spec <- adt(df_reg_anls_cfgs_wide)[, .N, .(cbn_name, base_lag_spec)][, round(mean(N),0)]
 
     
+    ## collect all results
     res_desc <- c(list(
         pmdb_stats = pmdb_stats,
         nbr_pm_regsub = nbr_pm_regsub,
@@ -1972,13 +1980,25 @@ gen_nbrs <- function(df_excl, df_open, cbn_dfs_rates, cbn_dfs_rates_uscld,  df_r
         opng_rates_fmt = opng_rates_fmt,
         opng_prop_vlus = opng_prop_vlus,
         popnbrs_p1pm = popnbrs_p1pm,
-        rate_opng_glbl = rate_opng_glbl,
-        rate_opng_glbl_yearly = rate_opng_glbl_yearly,
         cvrgnc = lapply(l_cvrgnc, nicely_fmt_number)))
 
-    
-    dt_nbrs_desc <- imap_dfr(res_desc, ~data.table(nbr_name = names(.x),
-                                                    nbr_fmt = as.character(unname(.x)), grp = .y)) %>%
+    dt_nbrs_desc_prep <- imap_dfr(res_desc, ~data.table(nbr_name = names(.x),
+                                                    nbr_fmt = as.character(unname(.x)), grp = .y)) 
+
+        
+
+    ## start replacing some numbers here with lnbr as well 
+    lnbr_res <- list(
+        rate_opng_glbl = rate_opng_glbl,
+        rate_opng_glbl_yearly = rate_opng_glbl_yearly,
+        opng_p1m_glbl_yearly = opng_p1m_glbl_yearly)
+
+        
+    dt_lnbr_res <- imap_dfr(lnbr_res, ~rbindlist(.x)[, grp := .y]) %>%
+        .[, nbr_fmt := fmt_nbr_flex(nbr, digits)] %>%
+        .[, .(nbr_name, nbr_fmt, grp)]
+
+    dt_nbrs_desc <- rbind(dt_nbrs_desc_prep, dt_lnbr_res) %>%
         .[, nbr_name := factor(nbr_name, levels = nbr_name)]
 
     dt_nbrs_pred <- gen_nbrs_pred(reg_res_objs$top_coefs, cbn_dfs_rates_uscld, df_reg, print_examples)

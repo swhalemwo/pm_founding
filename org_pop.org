@@ -77,9 +77,17 @@ dt_nbrs[, .(macro_str = sprintf("#+MACRO: %s %s", nbr_name, nbr_fmt)), grp] %>%
 #+MACRO: nbr_pop_p_1pm_cbn_controls 75.1
 
 
+# cvrgnc
+#+MACRO: cvrgd1 79 339
+#+MACRO: cvrgd0 1 166
+#+MACRO: mdlcnt_ttl 80 505
+#+MACRO: cvrgnc_rate 98.6
+#+MACRO: nbr_runs_p_cbn_spec 149
+
+
 # rate_opng_glbl
 #+MACRO: rate_opng_glbl_cbn_all 0.00434
-#+MACRO: rate_opng_glbl_cbn_no_cult_spending 0.003
+#+MACRO: rate_opng_glbl_cbn_no_cult_spending 0.00300
 #+MACRO: rate_opng_glbl_cbn_no_cult_spending_and_mitr 0.00283
 #+MACRO: rate_opng_glbl_cbn_controls 0.00253
 
@@ -91,12 +99,11 @@ dt_nbrs[, .(macro_str = sprintf("#+MACRO: %s %s", nbr_name, nbr_fmt)), grp] %>%
 #+MACRO: rate_opng_glbl_yearly_cbn_controls 0.00248
 
 
-# cvrgnc
-#+MACRO: cvrgd1 79 339
-#+MACRO: cvrgd0 1 166
-#+MACRO: mdlcnt_ttl 80 505
-#+MACRO: cvrgnc_rate 98.6
-#+MACRO: nbr_runs_p_cbn_spec 149
+# opng_p1m_glbl_yearly
+#+MACRO: opng_p1m_glbl_yearly_cbn_all 246
+#+MACRO: opng_p1m_glbl_yearly_cbn_no_cult_spending 346
+#+MACRO: opng_p1m_glbl_yearly_cbn_no_cult_spending_and_mitr 364
+#+MACRO: opng_p1m_glbl_yearly_cbn_controls 403
 
 
 # intcpt_info
@@ -875,15 +882,13 @@ Summary statistics for all variables are provided in unscaled form in table \ref
 #
 A number of insights can be gained from these descriptive findings:
 #
-First, private museum founding is more prevalent in the smaller datasets in which countries of the Global North are disproportionately represented.
+Given that the smaller datasets, especially "DS all IVs", countries of the Global North are overrepresented, these datasets are characterized disproportionately by higher rates of HNWIs, lower inequalities, higher GDP per capita and larger (per capita) populations of museums and collectors of modern and contemporary art.
 #
-Consequently, the less country-years are included in a dataset, the stronger it is characterized by higher private museum founding rates (and consequently densities), higher rates of HNWIs, lower inequalities, higher GDP per capita and larger (per capita) populations of museums and collectors of modern and contemporary art.
+Furthermore the main variable of interest, private museum founding (and consequently private museum densities), is more prevalent in "DS all IVs" as well. 
 #
-For example, while in "DS all IVs" each year on average 1 private museum is founded per {{{nbr_pop_p_1pm_cbn_all}}} million inhabitants (1/{{{opng_rate_cbn1}}}), this rate is substantially lower in "DS --CuSP" and "DS -CuSp/TMITR" with 1 private museum founding per {{{nbr_pop_p_1pm_cbn_no_cult_spending}}} and {{{nbr_pop_p_1pm_cbn_no_cult_spending_and_mitr}}} million inhabitants, respectively.
+For example, while in "DS all IVs" each year on average 1 private museum is founded per {{{nbr_pop_p_1pm_cbn_all}}} million inhabitants (1/{{{opng_rate_cbn1}}}), this rate is substantially lower in "DS --CuSP" and "DS -CuSp/TMITR" with 1 private museum founding per {{{nbr_pop_p_1pm_cbn_no_cult_spending}}} and {{{nbr_pop_p_1pm_cbn_no_cult_spending_and_mitr}}} million inhabitants, respectively.[fn::These rates refer to country-year averages which weigh all countries evenly regardless of population size. The dataset-year private museum founding rates are lower at on average one private museum founding per {{{opng_p1m_glbl_yearly_cbn_all}}}, {{{opng_p1m_glbl_yearly_cbn_no_cult_spending}}}, {{{opng_p1m_glbl_yearly_cbn_no_cult_spending_and_mitr}}} million inhabitants in "DS all IVs", "DS --CuSP", and "DS -CuSp/TMITR", respectively, indicating that private museum founding takes place disproportionally in country-years with population size below average]
 #
-Additionally, several variables show substantial skew (indicated by high standard deviations compared to the mean), such as the dependent variable of private museum openings (and consequently private museum density measures), as well as cultural spending, GDP and the HNWI, art museum and collector counts.
-#
-In particular, private museum founding is concentrated in a number of country-years:
+Additionally, several variables show substantial skew (indicated by high standard deviations compared to the mean), such as cultural spending, GDP and the HNWI, art museum and collector rates, as well as the dependent variable of private museum openings: 
 #
 Only {{{nbr_nzero_cbn_all}}} country-years see show at least one private museum founding in "DS all IVs" ({{{prop_nzero_cbn_all}}}%), while the other datasets see even lower proportions ({{{prop_nzero_cbn_no_cult_spending}}}% for "DS --CuSP" and {{{prop_nzero_cbn_no_cult_spending_and_mitr}}}% for "DS --CuSP/TMTIR", respectively).
 
