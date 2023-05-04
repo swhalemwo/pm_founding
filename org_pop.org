@@ -601,7 +601,7 @@ This study has a global scope (it includes the large number of countries without
 #
 For this study, I focus on top marginal income tax rates, i.e. the amount of tax to be paid on income in the uppermost tax bracket, and tax deductibility of donations.
 #
-Higher marginal income tax rates (in combination with tax deductibility of charitable donations) decrease the net cost of a donation (as higher rates increase the amount of taxes returned; cf. cite:&Hemels_2017_incentives for a more detailed discussion), and are thus expected to increase the incentive for founders to donate their collection (or parts of it) to their private museum and receive a tax deduction in return. 
+Higher top marginal income tax rates (in combination with tax deductibility of charitable donations) decrease the net cost of a donation (as higher rates increase the amount of taxes returned; cf. cite:&Hemels_2017_incentives for a more detailed discussion), and are thus expected to increase the incentive for founders to donate their collection (or parts of it) to their private museum and receive a tax deduction in return. 
 
 
 Top marginal income tax rate data is taken from the Index of Economic Freedom of the World parencite:&Fraser_2022_economic_freedom, of which it constitutes a sub-item.
@@ -805,7 +805,7 @@ I address these challenges as follows:
 
 
 
-Despite substantial efforts to collect complete data for the relevant variables, it was not possible to collect data for all country-years; in particular cultural spending and marginal income tax rate have substantial coverage gaps.
+Despite substantial efforts to collect complete data for the relevant variables, it was not possible to collect data for all country-years; in particular cultural spending and top marginal income tax rate have substantial coverage gaps.
 #
 # I therefore choose an approach that attempts to (at least partly) address two competing limitations, namely omitted variable bias and data missing not-at-random:
 # #
@@ -817,7 +817,7 @@ Despite substantial efforts to collect complete data for the relevant variables,
 #
 As excluding a large number of country-years limits the generalizability of findings, I construct multiple datasets that differ regarding variable and country-year coverage.
 # 
-In particular, I construct one dataset with all variables ({{{nbr_cy_cbn_all}}} country years, {{{nbr_crys_cbn_all}}} countries; referred to as "DS all IVs"), one with all variables except cultural spending ({{{nbr_cy_cbn_no_cult_spending}}} country years, {{{nbr_crys_cbn_no_cult_spending}}} countries; "DS --CuSp"), and one with all variables except cultural spending and marginal income tax rates ({{{nbr_cy_cbn_no_cult_spending_and_mitr}}} country years, {{{nbr_crys_cbn_no_cult_spending_and_mitr}}} countries; "DS --CuSp/TMITR").
+In particular, I construct one dataset with all variables ({{{nbr_cy_cbn_all}}} country years, {{{nbr_crys_cbn_all}}} countries; referred to as "DS all IVs"), one with all variables except cultural spending ({{{nbr_cy_cbn_no_cult_spending}}} country years, {{{nbr_crys_cbn_no_cult_spending}}} countries; "DS --CuSp"), and one with all variables except cultural spending and top marginal income tax rates ({{{nbr_cy_cbn_no_cult_spending_and_mitr}}} country years, {{{nbr_crys_cbn_no_cult_spending_and_mitr}}} countries; "DS --CuSp/TMITR").
 #
 Most country-years are situated between 2000 and 2020, with coverage generally increasing over time; the datasets therefore effectively cover in the period in which the majority of private museum founding has taken place.
 #
