@@ -1254,6 +1254,37 @@ gentbl_regrslts <- function(top_coefs, gof_df_cbn, df_best_mdls, wcptbl) {
 }
 
 
+gentbl_cbn_cpsgn <- function(cbn_dfs_rates) {
+    #' generate table of combination region composition
+    
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
+    1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;
+
+    dt_reg6_lbls <- data.table(reg6 = names(reg6_lbls), lbl = unlist(reg6_lbls))
+
+    dt_cbn_cpsn <- imap_dfr(cbn_dfs_rates[1:3], ~adt(.x)[, .N, .(reg6 = rcd_iso3c_reg6(iso3c))][, cbn := .y]) %>%
+        .[, `:=`(prop = paste0(format(round(100*N/sum(N),1), nsmall = 1), "%"), 
+                 N_fmt = fmt_nbr_flex(N)), cbn] %>% .[, N := NULL] %>% # format N into chr, yeet original int
+        melt(id.vars = c("reg6", "cbn")) %>%
+        dcast.data.table(reg6 ~ cbn + variable) %>%
+        dt_reg6_lbls[., on = "reg6"] %>%
+        .[, reg6 := NULL]
+
+    
+    align_cfg <- c("l", "p{7cm}", rep("l", 6))
+
+    clm_names <- list()
+    clm_names <- list(-1,-1, nrow(dt_cbn_cpsn))
+    cbn_dfs_rates[1:3]
+    
+    
+        
+    
+
+
+}
+
+gentbl_cbn_cpsgn(cbn_dfs_rates)
 
 
 gen_res_tbls <- function(reg_res_objs) {
