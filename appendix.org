@@ -21,7 +21,7 @@
 [[file:figures/cpltns_vrbl_plot_v2.pdf]]
 
 As figure [[fig:cpltns_vrbl_plot_v2]] shows,
-j
+
 
 #+label: fig:world_plot_faceted
 #+caption: Countries colored by number of country-years per combination
@@ -36,21 +36,33 @@ Figures [[fig:world_plot_faceted]] and [[fig:cbn_cnt_line_plot]] illustrate the 
 As a consequence of the data availability of longitudinal variables, for most countries the analysis covers the years 2000-2020.
 
 
+** coef distribution
+
+#+label: fig:coef_violin
+#+caption: Coefficient point estimate distribution (variation based on different variable choices)
+[[file:figures/plt_v75_coef_violin.pdf]]
 
 
 
-#+label: fig:plt_v62_reg_res_within
-#+caption: Coefficients of the 3 best-fittin models per lag and variable combination, lines indicate stability of other variables as the lag of the variable on the line is varied, minor variation around x-axis added to improve legibility
-[[file:figures/plt_v62_reg_res_within.pdf]]
+
+** model improvement given inclusion of variables 
+:PROPERTIES:
+:ID:       ddb30663-9a58-4af5-977c-43f83903776c
+:END:
+
+#+label: fig:oneout_llrt_lldiff
+#+caption: Model fit difference given variable inclusion
+[[file:figures/plt_v75_oneout_llrt_lldiff.pdf]]
+
+#+label: fig:oneout_llrt_lldiff
+#+caption: Significance of model improvement given variable inclusion
+[[file:figures/plt_v75_oneout_llrt_z.pdf]]
 
 
-#+label: fig:plt_v62_cbn_log_likelihoods
-#+caption: Log-likelihood distribution of model results
-[[file:figures/plt_v62_cbn_log_likelihoods.pdf]]
-
-
-
-#+label: fig:plt_v62_best_models_wlag
-#+caption: Coefficients of best fitting models
-[[file:figures/plt_v62_best_models_wlag.pdf]]
-
+** lag choice
+:PROPERTIES:
+:ID:       68b9f836-26ed-4340-899f-4d6c31192cd5
+:END:
+#+label: fig:lag_dens
+#+caption: Distribution of lags of longitudinal variables
+[[file:figures/plt_v75_lag_dens.pdf]]
