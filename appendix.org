@@ -1,0 +1,56 @@
+#+latex_class: article_usual2
+# erases make title
+# #+BIND: org-export-latex-title-command ""
+
+# fucks all the maketitlestuff just to be sure
+#+OPTIONS: num:nil
+#+OPTIONS: toc:nil
+#+OPTIONS: h:5
+
+
+ 
+* Appendix
+
+
+#+label: fig:openings
+#+caption: Private Museum openings (absolute and population-rate) of 12 countries with highest counts. 
+[[file:figures/foundings_country_cnt_and_rate.pdf]]
+
+#+label: fig:cpltns_vrbl_plot_v2
+#+caption: Number of countries with data per year
+[[file:figures/cpltns_vrbl_plot_v2.pdf]]
+
+As figure [[fig:cpltns_vrbl_plot_v2]] shows,
+j
+
+#+label: fig:world_plot_faceted
+#+caption: Countries colored by number of country-years per combination
+[[file:figures/world_plot_faceted_v2.pdf]]
+
+#+label: fig:cbn_cnt_line_plot
+#+caption: Number of countries per year per variable combination
+[[file:figures/cbn_cnt_line_plot_v2.pdf]]
+
+Figures [[fig:world_plot_faceted]] and [[fig:cbn_cnt_line_plot]] illustrate the variation of country-year coverage between the variable combinations. 
+
+As a consequence of the data availability of longitudinal variables, for most countries the analysis covers the years 2000-2020.
+
+
+
+
+
+#+label: fig:plt_v62_reg_res_within
+#+caption: Coefficients of the 3 best-fittin models per lag and variable combination, lines indicate stability of other variables as the lag of the variable on the line is varied, minor variation around x-axis added to improve legibility
+[[file:figures/plt_v62_reg_res_within.pdf]]
+
+
+#+label: fig:plt_v62_cbn_log_likelihoods
+#+caption: Log-likelihood distribution of model results
+[[file:figures/plt_v62_cbn_log_likelihoods.pdf]]
+
+
+
+#+label: fig:plt_v62_best_models_wlag
+#+caption: Coefficients of best fitting models
+[[file:figures/plt_v62_best_models_wlag.pdf]]
+
