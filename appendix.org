@@ -23,9 +23,9 @@
 As figure [[fig:cpltns_vrbl_plot_v2]] shows,
 
 
-#+label: fig:world_plot_faceted
-#+caption: Countries colored by number of country-years per combination
-[[file:figures/world_plot_faceted_v2.pdf]]
+# #+label: fig:world_plot_faceted
+# #+caption: Countries colored by number of country-years per combination
+# [[file:figures/world_plot_faceted_v2.pdf]]
 
 #+label: fig:cbn_cnt_line_plot
 #+caption: Number of countries per year per variable combination
