@@ -100,10 +100,40 @@ get_df_reg <- function(df_anls) {
 
     df_reg <- as_tibble(Reduce(function(x,y,...) merge(x,y, all.x = TRUE), dfs_to_combine))
 
+
+
+
+
     ## fill up MOW data, maybe other databases later (IDA, Artfacts)
-    fill_up_cols <- unique(c(names(mow_cntns), names(mow_crssctn), names(df_artnews)))
-    
+    fill_up_cols <- unique(c(names(mow_cntns), names(mow_crssctn)))
     df_reg[fill_up_cols][is.na(df_reg[fill_up_cols])] <- 0
+
+    ## fill up AN cols only from 1990 (min year) onwards
+    min_AN_year <- adt(df_reg)[clctr_cnt_cpaer != 0, min(year)] # yeet CYs before AN ranking existed
+    fill_up_cols_AN <- setdiff(unique(names(df_artnews)), c("iso3c", "year"))
+        ## df_reg[fill_up_cols_AN][is.na(df_reg[fill_up_cols_AN]) & df_reg$year >= min_AN_year] <- 0
+
+    df_reg <- adt(df_reg)[year >= min_AN_year, (fill_up_cols_AN) := replace(.SD, is.na(.SD), 0),
+                              .SDcols = fill_up_cols_AN] %>% atb()
+
+    ## diag_dt <- adt(df_reg_fld)[, lapply(.SD, \(x) sum(is.na(x)))] %>% melt %>% .[, src := "dt"]
+
+    ## test that it looks good
+    ## ## replace all in tibbles with base approach 
+    ## fill_up_cols2 <- unique(c(names(mow_cntns), names(mow_crssctn), names(df_artnews)))
+    ## df_reg2 <- adt(df_reg) %>% copy() %>% atb()
+    ## df_reg2[fill_up_cols2][is.na(df_reg2[fill_up_cols2])] <- 0
+    ## diag2 <- adt(df_reg2)[, lapply(.SD, \(x) sum(is.na(x)))] %>% melt() %>% .[, src := "base"]
+
+    ## rbind(diag_dt, diag2) %>%
+    ##     dcast.data.table(variable ~ src) %>%
+    ##     .[, diff := base - dt] %>%
+    ##     .[diff != 0]
+
+    ## df_reg_fld[, lapply(.SD, \(x) sum(is.na(x))), .SDcols = fill_up_cols_AN, year]
+    ## ## -> seems to be fine
+    
+
 
     ## generate counts from percentages for HNWI
     hnwi_names <- names(df_hnwi)[3:ncol(df_hnwi)]
