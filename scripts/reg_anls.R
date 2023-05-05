@@ -1177,7 +1177,9 @@ gen_tblcfgs <- function(TABLE_DIR) {
         tbl_regrslts_wcptblT = gen_tblcfg(label = "tbl:regrslts_wcptblT", TABLE_DIR = TABLE_DIR,
                                           caption = "Negative binomial models of private museum founding rate"),
         tbl_descs = gen_tblcfg(label = "tbl:descs", TABLE_DIR = TABLE_DIR,
-                               caption = "Summary Statistics")
+                               caption = "Summary Statistics"),
+        tbl_cbn_cpsgn = gen_tblcfg(label = "tbl:cbn_cpsgn", TABLE_DIR = TABLE_DIR,
+                                   caption = "Dataset composition by region")        
     )
 }
 
@@ -1254,6 +1256,37 @@ gentbl_regrslts <- function(top_coefs, gof_df_cbn, df_best_mdls, wcptbl) {
 }
 
 
+gen_cmidrule_header <- function(ubrcol_lbls, ubr_colwidth, row_lbl, col_lbls) {
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
+    ## generate multi-row header for multicolumns
+    ## assumes first cell (first row in top column row) is empty
+    ## row_lbl: name for row-entities
+
+    ubr_cols <- map_chr(ubrcol_lbls, ~sprintf("\\multicolumn{%s}{c}{%s}", ubr_colwidth, .x))
+
+    cmidrules <- map_chr(1:len(ubrcol_lbls),
+                         ~sprintf("\\cmidrule(r){%s-%s}",
+                                  ## beginning is end - ubr_colwidth + 1 ("inclusive")
+                         (((.x * ubr_colwidth) + 1) - ubr_colwidth) + 1, 
+                         (.x * ubr_colwidth) + 1)) %>% # end is number of uber-columns + 1
+        paste0(collapse = "")
+                   
+    ubr_cols_clapsd <- paste0(c("\\hline \n", ## hline on top 
+                                ubr_cols), collapse = " & ")
+
+    ubr_row <- paste0(ubr_cols_clapsd, " \\\\ \n", cmidrules)
+
+    ## collapse raow_lbl and col_lbls, and linebreaks before/after
+    second_row <- sprintf("\n %s \\\\ \n", paste0(c(row_lbl, col_lbls), collapse = " & "))
+
+    c(ubr_row, second_row)
+}
+    
+        
+    
+    
+
+
 gentbl_cbn_cpsgn <- function(cbn_dfs_rates) {
     #' generate table of combination region composition
     
@@ -1263,19 +1296,25 @@ gentbl_cbn_cpsgn <- function(cbn_dfs_rates) {
     dt_reg6_lbls <- data.table(reg6 = names(reg6_lbls), lbl = unlist(reg6_lbls))
 
     dt_cbn_cpsn <- imap_dfr(cbn_dfs_rates[1:3], ~adt(.x)[, .N, .(reg6 = rcd_iso3c_reg6(iso3c))][, cbn := .y]) %>%
-        .[, `:=`(prop = paste0(format(round(100*N/sum(N),1), nsmall = 1), "%"), 
+        .[, `:=`(prop = latexTranslate(paste0(format(round(100*N/sum(N),1), nsmall = 1), "%")), 
                  N_fmt = fmt_nbr_flex(N)), cbn] %>% .[, N := NULL] %>% # format N into chr, yeet original int
         melt(id.vars = c("reg6", "cbn")) %>%
+        .[, variable := factor(variable, levels = c("N_fmt", "prop"))] %>% 
         dcast.data.table(reg6 ~ cbn + variable) %>%
         dt_reg6_lbls[., on = "reg6"] %>%
         .[, reg6 := NULL]
 
+ 
     
-    align_cfg <- c("l", "p{7cm}", rep("l", 6))
 
     clm_names <- list()
-    clm_names <- list(-1,-1, nrow(dt_cbn_cpsn))
-    cbn_dfs_rates[1:3]
+    clm_names$pos <- list(-1,-1)
+    clm_names$command <- gen_cmidrule_header(vvs$cbn_lbls, 2, "region", rep(c("N", "Percent"), 3))
+
+    list(dt_fmtd = dt_cbn_cpsn,
+         align_cfg = align_cfg <- c("l", "p{2.5cm}", rep("r", 6)),
+         add_to_row = clm_names,
+         hline_after = c(0, nrow(dt_cbn_cpsn)))
     
     
         
@@ -1284,7 +1323,7 @@ gentbl_cbn_cpsgn <- function(cbn_dfs_rates) {
 
 }
 
-gentbl_cbn_cpsgn(cbn_dfs_rates)
+## gentbl_cbn_cpsgn(cbn_dfs_rates) %>% pvxtbl(crop = T, landscape = T)
 
 
 gen_res_tbls <- function(reg_res_objs) {
@@ -1305,13 +1344,15 @@ gen_res_tbls <- function(reg_res_objs) {
     tbl_descs <- gentbl_sum_stats_rates(df_reg_rts, cbn_dfs_rates_uscld, vvs)
     ## pvxtbl(tbl_descs, crop = T, landscape = T)
     
+    tbl_cbn_cpsgn <- gentbl_cbn_cpsgn(cbn_dfs_rates)
     
     ## do.call("render_xtbl", c(tbl_descs, list(label = "descs2", caption = "descs2",
     ##                                          file = paste0(TABLE_DIR, "descs2.tex"))))
 
     list(tbl_regrslts_wcptblF = tbl_regrslts_wcptblF,
          tbl_regrslts_wcptblT = tbl_regrslts_wcptblT, 
-         tbl_descs = tbl_descs)
+         tbl_descs = tbl_descs,
+         tbl_cbn_cpsgn = tbl_cbn_cpsgn)
 }
 
 
@@ -2086,6 +2127,7 @@ system(pdftk_cmd)
 res_tbls <- gen_res_tbls(reg_res_objs)
 pvxtbl(res_tbls$tbl_regrslts_wcptblF, landscape = T)
 pvxtbl(res_tbls$tbl_descs, landscape = T)
+pvxtbl(res_tbls$tbl_cbn_cpsgn, landscape = T)
 
 iwalk(res_tbls, ~do.call("render_xtbl", c(.x, gen_tblcfgs(TABLE_DIR)[[.y]])))
 
