@@ -1115,10 +1115,29 @@ gen_plt_vrbl_cycnt <- function(df_reg_rts) {
 ## gen_plt_vrbl_cycnt(df_reg_rts)
 
 
-gen_plt_cbn_cycnt <- function(cbn_dfs_rates) {}
+gen_plt_cbn_cycnt <- function(cbn_dfs_rates) {
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
+    1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;
+
+    
+    dt_cbn_cycnts <- imap_dfr(cbn_dfs_rates[1:3], ~adt(.x)[, .N, year][, cbn := .y])
+
+    dt_cbn_lbls <- dt_cbn_cycnts[year == 2005] %>% copy() %>%
+        .[, lbl  := vvs$cbn_lbls[[cbn]], cbn]
+
+    
+    ggplot() +
+        geom_line(dt_cbn_cycnts, mapping = aes(x=year, y=N, group = cbn, linetype = cbn),
+                  show.legend = F) +
+        geom_text_repel(dt_cbn_lbls, mapping = aes(x = year, y = N, label = lbl),
+                        nudge_y = -9, min.segment.length = 100) +
+        labs(y = "Number of years covered")
+                       
+
+}
 
 
-
+## gen_plt_cbn_cycnt(cbn_dfs_rates)
 
 
 
@@ -1145,7 +1164,8 @@ gen_reg_res_plts <- function(reg_res_objs, vvs, NBR_MDLS, only_priority_plts) {
         plt_oneout_coefs = gen_plt_oneout_coefs(ou_anls, top_coefs_llrt),
         plt_oneout_llrt_z = gen_plt_oneout_llrt_z(ou_anls),
         plt_oneout_llrt_lldiff = gen_plt_oneout_llrt_lldiff(ou_anls),
-        plt_vrbl_cycnt = gen_plt_vrbl_cycnt(df_reg_rts)
+        plt_vrbl_cycnt = gen_plt_vrbl_cycnt(df_reg_rts),
+        plt_cbn_cycnt = gen_plt_cbn_cycnt(cbn_dfs_rates)
     )
         
     
@@ -1206,7 +1226,8 @@ gen_plt_cfgs <- function() {
             plt_oneout_coefs = list(filename = "oneout_coefs.pdf", width = 9, height = 6),
             plt_oneout_llrt_lldiff = list(filename = "oneout_llrt_lldiff.pdf", width = 9, height = 6),
             plt_oneout_llrt_z = list(filename = "oneout_llrt_z.pdf", width = 9, height = 6),
-            plt_vrbl_cycnt = list(filename = "vrbl_cycnt.pdf", width = 7, height = 5)
+            plt_vrbl_cycnt = list(filename = "vrbl_cycnt.pdf", width = 7, height = 5),
+            plt_cbn_cycnt = list(filename = "cbn_cycnt.pdf", width = 7, height = 5)
         )
     )
 
@@ -2173,7 +2194,7 @@ reg_res$plts <- gen_reg_res_plts(reg_res_objs, vvs, NBR_MDLS, only_priority_plts
 plt_inspector(reg_res$plts)
 ## reg_res$plts$plt_oneout_llrt_z
 reg_res$plts$plt_oneout_coefs
-reg_res$plts$plt_vrbl_cycnt
+reg_res$plts$plt_cbn_cycnt
 
 
 reg_res$plt_cfgs <- gen_plt_cfgs()
