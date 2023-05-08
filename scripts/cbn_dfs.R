@@ -175,8 +175,11 @@ get_df_reg <- function(df_anls) {
 
 
 check_if_var_is_longitudinal <- function(dfx, vx) {
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
     
     #' check weather a variable has 0 within-variation -> not longitudinal
+
+    ## xtsum(dfx, NY.GDP.PCAP.CD, iso3c)
 
     sd_within <- xtsum(dfx, get(vx), iso3c)$sd[3]
     return(sd_within != 0)
@@ -296,6 +299,7 @@ check_lin_imptd_vars <- function(df_regx, lngtd_vars) {
 MANUAL_IMPUTATION_CHECK <- F
 
 check_imputed_values <- function(df_reg) {
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
     
     ## check all df vars that are not "base vars"
     ## also exclude tmitr because has only 1 obs for some countries, and I'm never gonna use that purely anyways

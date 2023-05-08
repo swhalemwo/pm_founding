@@ -236,6 +236,8 @@ locate_col <- function(df, term) {
 
 
 xtsum <- function(data, varname, unit) {
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
+    
     ## Xtsum
     varname <- enquo(varname)
     loc.unit <- enquo(unit)
@@ -250,7 +252,9 @@ xtsum <- function(data, varname, unit) {
     }
 
     ## Table Output
-    Variable <- matrix(c(varname, "", ""), ncol=1)
+    ## Variable <- matrix(c(varname, "", ""), ncol=1)
+    ## Variable <- matrix(c("varname", "", ""), ncol=1)
+    Variable <- matrix(c(quo_name(varname), "", ""), ncol=1)
     Comparison <- matrix(c("Overall", "Between", "Within"), ncol=1)
     Mean <- matrix(c(ores[1], "", ""), ncol=1)
     Observations <- matrix(c(paste0("N = ", ores[5]), paste0("n = ", bres[4]), paste0("T-bar = ", round(bres[5], 4))), ncol=1)
