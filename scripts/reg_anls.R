@@ -1048,12 +1048,65 @@ gen_plt_lag_dens <- function(top_coefs) {
     ## scale_fill_gradient(high = "#132B43", low = "#56B1F7") # reversed normal 
     ## scale_fill_gradient(high = "#c0e5f9", low = "#0077b6") # blue 
     ## scale_fill_gradient(high = "#000000", low = "#FFFFFF") # black-white 
+}
+
+gen_plt_vrbl_cycnt <- function(df_reg_rts) {
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
+    1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;
+    #' generate coverage of variables
+    #' uses df_reg_rts, which is created after filtering out AN years
+    #' but that's wrong -> other data is complete
 
     
+
+    ## just use the same variables as before
+    rel_lngtd_vrbls <- c("tmitr_approx_linear20step",
+                        "hnwi_nbr_30M",
+                        "gptinc992j",
+                        "ghweal992j",
+                        "smorc_dollar_fxm",
+                        "NY.GDP.PCAP.CDk",
+                        "SP.POP.TOTLm")
+
+    
+    dt_cvrg <- melt(adt(df_reg_rts), id.vars = c("iso3c", "year"), measure.vars = rel_lngtd_vrbls) %>%
+        .[, .(nbr_CYs = 1.0*sum(!is.na(value))), .(variable, year)]
+
+    dt_vrbl_lbls <- data.table(vrbl = names(vvs$vrbl_lbls), lbl = addline_format(unname(vvs$vrbl_lbls))) %>%
+        .[rbind(
+            dt_cvrg[variable =="tmitr_approx_linear20step" & year == 2003],
+            dt_cvrg[variable == "hnwi_nbr_30M" & year ==1998],
+            dt_cvrg[variable == "gptinc992j" & year ==1987],
+            dt_cvrg[variable == "ghweal992j" & year ==1994],
+            dt_cvrg[variable == "smorc_dollar_fxm" & year ==2005],
+            dt_cvrg[variable == "NY.GDP.PCAP.CDk" & year ==2000],
+            dt_cvrg[variable == "SP.POP.TOTLm" & year ==2005]), on = .(vrbl = variable)]
+    ggplot() + 
+        geom_line(dt_cvrg, mapping = aes(x=year, y =nbr_CYs, group = variable),
+                  show.legend = F) +
+        geom_text_repel(dt_vrbl_lbls, mapping = aes(nudge_x=year, nudge_y=nbr_CYs -8, label = lbl,
+                                                    x = year, y = nbr_CYs ),
+                        hjust = 0, max.iter = 0) +
+        labs(y="Number of years covered")
         
+    
+    ## ggplot() +
+    ##     geom_line(dt_cvrg, mapping = aes(x=year, y =nbr_CYs),
+    ##               show.legend = F) +
+    ##     facet_grid(variable~., space = "free")
+
 
 
 }
+
+## gen_plt_vrbl_cycnt(df_reg_rts)
+
+
+gen_plt_cbn_cycnt <- function(cbn_dfs_rates) {}
+
+
+
+
 
 
 gen_reg_res_plts <- function(reg_res_objs, vvs, NBR_MDLS, only_priority_plts) {
@@ -1078,7 +1131,8 @@ gen_reg_res_plts <- function(reg_res_objs, vvs, NBR_MDLS, only_priority_plts) {
         plt_lag_dens = gen_plt_lag_dens(top_coefs),
         plt_oneout_coefs = gen_plt_oneout_coefs(ou_anls, top_coefs_llrt),
         plt_oneout_llrt_z = gen_plt_oneout_llrt_z(ou_anls),
-        plt_oneout_llrt_lldiff = gen_plt_oneout_llrt_lldiff(ou_anls)
+        plt_oneout_llrt_lldiff = gen_plt_oneout_llrt_lldiff(ou_anls),
+        plt_vrbl_cycnt = gen_plt_vrbl_cycnt(df_reg_rts)
     )
         
     
@@ -1138,7 +1192,8 @@ gen_plt_cfgs <- function() {
             plt_lag_dens = list(filename = "lag_dens.pdf", width = 9, height = 5),
             plt_oneout_coefs = list(filename = "oneout_coefs.pdf", width = 9, height = 6),
             plt_oneout_llrt_lldiff = list(filename = "oneout_llrt_lldiff.pdf", width = 9, height = 6),
-            plt_oneout_llrt_z = list(filename = "oneout_llrt_z.pdf", width = 9, height = 6)
+            plt_oneout_llrt_z = list(filename = "oneout_llrt_z.pdf", width = 9, height = 6),
+            plt_vrbl_cycnt = list(filename = "vrbl_cycnt.pdf", width = 7, height = 5)
         )
     )
 
@@ -2109,7 +2164,7 @@ reg_res$plts$plt_best_coefs_single
 
 
 reg_res$plt_cfgs <- gen_plt_cfgs()
-## render_reg_res("plt_coef_violin", reg_res, reg_res$plt_cfgs, batch_version = "v62")
+render_reg_res("plt_vrbl_cycnt", reg_res, reg_res$plt_cfgs, batch_version = "v75")
 
 ## reg_res$plts$plt_coef_krnls
 
