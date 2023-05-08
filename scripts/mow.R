@@ -174,11 +174,17 @@ get_mow_dfs <- function() {
     ## filter(mow_dupl, !is.na(idx)) %>% left_join(mow_tag) %>%
     ##     filter(iso3c == "USA", tag == "Art, Modern and Contemporary")
         
-
-
     df_mow2 <- filter(mow_dupl, dupl==1) %>% select(idx) %>% unique() %>% 
         anti_join(mow_tag, ., on = "idx") %>%
-        unique()
+
+    ## ## df_mow2 <-
+    ## mow_dupl_ids <- filter(mow_dupl, dupl==1) %>% select(idx) %>% unique()
+    ## df_mow2 <- anti_join(mow_tag, mow_dupl_ids, by = "idx") %>% unique()
+    ## ## anti_join(mow_tag, ., on = "idx")
+       
+
+    ## %>%
+    ## unique()
 
         ## manual testing 
     ## merge(
