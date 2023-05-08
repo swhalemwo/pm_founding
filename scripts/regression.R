@@ -1215,7 +1215,7 @@ gen_vrbl_vectors <- function() {
                    "hdi" = "Human Development Index", 
                    "NPO.tax.exemption" = "Tax exemption of non-profits",
                    "Ind.tax.incentives" = "Tax deductibility of donations",
-                   "tmitr_approx_linear20step" = "Marginal Income Tax Rate (%)",
+                   "tmitr_approx_linear20step" = "Top Marginal Income Tax Rate (%)",
                    "ti_tmitr_interact" = "Marginal Income Tax Rate * Tax deductibility of donations",
                    ## "hnwi_nbr_1M" = "# HNWIs with net worth >= 1M",
                    ## "hnwi_nbr_5M" = "# HNWIs with net worth >= 5M",
