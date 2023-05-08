@@ -1065,6 +1065,8 @@ gen_plt_vrbl_cycnt <- function(df_reg_rts) {
     rel_lngtd_vrbls <- c("tmitr_approx_linear20step",
                         "hnwi_nbr_30M",
                         "gptinc992j",
+                        ## "sptinc992j_p90p100",
+                        ## "shweal992j_p90p100",
                         "ghweal992j",
                         "smorc_dollar_fxm",
                         "NY.GDP.PCAP.CDk",
@@ -1080,15 +1082,24 @@ gen_plt_vrbl_cycnt <- function(df_reg_rts) {
             dt_cvrg[variable == "hnwi_nbr_30M" & year ==1998],
             dt_cvrg[variable == "gptinc992j" & year ==1987],
             dt_cvrg[variable == "ghweal992j" & year ==1994],
+            ## dt_cvrg[variable == "shweal992j_p90p100" & year ==1994],
+            ## dt_cvrg[variable == "sptinc992j_p90p100" & year ==1994],
             dt_cvrg[variable == "smorc_dollar_fxm" & year ==2005],
             dt_cvrg[variable == "NY.GDP.PCAP.CDk" & year ==2000],
-            dt_cvrg[variable == "SP.POP.TOTLm" & year ==2005]), on = .(vrbl = variable)]
+            dt_cvrg[variable == "SP.POP.TOTLm" & year ==2005]), on = .(vrbl = variable)] %>% 
+        .[, vrbl := factor(vrbl, levels = levels(dt_cvrg$variable))] %>%
+        .[order(vrbl)] %>% 
+        .[, linetype := seq(1, .N)]
+
+
     ggplot() + 
-        geom_line(dt_cvrg, mapping = aes(x=year, y =nbr_CYs, group = variable),
+        geom_line(dt_cvrg, mapping = aes(x=year, y =nbr_CYs, group = variable,
+                                         linetype = variable),
                   show.legend = F) +
-        geom_text_repel(dt_vrbl_lbls, mapping = aes(nudge_x=year, nudge_y=nbr_CYs -8, label = lbl,
-                                                    x = year, y = nbr_CYs ),
+        geom_text_repel(dt_vrbl_lbls, mapping = aes(nudge_x=year + 0.7, nudge_y=nbr_CYs -9, label = lbl,
+                                                    x = year, y = nbr_CYs, segment.linetype = linetype),
                         hjust = 0, max.iter = 0) +
+        scale_linetype_manual(values = setNames(dt_vrbl_lbls$linetype, dt_vrbl_lbls$vrbl)) + 
         labs(y="Number of years covered")
         
     
