@@ -921,7 +921,9 @@ addline_format <- function(x,...){
         gsub(' \\(\\*100\\)', "", .) %>% # yeet *100 for ginis/inequality percentages
         gsub("\\(thousands\\)", "", .) %>% # yeet thousands from GDP
         gsub("\\(millions\\)", "", .) %>% # yeet millions from gvt cultural spending
-        gsub("\\(\\%\\)", "", .) # yeet percentage sign from TMITR
+        gsub("\\(\\%\\)", "", .) %>% # yeet percentage sign from TMITR
+        trimws()
+    
 }
 
 gen_plt_coef_violin <- function(top_coefs) {
