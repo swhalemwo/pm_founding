@@ -23,16 +23,31 @@
 # As figure [[fig:cpltns_vrbl_plot_v2]] shows,
 
 #+label: fig:vrbl_cycnt
-#+caption: Number of countries with data per year
+#+caption: Number of countries with per year per variable
 file:figures/plt_v75_vrbl_cycnt.pdf
+
+
+#+MACRO: fig_cbn_cycnt_cfg #+attr_latex: :width 8cm
+
+
+
+{{{fig_cbn_cycnt_cfg}}} :float wrap :placement {R}{0pt}
+#+label: fig:cbn_cycnt
+#+caption: Number of countries per year per variable combination
+file:figures/plt_v75_cbn_cycnt.pdf
+
+
+
+
+
+
+
 
 Figure [[fig:vrbl_cycnt]] shows the country-year coverage of the main variables (other HNWI thresholds and inequality shares follow the ones depicted).
 #
 In particular it can be seen that the coverage of wealth variables in the WID improves substantially from 1995 onwards, a pattern that is to a lesser extent also visible in indicators of cultural spending and top marginal income tax rates.
 #
-Given this state of data coverage and the fact that five years of subsequent data are required for lag length optimization, the observation period for the largest proportion of countries starts in the year 2000 or later (*figure XXX*). 
-
-
+Given this state of data coverage and the fact that five years of subsequent data are required for lag length optimization, the observation period for the largest proportion of countries starts in the year 2000 or later (figure [[fig:cbn_cycnt]], the start 1995 is set by the availability of Artnews collector ranking data from 1990 onwards). 
 
 
 
@@ -40,13 +55,10 @@ Given this state of data coverage and the fact that five years of subsequent dat
 # #+caption: Countries colored by number of country-years per combination
 # [[file:figures/world_plot_faceted_v2.pdf]]
 
-#+label: fig:cbn_cnt_line_plot
-#+caption: Number of countries per year per variable combination
-[[file:figures/cbn_cnt_line_plot_v2.pdf]]
 
-Figures [[fig:world_plot_faceted]] and [[fig:cbn_cnt_line_plot]] illustrate the variation of country-year coverage between the variable combinations. 
+# Figures [[fig:world_plot_faceted]] and [[fig:cbn_cnt_line_plot]] illustrate the variation of country-year coverage between the variable combinations. 
 
-As a consequence of the data availability of longitudinal variables, for most countries the analysis covers the years 2000-2020.
+# As a consequence of the data availability of longitudinal variables, for most countries the analysis covers the years 2000-2020.
 
 ** Combination composition
 
