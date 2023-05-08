@@ -48,7 +48,7 @@ Figures [[fig:world_plot_faceted]] and [[fig:cbn_cnt_line_plot]] illustrate the 
 
 As a consequence of the data availability of longitudinal variables, for most countries the analysis covers the years 2000-2020.
 
-** Combination Composition
+** Combination composition
 
 #+INCLUDE: "./tables/tbl:cbn_cpsgn.tex" export latex
 

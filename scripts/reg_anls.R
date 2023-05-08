@@ -2173,7 +2173,7 @@ reg_res$plts <- gen_reg_res_plts(reg_res_objs, vvs, NBR_MDLS, only_priority_plts
 plt_inspector(reg_res$plts)
 ## reg_res$plts$plt_oneout_llrt_z
 reg_res$plts$plt_oneout_coefs
-reg_res$plts$plt_best_coefs_single
+reg_res$plts$plt_vrbl_cycnt
 
 
 reg_res$plt_cfgs <- gen_plt_cfgs()
