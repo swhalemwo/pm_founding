@@ -1210,24 +1210,42 @@ gen_plt_cfgs <- function() {
     
     return(
         list(
-            plt_cbn_log_likelihoods = list(filename = "cbn_log_likelihoods.pdf", width = 6, height = 3),
-            plt_reg_res_within = list(filename = "reg_res_within.pdf", width = 12, height = 12),
-            plt_reg_res_all = list(filename = "reg_res_all.pdf", width = 12, height = 12),
-            plt_best_models_wlag = list(filename = "best_models_wlag.pdf", width = 8, height = 12),
-            plt_best_models_condensed = list(filename = "best_models_condensed.pdf", width = 9, height = 8),
-            plt_lag_cprn = list(filename = "lag_cprn.pdf", width = 7, height = 5),
-            plt_cvrgnc = list(filename = "cvrgnc.pdf", width = 5, height = 7),
+            plt_cbn_log_likelihoods = list(filename = "cbn_log_likelihoods.pdf", width = 6, height = 3,
+                                           caption = "model log likelihood distribution per dataset"),
+            plt_reg_res_within = list(filename = "reg_res_within.pdf", width = 12, height = 12,
+                                      caption = "bottom text"),
+            plt_reg_res_all = list(filename = "reg_res_all.pdf", width = 12, height = 12,
+                                   caption = "bottom text"),
+            plt_best_models_wlag = list(filename = "best_models_wlag.pdf", width = 8, height = 12,
+                                        caption = "bottom text"),
+            plt_best_models_condensed = list(filename = "best_models_condensed.pdf", width = 9, height = 8,
+                                             caption = "bottom text"),
+            plt_lag_cprn = list(filename = "lag_cprn.pdf", width = 7, height = 5,
+                                caption = "Lag comparison"),
+            plt_cvrgnc = list(filename = "cvrgnc.pdf", width = 5, height = 7,
+                              caption = "Model improvement"),
             ## plt_hyp_thld_res = list(filename = "hyp_thld_res.pdf", width = 7, height = 6),
             ## plt_coef_krnls = list(filename = "coef_krnls.pdf", width = 9, height = 6),
-            plt_coef_violin = list(filename = "coef_violin.pdf", width = 9, height = 4.5),
-            plt_best_coefs_cloud = list(filename = "best_coefs_cloud.pdf", width = 9, height = 6),
-            plt_best_coefs_single = list(filename = "best_coefs_single.pdf", width = 9, height = 6),
-            plt_lag_dens = list(filename = "lag_dens.pdf", width = 9, height = 5),
-            plt_oneout_coefs = list(filename = "oneout_coefs.pdf", width = 9, height = 6),
-            plt_oneout_llrt_lldiff = list(filename = "oneout_llrt_lldiff.pdf", width = 9, height = 6),
-            plt_oneout_llrt_z = list(filename = "oneout_llrt_z.pdf", width = 9, height = 6),
-            plt_vrbl_cycnt = list(filename = "vrbl_cycnt.pdf", width = 7, height = 5),
-            plt_cbn_cycnt = list(filename = "cbn_cycnt.pdf", width = 7, height = 5)
+            plt_coef_violin = list(filename = "coef_violin.pdf", width = 9, height = 4.5,
+                                   caption = "Distribution of coefficient point estimates"),
+            plt_best_coefs_cloud = list(filename = "best_coefs_cloud.pdf", width = 9, height = 6,
+                                        caption = "Coefficient point estimate and 95% CI"),
+            plt_best_coefs_single = list(filename = "best_coefs_single.pdf", width = 9, height = 6,
+                                         caption = "Model coefficients (best fitting model)"),
+            plt_lag_dens = list(filename = "lag_dens.pdf", width = 9, height = 5,
+                                caption = "Distribution of lag choice after optimization"),
+            plt_oneout_coefs = list(filename = "oneout_coefs.pdf", width = 9, height = 6,
+                                    caption = paste0("Model coefficients (best fitting model; ",
+                                                     "colored by significance of model improvement)")),
+            plt_oneout_llrt_lldiff = list(filename = "oneout_llrt_lldiff.pdf", width = 9, height = 6,
+                                          caption = "Model improvement depending on variable inclusion"),
+            plt_oneout_llrt_z = list(filename = "oneout_llrt_z.pdf", width = 9, height = 6,
+                                     caption = paste0("Probability of model improvement (z-scores) ",
+                                                      "depending on variable inclusion")),
+            plt_vrbl_cycnt = list(filename = "vrbl_cycnt.pdf", width = 7, height = 5,
+                                  caption = "Number of countries with per year per variable"),
+            plt_cbn_cycnt = list(filename = "cbn_cycnt.pdf", width = 7, height = 5,
+                                 caption = "Number of countries per year per variable combination")
         )
     )
 
@@ -2139,11 +2157,13 @@ gen_nbrs <- function(df_excl, df_open, cbn_dfs_rates, cbn_dfs_rates_uscld,  df_r
     dt_pltcfgs <- gen_plt_cfgs() %>% rbindlist() %>%
         .[, lbl := gsub(".pdf", "", filename)] %>%
         .[, macro :=
-                sprintf('(eval (concat "#+label: fig:%s\\n" "#+attr_latex: :width %scm\\n" "[[file:figures/%s]]"))',
+                sprintf(paste0('(eval (concat "#+label: fig:%s\\n" "#+caption: %s\\n" ',
+                               '"#+attr_latex: :width %scm\\n" "[[file:figures/%s]]"))'),
                         lbl,
+                        caption,
                         width,
                         paste0("plt_", batch_version, "_", filename))] %>%
-        .[, .(nbr_name = paste0(lbl, "_insrt"), nbr_fmt = macro, grp = "pltcfgs")]
+        .[, .(nbr_name = paste0("ynkplt_", lbl), nbr_fmt = macro, grp = "pltcfgs")]
         
 
     
