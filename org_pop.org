@@ -66,16 +66,16 @@ dt_nbrs[, .(macro_str = sprintf("#+MACRO: %s %s", nbr_name, nbr_fmt)), grp] %>%
 #+MACRO: nbr_zero_cbn_no_cult_spending_and_mitr 3 136
 #+MACRO: nbr_nzero_cbn_no_cult_spending_and_mitr 257
 #+MACRO: prop_nzero_cbn_no_cult_spending_and_mitr 7.6
-#+MACRO: nbr_zero_cbn_controls 5 032
-#+MACRO: nbr_nzero_cbn_controls 281
-#+MACRO: prop_nzero_cbn_controls 5.3
+#+MACRO: nbr_zero_cbn_controls 5 931
+#+MACRO: nbr_nzero_cbn_controls 301
+#+MACRO: prop_nzero_cbn_controls 4.8
 
 
 # popnbrs_p1pm
 #+MACRO: nbr_pop_p_1pm_cbn_all 89.2
 #+MACRO: nbr_pop_p_1pm_cbn_no_cult_spending 165
 #+MACRO: nbr_pop_p_1pm_cbn_no_cult_spending_and_mitr 215
-#+MACRO: nbr_pop_p_1pm_cbn_controls 75.1
+#+MACRO: nbr_pop_p_1pm_cbn_controls 85.0
 
 
 # cvrgnc
@@ -90,21 +90,21 @@ dt_nbrs[, .(macro_str = sprintf("#+MACRO: %s %s", nbr_name, nbr_fmt)), grp] %>%
 #+MACRO: rate_opng_glbl_cbn_all 0.00434
 #+MACRO: rate_opng_glbl_cbn_no_cult_spending 0.00300
 #+MACRO: rate_opng_glbl_cbn_no_cult_spending_and_mitr 0.00283
-#+MACRO: rate_opng_glbl_cbn_controls 0.00253
+#+MACRO: rate_opng_glbl_cbn_controls 0.00231
 
 
 # rate_opng_glbl_yearly
 #+MACRO: rate_opng_glbl_yearly_cbn_all 0.00407
 #+MACRO: rate_opng_glbl_yearly_cbn_no_cult_spending 0.00289
 #+MACRO: rate_opng_glbl_yearly_cbn_no_cult_spending_and_mitr 0.00275
-#+MACRO: rate_opng_glbl_yearly_cbn_controls 0.00248
+#+MACRO: rate_opng_glbl_yearly_cbn_controls 0.00223
 
 
 # opng_p1m_glbl_yearly
 #+MACRO: opng_p1m_glbl_yearly_cbn_all 246
 #+MACRO: opng_p1m_glbl_yearly_cbn_no_cult_spending 346
 #+MACRO: opng_p1m_glbl_yearly_cbn_no_cult_spending_and_mitr 364
-#+MACRO: opng_p1m_glbl_yearly_cbn_controls 403
+#+MACRO: opng_p1m_glbl_yearly_cbn_controls 449
 
 
 # intcpt_info
