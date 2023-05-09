@@ -317,7 +317,20 @@ Given this state of data coverage and the fact that five years of subsequent dat
 
 #+INCLUDE: "./tables/tbl:cbn_cpsgn.tex" export latex
 
-Table \ref{tbl:cbn_cpsgn} shows the coverage of datasets by region.
+# #+latex: \begin{table}[ht]
+# #+latex: \centering
+
+# #+caption: Test table
+
+#+label: testtable
+#+ATTR_LATEX: :caption "My Table Caption" :label "testtable"
+#+INCLUDE: "./tables/testtable.tex" export latex
+
+# #+latex: \end{table}
+
+#+macro: rplt_cbn_cycnt \ref{fig:cbn_cycnt}
+
+Table \ref{tbl:cbn_cpsgn} and figure {{{rplt_cbn_cycnt}}} shows the coverage of datasets by region, table [[testtable]] shows otherwise.
 #
 Relative between-dataset differences are particularly strong for Africa, Latin America and Europe.
 #

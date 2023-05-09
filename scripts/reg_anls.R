@@ -2267,7 +2267,8 @@ fwrite(dt_nbrs, paste0(TABLE_DIR, "tbl_nbrs_", batch_version, ".csv"), quote = F
 dt_nbrs2 <- fread("/home/johannes/Dropbox/phd/papers/org_pop/tables/tbl_nbrs_v75.csv", quote = "")
 tail(dt_nbrs2)
 
-
+xtable(adt(mtcars)[1:3, .(mpg, cyl, disp)]) %>%
+    print.xtable(floating = F, file = paste0(TABLE_DIR, "testtable.tex"))
 
 
 mutate(cbn_dfs_rates$cbn_all, region = countrycode(iso3c, "iso3c", "un.region.name")) %>%
