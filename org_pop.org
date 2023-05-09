@@ -236,6 +236,25 @@ dt_nbrs[, .(macro_str = sprintf("#+MACRO: %s %s", nbr_name, nbr_fmt)), grp] %>%
 #+MACRO: gdp_1SD_cbn_all 24.87
 #+MACRO: gdp_1SD_cbn_no_cult_spending 21.33
 #+MACRO: gdp_1SD_cbn_no_cult_spending_and_mitr 19.74
+
+
+# pltcfgs
+#+MACRO: cbn_log_likelihoods_insrt "(eval(concat ""#+label: cbn_log_likelihoods\n"" ""#+attr_latex: :width 6cm\n"" ""file:figures/cbn_log_likelihoods.pdf""))"
+#+MACRO: reg_res_within_insrt "(eval(concat ""#+label: reg_res_within\n"" ""#+attr_latex: :width 12cm\n"" ""file:figures/reg_res_within.pdf""))"
+#+MACRO: reg_res_all_insrt "(eval(concat ""#+label: reg_res_all\n"" ""#+attr_latex: :width 12cm\n"" ""file:figures/reg_res_all.pdf""))"
+#+MACRO: best_models_wlag_insrt "(eval(concat ""#+label: best_models_wlag\n"" ""#+attr_latex: :width 8cm\n"" ""file:figures/best_models_wlag.pdf""))"
+#+MACRO: best_models_condensed_insrt "(eval(concat ""#+label: best_models_condensed\n"" ""#+attr_latex: :width 9cm\n"" ""file:figures/best_models_condensed.pdf""))"
+#+MACRO: lag_cprn_insrt "(eval(concat ""#+label: lag_cprn\n"" ""#+attr_latex: :width 7cm\n"" ""file:figures/lag_cprn.pdf""))"
+#+MACRO: cvrgnc_insrt "(eval(concat ""#+label: cvrgnc\n"" ""#+attr_latex: :width 5cm\n"" ""file:figures/cvrgnc.pdf""))"
+#+MACRO: coef_violin_insrt "(eval(concat ""#+label: coef_violin\n"" ""#+attr_latex: :width 9cm\n"" ""file:figures/coef_violin.pdf""))"
+#+MACRO: best_coefs_cloud_insrt "(eval(concat ""#+label: best_coefs_cloud\n"" ""#+attr_latex: :width 9cm\n"" ""file:figures/best_coefs_cloud.pdf""))"
+#+MACRO: best_coefs_single_insrt "(eval(concat ""#+label: best_coefs_single\n"" ""#+attr_latex: :width 9cm\n"" ""file:figures/best_coefs_single.pdf""))"
+#+MACRO: lag_dens_insrt "(eval(concat ""#+label: lag_dens\n"" ""#+attr_latex: :width 9cm\n"" ""file:figures/lag_dens.pdf""))"
+#+MACRO: oneout_coefs_insrt "(eval(concat ""#+label: oneout_coefs\n"" ""#+attr_latex: :width 9cm\n"" ""file:figures/oneout_coefs.pdf""))"
+#+MACRO: oneout_llrt_lldiff_insrt "(eval(concat ""#+label: oneout_llrt_lldiff\n"" ""#+attr_latex: :width 9cm\n"" ""file:figures/oneout_llrt_lldiff.pdf""))"
+#+MACRO: oneout_llrt_z_insrt "(eval(concat ""#+label: oneout_llrt_z\n"" ""#+attr_latex: :width 9cm\n"" ""file:figures/oneout_llrt_z.pdf""))"
+#+MACRO: vrbl_cycnt_insrt "(eval(concat ""#+label: vrbl_cycnt\n"" ""#+attr_latex: :width 7cm\n"" ""file:figures/vrbl_cycnt.pdf""))"
+#+MACRO: cbn_cycnt_insrt "(eval(concat ""#+label: cbn_cycnt\n"" ""#+attr_latex: :width 7cm\n"" ""file:figures/cbn_cycnt.pdf""))"
 :end:
 
 

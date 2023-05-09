@@ -2135,6 +2135,17 @@ gen_nbrs <- function(df_excl, df_open, cbn_dfs_rates, cbn_dfs_rates_uscld,  df_r
 
     l_cvrgnc$nbr_runs_p_cbn_spec <- adt(df_reg_anls_cfgs_wide)[, .N, .(cbn_name, base_lag_spec)][, round(mean(N),0)]
 
+    ## generate the macros for the plot insertions
+    dt_pltcfgs <- gen_plt_cfgs() %>% rbindlist() %>%
+        .[, lbl := gsub(".pdf", "", filename)] %>%
+        .[, macro :=
+                sprintf('(eval (concat "#+label: fig:%s\\n" "#+attr_latex: :width %scm\\n" "[[file:figures/%s]]"))',
+                        lbl,
+                        width,
+                        paste0("plt_", batch_version, "_", filename))] %>%
+        .[, .(nbr_name = paste0(lbl, "_insrt"), nbr_fmt = macro, grp = "pltcfgs")]
+        
+
     
     ## collect all results
     res_desc <- c(list(
@@ -2167,7 +2178,7 @@ gen_nbrs <- function(df_excl, df_open, cbn_dfs_rates, cbn_dfs_rates_uscld,  df_r
 
     dt_nbrs_pred <- gen_nbrs_pred(reg_res_objs$top_coefs, cbn_dfs_rates_uscld, df_reg, print_examples)
 
-    dt_res <- rbind(dt_nbrs_desc, dt_nbrs_pred)
+    dt_res <- rbind(dt_nbrs_desc, dt_nbrs_pred, dt_pltcfgs)
 
     if (dt_res[, .N, nbr_name][, max(N)] != 1) {stop("nbr_name not not unique")}
 
@@ -2232,8 +2243,10 @@ dt_nbrs <- gen_nbrs(df_excl, df_open, cbn_dfs_rates, cbn_dfs_rates_uscld,
 dt_nbrs %>% print(n=300)
 
 ## run again after v75, then I get all changes in one commit
-fwrite(dt_nbrs, paste0(TABLE_DIR, "tbl_nbrs_", batch_version, ".csv")) 
-
+fwrite(dt_nbrs, paste0(TABLE_DIR, "tbl_nbrs_", batch_version, ".csv"), quote = F)
+fread
+dt_nbrs2 <- fread("/home/johannes/Dropbox/phd/papers/org_pop/tables/tbl_nbrs_v75.csv", quote = "")
+tail(dt_nbrs2)
 
 
 

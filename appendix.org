@@ -7,6 +7,257 @@
 #+OPTIONS: toc:nil
 #+OPTIONS: h:5
 
+#+BEGIN_SRC R :session calc :exports none :results values drawer
+dt_nbrs <- fread("/home/johannes/Dropbox/phd/papers/org_pop/tables/tbl_nbrs_v75.csv", quote = "")
+
+dt_nbrs[, .(macro_str = sprintf("#+MACRO: %s %s", nbr_name, nbr_fmt)), grp] %>%
+  .[, .(grp_str = paste(macro_str, collapse = "\n")), grp] %>%
+  .[, .(grp_str2 = paste0("# ", grp, "\n", grp_str))] %>% 
+  .[, paste0(grp_str2, collapse = "\n\n\n")]
+  
+#+END_SRC
+
+#+RESULTS:
+:results:
+# pmdb_stats
+#+MACRO: nbr_muem_in_pmdb 547
+#+MACRO: nbr_opnd_wld 516
+#+MACRO: nbr_clsd_wld 101
+#+MACRO: nbr_cry_wal1pm_all 64
+#+MACRO: nbr_pm_openatm 446
+
+
+# nbr_pm_regsub
+#+MACRO: regsub_cnt_Western_Europe 136
+#+MACRO: regsub_cnt_Eastern_Asia 97
+#+MACRO: regsub_cnt_Northern_America 77
+#+MACRO: regsub_cnt_Southern_Europe 71
+#+MACRO: regsub_cnt_Northern_Europe 27
+
+
+# cbn_info
+#+MACRO: nbr_cy_cbn_all 1250
+#+MACRO: nbr_cy_cbn_no_cult_spending 2562
+#+MACRO: nbr_cy_cbn_no_cult_spending_and_mitr 3393
+#+MACRO: nbr_crys_cbn_all 86
+#+MACRO: nbr_crys_cbn_no_cult_spending 153
+#+MACRO: nbr_crys_cbn_no_cult_spending_and_mitr 164
+#+MACRO: nbr_opngs_cbn_all 356
+#+MACRO: nbr_opngs_cbn_no_cult_spending 405
+#+MACRO: nbr_opngs_cbn_no_cult_spending_and_mitr 407
+#+MACRO: prop_opngs_cvrd_cbn_all 0.651
+#+MACRO: prop_opngs_cvrd_cbn_no_cult_spending 0.740
+#+MACRO: prop_opngs_cvrd_cbn_no_cult_spending_and_mitr 0.744
+
+
+# opng_rates_fmt
+#+MACRO: opng_rate_cbn1 0.0112
+#+MACRO: opng_rate_cbn2 0.0061
+#+MACRO: opng_rate_cbn3 0.0047
+
+
+# opng_prop_vlus
+#+MACRO: nbr_zero_cbn_all 1 038
+#+MACRO: nbr_nzero_cbn_all 212
+#+MACRO: prop_nzero_cbn_all 17.0
+#+MACRO: nbr_zero_cbn_no_cult_spending 2 307
+#+MACRO: nbr_nzero_cbn_no_cult_spending 255
+#+MACRO: prop_nzero_cbn_no_cult_spending 10.0
+#+MACRO: nbr_zero_cbn_no_cult_spending_and_mitr 3 136
+#+MACRO: nbr_nzero_cbn_no_cult_spending_and_mitr 257
+#+MACRO: prop_nzero_cbn_no_cult_spending_and_mitr 7.6
+#+MACRO: nbr_zero_cbn_controls 5 931
+#+MACRO: nbr_nzero_cbn_controls 301
+#+MACRO: prop_nzero_cbn_controls 4.8
+
+
+# popnbrs_p1pm
+#+MACRO: nbr_pop_p_1pm_cbn_all 89.2
+#+MACRO: nbr_pop_p_1pm_cbn_no_cult_spending 165
+#+MACRO: nbr_pop_p_1pm_cbn_no_cult_spending_and_mitr 215
+#+MACRO: nbr_pop_p_1pm_cbn_controls 85.0
+
+
+# cvrgnc
+#+MACRO: cvrgd1 79 339
+#+MACRO: cvrgd0 1 166
+#+MACRO: mdlcnt_ttl 80 505
+#+MACRO: cvrgnc_rate 98.6
+#+MACRO: nbr_runs_p_cbn_spec 149
+
+
+# rate_opng_glbl
+#+MACRO: rate_opng_glbl_cbn_all 0.00434
+#+MACRO: rate_opng_glbl_cbn_no_cult_spending 0.00300
+#+MACRO: rate_opng_glbl_cbn_no_cult_spending_and_mitr 0.00283
+#+MACRO: rate_opng_glbl_cbn_controls 0.00231
+
+
+# rate_opng_glbl_yearly
+#+MACRO: rate_opng_glbl_yearly_cbn_all 0.00407
+#+MACRO: rate_opng_glbl_yearly_cbn_no_cult_spending 0.00289
+#+MACRO: rate_opng_glbl_yearly_cbn_no_cult_spending_and_mitr 0.00275
+#+MACRO: rate_opng_glbl_yearly_cbn_controls 0.00223
+
+
+# opng_p1m_glbl_yearly
+#+MACRO: opng_p1m_glbl_yearly_cbn_all 246
+#+MACRO: opng_p1m_glbl_yearly_cbn_no_cult_spending 346
+#+MACRO: opng_p1m_glbl_yearly_cbn_no_cult_spending_and_mitr 364
+#+MACRO: opng_p1m_glbl_yearly_cbn_controls 449
+
+
+# intcpt_info
+#+MACRO: intcpt -2.50
+#+MACRO: intcpt_exp 0.082
+
+
+# txinctvs
+#+MACRO: txdctblt_cbn3 0.72
+#+MACRO: txdctblt_cbn3_exp 2.1
+#+MACRO: txdctblt_cbn2 0.48
+#+MACRO: tmitr_cbn2 -0.38
+#+MACRO: txdctblt_tmitr_interact_cbn2 0.77
+#+MACRO: txdctblt_tmitr_interact_cbn2_exp 2.17
+#+MACRO: tmitr_1SD_cbn_no_cult_spending 14.1
+#+MACRO: tmitr_neteffct_txdctblt1_cbn_no_cult_spending 0.39
+#+MACRO: tmitr_neteffct_txdctblt1_cbn_no_cult_spending_exp 1.48
+#+MACRO: tmitr_iso3c1 50
+#+MACRO: tmitr_iso3c2 36
+
+
+# smorc_stats
+#+MACRO: smorc_lin 0.37
+#+MACRO: smorc_lin_flipped -0.37
+#+MACRO: smorc_sqrd -0.62
+#+MACRO: smorc_top_point_std 0.30
+#+MACRO: smorc_top_point 438
+
+
+# smorc_vlus_2020
+#+MACRO: smorc_2020_ITA 362
+#+MACRO: smorc_2020_SVK 415
+#+MACRO: smorc_2020_ARE 440
+#+MACRO: smorc_2020_NZL 463
+#+MACRO: smorc_2020_POL 466
+#+MACRO: smorc_2020_LVA 467
+#+MACRO: smorc_2020_AUS 499
+#+MACRO: smorc_2020_ESP 501
+#+MACRO: smorc_2020_CAN 513
+#+MACRO: smorc_2020_HRV 521
+#+MACRO: smorc_2020_CZE 634
+#+MACRO: smorc_2020_DEU 660
+#+MACRO: smorc_2020_FRA 680
+#+MACRO: smorc_2020_BEL 688
+#+MACRO: smorc_2020_AUT 694
+#+MACRO: smorc_2020_NLD 782
+#+MACRO: smorc_2020_FIN 799
+#+MACRO: smorc_2020_CHE 806
+#+MACRO: smorc_2020_EST 819
+#+MACRO: smorc_2020_SWE 859
+#+MACRO: smorc_2020_DNK 1 058
+#+MACRO: smorc_2020_HUN 1 410
+#+MACRO: smorc_2020_NOR 1 544
+#+MACRO: smorc_2020_LUX 1 559
+
+
+# smorc_top_point_stats
+#+MACRO: smorctop_below_CYs_cnt 819
+#+MACRO: smorctop_above_CYs_cnt 431
+#+MACRO: smorctop_below_nbr_opened_cnt 212
+#+MACRO: smorctop_above_nbr_opened_cnt 144
+#+MACRO: smorctop_below_CYs_prop 65.5
+#+MACRO: smorctop_above_CYs_prop 34.5
+#+MACRO: smorctop_below_nbr_opened_prop 59.6
+#+MACRO: smorctop_above_nbr_opened_prop 40.4
+
+
+# shweal_stats
+#+MACRO: shweal_1SD_cbn_all 7.6
+#+MACRO: shweal_iso3c1 50.2
+#+MACRO: shweal_iso3c2 57.9
+#+MACRO: shweal_lngtd_vlu_year1 64.1
+#+MACRO: shweal_lngtd_vlu_year2 71.7
+#+MACRO: shweal_cbn_all 0.33
+#+MACRO: shweal_cbn_all_exp 1.39
+#+MACRO: shweal_lngtd_year1 1991
+#+MACRO: shweal_lngtd_year2 2011
+
+
+# sptinc_stats
+#+MACRO: sptinc_1SD_cbn_all 8.9
+#+MACRO: sptinc_iso3c1 30.8
+#+MACRO: sptinc_iso3c2 39.7
+#+MACRO: sptinc_lngtd_vlu_year1 32.5
+#+MACRO: sptinc_lngtd_vlu_year2 41.1
+#+MACRO: sptinc_cbn_all -0.45
+#+MACRO: sptinc_cbn_all_exp 0.64
+#+MACRO: sptinc_lngtd_year1 2000
+#+MACRO: sptinc_lngtd_year2 2014
+
+
+# dens_coef_stats
+#+MACRO: pm_density_cbn_all 1.20
+#+MACRO: pm_density_sqrd_cbn_all -0.29
+#+MACRO: pm_density_glbl_cbn_all -0.38
+#+MACRO: pm_density_glbl_sqrd_cbn_all -0.28
+#+MACRO: dens_cry_top_point_std_cbn_all 2.05
+#+MACRO: dens_glbl_top_point_std_cbn_all -0.69
+#+MACRO: dens_cry_top_point_cbn_all 0.74
+#+MACRO: dens_glbl_top_point_cbn_all 221.05
+
+
+# dens_cry_top_point_stats
+#+MACRO: dens_cry_top_below_CYs_cnt 1 156
+#+MACRO: dens_cry_top_above_CYs_cnt 94
+#+MACRO: dens_cry_top_below_nbr_opened_cnt 316
+#+MACRO: dens_cry_top_above_nbr_opened_cnt 40
+#+MACRO: dens_cry_top_below_CYs_prop 92.5
+#+MACRO: dens_cry_top_above_CYs_prop 7.5
+#+MACRO: dens_cry_top_below_nbr_opened_prop 88.8
+#+MACRO: dens_cry_top_above_nbr_opened_prop 11.2
+
+
+# dens_glbl_top_point_stats
+#+MACRO: dens_glbl_top_above_CYs_cnt 844
+#+MACRO: dens_glbl_top_below_CYs_cnt 406
+#+MACRO: dens_glbl_top_above_nbr_opened_cnt 241
+#+MACRO: dens_glbl_top_below_nbr_opened_cnt 115
+#+MACRO: dens_glbl_top_above_CYs_prop 67.5
+#+MACRO: dens_glbl_top_below_CYs_prop 32.5
+#+MACRO: dens_glbl_top_above_nbr_opened_prop 67.7
+#+MACRO: dens_glbl_top_below_nbr_opened_prop 32.3
+
+
+# gdp_stats
+#+MACRO: gdp_coef_cbn_no_cult_spending_and_mitr 0.88
+#+MACRO: gdp_coef_cbn_no_cult_spending 0.79
+#+MACRO: gdp_coef_cbn_all 0.39
+#+MACRO: gdp_1SD_cbn_all 24.87
+#+MACRO: gdp_1SD_cbn_no_cult_spending 21.33
+#+MACRO: gdp_1SD_cbn_no_cult_spending_and_mitr 19.74
+
+
+# pltcfgs
+#+MACRO: cbn_log_likelihoods_insrt (eval (concat "#+label: fig:cbn_log_likelihoods\n" "#+attr_latex: :width 6cm\n" "[[file:figures/plt_v75_cbn_log_likelihoods.pdf]]"))
+#+MACRO: reg_res_within_insrt (eval (concat "#+label: fig:reg_res_within\n" "#+attr_latex: :width 12cm\n" "[[file:figures/plt_v75_reg_res_within.pdf]]"))
+#+MACRO: reg_res_all_insrt (eval (concat "#+label: fig:reg_res_all\n" "#+attr_latex: :width 12cm\n" "[[file:figures/plt_v75_reg_res_all.pdf]]"))
+#+MACRO: best_models_wlag_insrt (eval (concat "#+label: fig:best_models_wlag\n" "#+attr_latex: :width 8cm\n" "[[file:figures/plt_v75_best_models_wlag.pdf]]"))
+#+MACRO: best_models_condensed_insrt (eval (concat "#+label: fig:best_models_condensed\n" "#+attr_latex: :width 9cm\n" "[[file:figures/plt_v75_best_models_condensed.pdf]]"))
+#+MACRO: lag_cprn_insrt (eval (concat "#+label: fig:lag_cprn\n" "#+attr_latex: :width 7cm\n" "[[file:figures/plt_v75_lag_cprn.pdf]]"))
+#+MACRO: cvrgnc_insrt (eval (concat "#+label: fig:cvrgnc\n" "#+attr_latex: :width 5cm\n" "[[file:figures/plt_v75_cvrgnc.pdf]]"))
+#+MACRO: coef_violin_insrt (eval (concat "#+label: fig:coef_violin\n" "#+attr_latex: :width 9cm\n" "[[file:figures/plt_v75_coef_violin.pdf]]"))
+#+MACRO: best_coefs_cloud_insrt (eval (concat "#+label: fig:best_coefs_cloud\n" "#+attr_latex: :width 9cm\n" "[[file:figures/plt_v75_best_coefs_cloud.pdf]]"))
+#+MACRO: best_coefs_single_insrt (eval (concat "#+label: fig:best_coefs_single\n" "#+attr_latex: :width 9cm\n" "[[file:figures/plt_v75_best_coefs_single.pdf]]"))
+#+MACRO: lag_dens_insrt (eval (concat "#+label: fig:lag_dens\n" "#+attr_latex: :width 9cm\n" "[[file:figures/plt_v75_lag_dens.pdf]]"))
+#+MACRO: oneout_coefs_insrt (eval (concat "#+label: fig:oneout_coefs\n" "#+attr_latex: :width 9cm\n" "[[file:figures/plt_v75_oneout_coefs.pdf]]"))
+#+MACRO: oneout_llrt_lldiff_insrt (eval (concat "#+label: fig:oneout_llrt_lldiff\n" "#+attr_latex: :width 9cm\n" "[[file:figures/plt_v75_oneout_llrt_lldiff.pdf]]"))
+#+MACRO: oneout_llrt_z_insrt (eval (concat "#+label: fig:oneout_llrt_z\n" "#+attr_latex: :width 9cm\n" "[[file:figures/plt_v75_oneout_llrt_z.pdf]]"))
+#+MACRO: vrbl_cycnt_insrt (eval (concat "#+label: fig:vrbl_cycnt\n" "#+attr_latex: :width 7cm\n" "[[file:figures/plt_v75_vrbl_cycnt.pdf]]"))
+#+MACRO: cbn_cycnt_insrt (eval (concat "#+label: fig:cbn_cycnt\n" "#+attr_latex: :width 7cm\n" "[[file:figures/plt_v75_cbn_cycnt.pdf]]"))
+:end:
+
+
 
  
 * Appendix
@@ -27,18 +278,14 @@
 file:figures/plt_v75_vrbl_cycnt.pdf
 
 
-#+MACRO: fig_cbn_cycnt_cfg #+attr_latex: :width 8cm
+# grok out the format for inserting figure label/caption/dimension macros
+
+#+macro: plt_cbn_cycnt_insrt_r (eval (concat "#+caption: Number of countries per year per variable combination\n" "#+label: plt_v75_cbn_cycnt\n" "#+attr_latex: :width 4cm\n" "[[file:figures/plt_v75_cbn_cycnt.pdf]]"))
+
+# {{{plt_cbn_cycnt_insrt_r}}}
 
 
-
-{{{fig_cbn_cycnt_cfg}}} :float wrap :placement {R}{0pt}
-#+label: fig:cbn_cycnt
-#+caption: Number of countries per year per variable combination
-file:figures/plt_v75_cbn_cycnt.pdf
-
-
-
-
+{{{cbn_log_likelihoods_insrt}}}
 
 
 
