@@ -1122,7 +1122,7 @@ gen_plt_cbn_cycnt <- function(cbn_dfs_rates) {
     
     dt_cbn_cycnts <- imap_dfr(cbn_dfs_rates[1:3], ~adt(.x)[, .N, year][, cbn := .y])
 
-    dt_cbn_lbls <- dt_cbn_cycnts[year == 2005] %>% copy() %>%
+    dt_cbn_lbls <- dt_cbn_cycnts[year == 2006] %>% copy() %>%
         .[, lbl  := vvs$cbn_lbls[[cbn]], cbn]
 
     
@@ -2178,8 +2178,7 @@ gen_nbrs <- function(df_excl, df_open, cbn_dfs_rates, cbn_dfs_rates_uscld,  df_r
         cvrgnc = lapply(l_cvrgnc, nicely_fmt_number)))
 
     dt_nbrs_desc_prep <- imap_dfr(res_desc, ~data.table(nbr_name = names(.x),
-                                                    nbr_fmt = as.character(unname(.x)), grp = .y)) 
-
+                                                        nbr_fmt = as.character(unname(.x)), grp = .y)) 
         
 
     ## start replacing some numbers here with lnbr as well 
@@ -2229,7 +2228,7 @@ reg_res$plts$plt_cbn_cycnt
 
 
 reg_res$plt_cfgs <- gen_plt_cfgs()
-render_reg_res("plt_vrbl_cycnt", reg_res, reg_res$plt_cfgs, batch_version = "v75")
+render_reg_res("plt_cbn_cycnt", reg_res, reg_res$plt_cfgs, batch_version = "v75")
 
 ## reg_res$plts$plt_coef_krnls
 
@@ -2264,7 +2263,7 @@ dt_nbrs %>% print(n=300)
 
 ## run again after v75, then I get all changes in one commit
 fwrite(dt_nbrs, paste0(TABLE_DIR, "tbl_nbrs_", batch_version, ".csv"), quote = F)
-fread
+
 dt_nbrs2 <- fread("/home/johannes/Dropbox/phd/papers/org_pop/tables/tbl_nbrs_v75.csv", quote = "")
 tail(dt_nbrs2)
 
