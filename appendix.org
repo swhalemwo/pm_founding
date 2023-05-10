@@ -241,13 +241,13 @@ dt_nbrs[, .(macro_str = sprintf("#+MACRO: %s %s", nbr_name, nbr_fmt)), grp] %>%
 # pltcfgs
 #+MACRO: ynkplt_cbn_log_likelihoods (eval (concat "#+label: fig:cbn_log_likelihoods\n" "#+caption: model log likelihood distribution per dataset\n" "#+attr_latex: :width 16cm\n" "[[file:figures/plt_v75_cbn_log_likelihoods.pdf]]"))
 #+MACRO: ynkplt_cvrgnc (eval (concat "#+label: fig:cvrgnc\n" "#+caption: Model improvement\n" "#+attr_latex: :width 12cm\n" "[[file:figures/plt_v75_cvrgnc.pdf]]"))
-#+MACRO: ynkplt_coef_violin (eval (concat "#+label: fig:coef_violin\n" "#+caption: Distribution of coefficient point estimates\n" "#+attr_latex: :width 18cm\n" "[[file:figures/plt_v75_coef_violin.pdf]]"))
+#+MACRO: ynkplt_coef_violin (eval (concat "#+label: fig:coef_violin\n" "#+caption: Distribution of coefficient point estimates (Gaussian kernel density estimate; bandwidth = 0.04)\n" "#+attr_latex: :width 18cm\n" "[[file:figures/plt_v75_coef_violin.pdf]]"))
 #+MACRO: ynkplt_best_coefs_cloud (eval (concat "#+label: fig:best_coefs_cloud\n" "#+caption: Coefficient point estimate and 95% CI\n" "#+attr_latex: :width 18cm\n" "[[file:figures/plt_v75_best_coefs_cloud.pdf]]"))
 #+MACRO: ynkplt_best_coefs_single (eval (concat "#+label: fig:best_coefs_single\n" "#+caption: Model coefficients (best fitting model)\n" "#+attr_latex: :width 18cm\n" "[[file:figures/plt_v75_best_coefs_single.pdf]]"))
 #+MACRO: ynkplt_lag_dens (eval (concat "#+label: fig:lag_dens\n" "#+caption: Distribution of lag choice after optimization\n" "#+attr_latex: :width 18cm\n" "[[file:figures/plt_v75_lag_dens.pdf]]"))
 #+MACRO: ynkplt_oneout_coefs (eval (concat "#+label: fig:oneout_coefs\n" "#+caption: Model coefficients (best fitting model; colored by significance of model improvement)\n" "#+attr_latex: :width 18cm\n" "[[file:figures/plt_v75_oneout_coefs.pdf]]"))
-#+MACRO: ynkplt_oneout_llrt_lldiff (eval (concat "#+label: fig:oneout_llrt_lldiff\n" "#+caption: Model improvement given variable inclusion\n" "#+attr_latex: :width 18cm\n" "[[file:figures/plt_v75_oneout_llrt_lldiff.pdf]]"))
-#+MACRO: ynkplt_oneout_llrt_z (eval (concat "#+label: fig:oneout_llrt_z\n" "#+caption: Probability of significant model improvement (z-scores) given variable inclusion\n" "#+attr_latex: :width 18cm\n" "[[file:figures/plt_v75_oneout_llrt_z.pdf]]"))
+#+MACRO: ynkplt_oneout_llrt_lldiff (eval (concat "#+label: fig:oneout_llrt_lldiff\n" "#+caption: Model improvement given variable inclusion (Gaussian kernel density estimate; bandwidth = 0.4)\n" "#+attr_latex: :width 18cm\n" "[[file:figures/plt_v75_oneout_llrt_lldiff.pdf]]"))
+#+MACRO: ynkplt_oneout_llrt_z (eval (concat "#+label: fig:oneout_llrt_z\n" "#+caption: Distribution of Z-score of log-likelihood ratio test p-value (Gaussian kernel density estimate; bandwidth = 0.1)\n" "#+attr_latex: :width 18cm\n" "[[file:figures/plt_v75_oneout_llrt_z.pdf]]"))
 #+MACRO: ynkplt_vrbl_cycnt (eval (concat "#+label: fig:vrbl_cycnt\n" "#+caption: Number of countries with per year per variable\n" "#+attr_latex: :width 18cm\n" "[[file:figures/plt_v75_vrbl_cycnt.pdf]]"))
 #+MACRO: ynkplt_cbn_cycnt (eval (concat "#+label: fig:cbn_cycnt\n" "#+caption: Number of countries per year per variable combination\n" "#+attr_latex: :width 18cm\n" "[[file:figures/plt_v75_cbn_cycnt.pdf]]"))
 

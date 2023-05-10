@@ -880,9 +880,14 @@ gen_plt_oneout_llrt_z <- function(ou_anls) {
     ## violin plot z
     ou_anls %>%
         ggplot(aes(x=z, y = ou_set_title_unlag)) +
-        geom_violin(bw = 0.2) + 
-        facet_grid(hyp~cbn_name, scales = "free", space = "free") +
-        geom_vline(xintercept = 1.96, linetype = "dashed")
+        geom_violin(bw = 0.1) +
+        scale_y_discrete(labels = map_chr(addline_format(vvs$vrbl_lbls),
+                                          ~paste(strwrap(.x, 30), collapse = "\n"))) + 
+        facet_grid(hyp~cbn_name, scales = "free", space = "free", switch = "y",
+                   labeller = as_labeller(c(vvs$krnl_lbls, vvs$cbn_lbls, vvs$vrbl_lbls))) +
+        geom_vline(xintercept = 1.96, linetype = "dashed") +
+        labs(x="Z-score", y = element_blank()) +
+        theme_orgpop()
 
     ## ## point plot: doesn't scale well 
     ## ou_anls %>%
@@ -895,6 +900,8 @@ gen_plt_oneout_llrt_z <- function(ou_anls) {
 }
 
 gen_plt_oneout_llrt_lldiff <- function(ou_anls) {
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
+        
     #' visualizes change in log-likelihood if variable
     ## (or variables, in case of interactions/squared variables/sets)
     ## are removed
@@ -902,8 +909,14 @@ gen_plt_oneout_llrt_lldiff <- function(ou_anls) {
     ## violin LL diff
     ou_anls %>%
         ggplot(aes(x=log_likelihood_diff, y = ou_set_title_unlag)) +
-        geom_violin(bw = 0.4) + # , size = 0.3, color = "black") + 
-        facet_grid(hyp~cbn_name, scales = "free", space = "free")
+        geom_violin(bw = 0.4) + # , size = 0.3, color = "black") +
+        scale_y_discrete(labels = map_chr(addline_format(vvs$vrbl_lbls),
+                                          ~paste(strwrap(.x, 30), collapse = "\n"))) + 
+        facet_grid(hyp~cbn_name, scales = "free", space = "free", switch = "y",
+                   labeller = as_labeller(c(vvs$krnl_lbls, vvs$cbn_lbls, vvs$vrbl_lbls))) +
+        labs(x="Log likelihood improvement", y = element_blank()) +
+        theme_orgpop() +
+        theme(plot.margin = unit(rep(5.5, 4), "points"))
 
     
     ## ou_anls %>%
@@ -937,26 +950,32 @@ gen_plt_coef_violin <- function(top_coefs) {
     ##     .[hyp_id != "zcontrols"] %>% 
     ##     .[, vrbl_name_unlag := factor(vrbl_name_unlag, levels = rev(names(vvs$vrbl_lbls)))]
     top_coefs2 <- vvs$hyp_mep_dt[top_coefs, on = .(vrbl = vrbl_name_unlag)] %>%
-        .[hyp %!in% c("h1a", "cons")] %>%
-        .[!is.na(hyp)]
+        .[hyp %!in% c("h1a", "cons")] %>% # yeet intercept and NPO tax exemptions
+        .[!is.na(hyp)] # yeet ln_r/ln_s (neg binom regression stuff)
+    
+    
     
 
-    
+
     ## make violin plot
     plt_coef_violin <- ggplot(top_coefs2, aes(y=vrbl, x=coef)) +
         geom_violin(scale = "area", trim = T, bw = 0.04) +
         ## geom_col() + 
         ## use custom bandwidth -> somehow good sizing across facets
         ## geom_jitter(size = 0.4, width = 0, height = 0.1) + # don't litter plot with jitter
-        scale_y_discrete(labels = addline_format(vvs$vrbl_lbls)) + # actual relabelling of variables (on y-axes)
+        ## scale_y_discrete(labels = addline_format(vvs$vrbl_lbls)) + # actual relabelling of variables (on y-axes)
+        scale_y_discrete(labels = map_chr(addline_format(vvs$vrbl_lbls),
+                                          ~paste(strwrap(.x, 30), collapse = "\n"))) + 
         facet_grid(hyp ~ cbn_name, scales = "free", switch = "y", space = "free",
                    labeller = as_labeller(c(vvs$krnl_lbls, vvs$cbn_lbls, vvs$vrbl_lbls))) +
         geom_vline(xintercept = 0, linetype = "dashed") +
-        theme(strip.text.y.left = element_text(angle = 0, size = 11),
-              strip.text.x = element_text(size = 12),
-              axis.text.y = element_text(size = 11),
-              axis.text.x = element_text(size = 10)) + 
-        labs(x="coefficient value", y = element_blank())
+        ## theme(# strip.text.y.left = element_text(angle = 0, size = 11),
+        ## strip.text.x = element_text(size = 12),
+              ## axis.text.y = element_text(size = 11),
+              ## axis.text.x = element_text(size = 10)) + 
+        labs(x="coefficient value", y = element_blank()) +
+        theme_orgpop() +
+        theme(plot.margin = unit(rep(4, 4), "points"))
     plt_coef_violin
 
     return(plt_coef_violin)
@@ -1029,16 +1048,24 @@ gen_plt_lag_dens <- function(top_coefs) {
         copy(vvs$hyp_mep_dt)[., on = .(vrbl = vrbl_name_unlag)] %>%
         .[!is.na(hyp)] %>% # yeet cons, ln_r, ln_s
         ## plotting
-        ggplot(aes(x=factor(lag), y=vrbl, fill = Nprob)) +
-        geom_tile() + 
+        ggplot(aes(x=factor(lag), y=vrbl, fill = Nprob, color = Nprob)) +
+        geom_tile(linewidth = 0) + 
         facet_grid(hyp~cbn_name, scales = "free", space =  "free", switch = "y",
                    labeller = as_labeller(c(vvs$krnl_lbls, vvs$cbn_lbls))) + 
         scale_fill_gradient(low = "grey90", high = "#0077b6", na.value = "white") + # grey to only blue
-        theme(# panel.grid = element_blank(),
-              # panel.background = element_rect(fill = "white"),
-            strip.text.y.left = element_text(angle = 0)
-        ) +
-        ## geom_hline(yintercept = Inf, color = "white", size = 2) + 
+        scale_color_gradient(low = "grey90", high = "#0077b6", na.value = "white") + # yeet remaining border lines
+        ## theme(# panel.grid = element_blank(),
+        ##       # panel.background = element_rect(fill = "white"),
+        ##     strip.text.y.left = element_text(angle = 0)
+        ## ) +
+        ## geom_hline(yintercept = Inf, color = "white", size = 2) +
+        theme_orgpop() +
+        theme(panel.grid.major = element_blank(), # yeet the grid
+              ## panel.background = element_rect(fill = "white")) +
+              
+              panel.background = element_blank()) +
+        
+        theme(legend.position = "bottom") + 
         scale_y_discrete(labels = addline_format(vvs$vrbl_lbls), expand = c(0,0)) +
         scale_x_discrete(expand = c(0,0)) +
         labs(x="lag", y=element_blank())
@@ -1126,7 +1153,7 @@ gen_plt_vrbl_cycnt <- function(df_reg_rts, stylecfg) {
 ## gen_plt_vrbl_cycnt(df_reg_rts, stylecfg)
 
 
-gen_plt_cbn_cycnt <- function(cbn_dfs_rates) {
+gen_plt_cbn_cycnt <- function(cbn_dfs_rates, stylecfg) {
     if (as.character(match.call()[[1]]) %in% fstd){browser()}
     1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;
 
@@ -1141,8 +1168,10 @@ gen_plt_cbn_cycnt <- function(cbn_dfs_rates) {
         geom_line(dt_cbn_cycnts, mapping = aes(x=year, y=N, group = cbn, linetype = cbn),
                   show.legend = F) +
         geom_text_repel(dt_cbn_lbls, mapping = aes(x = year, y = N, label = lbl),
-                        nudge_y = -9, min.segment.length = 100) +
-        labs(y = "Number of countries covered")
+                        nudge_y = -9, min.segment.length = 100,
+                        size = pt2mm(stylecfg$lbl_fntsz)) +
+        labs(y = "Number of countries covered") +
+        theme_orgpop()
                        
 
 }
@@ -1177,7 +1206,7 @@ gen_reg_res_plts <- function(reg_res_objs, vvs, NBR_MDLS, only_priority_plts, st
         plt_oneout_llrt_z = gen_plt_oneout_llrt_z(ou_anls),
         plt_oneout_llrt_lldiff = gen_plt_oneout_llrt_lldiff(ou_anls),
         plt_vrbl_cycnt = gen_plt_vrbl_cycnt(df_reg_rts, stylecfg),
-        plt_cbn_cycnt = gen_plt_cbn_cycnt(cbn_dfs_rates)
+        plt_cbn_cycnt = gen_plt_cbn_cycnt(cbn_dfs_rates, stylecfg)
     )
         
     
@@ -1238,25 +1267,29 @@ gen_plt_cfgs <- function() {
                               caption = "Model improvement"),
             ## plt_hyp_thld_res = list(filename = "hyp_thld_res.pdf", width = 7, height = 6),
             ## plt_coef_krnls = list(filename = "coef_krnls.pdf", width = 9, height = 6),
-            plt_coef_violin = list(filename = "coef_violin.pdf", width = 18, height = 9,
-                                   caption = "Distribution of coefficient point estimates"),
+            plt_coef_violin = list(filename = "coef_violin.pdf", width = 18, height = 18,
+                                   caption = paste0("Distribution of coefficient point estimates ",
+                                                    "(Gaussian kernel density estimate; bandwidth = 0.04)")),
             plt_best_coefs_cloud = list(filename = "best_coefs_cloud.pdf", width = 18, height = 12,
                                         caption = "Coefficient point estimate and 95% CI"),
             plt_best_coefs_single = list(filename = "best_coefs_single.pdf", width = 18, height = 12,
                                          caption = "Model coefficients (best fitting model)"),
-            plt_lag_dens = list(filename = "lag_dens.pdf", width = 18, height = 10,
+            plt_lag_dens = list(filename = "lag_dens.pdf", width = 18, height = 14,
                                 caption = "Distribution of lag choice after optimization"),
             plt_oneout_coefs = list(filename = "oneout_coefs.pdf", width = 18, height = 12,
                                     caption = paste0("Model coefficients (best fitting model; ",
                                                      "colored by significance of model improvement)")),
-            plt_oneout_llrt_lldiff = list(filename = "oneout_llrt_lldiff.pdf", width = 18, height = 12,
-                                          caption = "Model improvement given variable inclusion"),
-            plt_oneout_llrt_z = list(filename = "oneout_llrt_z.pdf", width = 18, height = 12,
-                                     caption = paste0("Probability of significant model improvement (z-scores) ",
-                                                      "given variable inclusion")),
+            plt_oneout_llrt_lldiff = list(filename = "oneout_llrt_lldiff.pdf", width = 18, height = 18,
+                                          caption = paste0("Model improvement given variable inclusion ",
+                                                           "(Gaussian kernel density estimate; bandwidth = 0.4)")),
+            plt_oneout_llrt_z = list(filename = "oneout_llrt_z.pdf", width = 18, height = 18,
+                                     caption = paste0("Distribution of Z-score of log-likelihood ",
+                                                      "ratio test p-value ",
+                                                      "(Gaussian kernel density estimate; bandwidth = 0.1)")), 
+            ## "given variable inclusion")),
             plt_vrbl_cycnt = list(filename = "vrbl_cycnt.pdf", width = 18, height = 10,
                                   caption = "Number of countries with per year per variable"),
-            plt_cbn_cycnt = list(filename = "cbn_cycnt.pdf", width = 18, height = 12,
+            plt_cbn_cycnt = list(filename = "cbn_cycnt.pdf", width = 18, height = 8,
                                  caption = "Number of countries per year per variable combination")
         )
     )
@@ -2230,7 +2263,7 @@ gen_nbrs <- function(df_excl, df_open, cbn_dfs_rates, cbn_dfs_rates_uscld,  df_r
 
 }
 
-theme_orgpop <- function(extra_space_top=0) {
+theme_orgpop <- function(extra_space_top=2) {
     ## pmdb theme for minimal layout
     
     ## theme_minimal() %+replace%
@@ -2248,8 +2281,10 @@ theme_orgpop <- function(extra_space_top=0) {
         ## axis.ticks.length = unit(0, "pt"),
         axis.title = element_text(size = 9),
         axis.text = element_text(size = 9),
+        strip.text.y.left = element_text(angle = 0, size = 9),
+        strip.text.x = element_text(size = 9),
         ## axis.text = element_blank(),
-        plot.margin = unit(c(extra_space_top,0,0,0), "points")
+        plot.margin = unit(c(extra_space_top,2,2,2), "points")
     )
 }
 
@@ -2271,17 +2306,11 @@ reg_res <- list()
 
 ## generate plots, construct configs
 reg_res$plts <- gen_reg_res_plts(reg_res_objs, vvs, NBR_MDLS, only_priority_plts = T, stylecfg)
-render_reg_res("plt_vrbl_cycnt", reg_res, batch_version = "v75")
+render_reg_res("plt_lag_dens", reg_res, batch_version = "v75")
+
 
 plt_inspector(reg_res$plts)
 ## reg_res$plts$plt_oneout_llrt_z
-reg_res$plts$plt_oneout_coefs
-reg_res$plts$plt_cbn_cycnt
-
-
-
-
-## reg_res$plts$plt_coef_krnls
 
 purrr::map(names(reg_res$plts), ~render_reg_res(.x, reg_res, batch_version = batch_version))
 
