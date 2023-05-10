@@ -2167,8 +2167,17 @@ gen_nbrs <- function(df_excl, df_open, cbn_dfs_rates, cbn_dfs_rates_uscld,  df_r
                         paste0("plt_", batch_version, "_", filename))] %>%
         .[, .(nbr_name = paste0("ynkplt_", lbl), nbr_fmt = macro, grp = "pltcfgs")]
         
-
     
+    dt_pltlbls <- gen_plt_cfgs() %>% rbindlist() %>% 
+        .[, core := gsub(".pdf", "", filename)] %>% 
+        .[, .(nbr_fmt = sprintf("\\ref{fig:%s}", core), nbr_name=  paste0("rplt_", core), grp = "figlbls")] 
+        
+    dt_tbllbls <- gen_tblcfgs(TABLE_DIR) %>% rbindlist(idcol = "name") %>%
+        .[, .(nbr_fmt = sprintf("\\ref{%s}", label), nbr_name = paste0("r", name), grp = "tbllbls")]
+
+    dt_cfgs_lbls <- reduce(list(dt_pltcfgs, dt_pltlbls, dt_tbllbls), rbind)
+    
+
     ## collect all results
     res_desc <- c(list(
         pmdb_stats = pmdb_stats,
@@ -2199,7 +2208,7 @@ gen_nbrs <- function(df_excl, df_open, cbn_dfs_rates, cbn_dfs_rates_uscld,  df_r
 
     dt_nbrs_pred <- gen_nbrs_pred(reg_res_objs$top_coefs, cbn_dfs_rates_uscld, df_reg, print_examples)
 
-    dt_res <- rbind(dt_nbrs_desc, dt_nbrs_pred, dt_pltcfgs)
+    dt_res <- rbind(dt_nbrs_desc, dt_nbrs_pred, dt_cfgs_lbls)
 
     if (dt_res[, .N, nbr_name][, max(N)] != 1) {stop("nbr_name not not unique")}
 
