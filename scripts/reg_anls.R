@@ -1122,12 +1122,71 @@ gen_plt_vrbl_cycnt <- function(df_reg_rts, stylecfg) {
         .[order(vrbl)] %>% 
         .[, linetype := seq(1, .N)]
 
-    library(showtext)
-    font_add("Crimson", "/usr/share/texmf-dist/fonts/opentype/kosch/crimson/Crimson-Roman.otf")
+    ## library(showtext)
+    ## font_add("Crimson", "/usr/share/texmf-dist/fonts/opentype/kosch/crimson/Crimson-Roman.otf")
 
-    fontfam <- "Crimson"
+    ## fontfam <- "Crimson"
     ## fontfam <- "Graphik"
 
+    ## try different visualization
+    ## color: I get it, but harder for normies, even with numbers.. 
+    ggplot(dt_cvrg, aes(x=year, y=variable, fill = nbr_CYs)) +
+        geom_tile() +
+        scale_fill_gradient(low = "grey90", high = "#0077b6", na.value = "white")  + # grey to only blue
+        geom_text(dt_cvrg[year %in% (seq(1990, 2020, 15)-1)],
+                  mapping = aes(x=year, y=variable, label = nbr_CYs))
+
+    ## segment thickness
+    ## hmm not that bad in combination with color and labels.. 
+    dt_cvrg_seg <- dt_cvrg %>% copy() %>% .[, `:=`(nbr_CYs_lag = shift(nbr_CYs, 1), year_lag = year -1), variable]
+
+    ## width + color + text
+    dt_cvrg_seg %>%
+        ggplot(aes(x = year, xend = year_lag, y=variable, yend = variable, size = nbr_CYs, color = nbr_CYs)) +
+        geom_segment() +
+        scale_color_gradient(low = "grey90", high = "#0077b6", na.value = "white") +
+        geom_text(dt_cvrg_seg[year %in% (seq(1990, 2020, 15)-1)],
+                  mapping = aes(x=year, y=variable, label = nbr_CYs), color = "black", nudge_y=-0.3)
+        
+    ## dt_cvrg_seg %>%
+    ##     ggplot(aes(x=year, xend = year_lag, y=variable, yend = variable, nudge_y = nbr_CYs)) +
+    ##     geom_segment(mapping = aes(nudge_y = nbr_CYs)) +
+    ##     geom_linerange(
+    ##         position_dodge
+
+
+    ## abuse dodge
+    dt_dodge_abuse <- data.table(x=c(0,1,2,3), y = c(0,1,2,3)) %>%
+        .[, .(fillup = 0:x), .(x,y)] %>% # create fake bars
+        .[, id := "a"] %>%
+        .[, type := fifelse(y==fillup, "real", "cushion")]
+
+    ## need to have some bottom stuff since dodge always dodges around center
+    dt_doge_abuse_bottom <- copy(dt_dodge_abuse)[fillup > 0][, `:=`(fillup = fillup*-1, type = "cushion")]
+
+    rbind(dt_dodge_abuse, dt_doge_abuse_bottom) %>% 
+        ggplot(aes(x=x, y = id, xmin = x-1, xmax = x, group = factor(fillup), color = type)) +
+        geom_linerange(position = position_dodge(width = 0.1), size = 1, alpha = 0.5)
+
+    ## maybe I can also do the same with segments: just add a huge number of fake ones and dodge them away..
+    ## -> check tomorrow
+
+
+
+    ## faceted line again..
+    ## why doesn't that work?  maybe the other lines are confusion? 
+    copy(vvs$hyp_mep_dt)[copy(dt_cvrg), on = .(vrbl = variable)] %>% 
+        ggplot(aes(x=year, y = nbr_CYs)) +
+        geom_line() +
+        facet_grid(hyp ~., switch = "y") +
+        theme(panel.grid = element_blank(),
+              panel.background = element_rect(color = "black"),
+              strip.text.y.left = element_text(angle = 0),
+              panel.border = element_rect(color = "black", fill = NA))
+        ## theme_bw()
+    
+
+    
     
     ggplot() + 
         geom_line(dt_cvrg, mapping = aes(x=year, y =nbr_CYs, group = variable,
@@ -1154,7 +1213,7 @@ gen_plt_vrbl_cycnt <- function(df_reg_rts, stylecfg) {
 
 }
 
-## gen_plt_vrbl_cycnt(df_reg_rts, stylecfg)
+gen_plt_vrbl_cycnt(df_reg_rts, stylecfg)
 
 
 gen_plt_cbn_cycnt <- function(cbn_dfs_rates, stylecfg) {
