@@ -791,3 +791,8 @@ rcd_iso3c_reg6 <- function(iso3cs) {
     
     ## unname(unlist(sapply(regs_unreg, \(x) reg_cbn_rcd_list[[x]])))
 }
+
+pt2mm <- function(ptx) {
+    #' convert points (font size) to mm (used by geom_text)
+    ptx * (25.4/72.27)
+}
