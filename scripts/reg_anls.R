@@ -1052,7 +1052,7 @@ gen_plt_lag_dens <- function(top_coefs) {
     ## scale_fill_gradient(high = "#000000", low = "#FFFFFF") # black-white 
 }
 
-gen_plt_vrbl_cycnt <- function(df_reg_rts) {
+gen_plt_vrbl_cycnt <- function(df_reg_rts, stylecfg) {
     if (as.character(match.call()[[1]]) %in% fstd){browser()}
     1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;
     #' generate coverage of variables
@@ -1091,28 +1091,39 @@ gen_plt_vrbl_cycnt <- function(df_reg_rts) {
         .[order(vrbl)] %>% 
         .[, linetype := seq(1, .N)]
 
+    library(showtext)
+    font_add("Crimson", "/usr/share/texmf-dist/fonts/opentype/kosch/crimson/Crimson-Roman.otf")
 
+    fontfam <- "Crimson"
+    ## fontfam <- "Graphik"
+
+    
     ggplot() + 
         geom_line(dt_cvrg, mapping = aes(x=year, y =nbr_CYs, group = variable,
                                          linetype = variable),
                   show.legend = F) +
         geom_text_repel(dt_vrbl_lbls, mapping = aes(nudge_x=year + 0.7, nudge_y=nbr_CYs -9, label = lbl,
                                                     x = year, y = nbr_CYs, segment.linetype = linetype),
-                        hjust = 0, max.iter = 0) +
+                        min.segment.length = 0,
+                        hjust = 0, max.iter = 0,
+                        ## family = fontfam,
+                        size = pt2mm(stylecfg$lbl_fntsz)
+                        ) + 
         scale_linetype_manual(values = setNames(dt_vrbl_lbls$linetype, dt_vrbl_lbls$vrbl)) + 
-        labs(y="Number of years covered")
+        labs(y="Number of countries covered") +
+        theme_orgpop()
         
+    
+    
     
     ## ggplot() +
     ##     geom_line(dt_cvrg, mapping = aes(x=year, y =nbr_CYs),
     ##               show.legend = F) +
     ##     facet_grid(variable~., space = "free")
 
-
-
 }
 
-## gen_plt_vrbl_cycnt(df_reg_rts)
+## gen_plt_vrbl_cycnt(df_reg_rts, stylecfg)
 
 
 gen_plt_cbn_cycnt <- function(cbn_dfs_rates) {
@@ -1131,7 +1142,7 @@ gen_plt_cbn_cycnt <- function(cbn_dfs_rates) {
                   show.legend = F) +
         geom_text_repel(dt_cbn_lbls, mapping = aes(x = year, y = N, label = lbl),
                         nudge_y = -9, min.segment.length = 100) +
-        labs(y = "Number of years covered")
+        labs(y = "Number of countries covered")
                        
 
 }
@@ -1141,7 +1152,8 @@ gen_plt_cbn_cycnt <- function(cbn_dfs_rates) {
 
 
 
-gen_reg_res_plts <- function(reg_res_objs, vvs, NBR_MDLS, only_priority_plts) {
+
+gen_reg_res_plts <- function(reg_res_objs, vvs, NBR_MDLS, only_priority_plts, stylecfg) {
     if (as.character(match.call()[[1]]) %in% fstd){browser()}
     #' generate all the plots
     
@@ -1164,7 +1176,7 @@ gen_reg_res_plts <- function(reg_res_objs, vvs, NBR_MDLS, only_priority_plts) {
         plt_oneout_coefs = gen_plt_oneout_coefs(ou_anls, top_coefs_llrt),
         plt_oneout_llrt_z = gen_plt_oneout_llrt_z(ou_anls),
         plt_oneout_llrt_lldiff = gen_plt_oneout_llrt_lldiff(ou_anls),
-        plt_vrbl_cycnt = gen_plt_vrbl_cycnt(df_reg_rts),
+        plt_vrbl_cycnt = gen_plt_vrbl_cycnt(df_reg_rts, stylecfg),
         plt_cbn_cycnt = gen_plt_cbn_cycnt(cbn_dfs_rates)
     )
         
@@ -1210,41 +1222,41 @@ gen_plt_cfgs <- function() {
     
     return(
         list(
-            plt_cbn_log_likelihoods = list(filename = "cbn_log_likelihoods.pdf", width = 6, height = 3,
+            plt_cbn_log_likelihoods = list(filename = "cbn_log_likelihoods.pdf", width = 16, height = 8,
                                            caption = "model log likelihood distribution per dataset"),
-            plt_reg_res_within = list(filename = "reg_res_within.pdf", width = 12, height = 12,
+            plt_reg_res_within = list(filename = "reg_res_within.pdf", width = 18, height = 18,
                                       caption = "bottom text"),
-            plt_reg_res_all = list(filename = "reg_res_all.pdf", width = 12, height = 12,
+            plt_reg_res_all = list(filename = "reg_res_all.pdf", width = 18, height = 18,
                                    caption = "bottom text"),
-            plt_best_models_wlag = list(filename = "best_models_wlag.pdf", width = 8, height = 12,
+            plt_best_models_wlag = list(filename = "best_models_wlag.pdf", width = 15, height = 23,
                                         caption = "bottom text"),
-            plt_best_models_condensed = list(filename = "best_models_condensed.pdf", width = 9, height = 8,
+            plt_best_models_condensed = list(filename = "best_models_condensed.pdf", width = 18, height = 16,
                                              caption = "bottom text"),
-            plt_lag_cprn = list(filename = "lag_cprn.pdf", width = 7, height = 5,
+            plt_lag_cprn = list(filename = "lag_cprn.pdf", width = 18, height = 12,
                                 caption = "Lag comparison"),
-            plt_cvrgnc = list(filename = "cvrgnc.pdf", width = 5, height = 7,
+            plt_cvrgnc = list(filename = "cvrgnc.pdf", width = 12, height = 15,
                               caption = "Model improvement"),
             ## plt_hyp_thld_res = list(filename = "hyp_thld_res.pdf", width = 7, height = 6),
             ## plt_coef_krnls = list(filename = "coef_krnls.pdf", width = 9, height = 6),
-            plt_coef_violin = list(filename = "coef_violin.pdf", width = 9, height = 4.5,
+            plt_coef_violin = list(filename = "coef_violin.pdf", width = 18, height = 9,
                                    caption = "Distribution of coefficient point estimates"),
-            plt_best_coefs_cloud = list(filename = "best_coefs_cloud.pdf", width = 9, height = 6,
+            plt_best_coefs_cloud = list(filename = "best_coefs_cloud.pdf", width = 18, height = 12,
                                         caption = "Coefficient point estimate and 95% CI"),
-            plt_best_coefs_single = list(filename = "best_coefs_single.pdf", width = 9, height = 6,
+            plt_best_coefs_single = list(filename = "best_coefs_single.pdf", width = 18, height = 12,
                                          caption = "Model coefficients (best fitting model)"),
-            plt_lag_dens = list(filename = "lag_dens.pdf", width = 9, height = 5,
+            plt_lag_dens = list(filename = "lag_dens.pdf", width = 18, height = 10,
                                 caption = "Distribution of lag choice after optimization"),
-            plt_oneout_coefs = list(filename = "oneout_coefs.pdf", width = 9, height = 6,
+            plt_oneout_coefs = list(filename = "oneout_coefs.pdf", width = 18, height = 12,
                                     caption = paste0("Model coefficients (best fitting model; ",
                                                      "colored by significance of model improvement)")),
-            plt_oneout_llrt_lldiff = list(filename = "oneout_llrt_lldiff.pdf", width = 9, height = 6,
+            plt_oneout_llrt_lldiff = list(filename = "oneout_llrt_lldiff.pdf", width = 18, height = 12,
                                           caption = "Model improvement given variable inclusion"),
-            plt_oneout_llrt_z = list(filename = "oneout_llrt_z.pdf", width = 9, height = 6,
+            plt_oneout_llrt_z = list(filename = "oneout_llrt_z.pdf", width = 18, height = 12,
                                      caption = paste0("Probability of significant model improvement (z-scores) ",
                                                       "given variable inclusion")),
-            plt_vrbl_cycnt = list(filename = "vrbl_cycnt.pdf", width = 7, height = 5,
+            plt_vrbl_cycnt = list(filename = "vrbl_cycnt.pdf", width = 18, height = 10,
                                   caption = "Number of countries with per year per variable"),
-            plt_cbn_cycnt = list(filename = "cbn_cycnt.pdf", width = 7, height = 5,
+            plt_cbn_cycnt = list(filename = "cbn_cycnt.pdf", width = 18, height = 12,
                                  caption = "Number of countries per year per variable combination")
         )
     )
@@ -1474,14 +1486,14 @@ render_all_reg_res_plts <- function(reg_res, batch_version) {
 
     
     lapply(names(reg_res$plts), \(x)
-           render_reg_res(x, reg_res, reg_res$plt_cfgs, batch_version))
+           render_reg_res(x, reg_res, batch_version))
 
     
 }
     
 
 
-render_reg_res <- function(plt_name, reg_res, plt_cfgs, batch_version) {
+render_reg_res <- function(plt_name, reg_res, batch_version) {
     #' general way to plot regression result to file, also adding batch number
     
     plt <- reg_res$plts[[plt_name]]
@@ -1489,11 +1501,13 @@ render_reg_res <- function(plt_name, reg_res, plt_cfgs, batch_version) {
     
     ## plt_name <- deparse(substitute(plt)) %>% strsplit("$", fixed = T) %>% unlist() %>% tail(1)
 
-    plt_cfg <- reg_res$plt_cfgs[[plt_name]]
+    plt_cfg <- gen_plt_cfgs() %>% chuck(plt_name)
+    
+    ## plt_cfg <- reg_res$plt_cfgs[[plt_name]]
 
     plt_filename <- paste0(FIG_DIR, "plt_", batch_version, "_", plt_cfg$filename)
     
-    pdf(plt_filename,  width = plt_cfg$width, height = plt_cfg$height)
+    pdf(plt_filename,  width = plt_cfg$width/2.54, height = plt_cfg$height/2.54)
     plot(plt)
     dev.off()
     
@@ -2216,10 +2230,36 @@ gen_nbrs <- function(df_excl, df_open, cbn_dfs_rates, cbn_dfs_rates_uscld,  df_r
 
 }
 
+theme_orgpop <- function(extra_space_top=0) {
+    ## pmdb theme for minimal layout
+    
+    ## theme_minimal() %+replace%
+
+    base_size = 10
+    half_line <- base_size/2
+
+    ## ggplot() +
+    ##     theme(axis.title
+
+    theme(
+        ## panel.grid.major = element_blank(),
+        ## panel.background = element_rect(fill = "white"),
+        ## axis.ticks = element_blank(),
+        ## axis.ticks.length = unit(0, "pt"),
+        axis.title = element_text(size = 9),
+        axis.text = element_text(size = 9),
+        ## axis.text = element_blank(),
+        plot.margin = unit(c(extra_space_top,0,0,0), "points")
+    )
+}
+
+
 
 stop("functions done")
 
 ## ** main analysis
+stylecfg <- list(lbl_fntsz = 9)
+
 NBR_MDLS <- 1
 batch_version <- "v75"
 ## fldr_info <- fldr_info_optmz
@@ -2230,7 +2270,8 @@ reg_res_objs <- proc_reg_res_objs(reg_anls_base, vvs, NBR_MDLS)
 reg_res <- list()
 
 ## generate plots, construct configs
-reg_res$plts <- gen_reg_res_plts(reg_res_objs, vvs, NBR_MDLS, only_priority_plts = T)
+reg_res$plts <- gen_reg_res_plts(reg_res_objs, vvs, NBR_MDLS, only_priority_plts = T, stylecfg)
+render_reg_res("plt_vrbl_cycnt", reg_res, batch_version = "v75")
 
 plt_inspector(reg_res$plts)
 ## reg_res$plts$plt_oneout_llrt_z
@@ -2238,19 +2279,17 @@ reg_res$plts$plt_oneout_coefs
 reg_res$plts$plt_cbn_cycnt
 
 
-reg_res$plt_cfgs <- gen_plt_cfgs()
-render_reg_res("plt_cbn_cycnt", reg_res, reg_res$plt_cfgs, batch_version = "v75")
+
 
 ## reg_res$plts$plt_coef_krnls
 
-purrr::map(names(reg_res$plts), ~render_reg_res(.x, reg_res, reg_res$plt_cfgs, batch_version = batch_version))
+purrr::map(names(reg_res$plts), ~render_reg_res(.x, reg_res, batch_version = batch_version))
 
 ## only render those plots that are generated (not all version plots)
 pdftk_cmd <- sprintf("cd %s && pdftk %s output plts_%s.pdf", FIG_DIR,
                      paste0(paste0("plt_", batch_version, "_", gsub("plt_", "", names(reg_res$plts)), ".pdf"),
                             collapse = " "),
                      batch_version)
-
 system(pdftk_cmd)
 
 ## tables
@@ -2263,9 +2302,7 @@ iwalk(res_tbls, ~do.call("render_xtbl", c(.x, gen_tblcfgs(TABLE_DIR)[[.y]])))
 
 ## ** predicting
 
-
-
-gen_nbrs_pred(reg_res_objs$top_coefs, cbn_dfs_rates_uscld, df_reg, print_examples = F)
+## gen_nbrs_pred(reg_res_objs$top_coefs, cbn_dfs_rates_uscld, df_reg, print_examples = F)
 
 dt_nbrs <- gen_nbrs(df_excl, df_open, cbn_dfs_rates, cbn_dfs_rates_uscld,
                     reg_anls_base$df_reg_anls_cfgs_wide, df_reg, batch_version, print_examples = F,
