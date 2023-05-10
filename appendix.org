@@ -292,11 +292,7 @@ dt_nbrs[, .(macro_str = sprintf("#+MACRO: %s %s", nbr_name, nbr_fmt)), grp] %>%
 # #+caption: Number of countries with data per year
 # [[file:figures/cpltns_vrbl_plot_v2.pdf]]
 
-# As figure [[fig:cpltns_vrbl_plot_v2]] shows,
 
-# #+label: fig:vrbl_cycnt
-# #+caption: Number of countries with per year per variable
-# file:figures/plt_v75_vrbl_cycnt.pdf
 
 {{{ynkplt_vrbl_cycnt}}}
 
@@ -320,8 +316,6 @@ In particular it can be seen that the coverage of wealth variables in the WID im
 #
 Given this state of data coverage and the fact that five years of subsequent data are required for lag length optimization, the observation period for the largest proportion of countries starts in the year 2000 or later  (figure {{{rplt_cbn_cycnt}}}, the start 1995 is set by the availability of Artnews collector ranking data from 1990 onwards).
 #
-
-
 
 
 
@@ -382,6 +376,39 @@ with the shares of the former increasing with dataset size in country-years (*li
 # [[file:figures/plt_v75_oneout_llrt_z.pdf]]
 
 {{{ynkplt_oneout_llrt_z}}}
+
+To investigate whether a variable improves the model, a comparison is made between the full model and the full model without the variable in question.
+# 
+For each dataset there are 36 models (due to variables choices for HWNI (4 different thresholds) and inequality measures (1 of 3 for both wealth and income inequality)), resulting in 108 models in total. 
+#
+For each variable in each of these models a reduced model is constructed by removing the variable in question and comparing model fit to the full model.
+#
+# fuck actually doesn't really make sense to compare a full model with smorc_linear and squared to one iwth only linear
+# also my improvement of smorc is weird: same for both smorc linear and smorc squared
+#
+If a variable had a squared term or interaction, it was removed together with the main term.
+#
+Furthermore additional reduced models were constructed, namely one without the four density variables (country and global density linear and squared), as well as one without the density variables and closings.
+#
+Given that the datasets differ in their number of variables, a different number of reduced models is calculated per dataset, in particular *684* for "DS all IVs", *612* for "DS --CuSp", and *540* for "DS --CuSp/TMITR". 
+# 
+The lags of the reduced models were not optimized due to computational limitations. 
+
+
+
+Figure {{{rplt_oneout_llrt_lldiff}}} shows the distribution of differences in log-likelihood between the full and reduced models per variable and dataset.
+#
+Furthermore, a likelihood ratio test ($LR = 2[LL_{reduced} - LL_{full}]$) was conducted to compare each reduced to its corresponding full model.
+#
+The likelihood ratio statistic follows a Chi-square distribution; its corresponding p-value was converted to a z-score to facilitate interpretation.
+#
+The distribution of z-scores per variable and dataset is shown in figure {{{rplt_oneout_llrt_z}}}.
+
+
+Both analysis correspond in large parts to the results of the main regression analysis *table X* insofar as variables with significant coefficient correspond to significant and/or substantial model improvements.
+#
+There are however a few exceptions, such as tax deductibility of donations in "DS -CuSp/TMITR", GDP per capita in "DS all IVs" as well as some  wealth inequality variables in "DS all IVs" in which a significant coefficient does not always correspond to a significant model improvement. 
+
 
 
 ** lag choice

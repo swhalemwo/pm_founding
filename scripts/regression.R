@@ -1879,7 +1879,8 @@ one_out_setup_and_run <- function(batch_version) {
     ##   .SDcols = "mdl_id"] %>%
     ## .[5, mdl_id]
     mdl_id_dt <- gen_mdl_id_dt(reg_res_files$gof_df_cbn)
-    
+
+    ## mdl_id_dt[, .N, cbn_name]
 
     ## reconstruct folder info to read the reg_spec of model 
     
@@ -1901,6 +1902,9 @@ one_out_setup_and_run <- function(batch_version) {
     regspecs_ou <- mclapply(reg_specs_orig, \(x) gen_regspecs_ou(x, vvs), mc.cores = 4) %>% flatten()
     len(regspecs_ou)
 
+    ## map_chr(regspecs_ou, ~chuck(.x, "cfg", "cbn_name")) %>% table()
+
+    
 
     ## gen_regspecs_ou(reg_specs_orig[[3]], vvs)
     ## dx <- data.table(ou_set_title = map_chr(regspecs_ou, ~.x$cfg$ou_set_title))
