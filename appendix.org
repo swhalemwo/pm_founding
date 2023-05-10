@@ -422,3 +422,12 @@ There are however a few exceptions, such as tax deductibility of donations in "D
 
 {{{ynkplt_lag_dens}}}
 
+Figure {{{rplt_lag_dens}}} shows the distribution of the lag of the coefficient after optimization.
+#
+As often time lags different from one year are chosen (which would likely constitute the default if they were not varied), it can be seen that allowing the lag to vary substantially increases model fit. 
+#
+It furthermore seem to be the case that the HNWI coefficients (which are not significant) vary the most in regards to their lag choice (which is plausible since a non-substantial overall effect could imply that the particular lag does not matter much). 
+# , which is plausible insofar as a flat 
+
+
+
