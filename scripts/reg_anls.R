@@ -37,9 +37,13 @@ read_reg_anls_files <- function(fldr_info) {
 
 proc_ou_files <- function(regres_ou_files, gof_df_cbn, top_coefs) {
     if (as.character(match.call()[[1]]) %in% fstd){browser()}
+
     1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;
     #' process the one-out files 
 
+    ## some (25) just don't converge in v75 
+    ## regres_ou_files$df_reg_anls_cfgs_wide %>% adt() %>% .[, .N, cvrgd]
+    ## regres_ou_files$df_reg_anls_cfgs_wide %>% adt() %>% .[cvrgd == 0] %>% adf()
 
     ## ## compare with previous results
     
