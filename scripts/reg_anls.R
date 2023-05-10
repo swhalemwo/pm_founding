@@ -2046,7 +2046,7 @@ gen_nbrs_pred <- function(top_coefs, cbn_dfs_rates_uscld, df_reg, print_examples
 
 
 gen_nbrs <- function(df_excl, df_open, cbn_dfs_rates, cbn_dfs_rates_uscld,  df_reg_anls_cfgs_wide, df_reg,
-                     batch_version, print_examples = F) {
+                     batch_version, print_examples = F, pltnames) {
     if (as.character(match.call()[[1]]) %in% fstd){browser()}
     1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;
     
@@ -2156,6 +2156,8 @@ gen_nbrs <- function(df_excl, df_open, cbn_dfs_rates, cbn_dfs_rates_uscld,  df_r
     ## generate the macros for the plot insertions
     dt_pltcfgs <- gen_plt_cfgs() %>% rbindlist() %>%
         .[, lbl := gsub(".pdf", "", filename)] %>%
+        .[, pltname := paste0("plt_", lbl)] %>%
+        .[pltname %in% pltnames] %>% # don't generate macro for unused plots
         .[, macro :=
                 sprintf(paste0('(eval (concat "#+label: fig:%s\\n" "#+caption: %s\\n" ',
                                '"#+attr_latex: :width %scm\\n" "[[file:figures/%s]]"))'),
@@ -2257,7 +2259,8 @@ iwalk(res_tbls, ~do.call("render_xtbl", c(.x, gen_tblcfgs(TABLE_DIR)[[.y]])))
 gen_nbrs_pred(reg_res_objs$top_coefs, cbn_dfs_rates_uscld, df_reg, print_examples = F)
 
 dt_nbrs <- gen_nbrs(df_excl, df_open, cbn_dfs_rates, cbn_dfs_rates_uscld,
-                    reg_anls_base$df_reg_anls_cfgs_wide, df_reg, batch_version, print_examples = F)
+                    reg_anls_base$df_reg_anls_cfgs_wide, df_reg, batch_version, print_examples = F,
+                    names(reg_res$plts))
 
 dt_nbrs %>% print(n=300)
 

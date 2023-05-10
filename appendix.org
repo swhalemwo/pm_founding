@@ -240,11 +240,6 @@ dt_nbrs[, .(macro_str = sprintf("#+MACRO: %s %s", nbr_name, nbr_fmt)), grp] %>%
 
 # pltcfgs
 #+MACRO: ynkplt_cbn_log_likelihoods (eval (concat "#+label: fig:cbn_log_likelihoods\n" "#+caption: model log likelihood distribution per dataset\n" "#+attr_latex: :width 6cm\n" "[[file:figures/plt_v75_cbn_log_likelihoods.pdf]]"))
-#+MACRO: ynkplt_reg_res_within (eval (concat "#+label: fig:reg_res_within\n" "#+caption: bottom text\n" "#+attr_latex: :width 12cm\n" "[[file:figures/plt_v75_reg_res_within.pdf]]"))
-#+MACRO: ynkplt_reg_res_all (eval (concat "#+label: fig:reg_res_all\n" "#+caption: bottom text\n" "#+attr_latex: :width 12cm\n" "[[file:figures/plt_v75_reg_res_all.pdf]]"))
-#+MACRO: ynkplt_best_models_wlag (eval (concat "#+label: fig:best_models_wlag\n" "#+caption: bottom text\n" "#+attr_latex: :width 8cm\n" "[[file:figures/plt_v75_best_models_wlag.pdf]]"))
-#+MACRO: ynkplt_best_models_condensed (eval (concat "#+label: fig:best_models_condensed\n" "#+caption: bottom text\n" "#+attr_latex: :width 9cm\n" "[[file:figures/plt_v75_best_models_condensed.pdf]]"))
-#+MACRO: ynkplt_lag_cprn (eval (concat "#+label: fig:lag_cprn\n" "#+caption: Lag comparison\n" "#+attr_latex: :width 7cm\n" "[[file:figures/plt_v75_lag_cprn.pdf]]"))
 #+MACRO: ynkplt_cvrgnc (eval (concat "#+label: fig:cvrgnc\n" "#+caption: Model improvement\n" "#+attr_latex: :width 5cm\n" "[[file:figures/plt_v75_cvrgnc.pdf]]"))
 #+MACRO: ynkplt_coef_violin (eval (concat "#+label: fig:coef_violin\n" "#+caption: Distribution of coefficient point estimates\n" "#+attr_latex: :width 9cm\n" "[[file:figures/plt_v75_coef_violin.pdf]]"))
 #+MACRO: ynkplt_best_coefs_cloud (eval (concat "#+label: fig:best_coefs_cloud\n" "#+caption: Coefficient point estimate and 95% CI\n" "#+attr_latex: :width 9cm\n" "[[file:figures/plt_v75_best_coefs_cloud.pdf]]"))
