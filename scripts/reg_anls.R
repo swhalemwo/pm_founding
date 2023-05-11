@@ -1171,6 +1171,24 @@ gen_plt_vrbl_cycnt <- function(df_reg_rts, stylecfg) {
     ## maybe I can also do the same with segments: just add a huge number of fake ones and dodge them away..
     ## -> check tomorrow
 
+    library(ggridges)
+    ## extend/unfold and use ridgeline
+
+    dt_cvrg %>% copy() %>% .[, .(dens = 1:nbr_CYs), by = .(variable, year)] %>%
+        ggplot(aes(x=year, y=variable)) +
+        ## geom_violin()
+        geom_density_ridges(scale = 0.95, panel_scaling = T)
+    ## geom_density_ridges: seems to scale area to same size
+
+    
+    ## geom_ridgeline: seems to be what I want, but need to hack y-axis: has to be continuous
+    dt_cvrg %>% copy() %>% .[, vrbl_fac := factor(variable)] %>%
+        .[, nbr_CYs_adj := nbr_CYs/max(nbr_CYs)] %>% # scale to max 1
+        ggplot(aes(x=year, y = vrbl_fac, height = nbr_CYs_adj*0.9)) + # can add some scale to not touch top
+        geom_ridgeline()
+                   
+
+
 
 
     ## faceted line again..
@@ -1213,7 +1231,7 @@ gen_plt_vrbl_cycnt <- function(df_reg_rts, stylecfg) {
 
 }
 
-gen_plt_vrbl_cycnt(df_reg_rts, stylecfg)
+## gen_plt_vrbl_cycnt(df_reg_rts, stylecfg)
 
 
 gen_plt_cbn_cycnt <- function(cbn_dfs_rates, stylecfg) {
