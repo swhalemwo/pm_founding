@@ -775,3 +775,90 @@ xtsum(dt_vrnc, nbr_opnd, id) %>% adt() %>% .[Comparison != "Between", .(Comparis
 
 
 
+## ** figure out VIF setup
+
+## *** test different functions: see whether offset, random intercept, both neither differ -> yup
+library(car, include.only = "vif")
+
+## cbn_dfs_rates$cbn_all
+f_base <- nbr_opened ~ hnwi_nbr_1M_lag0 + gptinc992j_lag4 + NY.GDP.PCAP.CDk_lag1
+## random intercept
+f_ri <- update.formula(f_base, ~ . + (1 | iso3c))
+## offset
+f_ofst <- update.formula(f_base, ~ . + offset(SP.POP.TOTLm_lag0))
+## both offset and random intercept
+f_ri_ofst <- update.formula(f_base, ~ . + (1 | iso3c) + offset(SP.POP.TOTLm_lag0))
+
+library(glmmTMB)
+library(MASS)
+res_base <- glm.nb(f_base, cbn_dfs_rates$cbn_all)
+res_base2 <- glmmTMB(f_ri_ofst, cbn_dfs_rates$cbn_all, family = nbinom2)
+
+## compare glmmtmb and glmer.nb
+## use glmmtmb for more flexible handling
+
+glmer.nb(f_ri_ofst, cbn_dfs_rates$cbn_all) %>% vif()
+
+glmmTMB(f_ofst, cbn_dfs_rates$cbn_all, family = nbinom2) %>% vif()
+
+check_collinearity(res_base2) %>% names()
+
+
+glm(f_base, data = cbn_dfs_rates$cbn_all)
+
+
+fncs <- list(f_base     = f_base,   
+             f_ri       = f_ri,     
+             f_ofst     = f_ofst,   
+             f_ri_ofst  =f_ri_ofst)
+
+## *** check whether link function matters, seems to 
+df_vifres <- imap_dfr(fncs, ~glmmTMB(.x, cbn_dfs_rates$cbn_all, family = nbinom2) %>%
+                                check_collinearity() %>% adt() %>% .[, f := .y])
+
+df_vifres_ols <- imap_dfr(fncs, ~glmmTMB(.x, cbn_dfs_rates$cbn_all) %>%
+                                    check_collinearity() %>% adt() %>% .[, f := .y])
+
+ggplot(df_vifres, aes(x=VIF, y=Term, fill = f)) +
+    geom_col(position = position_dodge2())
+
+## vif(res_base)
+
+rbind(copy(df_vifres)[, family := "nbinom2"], copy(df_vifres_ols)[, family := "ols"]) %>%
+    ggplot(aes(x=VIF, y=f, group = family, fill = family)) + 
+    geom_col(position = position_dodge2()) +
+    facet_grid(~Term)
+
+## *** compare xtnbreg and glmmtmb again to see if they're similar enough -> they are
+
+
+## model_performance(res_base2)
+## check_model(res_base2)
+
+## some_mdl <- get_reg_spec_from_id(reg_res_objs$top_coefs$mdl_id[1], fldr_info)
+## res_xtnbreg <- run_vrbl_mdl_vars(some_mdl, vvs, fldr_info, verbose = T, wtf = F, return_objs = c("res_parsed"))
+
+
+## mdl_glmmTMB <- some_mdl %>% copy()
+## pluck(mdl_glmmTMB, "cfg", "regcmd") <- "glmmTMB"
+
+## res_glmmtmb <- run_vrbl_mdl_vars(mdl_glmmTMB, vvs, fldr_info, wtf = F, return_objs = "res_parsed")
+
+## dt_vif <- vif_tester(mdl_glmmTMB)
+
+## ggplot(dt_vif, aes(x = VIF, y=Term, fill = vrblset)) +
+##     geom_col(position = position_dodge())
+
+## jj
+## ## xtnbreg and glmmtmb are pretty similar
+## res_glmmtmb$res_parsed$gof_df %>% adt()
+
+## rbind(adt(res_xtnbreg$res_parsed$coef_df)[, src := "xtnbreg"],
+##       adt(res_glmmtmb$res_parsed$coef_df)[, src := "glmmtmb"]) %>%
+##     ggplot(aes(x=coef, y = vrbl_name, fill = src)) +
+##     geom_col(position = position_dodge2())
+
+## probably similar enough to use glmmTMB for VIF 
+
+## glmmTMB::fixef
+

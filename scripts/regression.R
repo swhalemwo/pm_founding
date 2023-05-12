@@ -716,20 +716,43 @@ get_r_gof <- function(rx_glmmtmb, rx_smry){
 
 }
 
+gen_r_f <- function(dvfmt, r_vars) {
+    #' generate r formula for regression model
+    
+    fx_prep <- sprintf("nbr_opened ~ %s + (1 | iso3c)", paste0(r_vars, collapse = " + ")) 
+
+    ## generate formula, depending on whether counts or rates are calculated
+    if (dvfmt == "counts") {
+        
+        fx_prep2 <- fx_prep
+        
+    } else if (dvfmt == "rates") {
+        
+        fx_prep2 <- paste0(fx_prep, " + offset(log(SP_POP_TOTLm_lag0_uscld))")
+        
+    }
+    
+    fx <- as.formula(fx_prep2)
+    return(fx)
+}
+
 
 ## r_vars <- iv_vars
-run_glmmtmb <- function(dfx, r_vars, verbose) {
+run_glmmtmb <- function(dfx, dvfmt, r_vars, verbose) {
     if (as.character(match.call()[[1]]) %in% fstd){browser()}
     #' run a regression specification from R
 
-    ## generate formula
-    fx <- sprintf("nbr_opened ~ %s + (1 | iso3c)", paste0(r_vars, collapse = " + ")) %>% as.formula()
+    fx <- gen_r_f(dvfmt, r_vars)
 
     ## glmmcrol <- glmmTMBControl(profile = T, optCtrl = list(iter.max = 300))
 
     ## generate results
 
     rx_glmmtmb <- glmmTMB(fx, dfx, family = nbinom2, verbose = verbose)
+
+    ## check_collinearity(rx_glmmtmb)
+    ## check_model(rx_glmmtmb)
+
 
     ## glmmTMP really necessary, glmer.nb takes for fucking ever 
     ##  rx <- glmer.nb(fx, dfx)
@@ -1528,8 +1551,11 @@ idfy_reg_specs <- function(reg_spec_mdls, vvs){
 
 
 get_reg_spec_from_id <- function(mdl_id, fldr_info) {
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
+    1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;
     
     reg_spec <- readRDS(paste0(fldr_info$REG_SPEC_DIR, mdl_id))
+    return(reg_spec)
 }
 
 
@@ -1861,9 +1887,84 @@ cbn_splitted_files <- function(grep_pattern, fldr_info) {
 
 
 
+gen_VIF_res <- function(iv_vars, dfx) {
+    #' generate VIF results from some set of variables
+
+    
+    f_allvrbls <- gen_r_f("rates", iv_vars)
+    r_check <- glmmTMB(f_allvrbls, dfx, family = nbinom1)
+
+    check_collinearity(r_check)
+}
+
+vif_tester <- function(regspec) {
+    #' generate VIF stats for a regspec
+
+    dfx <- chuck(cbn_df_dict, "rates", chuck(regspec, "cfg", "cbn_name"))
+
+    #' makes sense to generate variables here because dt they are filtered down 
+
+    iv_vars <- keep(setdiff(regspec$mdl_vars, vvs$base_vars), ~!grepl("^SP\\.POP\\.TOTLm", .x))
+    dt_vifres_all <- gen_VIF_res(iv_vars, dfx)
+
+    ## yeet squared variables and interactions
+    set_wosqrd <- c("_sqrd", "_interact")
+    iv_vars_wosqrd <- keep(iv_vars, ~!any(sapply(set_wosqrd, \(w) grepl(w, .x))))
+    dt_vifres_wosqrd <- gen_VIF_res(iv_vars_wosqrd, dfx)
+
+    ## ## also yeet global density
+    ## set_wosqrd_densglb <- c("_sqrd", "_interact", "pm_density_global")
+    ## iv_vars_wosqrd_densglb <- keep(iv_vars, ~!any(sapply(set_wosqrd_densglb, \(w) grepl(w, .x))))
+    ## dt_vifres_wosqrd_densglb <- gen_VIF_res(iv_vars_wosqrd_densglb, dfx)
 
 
-one_out_setup_and_run <- function(batch_version) {
+    rbind(adt(dt_vifres_all)[, vrblset := "all"], adt(dt_vifres_wosqrd)[, vrblset := "wosqrd"])
+    ## adt(dt_vifres_wosqrd_densglb)[, vrblset := "wosqrd_densglb"])
+
+}
+
+
+
+gen_VIF_regspec_res <- function(mdl_id, fldr_info) {
+    #' generate VIF stats for one regspec/mdl (given model ID)
+
+    ## read from file 
+    regspecx <- get_reg_spec_from_id(mdl_id, fldr_info)
+    ## set command to glmmTMB
+    pluck(regspecx, "cfg", "regcmd") <- "glmmTMB"
+
+    ## generate VIF stats (atm once with all, once without squared/interactions)
+    dt_vif_cbn1 <- vif_tester(regspecx)[, mdl_id := mdl_id]
+    
+    return(dt_vif_cbn1)
+
+}
+
+gen_VIF_allres <- function(top_coefs, fldr_info) {
+    #' generate the VIF numbers, write them to file in BATCH_DIR
+    
+    ## top_coefs[, uniqueN(mdl_id)]
+    ## top_coefs[, uniqueN(mdl_id), cbn_name]
+    
+    ## x <- gen_VIF_regspec_res(top_coefs[, sample(mdl_id, 1)], fldr_info)
+    ## ggplot(x, aes(x = VIF, y=Term, fill = vrblset)) +
+    ##     geom_col(position = position_dodge2(preserve = "single"))
+
+    ## mdl_cbn_all <- top_coefs[cbn_name == "cbn_all", mdl_id[5]]
+    
+    plan(multicore, workers = 5)
+
+    ## t1 = Sys.time()
+    ## nothingness <- future_map(c(2, 2, 2), ~Sys.sleep(.x))
+    ## t2 = Sys.time()
+    
+    
+    dt_vif_res <- future_map_dfr(unique(top_coefs$mdl_id), ~gen_VIF_regspec_res(.x, fldr_info))
+    fwrite(dt_vif_res, paste0(fldr_info$BATCH_DIR, "VIF_res.csv"))
+}
+
+
+one_out_setup_and_run <- function(batch_version, gof_df_cbn) {
     if (as.character(match.call()[[1]]) %in% fstd){browser()}
     1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;
     
@@ -1871,14 +1972,14 @@ one_out_setup_and_run <- function(batch_version) {
     fldr_info <- setup_regression_folders_and_files(batch_version)
 
     
-    reg_res_files <- read_reg_res_files(fldr_info)
+    # reg_res_files <- read_reg_res_files(fldr_info)
 
     ## get the best fitting models
     ## mdl_idx <- reg_res64$reg_res_objs$gof_df_cbn %>% adt() %>%
     ## .[gof_names == "log_likelihood", .SD[which.max(gof_value)], by = .(cbn_name, vrbl_choice),
     ##   .SDcols = "mdl_id"] %>%
     ## .[5, mdl_id]
-    mdl_id_dt <- gen_mdl_id_dt(reg_res_files$gof_df_cbn)
+    mdl_id_dt <- gen_mdl_id_dt(gof_df_cbn)
 
     ## mdl_id_dt[, .N, cbn_name]
 
@@ -2084,6 +2185,59 @@ read_reg_res_files <- function(fldr_info) {
 
 }
 
+gen_top_coefs <- function(df_anls_base, gof_df_cbn) {
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
+
+    top_mdls_per_thld_choice <- gof_df_cbn %>% adt() %>%
+        .[!is.na(gof_value) & gof_names == "log_likelihood"] %>% # focus on lls
+        .[, vrbl_choice := gsub("[1-5]", "0", base_lag_spec)] %>% # again generate vrbl_choice urg
+        .[, .SD[which.max(gof_value)], by=.(cbn_name, vrbl_choice)] %>% # pick best fitting model
+        .[, .(mdl_id ,log_likelihood = gof_value)]
+
+    top_coefs <- df_anls_base %>% adt() %>% .[top_mdls_per_thld_choice, on ="mdl_id"] %>%
+        .[, vrbl_name_unlag := factor(vrbl_name_unlag, levels = rev(names(vvs$vrbl_lbls)))]
+        
+    
+    
+    return(top_coefs)
+}
+
+add_coef_sig <- function(coef_df,  df_reg_anls_cfgs_wide) {
+    #' add significance to coefs
+
+    df_anls_base <- coef_df %>%
+        mutate(vrbl_name_unlag = gsub("_lag[1-5]", "", vrbl_name),
+               lag = as.numeric(substring(str_extract(vrbl_name, "_lag(\\d+)"), 5)),
+               lag = ifelse(is.na(lag), 0, lag)) %>%
+        merge(df_reg_anls_cfgs_wide) %>% atb() %>%
+        mutate(t_value = coef/se, 
+               sig = ifelse(pvalues < 0.05, 1, 0))
+
+    return(df_anls_base)
+
+}
+
+
+
+postestimation <- function(fldr_info) {
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
+
+    
+
+    reg_res_files <- read_reg_res_files(fldr_info)    
+    
+    gof_df_cbn <- reg_res_files$gof_df_cbn
+    
+    one_out_setup_and_run(fldr_info$batch_version, gof_df_cbn)
+    
+    
+    ## generate top coefs, use it for VIF data
+    df_anls_base <- add_coef_sig(reg_res_files$coef_df, reg_res_files$df_reg_anls_cfgs_wide)
+    top_coefs <- gen_top_coefs(df_anls_base, gof_df_cbn)
+    gen_VIF_allres(top_coefs, fldr_info)
+
+
+}
 
 
 
@@ -2153,7 +2307,9 @@ pbmclapply(reg_spec_mdls_optmz, \(x) optmz_reg_spec(x, fldr_info_optmz, reg_sett
 cbn_splitted_files("_cfgs.csv", fldr_info_optmz)
 
 ## run the one-out analysis
-one_out_setup_and_run(reg_settings_optmz$batch_version)
+
+
+postestimation(fldr_info_optmz)
 
 ## one_out_setup_and_run("v67")
 

@@ -30,7 +30,12 @@ read_reg_anls_files <- function(fldr_info) {
 
     reg_anls_ou_objs <- read_reg_res_files(fldr_info_ou)
 
-    return(c(reg_anls_base_objs, list(ou_objs = reg_anls_ou_objs)))
+    dt_vif_res <- fread(paste0(fldr_info$BATCH_DIR, "VIF_res.csv"))
+
+    return(c(reg_anls_base_objs,
+             list(ou_objs = reg_anls_ou_objs),
+             list(dt_vif_res = dt_vif_res)
+             ))
     
    
 }
@@ -104,20 +109,6 @@ proc_ou_files <- function(regres_ou_files, gof_df_cbn, top_coefs) {
 
 
 
-add_coef_sig <- function(coef_df,  df_reg_anls_cfgs_wide) {
-    #' add significance to coefs
-
-    df_anls_base <- coef_df %>%
-        mutate(vrbl_name_unlag = gsub("_lag[1-5]", "", vrbl_name),
-               lag = as.numeric(substring(str_extract(vrbl_name, "_lag(\\d+)"), 5)),
-               lag = ifelse(is.na(lag), 0, lag)) %>%
-        merge(df_reg_anls_cfgs_wide) %>% atb() %>%
-        mutate(t_value = coef/se, 
-               sig = ifelse(pvalues < 0.05, 1, 0))
-
-    return(df_anls_base)
-
-}
 
 
 construct_df_anls_within_prep <- function(df_anls_base, optmzd) {
@@ -449,7 +440,8 @@ proc_reg_res_objs <- function(reg_anls_base, vvs, NBR_MDLS) {
             mdl_summary = mdl_summary,
             top_coefs = top_coefs,
             top_coefs_llrt = ou_procd$top_coefs_llrt,
-            ou_anls = ou_procd$ou_anls
+            ou_anls = ou_procd$ou_anls,
+            dt_vif_res = reg_anls_base$dt_vif_res
         )
     )
     
@@ -761,22 +753,6 @@ gen_plt_cvrgnc <- function(gof_df_cbn) {
 
 
 
-gen_top_coefs <- function(df_anls_base, gof_df_cbn) {
-    if (as.character(match.call()[[1]]) %in% fstd){browser()}
-
-    top_mdls_per_thld_choice <- gof_df_cbn %>% adt() %>%
-        .[!is.na(gof_value) & gof_names == "log_likelihood"] %>% # focus on lls
-        .[, vrbl_choice := gsub("[1-5]", "0", base_lag_spec)] %>% # again generate vrbl_choice urg
-        .[, .SD[which.max(gof_value)], by=.(cbn_name, vrbl_choice)] %>% # pick best fitting model
-        .[, .(mdl_id ,log_likelihood = gof_value)]
-
-    top_coefs <- df_anls_base %>% adt() %>% .[top_mdls_per_thld_choice, on ="mdl_id"] %>%
-        .[, vrbl_name_unlag := factor(vrbl_name_unlag, levels = rev(names(vvs$vrbl_lbls)))]
-        
-    
-    
-    return(top_coefs)
-}
 
 
 
@@ -1234,6 +1210,47 @@ gen_plt_vrbl_cycnt <- function(df_reg_rts, stylecfg) {
 ## gen_plt_vrbl_cycnt(df_reg_rts, stylecfg)
 
 
+
+
+
+
+
+gen_plt_vif <- function(dt_vif_res, top_coefs, stylecfg) {
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
+    1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;
+
+
+    # dt_vif_res <- fread(paste0(fldr_info$BATCH_DIR, "VIF_res.csv"))
+
+    ## add cbn_name
+    dt_vif_res2 <- top_coefs[, unique(.SD), .SDcols = c("mdl_id", "cbn_name")] %>% .[dt_vif_res, on = "mdl_id"] %>%
+        .[, vrbl_unlag := gsub("_lag[1-5]", "", Term)] %>% # generate unlag names
+        vvs$hyp_mep_dt[., on = .(vrbl = vrbl_unlag)] %>% # add hypothesees
+        .[, vrbl := factor(vrbl, levels = rev(names(vvs$vrbl_lbls)))]
+    
+
+    ggplot(dt_vif_res2, aes(x=VIF, y=vrbl, group = interaction(vrblset, vrbl),
+                           fill = vrblset, color = vrblset)) +
+        geom_violin(bw = 0.1) +
+        scale_y_discrete(labels = map_chr(addline_format(vvs$vrbl_lbls),
+                                          ~paste(strwrap(.x, 30), collapse = "\n"))) + 
+        facet_grid(hyp~cbn_name, scales = "free", space = "free", switch = "y",
+                   labeller = as_labeller(c(vvs$krnl_lbls, vvs$cbn_lbls, vvs$vrbl_lbls))) +
+        theme_orgpop() +
+        theme(legend.position = "bottom") +
+        scale_color_discrete(guide = guide_legend(title = "Variable set"),
+                             labels = c(all = "all", wosqrd = "all except squared variables and interactions")) +
+        scale_fill_discrete(guide = guide_legend(title = "Variable set"),
+                            labels = c(all = "all", wosqrd = "all except squared variables and interactions"))
+        
+
+}
+
+
+
+## gen_plt_VIF(reg_res_objs$top_coefs, fldr_info)
+
+
 gen_plt_cbn_cycnt <- function(cbn_dfs_rates, stylecfg) {
     if (as.character(match.call()[[1]]) %in% fstd){browser()}
     1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;
@@ -1276,6 +1293,7 @@ gen_reg_res_plts <- function(reg_res_objs, vvs, NBR_MDLS, only_priority_plts, st
     top_coefs <- reg_res_objs$top_coefs
     top_coefs_llrt <- reg_res_objs$top_coefs_llrt
     ou_anls <- reg_res_objs$ou_anls
+    dt_vif_res <- reg_res_objs$dt_vif_res
     
     l_plts <- list(
         plt_cbn_log_likelihoods = gen_plt_cbn_log_likelihoods(gof_df_cbn),
@@ -1287,7 +1305,8 @@ gen_reg_res_plts <- function(reg_res_objs, vvs, NBR_MDLS, only_priority_plts, st
         plt_oneout_llrt_z = gen_plt_oneout_llrt_z(ou_anls),
         plt_oneout_llrt_lldiff = gen_plt_oneout_llrt_lldiff(ou_anls),
         plt_vrbl_cycnt = gen_plt_vrbl_cycnt(df_reg_rts, stylecfg),
-        plt_cbn_cycnt = gen_plt_cbn_cycnt(cbn_dfs_rates, stylecfg)
+        plt_cbn_cycnt = gen_plt_cbn_cycnt(cbn_dfs_rates, stylecfg),
+        plt_vif = gen_plt_vif(dt_vif_res, top_coefs, stylecfg)
     )
         
     
@@ -1371,7 +1390,10 @@ gen_plt_cfgs <- function() {
             plt_vrbl_cycnt = list(filename = "vrbl_cycnt.pdf", width = 18, height = 10,
                                   caption = "Number of countries with per year per variable"),
             plt_cbn_cycnt = list(filename = "cbn_cycnt.pdf", width = 18, height = 8,
-                                 caption = "Number of countries per year per variable combination")
+                                 caption = "Number of countries per year per variable combination"),
+            plt_vif = list(filename = "vif.pdf", width = 18, height = 18,
+                           caption = paste0("Distribution of VIF estimates ",
+                                            "(Gaussian kernel density estimate; bandwidth = 0.1)"))
         )
     )
 
@@ -2387,7 +2409,7 @@ reg_res <- list()
 
 ## generate plots, construct configs
 reg_res$plts <- gen_reg_res_plts(reg_res_objs, vvs, NBR_MDLS, only_priority_plts = T, stylecfg)
-render_reg_res("plt_lag_dens", reg_res, batch_version = "v75")
+render_reg_res("plt_vif", reg_res, batch_version = "v75")
 
 
 plt_inspector(reg_res$plts)
