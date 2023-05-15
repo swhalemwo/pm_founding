@@ -1213,14 +1213,11 @@ gen_plt_vrbl_cycnt <- function(df_reg_rts, stylecfg) {
 
 
 
-
-
-gen_plt_vif <- function(dt_vif_res, top_coefs, stylecfg) {
+gen_plt_vif <- function(dt_vif_res, top_coefs) {
     if (as.character(match.call()[[1]]) %in% fstd){browser()}
     1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;
-
-
-    # dt_vif_res <- fread(paste0(fldr_info$BATCH_DIR, "VIF_res.csv"))
+    #' generate plot of VIF distribution
+    #' values previously generated as part of postestimation
 
     ## add cbn_name
     dt_vif_res2 <- top_coefs[, unique(.SD), .SDcols = c("mdl_id", "cbn_name")] %>% .[dt_vif_res, on = "mdl_id"] %>%
@@ -1228,10 +1225,24 @@ gen_plt_vif <- function(dt_vif_res, top_coefs, stylecfg) {
         vvs$hyp_mep_dt[., on = .(vrbl = vrbl_unlag)] %>% # add hypothesees
         .[, vrbl := factor(vrbl, levels = rev(names(vvs$vrbl_lbls)))]
     
+    
+    ## ## check some outliers
+    ## dt_vif_res2[vrbl %in% c("nbr_closed_cum_global", "NY.GDP.PCAP.CDk") | grepl("hnwi", vrbl)]  %>%
+    ##     ggplot(aes(x=VIF, y = vrbl, color = vrblset)) +
+    ##     geom_violin() + 
+    ##     ## geom_point(position_jitterdodge(jitter.width = NULL, jitter.height = 0.2, dodge.width = 0.9)) +
+    ##     geom_point(position = position_jitter(width = 0), size = 0.8) + 
+    ##     facet_grid(hyp~cbn_name, scales = "free", space = "free", switch = "y",
+    ##                labeller = as_labeller(c(vvs$krnl_lbls, vvs$cbn_lbls, vvs$vrbl_lbls)))
+    
+    ## dt_vif_res2[vrbl == "NY.GDP.PCAP.CDk"][, .N]
 
+    ## dt_vif_res2[vrbl == "NY.GDP.PCAP.CDk" & VIF > 8]
+
+    
     ggplot(dt_vif_res2, aes(x=VIF, y=vrbl, group = interaction(vrblset, vrbl),
                            fill = vrblset, color = vrblset)) +
-        geom_violin(bw = 0.1) +
+        geom_violin(bw = 0.1, position = position_dodge(width = 0.5), size = 0.2) + 
         scale_y_discrete(labels = map_chr(addline_format(vvs$vrbl_lbls),
                                           ~paste(strwrap(.x, 30), collapse = "\n"))) + 
         facet_grid(hyp~cbn_name, scales = "free", space = "free", switch = "y",
@@ -1248,7 +1259,7 @@ gen_plt_vif <- function(dt_vif_res, top_coefs, stylecfg) {
 
 
 
-## gen_plt_VIF(reg_res_objs$top_coefs, fldr_info)
+## gen_plt_vif(reg_res_objs$dt_vif_res, reg_res_objs$top_coefs)
 
 
 gen_plt_cbn_cycnt <- function(cbn_dfs_rates, stylecfg) {
@@ -1306,7 +1317,7 @@ gen_reg_res_plts <- function(reg_res_objs, vvs, NBR_MDLS, only_priority_plts, st
         plt_oneout_llrt_lldiff = gen_plt_oneout_llrt_lldiff(ou_anls),
         plt_vrbl_cycnt = gen_plt_vrbl_cycnt(df_reg_rts, stylecfg),
         plt_cbn_cycnt = gen_plt_cbn_cycnt(cbn_dfs_rates, stylecfg),
-        plt_vif = gen_plt_vif(dt_vif_res, top_coefs, stylecfg)
+        plt_vif = gen_plt_vif(dt_vif_res, top_coefs)
     )
         
     

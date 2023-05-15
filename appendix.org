@@ -437,11 +437,13 @@ It furthermore seem to be the case that the HNWI coefficients (which are not sig
 
 
 
-VIFs were calculated for the best-fitting model of each variable set and dataset (108 models in total given 1 of 4 HWNI variables \times 1 of 3 income inequality variables  \times 1 of 3 wealth inequality variables \times 1 of 3 datasets) using the R performance package [[parencite:&Luedecke_etal_2021_performance]]. 
+VIFs were calculated for the best-fitting model of each variable set and dataset (108 models in total given 1 of 4 HWNI variables \times 1 of 3 income inequality variables \times 1 of 3 wealth inequality variables \times 1 of 3 datasets) using the R =performance= package [[parencite:&Luedecke_etal_2021_performance]]. 
 # 
 As squared variables and interactions can result in high VIFs without substantial collinearity, I calculate VIFs once for the full model and once after excluding squared variables and interactions.
 # 
 Figure {{{rplt_vif}}} shows the distribution of the variance inflation factors.
 #
-While VIFs of squared variables and interactions can be substantial, no multicollinearity issues are present when focusing on the linear variables. 
+While VIFs can be substantial when including squared variables and interactions, no multicollinearity issues are present when focusing only on the linear variables (all VIFs < 10, all VIFs except global density (which after removing squared variables is still based on the same data as global density) < 5).
+#
+
 
