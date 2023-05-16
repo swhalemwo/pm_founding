@@ -392,6 +392,9 @@ tol9qualitative=c("#332288", "#88CCEE", "#44AA99", "#117733", "#999933", "#DDCC7
 tol10qualitative=c("#332288", "#88CCEE", "#44AA99", "#117733", "#999933", "#DDCC77", "#661100", "#CC6677", "#882255", "#AA4499")
 tol11qualitative=c("#332288", "#6699CC", "#88CCEE", "#44AA99", "#117733", "#999933", "#DDCC77", "#661100", "#CC6677", "#882255", "#AA4499")
 tol12qualitative=c("#332288", "#6699CC", "#88CCEE", "#44AA99", "#117733", "#999933", "#DDCC77", "#661100", "#CC6677", "#AA4466", "#882255", "#AA4499")
+tol11divergent <- c('#364B9A', '#4A7BB7', '#6EA6CD', '#98CAE1', '#C2E4EF', '#EAECCC', '#FEDA8B', '#FDB366', '#F67E4B', '#DD3D2D', '#A50026')
+tol9BuRd <- c('#2166AC', '#4393C3', '#92C5DE', '#D1E5F0', '#F7F7F7', '#FDDBC7', '#F4A582', '#D6604D', '#B2182B')
+tol9BuRd2 <- c('#2166AC', '#4393C3', '#92C5DE', '#D1E5F0', "grey85", '#FDDBC7', '#F4A582', '#D6604D', '#B2182B')
 
 
 sanitize_number <- function(nbr) {
@@ -795,4 +798,107 @@ rcd_iso3c_reg6 <- function(iso3cs) {
 pt2mm <- function(ptx) {
     #' convert points (font size) to mm (used by geom_text)
     ptx * (25.4/72.27)
+}
+
+proc_colvec_arm <- function(arm_vlus, p1, p2, stretch, scale_ratio) {
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
+    #' scales values of arm of divergent color scale
+    #' if scale_ratio < 1 and stretching disabled: only use part of the scale
+    
+    ## if (scale_ratio < 1 & stretch != 1) {
+        ## only select some part of the scale
+
+        ## prop_left <- 1-scale_ratio
+        ## prop_to_add <- prop_left * stretch
+        ## scale_ratio2 <- scale_ratio + prop_to_add
+        
+        ## prop_left <- 
+        ## prop_to_add <- 
+        ## scale_ratio2 <- scale_ratio + ((1-scale_ratio) * stretch)
+
+    ##     arm_vlus_trunc <- arm_vlus[1:(round(len(arm_vlus)*scale_ratio))]
+    ## } else {
+    ##     arm_vlus_trunc <- arm_vlus
+    ## }
+
+    rtio_sclr <- min(1,scale_ratio) # for the shorter scale, it's smaller than 1
+    
+    ## select endpoint of arm
+    ## when processing smaller arm: stretch sets how much more of the scale is used than if stretch were 0
+    arm_vlus_trunc <- arm_vlus[1:(round(len(arm_vlus) * (rtio_sclr + ((1-rtio_sclr) * stretch))))]
+
+    arm_scld <- seq(p1, p2, length.out = len(arm_vlus_trunc))
+    names(arm_scld) <- arm_vlus_trunc
+
+    return(arm_scld)
+}
+        
+        
+        
+    
+
+color_stretcher <- function(col_vec, midpt, minpt, maxpt, stretch, sharp_edge) {
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
+    1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;
+    ## col_vec should have uneven number
+
+    range01 <- function(x, ...){(x - min(x, ...)) / (max(x, ...) - min(x, ...))}
+
+    rngvec_scld <- c(minpt = minpt, midpt = midpt, maxpt = maxpt) %>% range01()
+    
+    ## scale color vec (don't use end to end) -> same behavior as in color_space
+    ## use the larger scale completely, scale the shorter one
+    ## assumes that all steps in color scale are at same distance
+    
+    
+    ## assign arm values: reverse bottom arm, un-reverse it at the end
+    if (sharp_edge) {
+        ## assign middle value to top arm 
+        bottom_arm_colrs <- col_vec[floor(len(col_vec)/2):1]
+        top_arm_colrs    <- col_vec[(ceiling(len(col_vec)/2)):len(col_vec)]
+
+    } else {
+        ## have middle value in both arms
+        bottom_arm_colrs <- col_vec[ceiling(len(col_vec)/2):1]
+        top_arm_colrs    <- col_vec[ceiling(len(col_vec)/2):len(col_vec)]
+
+    }
+
+    bottom_arm_len <- midpt - minpt
+    top_arm_len <- maxpt-midpt
+
+    ## scale_ratio <- bottom_arm_len/top_arm_len
+
+    ## stretch <- 1
+
+    bottom_arm_vlus <- proc_colvec_arm(bottom_arm_colrs, rngvec_scld[["midpt"]], rngvec_scld[["minpt"]],
+                                       stretch, bottom_arm_len/top_arm_len)
+
+    top_arm_vlus <- proc_colvec_arm(top_arm_colrs, rngvec_scld[["midpt"]], rngvec_scld[["maxpt"]],
+                                    stretch, top_arm_len/bottom_arm_len)
+
+    ## combine vecs
+    if (sharp_edge) {
+
+        bottom_arm_vlus[1] <- bottom_arm_vlus[1]-0.0000001
+                
+        col_vec_cbnd <- c(rev(bottom_arm_vlus), top_arm_vlus)
+        ## pal(names(col_vec_cbnd))
+        
+    } else {
+        ## revert bottom arm, skip first value of top vec (already in bottom vec)
+        col_vec_cbnd <- c(rev(bottom_arm_vlus), top_arm_vlus[2:len(top_arm_vlus)])
+        ## pal(names(col_vec_cbnd))
+    
+    }
+
+    ## this is now without midpoint being crushed, and using end to end of scale
+    ## bottom_arm <- seq(rngvec_scld[["minpt"]], rngvec_scld[["midpt"]], length.out = ceiling(len(col_vec)/2))
+    ## top_arm <- seq(rngvec_scld[["midpt"]], rngvec_scld[["maxpt"]], length.out = ceiling(len(col_vec)/2))
+
+    ## arms_cbnd <- c(bottom_arm, top_arm) %>% unique() # ugly way of cutting the overlap of the arms
+
+    ## names(arms_cbnd) <- col_vec
+    
+    return(col_vec_cbnd)
 }
