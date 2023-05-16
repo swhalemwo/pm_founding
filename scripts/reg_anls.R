@@ -107,6 +107,185 @@ proc_ou_files <- function(regres_ou_files, gof_df_cbn, top_coefs) {
 
 }
 
+gendt_oucoefchng <- function(ou_objs, df_anls_base) {
+    ## get dt_oucfg_wide for IDs
+    dt_oucfg_wide <- adt(ou_objs$df_reg_anls_cfgs_wide)
+
+    ## get one-out coefs
+    dt_coefs_ou <- adt(ou_objs$coef_df) %>%
+        .[, .(mdl_id_ou = mdl_id, vrbl_name_unlag = gsub("_lag[1-5]", "", vrbl_name), coef_ou = coef)] %>%
+        ## need to nonou_id here
+        .[dt_oucfg_wide[, .(mdl_id, nonou_id, ou_set_title)], on = .(mdl_id_ou = mdl_id)] %>%
+        .[, ou_set_title := gsub("_lag[1-5]", "", ou_set_title)]
+        
+
+    ## get original coefs
+    dt_coefs_nonou <- adt(df_anls_base) %>%
+        ## only select columns needed here atm 
+        .[, .(mdl_id, vrbl_name_unlag, coef, cbn_name)] %>%
+        ## only need nonou_id here to filter to filter down to original coefs
+        .[dt_oucfg_wide[, .(nonou_id = unique(nonou_id))], on = .(mdl_id = nonou_id)]
+
+    ## combine original and one-out coefs
+    dt_coef_cprn <- dt_coefs_nonou[dt_coefs_ou, on = .(mdl_id = nonou_id, vrbl_name_unlag)]
+
+    
+    ## calculate diffs, merge hyps to filter out stuff, also filter out other stuff
+    dt_coef_cprn_vis_prep <- dt_coef_cprn %>% copy() %>%
+        .[, diff := coef - coef_ou] %>%
+        ## .[cbn_name == "cbn_all"] %>%
+        vvs$hyp_mep_dt[, .(vrbl, hyp_nonou = hyp)][.,  on = .(vrbl = vrbl_name_unlag)] %>%
+        vvs$hyp_mep_dt[, .(ou_set_title = vrbl, hyp_ou = hyp)][., on = "ou_set_title"] %>%
+        .[, `:=`(ou_set_title = factor(ou_set_title, levels = names(vvs$vrbl_lbls)),
+                 vrbl = factor(vrbl, levels = rev(names(vvs$vrbl_lbls))))] %>%
+        .[vrbl %!in% c("ln_s", "ln_r")] %>% ## yeet model stuff
+        .[!(hyp_ou == "h1b" & hyp_nonou == "h1b")] %>% ## yeet h1 self-square (interactions)
+        .[!gsub("_sqrd", "", ou_set_title) == vrbl] %>% ## yeet changes to main when adding sqrd (h2, sqrd controls)
+        .[vrbl != "cons"] ## yeet intercept 
+
+
+    ## check xtsum: if within variation-pair in diff is substantial
+    ## dt_coef_cprn_vis_prep %>% copy() %>% .[, .(pair = paste0(vrbl, ou_set_title, cbn_name), diff)] %>%
+    ##     ## .[, .N, pair]
+    ##     xtsum(diff, pair) %>% adt()
+        
+        
+    ## aggregate diffs
+    dt_oucoefchng <- dt_coef_cprn_vis_prep %>%
+        .[, .(mean_diff = mean(diff)), # diff10 = quantile(diff, 0.10), diff90 = quantile(diff, 0.90)),
+          .(vrbl, cbn_name, ou_set_title, hyp_nonou, hyp_ou)]
+
+    return(dt_oucoefchng)
+}
+
+
+
+
+
+
+gen_plt_oucoefchng <- function(dt_oucoefchng) {
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
+    1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;
+    #' generate plot of how coef of variable changes when variable is removed
+
+    
+
+    colvec_stretched <- color_stretcher(tol9BuRd, midpt = 0,stretch = 0.2, sharp_edge = F,
+                                        minpt = min(dt_oucoefchng$mean_diff),
+                                        maxpt = max(dt_oucoefchng$mean_diff))
+    
+    ## default plot: point, uses color and size
+    dt_oucoefchng %>%
+        ggplot(aes(y=vrbl, x = ou_set_title, size = abs(mean_diff),
+                   fill = mean_diff,
+                   ## color = mean_diff,
+                   group = cbn_name,
+                   shape = cbn_name
+                   )) +
+        geom_point(
+            # show.legend = F,
+            ## shape = 21,
+            stroke = 0.3,
+            ## position = position_dodgev(height = 1)
+            position = position_dodge(width = 0.85)
+        ) +
+        ## scale_color_gradient2(low = "blue", high = "red", na.value = "white", mid = "grey75") +
+        ## scale_color_gradient2(low = tol9BuRd[1], high = tol9BuRd[9], na.value = "white", mid = "grey82") +
+        scale_fill_gradientn(colors = names(colvec_stretched), values = colvec_stretched) +
+        scale_color_gradientn(colors = names(colvec_stretched), values = colvec_stretched) + 
+        theme_orgpop() + 
+        theme(axis.text.x = element_text(angle = 25, hjust = 1),
+              ## panel.grid = element_line(color = "grey80", linetype = "dotted")
+              ## panel.background = element_rect(fill = "grey80")
+              legend.position = "bottom",
+              legend.margin = margin(0,0,0,0)
+              ) +
+        scale_shape_manual(values = c(21,22,23), labels = vvs$cbn_lbls) +
+        ## scale_shape_manual(values = c(22,22, 22)) +
+        ## scale_shape_manual(values = rep("\u25AF", 3)) + 
+        facet_grid(hyp_nonou ~ hyp_ou, scales = "free", space = "free") +
+        labs(y = "variable (with coefficient)", x = "variable/group of variables added") +
+        scale_size_continuous(range = c(0.8,3.5)) +  # guide = guide_legend(title = "asdf")) +
+        guides(shape = guide_legend(direction = "horizontal", nrow = 1, title = "Dataset",
+                                    title.position = "top",
+                                    override.aes = list(size = 4),
+                                    order = 1, byrow = T,
+                                    label.theme = element_text(size = 8),
+                                    title.theme = element_text(size = 8)),
+               fill = guide_colorbar(direction = "horizontal", title = "avg. coefficient difference",
+                                     title.position = "top",
+                                     barwidth = 7,
+                                     barheight = 0.75,
+                                     title.theme = element_text(size = 8), label.theme = element_text(size = 8)),
+               size = guide_legend(direction = "horizontal", nrow = 1, title = "abs. avg. coefficient difference",
+                                   byrow = T,
+                                   title.theme = element_text(size = 8), label.theme = element_text(size = 8),
+                                   title.position = "top"))
+    
+        
+    ## tileplot
+    ## ## think points better convey message
+    ## dt_coef_cprn_vis %>%
+    ##     ggplot(aes(y=vrbl, x = ou_set_title, color = mean_diff, fill = mean_diff)) +
+    ##     geom_tile() + 
+    ##     scale_color_gradient2(low = tol9BuRd[1], high = tol9BuRd[9], na.value = "white",
+    ##                           mid = tol9BuRd[5]) +
+    ##     scale_fill_gradient2(low = tol9BuRd[1], high = tol9BuRd[9], na.value = "white",
+    ##                           mid = tol9BuRd[5]) + 
+    ##     ## scale_fill_gradient2(low = "#0077b6", high = "#b60000", na.value = "white", mid = "grey90") +
+    ##     theme(axis.text.x = element_text(angle = 30, hjust = 1)) +
+    ##     facet_grid(hyp_nonou ~ hyp_ou, scales = "free", space = "free") +
+    ##     labs(y = "variable (with coefficient)", x = "variable/group of variables added") +
+    ##     theme_orgpop() +
+    ##     theme(panel.grid.major = element_blank(), # yeet the grid
+    ##           ## panel.background = element_rect(fill = "white")) +
+    ##           panel.background = element_blank())
+        
+
+    
+    ## dt_coef_cprn_vis[sign(diff25) != sign(diff75)] %$% hist(mean_diff)
+    ## dt_coef_cprn_vis[sign(diff25) != sign(diff75) & abs(mean_diff) > 0.3]
+
+    ## ## quantile data: explore variation
+    ## dt_coef_cprn_vis_qnt <- dt_coef_cprn_vis %>% copy() %>% .[, mean_diff := NULL] %>% 
+    ##     melt(id.vars = c("ou_set_title", "hyp_ou", "vrbl", "hyp_nonou"))
+
+    
+    ## ggplot(dt_coef_cprn_vis_qnt, # [hyp_ou == "h2" & hyp_nonou == "h1b"],
+    ##        aes(y=vrbl, x = ou_set_title, size = abs(value), color = value, shape = variable, group = variable)) + 
+    ##     geom_point(# shape = 21,
+    ##                ## position = "dodge"
+    ##                position = position_dodgev(height = 1) # preserve = "total", padding = 0.3)
+    ##                ## position = position_nudge(x=0.1)
+    ##                ) +
+    ##     ## geom_tile() + 
+    ##     scale_color_gradient2(low = "blue", high = "red", na.value = "white", mid = "grey75") +
+    ##     scale_fill_gradient2(low = "blue", high = "red", na.value = "white", mid = "grey75") +
+    ##     theme(axis.text.x = element_text(angle = 30, hjust = 1)) +
+    ##     facet_grid(hyp_nonou ~ hyp_ou, scales = "free", space = "free") +
+    ##     labs(y = "variable (with coefficient)", x = "variable/group of variables added")
+        
+
+    
+        
+
+
+
+    
+    
+
+    
+
+
+
+
+    
+}
+
+## gen_plt_oucoefchng(reg_anls_base$ou_objs, reg_res_objs$df_anls_base)
+
+
+
 
 
 
@@ -413,6 +592,7 @@ proc_reg_res_objs <- function(reg_anls_base, vvs, NBR_MDLS) {
     ## merging significance to all coefs (maybe can be 
     df_anls_base <- add_coef_sig(coef_df, df_reg_anls_cfgs_wide)
 
+    ou_objs <- reg_anls_base$ou_objs
     ## number of models to pick for the analyses
     
 
@@ -426,8 +606,10 @@ proc_reg_res_objs <- function(reg_anls_base, vvs, NBR_MDLS) {
 
     top_coefs <- gen_top_coefs(df_anls_base, gof_df_cbn)
     
-    ou_procd <- proc_ou_files(reg_anls_base$ou_objs, gof_df_cbn, top_coefs)
-    
+    ou_procd <- proc_ou_files(ou_objs, gof_df_cbn, top_coefs)
+
+    ## generate change of coef size from one-out models (what happens to all coefs when variable X gets yeeted)
+    dt_oucoefchng <- gendt_oucoefchng(ou_objs, df_anls_base)
 
 
     return(
@@ -441,7 +623,8 @@ proc_reg_res_objs <- function(reg_anls_base, vvs, NBR_MDLS) {
             top_coefs = top_coefs,
             top_coefs_llrt = ou_procd$top_coefs_llrt,
             ou_anls = ou_procd$ou_anls,
-            dt_vif_res = reg_anls_base$dt_vif_res
+            dt_vif_res = reg_anls_base$dt_vif_res,
+            dt_oucoefchng = dt_oucoefchng
         )
     )
     
@@ -1305,6 +1488,7 @@ gen_reg_res_plts <- function(reg_res_objs, vvs, NBR_MDLS, only_priority_plts, st
     top_coefs_llrt <- reg_res_objs$top_coefs_llrt
     ou_anls <- reg_res_objs$ou_anls
     dt_vif_res <- reg_res_objs$dt_vif_res
+    dt_oucoefchng <- reg_res_objs$dt_oucoefchng
     
     l_plts <- list(
         plt_cbn_log_likelihoods = gen_plt_cbn_log_likelihoods(gof_df_cbn),
@@ -1317,7 +1501,8 @@ gen_reg_res_plts <- function(reg_res_objs, vvs, NBR_MDLS, only_priority_plts, st
         plt_oneout_llrt_lldiff = gen_plt_oneout_llrt_lldiff(ou_anls),
         plt_vrbl_cycnt = gen_plt_vrbl_cycnt(df_reg_rts, stylecfg),
         plt_cbn_cycnt = gen_plt_cbn_cycnt(cbn_dfs_rates, stylecfg),
-        plt_vif = gen_plt_vif(dt_vif_res, top_coefs)
+        plt_vif = gen_plt_vif(dt_vif_res, top_coefs),
+        plt_oucoefchng = gen_plt_oucoefchng(dt_oucoefchng)
     )
         
     
@@ -1404,7 +1589,9 @@ gen_plt_cfgs <- function() {
                                  caption = "Number of countries per year per variable combination"),
             plt_vif = list(filename = "vif.pdf", width = 18, height = 18,
                            caption = paste0("Distribution of VIF estimates ",
-                                            "(Gaussian kernel density estimate; bandwidth = 0.1)"))
+                                            "(Gaussian kernel density estimate; bandwidth = 0.1)")),
+            plt_oucoefchng = list(filename = "oucoefchng.pdf", width = 24, height = 18,
+                           caption = "Coefficient changes given addition of other variables")
         )
     )
 
@@ -2420,7 +2607,10 @@ reg_res <- list()
 
 ## generate plots, construct configs
 reg_res$plts <- gen_reg_res_plts(reg_res_objs, vvs, NBR_MDLS, only_priority_plts = T, stylecfg)
-render_reg_res("plt_vif", reg_res, batch_version = "v75")
+
+reg_res$plts$plt_oucoefchng <- gen_plt_oucoefchng(reg_res_objs$dt_oucoefchng)
+render_reg_res("plt_oucoefchng", reg_res, batch_version = "v75")
+
 
 
 plt_inspector(reg_res$plts)
