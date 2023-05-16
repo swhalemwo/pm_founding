@@ -222,7 +222,18 @@ gen_plt_oucoefchng <- function(dt_oucoefchng) {
                                    title.theme = element_text(size = 8), label.theme = element_text(size = 8),
                                    title.position = "top"))
     
-        
+    ## dt_oucoefchng %>%
+    ##     ggplot(aes(y=vrbl, x=ou_set_title,
+    ##                fill = mean_diff,
+    ##                ## color = cbn_name,
+    ##                group = cbn_name)) +
+    ##     geom_tile(position = position_dodge(),
+    ##               show.legend = F) + 
+    ##     facet_grid(hyp_nonou ~ hyp_ou, scales = "free", space = "free") +
+    ##     scale_fill_gradientn(colors = names(colvec_stretched), values = colvec_stretched) +
+    ##     theme(axis.text.x = element_text(angle = 25, hjust = 1))
+
+
     ## tileplot
     ## ## think points better convey message
     ## dt_coef_cprn_vis %>%
@@ -266,26 +277,9 @@ gen_plt_oucoefchng <- function(dt_oucoefchng) {
     ##     labs(y = "variable (with coefficient)", x = "variable/group of variables added")
         
 
-    
-        
-
-
-
-    
-    
-
-    
-
-
-
-
-    
 }
 
 ## gen_plt_oucoefchng(reg_anls_base$ou_objs, reg_res_objs$df_anls_base)
-
-
-
 
 
 
@@ -1502,7 +1496,10 @@ gen_reg_res_plts <- function(reg_res_objs, vvs, NBR_MDLS, only_priority_plts, st
         plt_vrbl_cycnt = gen_plt_vrbl_cycnt(df_reg_rts, stylecfg),
         plt_cbn_cycnt = gen_plt_cbn_cycnt(cbn_dfs_rates, stylecfg),
         plt_vif = gen_plt_vif(dt_vif_res, top_coefs),
-        plt_oucoefchng = gen_plt_oucoefchng(dt_oucoefchng)
+        plt_oucoefchng = gen_plt_oucoefchng(dt_oucoefchng),
+        plt_oucoefchng_cbn1 = gen_plt_oucoefchng(dt_oucoefchng[cbn_name == "cbn_all"]),
+        plt_oucoefchng_cbn2 = gen_plt_oucoefchng(dt_oucoefchng[cbn_name == "cbn_no_cult_spending"]),
+        plt_oucoefchng_cbn3 = gen_plt_oucoefchng(dt_oucoefchng[cbn_name == "cbn_no_cult_spending_and_mitr"])
     )
         
     
@@ -1590,8 +1587,18 @@ gen_plt_cfgs <- function() {
             plt_vif = list(filename = "vif.pdf", width = 18, height = 18,
                            caption = paste0("Distribution of VIF estimates ",
                                             "(Gaussian kernel density estimate; bandwidth = 0.1)")),
-            plt_oucoefchng = list(filename = "oucoefchng.pdf", width = 24, height = 18,
-                           caption = "Coefficient changes given addition of other variables")
+            plt_oucoefchng = list(filename = "oucoefchng.pdf", width = 24, height = 16,
+                                  caption = "Coefficient changes given addition of other variables"),
+            plt_oucoefchng_cbn1 = list(filename = "oucoefchng_cbn1.pdf", width = 14, height = 12,
+                                       caption = paste0("Coefficient changes given addition of other variables ",
+                                                        "(DS all IVs)")),
+            plt_oucoefchng_cbn2 = list(filename = "oucoefchng_cbn2.pdf", width = 14, height = 12,
+                                       caption = paste0("Coefficient changes given addition of other variables ",
+                                                        "(DS --CuSp)")),
+            plt_oucoefchng_cbn3 = list(filename = "oucoefchng_cbn3.pdf", width = 14, height = 12,
+                                       caption = paste0("Coefficient changes given addition of other variables ",
+                                                        "(DS --CuSp/TMITR"))
+
         )
     )
 
@@ -2608,8 +2615,9 @@ reg_res <- list()
 ## generate plots, construct configs
 reg_res$plts <- gen_reg_res_plts(reg_res_objs, vvs, NBR_MDLS, only_priority_plts = T, stylecfg)
 
-reg_res$plts$plt_oucoefchng <- gen_plt_oucoefchng(reg_res_objs$dt_oucoefchng)
-render_reg_res("plt_oucoefchng", reg_res, batch_version = "v75")
+reg_res$plts$plt_oucoefchng_cbn <- gen_plt_oucoefchng(reg_res_objs$dt_oucoefchng)
+reg_res$plts$plt_oucoefchng_cbn2 <- gen_plt_oucoefchng(reg_res_objs$dt_oucoefchng[cbn_name == "cbn_all"])
+render_reg_res("plt_oucoefchng_cbn1", reg_res, batch_version = "v75")
 
 
 
