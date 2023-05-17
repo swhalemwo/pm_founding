@@ -165,7 +165,7 @@ gendt_oucoefchng <- function(ou_objs, df_anls_base) {
     return(dt_oucoefchng)
 }
 
-gendt_oucoefchng(reg_anls_base$ou_objs, reg_res_objs$df_anls_base)
+## gendt_oucoefchng(reg_anls_base$ou_objs, reg_res_objs$df_anls_base)
 
 
 
@@ -257,7 +257,7 @@ gen_plt_oucoefchng <- function(dt_oucoefchng) {
         geom_point(
             # show.legend = F,
             ## shape = 21,
-            stroke = 0.01,
+            stroke = 0.2,
             ## position = position_dodgev(height = 1)
             position = position_dodge(width = 0.85)
         ) +
