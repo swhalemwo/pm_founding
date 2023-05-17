@@ -108,6 +108,8 @@ proc_ou_files <- function(regres_ou_files, gof_df_cbn, top_coefs) {
 }
 
 gendt_oucoefchng <- function(ou_objs, df_anls_base) {
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
+    
     ## get dt_oucfg_wide for IDs
     dt_oucfg_wide <- adt(ou_objs$df_reg_anls_cfgs_wide)
 
@@ -129,7 +131,12 @@ gendt_oucoefchng <- function(ou_objs, df_anls_base) {
     ## combine original and one-out coefs
     dt_coef_cprn <- dt_coefs_nonou[dt_coefs_ou, on = .(mdl_id = nonou_id, vrbl_name_unlag)]
 
+    ## some debuggin
     
+    ## dt_coef_cprn[ou_set_title == "sptinc992j_p90p100" & vrbl_name_unlag == "shweal992j_p90p100" &
+    ##              cbn_name == "cbn_all"]
+
+
     ## calculate diffs, merge hyps to filter out stuff, also filter out other stuff
     dt_coef_cprn_vis_prep <- dt_coef_cprn %>% copy() %>%
         .[, diff := coef - coef_ou] %>%
@@ -158,7 +165,7 @@ gendt_oucoefchng <- function(ou_objs, df_anls_base) {
     return(dt_oucoefchng)
 }
 
-
+gendt_oucoefchng(reg_anls_base$ou_objs, reg_res_objs$df_anls_base)
 
 
 
@@ -250,7 +257,7 @@ gen_plt_oucoefchng <- function(dt_oucoefchng) {
         geom_point(
             # show.legend = F,
             ## shape = 21,
-            stroke = 0.3,
+            stroke = 0.01,
             ## position = position_dodgev(height = 1)
             position = position_dodge(width = 0.85)
         ) +
@@ -258,33 +265,37 @@ gen_plt_oucoefchng <- function(dt_oucoefchng) {
         ## scale_color_gradient2(low = tol9BuRd[1], high = tol9BuRd[9], na.value = "white", mid = "grey82") +
         scale_fill_gradientn(colors = names(colvec_stretched), values = colvec_stretched) +
         scale_color_gradientn(colors = names(colvec_stretched), values = colvec_stretched) + 
-        theme_orgpop() + 
+        ## theme_orgpop() + 
         theme(axis.text.x = element_text(angle = 25, hjust = 1),
+              axis.text = element_text(size =6),
+              strip.text = element_text(size = 6, margin = margin(2,2,2,2, "points")),
               ## panel.grid = element_line(color = "grey80", linetype = "dotted")
               ## panel.background = element_rect(fill = "grey80")
               legend.position = "bottom",
-              legend.margin = margin(0,0,0,0)
+              legend.margin = margin(0,0,0,0),
+              axis.title = element_text(size =6),
+              legend.box.margin = unit(c(0,0,0,0), "points")
               ) +
-        scale_shape_manual(values = c(21,22,23), labels = vvs$cbn_lbls) +
-        ## scale_shape_manual(values = c(22,22, 22)) +
-        ## scale_shape_manual(values = rep("\u25AF", 3)) + 
-        facet_grid(hyp_nonou ~ hyp_ou, scales = "free", space = "free") +
+        ## scale_shape_manual(values = c(21,22,23), labels = vvs$cbn_lbls) +
+        scale_shape_manual(values = c(21,22, 21), labels = vvs$cbn_lbls) +
+                facet_grid(hyp_nonou ~ hyp_ou, scales = "free", space = "free") +
         labs(y = "variable (with coefficient)", x = "variable/group of variables added") +
-        scale_size_continuous(range = c(0.8,3.5)) +  # guide = guide_legend(title = "asdf")) +
-        guides(shape = guide_legend(direction = "horizontal", nrow = 1, title = "Dataset",
+        scale_size_continuous(range = c(0.5,3.5)) +  # guide = guide_legend(title = "asdf")) +
+        guides(shape = guide_legend(direction = "horizontal", nrow = 1,
+                                    title = "Dataset (horizontal dataset order in plot follows legend order)",
                                     title.position = "top",
                                     override.aes = list(size = 4),
                                     order = 1, byrow = T,
-                                    label.theme = element_text(size = 8),
-                                    title.theme = element_text(size = 8)),
+                                    label.theme = element_text(size = 6),
+                                    title.theme = element_text(size = 6)),
                fill = guide_colorbar(direction = "horizontal", title = "avg. coefficient difference",
                                      title.position = "top",
                                      barwidth = 7,
                                      barheight = 0.75,
-                                     title.theme = element_text(size = 8), label.theme = element_text(size = 8)),
+                                     title.theme = element_text(size = 6), label.theme = element_text(size = 6)),
                size = guide_legend(direction = "horizontal", nrow = 1, title = "abs. avg. coefficient difference",
                                    byrow = T,
-                                   title.theme = element_text(size = 8), label.theme = element_text(size = 8),
+                                   title.theme = element_text(size = 6), label.theme = element_text(size = 6),
                                    title.position = "top"))
     
     
@@ -1644,9 +1655,9 @@ gen_plt_cfgs <- function() {
             plt_vif = list(filename = "vif.pdf", width = 18, height = 18,
                            caption = paste0("Distribution of VIF estimates ",
                                             "(Gaussian kernel density estimate; bandwidth = 0.1)")),
-            plt_oucoefchng = list(filename = "oucoefchng.pdf", width = 24, height = 16,
+            plt_oucoefchng = list(filename = "oucoefchng.pdf", width = 24, height = 12,
                                   caption = "Coefficient changes given addition of other variables"),
-            plt_oucoefchng_tile = list(filename = "oucoefchng_tile.pdf", width = 24, height = 16,
+            plt_oucoefchng_tile = list(filename = "oucoefchng_tile.pdf", width = 24, height = 12,
                                   caption = "Coefficient changes given addition of other variables"),
             plt_oucoefchng_cbn1 = list(filename = "oucoefchng_cbn1.pdf", width = 14, height = 12,
                                        caption = paste0("Coefficient changes given addition of other variables ",
@@ -2674,8 +2685,13 @@ reg_res <- list()
 ## generate plots, construct configs
 reg_res$plts <- gen_reg_res_plts(reg_res_objs, vvs, NBR_MDLS, only_priority_plts = T, stylecfg)
 
-reg_res$plts$plt_oucoefchng_tile <- gen_plt_oucoefchng_tile(reg_res_objs$dt_oucoefchng)
-render_reg_res("plt_oucoefchng_tile", reg_res, batch_version = "v75")
+reg_res$plts$plt_oucoefchng <- gen_plt_oucoefchng(reg_res_objs$dt_oucoefchng)
+render_reg_res("plt_oucoefchng", reg_res, batch_version = "v75")
+
+
+
+## reg_res$plts$plt_oucoefchng_tile <- gen_plt_oucoefchng_tile(reg_res_objs$dt_oucoefchng)
+## render_reg_res("plt_oucoefchng_tile", reg_res, batch_version = "v75")
 
 
 

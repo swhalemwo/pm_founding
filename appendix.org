@@ -251,6 +251,11 @@ dt_nbrs[, .(macro_str = sprintf("#+MACRO: %s %s", nbr_name, nbr_fmt)), grp] %>%
 #+MACRO: ynkplt_vrbl_cycnt (eval (concat "#+label: fig:vrbl_cycnt\n" "#+caption: Number of countries with per year per variable\n" "#+attr_latex: :width 18cm\n" "[[file:figures/plt_v75_vrbl_cycnt.pdf]]"))
 #+MACRO: ynkplt_cbn_cycnt (eval (concat "#+label: fig:cbn_cycnt\n" "#+caption: Number of countries per year per variable combination\n" "#+attr_latex: :width 18cm\n" "[[file:figures/plt_v75_cbn_cycnt.pdf]]"))
 #+MACRO: ynkplt_vif (eval (concat "#+label: fig:vif\n" "#+caption: Distribution of VIF estimates (Gaussian kernel density estimate; bandwidth = 0.1)\n" "#+attr_latex: :width 18cm\n" "[[file:figures/plt_v75_vif.pdf]]"))
+#+MACRO: ynkplt_oucoefchng (eval (concat "#+label: fig:oucoefchng\n" "#+caption: Coefficient changes given addition of other variables\n" "#+attr_latex: :width 24cm\n" "[[file:figures/plt_v75_oucoefchng.pdf]]"))
+#+MACRO: ynkplt_oucoefchng_tile (eval (concat "#+label: fig:oucoefchng_tile\n" "#+caption: Coefficient changes given addition of other variables\n" "#+attr_latex: :width 24cm\n" "[[file:figures/plt_v75_oucoefchng_tile.pdf]]"))
+#+MACRO: ynkplt_oucoefchng_cbn1 (eval (concat "#+label: fig:oucoefchng_cbn1\n" "#+caption: Coefficient changes given addition of other variables (DS all IVs)\n" "#+attr_latex: :width 14cm\n" "[[file:figures/plt_v75_oucoefchng_cbn1.pdf]]"))
+#+MACRO: ynkplt_oucoefchng_cbn2 (eval (concat "#+label: fig:oucoefchng_cbn2\n" "#+caption: Coefficient changes given addition of other variables (DS --CuSp)\n" "#+attr_latex: :width 14cm\n" "[[file:figures/plt_v75_oucoefchng_cbn2.pdf]]"))
+#+MACRO: ynkplt_oucoefchng_cbn3 (eval (concat "#+label: fig:oucoefchng_cbn3\n" "#+caption: Coefficient changes given addition of other variables (DS --CuSp/TMITR\n" "#+attr_latex: :width 14cm\n" "[[file:figures/plt_v75_oucoefchng_cbn3.pdf]]"))
 
 
 # figlbls
@@ -271,6 +276,11 @@ dt_nbrs[, .(macro_str = sprintf("#+MACRO: %s %s", nbr_name, nbr_fmt)), grp] %>%
 #+MACRO: rplt_vrbl_cycnt \ref{fig:vrbl_cycnt}
 #+MACRO: rplt_cbn_cycnt \ref{fig:cbn_cycnt}
 #+MACRO: rplt_vif \ref{fig:vif}
+#+MACRO: rplt_oucoefchng \ref{fig:oucoefchng}
+#+MACRO: rplt_oucoefchng_tile \ref{fig:oucoefchng_tile}
+#+MACRO: rplt_oucoefchng_cbn1 \ref{fig:oucoefchng_cbn1}
+#+MACRO: rplt_oucoefchng_cbn2 \ref{fig:oucoefchng_cbn2}
+#+MACRO: rplt_oucoefchng_cbn3 \ref{fig:oucoefchng_cbn3}
 
 
 # tbllbls
@@ -413,6 +423,50 @@ There are however a few exceptions, such as tax deductibility of donations in "D
 
 
 
+** Mediation: unsure if to use at all 
+
+#+latex: \begin{landscape}
+
+{{{ynkplt_oucoefchng}}}
+
+#+latex: \end{landscape}
+
+I furthermore analyze the coefficients of the restricted models to investigate potential mediation; results are presented in figure {{{rplt_oucoefchng}}}.
+#
+The variables (or variable sets of all density variables and all density variables plus closures) that are added are placed on the x-axis, the coefficients of the full model are placed on the y-axis;
+# 
+Each point shows the average difference between the coefficient of the full and the restricted model and can be understood as the effect that adding variable v_x to the model has on the coefficient of variable v_y.
+#
+For example, if GDP has a coefficient of 0.3 in the full model and one of 0.1 in the restricted model (e.g. one without cultural spending), the difference is 0.3 - 0.1 = 0.2; thus adding cultural spending to the model results in an increase of the GDP coefficient by 0.2. 
+#
+Positive coefficient changes (i.e. a larger coefficients in the full model than in the restricted model) are colored as red, negative coefficient changes as blue; points are furthermore scaled by the absolute coefficient size to compare both positive and negative changes. 
+
+
+A number of findings can be gleaned from this analysis.
+#
+Firstly, wealth and income inequality appear "mutually reinforcing".
+#
+The inclusion of income inequality increases the coefficients of wealth inequality (which is positive in the full model) and the inclusion of wealth inequality decreases further the negative coefficient of income inequality (which in the full model is negative).
+#
+This unexpected pattern (as well as the divergent inequality in general) clearly calls for further research to disentangle relations of inequality.
+
+
+Secondly, a number of variables appear to partly mediate GDP.
+#
+The coefficient of GDP decreases as other variables are added, which indicates that part of the effect is mediated through these variables.
+#
+This in particular concerns the effects of density, tax incentives and cultural spending, and to a lesser extent the effect of inequalities (for "DS --CuSp" and "DS --CuSp/TMITR") and some HNWI measures (for "DS all IVs").
+#
+Conversly, adding GDP to a model in which it was not included before reduces the coefficients of HNWIs, museums of modern/contemporary art and country-level density for "DS --CuSp" and "DS --CuSp/TMITR". 
+#
+
+does it need to be mediation? could be any kind of covariance? 
+
+
+
+
+
+
 ** lag choice
 :PROPERTIES:
 :ID:       68b9f836-26ed-4340-899f-4d6c31192cd5
@@ -430,6 +484,8 @@ As often time lags different from one year are chosen (which would likely consti
 #
 It furthermore seem to be the case that the HNWI coefficients (which are not significant) vary the most in regards to their lag choice (which is plausible since a non-substantial overall effect could imply that the particular lag does not matter much). 
 # , which is plausible insofar as a flat 
+
+
 
 
 ** Multicollinearity 
