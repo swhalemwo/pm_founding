@@ -163,6 +163,71 @@ gendt_oucoefchng <- function(ou_objs, df_anls_base) {
 
 
 
+gen_plt_oucoefchng_tile <- function(dt_oucoefchng) {
+    #' plot of one-out coef changes, but as tiles
+    
+    colvec_stretched <- color_stretcher(tol9BuRd, midpt = 0,stretch = 0.2, sharp_edge = F,
+                                        minpt = min(dt_oucoefchng$mean_diff),
+                                        maxpt = max(dt_oucoefchng$mean_diff))
+
+
+    dt_oucoefchng %>% 
+        ## .[ou_set_title %in% c("NY.GDP.PCAP.CDk", "pm_density") & hyp_nonou == "h1b"] %>%
+        ## .[hyp_nonou != "zcontrols"] %>% 
+        ggplot(aes(y=vrbl, x=ou_set_title,
+                   ## fill = mean_diff,
+                   ## color = cbn_name,
+                   group = cbn_name)) +
+        geom_tile(mapping = aes(fill = mean_diff),
+                  ## show.legend = T,
+                  color = "black",
+                  width = 0.9,
+                  ## height = 0.9,
+                  ## alpha = 0.5,
+                  position = position_dodge(width = 0.9),
+                  ## position = position_dodgev(height = 0.9),
+                  ## show.legend = F
+        ) +
+        geom_point(mapping = aes(shape = cbn_name, y = vrbl),
+                   position = position_dodge(width = 0.9),
+                   size = 0.7,
+                   stroke = 0.2
+                           ## position = position_dodgev(height = 0.9)
+                   ) + 
+        facet_grid(hyp_nonou ~ hyp_ou, scales = "free", space = "free") +
+        scale_fill_gradientn(colors = names(colvec_stretched), values = colvec_stretched) +
+        theme(axis.text.x = element_text(angle = 25, hjust = 1),
+              legend.position = "bottom") +
+        ## scale_shape_manual(values = c(21,22,23), labels = vvs$cbn_lbls) +
+        scale_shape_manual(values = c(3,2,1), labels = vvs$cbn_lbls) +
+        ## theme_orgpop() + 
+        theme(
+            legend.box.margin = unit(c(0,0,0,0), "points"),
+            strip.text = element_text(size = 6, margin = margin(2,2,2,2, "points")),
+            plot.margin = unit(c(0,0,0,0), "points"),
+            axis.text = element_text(size = 6),
+            axis.title = element_text(size =6),
+            legend.margin = margin(0,0,0,0),
+            panel.grid = element_blank(),
+            panel.background = element_blank()) +
+        guides(shape = guide_legend(direction = "horizontal", nrow = 1, title = "Dataset",
+                                    title.position = "top",
+                                    override.aes = list(size = 3),
+                                    order = 1, byrow = T,
+                                    label.theme = element_text(size = 6),
+                                    title.theme = element_text(size = 6)),
+               fill = guide_colorbar(direction = "horizontal", title = "avg. coefficient difference",
+                                     title.position = "top",
+                                     barwidth = 7,
+                                     barheight = 0.75,
+                                     title.theme = element_text(size = 6),
+                                     label.theme = element_text(size = 6))
+               )
+}
+
+## gen_plt_oucoefchng_tile(reg_res_objs$dt_oucoefchng)
+
+
 gen_plt_oucoefchng <- function(dt_oucoefchng) {
     if (as.character(match.call()[[1]]) %in% fstd){browser()}
     1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;
@@ -222,16 +287,7 @@ gen_plt_oucoefchng <- function(dt_oucoefchng) {
                                    title.theme = element_text(size = 8), label.theme = element_text(size = 8),
                                    title.position = "top"))
     
-    ## dt_oucoefchng %>%
-    ##     ggplot(aes(y=vrbl, x=ou_set_title,
-    ##                fill = mean_diff,
-    ##                ## color = cbn_name,
-    ##                group = cbn_name)) +
-    ##     geom_tile(position = position_dodge(),
-    ##               show.legend = F) + 
-    ##     facet_grid(hyp_nonou ~ hyp_ou, scales = "free", space = "free") +
-    ##     scale_fill_gradientn(colors = names(colvec_stretched), values = colvec_stretched) +
-    ##     theme(axis.text.x = element_text(angle = 25, hjust = 1))
+    
 
 
     ## tileplot
@@ -1497,6 +1553,7 @@ gen_reg_res_plts <- function(reg_res_objs, vvs, NBR_MDLS, only_priority_plts, st
         plt_cbn_cycnt = gen_plt_cbn_cycnt(cbn_dfs_rates, stylecfg),
         plt_vif = gen_plt_vif(dt_vif_res, top_coefs),
         plt_oucoefchng = gen_plt_oucoefchng(dt_oucoefchng),
+        plt_oucoefchng_tile = gen_plt_oucoefchng_tile(dt_oucoefchng),
         plt_oucoefchng_cbn1 = gen_plt_oucoefchng(dt_oucoefchng[cbn_name == "cbn_all"]),
         plt_oucoefchng_cbn2 = gen_plt_oucoefchng(dt_oucoefchng[cbn_name == "cbn_no_cult_spending"]),
         plt_oucoefchng_cbn3 = gen_plt_oucoefchng(dt_oucoefchng[cbn_name == "cbn_no_cult_spending_and_mitr"])
@@ -1588,6 +1645,8 @@ gen_plt_cfgs <- function() {
                            caption = paste0("Distribution of VIF estimates ",
                                             "(Gaussian kernel density estimate; bandwidth = 0.1)")),
             plt_oucoefchng = list(filename = "oucoefchng.pdf", width = 24, height = 16,
+                                  caption = "Coefficient changes given addition of other variables"),
+            plt_oucoefchng_tile = list(filename = "oucoefchng_tile.pdf", width = 24, height = 16,
                                   caption = "Coefficient changes given addition of other variables"),
             plt_oucoefchng_cbn1 = list(filename = "oucoefchng_cbn1.pdf", width = 14, height = 12,
                                        caption = paste0("Coefficient changes given addition of other variables ",
@@ -2615,9 +2674,8 @@ reg_res <- list()
 ## generate plots, construct configs
 reg_res$plts <- gen_reg_res_plts(reg_res_objs, vvs, NBR_MDLS, only_priority_plts = T, stylecfg)
 
-reg_res$plts$plt_oucoefchng_cbn <- gen_plt_oucoefchng(reg_res_objs$dt_oucoefchng)
-reg_res$plts$plt_oucoefchng_cbn2 <- gen_plt_oucoefchng(reg_res_objs$dt_oucoefchng[cbn_name == "cbn_all"])
-render_reg_res("plt_oucoefchng_cbn1", reg_res, batch_version = "v75")
+reg_res$plts$plt_oucoefchng_tile <- gen_plt_oucoefchng_tile(reg_res_objs$dt_oucoefchng)
+render_reg_res("plt_oucoefchng_tile", reg_res, batch_version = "v75")
 
 
 
