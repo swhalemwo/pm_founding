@@ -349,13 +349,9 @@ gen_plt_oucoefchng <- function(dt_oucoefchng) {
 ## gen_plt_oucoefchng(reg_anls_base$ou_objs, reg_res_objs$df_anls_base)
 
 
-gen_knts <- function(v, sec_prop) {
-    #' construct knots: use quantiles
-    qnt_end <- 1 - sec_prop
 
-    quantile(v, probs = seq(sec_prop, qnt_end, sec_prop)) %>%
-        unique() # only use unique values after all
-}
+
+
 
 gen_res_velps <- function(cbn_dfs_rates) {
     if (as.character(match.call()[[1]]) %in% fstd){browser()}
@@ -525,40 +521,8 @@ gen_res_velps <- function(cbn_dfs_rates) {
                   mapping = aes(x=year, y=mean_tmitr),
                   linewidth = 3)
 
-    ## testing spline for density 
-    r_dens_sqrd <- glmmTMB(nbr_opened ~ pm_density_lag1 + pm_density_sqrd_lag1 +
-                               offset(log(SP_POP_TOTLm_lag0_uscld)) + (1 | iso3c), cbn_dfs_rates$cbn_all)
-
-
-    knts_spline <- gen_knts(cbn_dfs_rates$cbn_all$pm_density_lag1, 0.2)
-
-    knts_spline <- quantile(cbn_dfs_rates$cbn_all$pm_density_lag1, probs = seq(0.2, 0.8, 0.2))
-
     
-    r_dens_spline <- glmmTMB(nbr_opened ~ bs(pm_density_lag1, knots = knts_spline, degree = 3) +
-                                 offset(log(SP_POP_TOTLm_lag0_uscld)) + (1 | iso3c), cbn_dfs_rates$cbn_all)
 
-    compare_performance(r_dens_sqrd, r_dens_spline)
-    ## not much difference, splines little better
-
-    dt_pred_dens <- expand.grid(iso3c = "ZAF",
-                                pm_density_lag1 = seq(min(cbn_dfs_rates$cbn_all$pm_density_lag1),
-                                                      max(cbn_dfs_rates$cbn_all$pm_density_lag1), 0.1),
-                                SP_POP_TOTLm_lag0_uscld = c(1,5,10,50)) %>% adt() %>%
-        .[, pm_density_sqrd_lag1 := pm_density_lag1^2]
-                                
-    dt_pred_dens$pred_spline <- predict(r_dens_spline, dt_pred_dens)
-    dt_pred_dens$pred_sqrd <- predict(r_dens_sqrd, dt_pred_dens)
-
-    dt_pred_dens %>% copy() %>% .[, pm_density_sqrd_lag1 := NULL] %>% # yeet sqrd (not needed)
-        melt(id.vars = c("iso3c", "pm_density_lag1", "SP_POP_TOTLm_lag0_uscld")) %>%
-        ggplot(aes(x=pm_density_lag1, y = exp(value), group = interaction(variable, SP_POP_TOTLm_lag0_uscld),
-                   color = variable, linetype = factor(SP_POP_TOTLm_lag0_uscld))) +
-        geom_line()
-                          
-    
-    ggplot(dt_pred_dens, aes(x=pm_density_lag1, y = pred_spline, color = factor(SP_POP_TOTLm_lag0_uscld))) +
-        geom_line()
 
 
 predict(r_dens_sqrd, cbn_dfs_rates$cbn_all)
