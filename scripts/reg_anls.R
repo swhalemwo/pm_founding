@@ -349,7 +349,240 @@ gen_plt_oucoefchng <- function(dt_oucoefchng) {
 ## gen_plt_oucoefchng(reg_anls_base$ou_objs, reg_res_objs$df_anls_base)
 
 
+gen_knts <- function(v, sec_prop) {
+    #' construct knots: use quantiles
+    qnt_end <- 1 - sec_prop
 
+    quantile(v, probs = seq(sec_prop, qnt_end, sec_prop)) %>%
+        unique() # only use unique values after all
+}
+
+gen_res_velps <- function(cbn_dfs_rates) {
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
+    1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;
+
+    dfx <- cbn_dfs_rates$cbn_all
+
+    r_smorc <- glmmTMB(smorc_dollar_fxm_lag0 ~ year + (1 | iso3c), dfx)
+    
+    r_rs_smorc <- glmmTMB(smorc_dollar_fxm_lag0 ~ year + ( year | iso3c), dfx)
+    
+    r_tmitr <- glmmTMB(tmitr_approx_linear20step_lag0 ~ year + (1 | iso3c), dfx)
+    ## summary(
+        
+    summary(r_rs_smorc)
+    summary(r_tmitr)
+
+    
+    stargazer(r_smorc)
+    library(huxtable)
+    huxreg(r_smorc)
+    
+    fixef(r_smorc)
+
+    summary(r_smorc) %>% coef() %>% .[["cond"]] %>% adt()
+
+    summary(r_rs_smorc) %>% coef() %>% chuck("cond") %>% adt(keep.rownames = "vrbl")
+    ## %$% createTexreg(coef.names = vrbl, coef = Estimate, se = `Std. Error`, pvalues = `Pr(>|z|)`) %>%
+    ##     screenreg()
+    get_r_gof(r_rs_smorc, summary(r_rs_smorc))
+    get_r_gof(r_smorc, summary(r_smorc))
+
+    
+
+
+    ## dfx %>% adt() %>%
+    ##     .[, .(iso3c, year, tmitr = tmitr_approx_linear20step_lag0, shweal992j_p90p100_lag0)] %>% 
+    ##     ## .[, .(imap(.SD, ~list(paste0(.y, "asdf") = .x))), iso3c]
+    ##     ## .[, .(lapply(.SD, \(x) setNames(x, sample(letters, 1))))]
+    ##     ## .[, .(map(.SD, ~.x + 1)), .SDcols = c("year", "tmitr")]
+    ##     ## .[, map(.SD, ~sum(is.na(.x)))] # werks 
+    ##     ## .[, lapply(.SD, \(x) sum(is.na(x)))] # werks
+    ##     ## .[, imap(.SD, ~.x)] # werks
+    ##     ## .[, c(imap(.SD, ~setNames(.x, paste0(names(.x), "_lul"))))] # renaming doesn't seem to work well
+    ##     .[, c(imap(.SD, ~c("dd" = .x, "kk" = .x)))]
+                  
+    ## with melting
+    dtx_wintwn <- dfx %>% adt() %>%
+        .[, .(iso3c, year, year_vlu = year, tmitr = tmitr_approx_linear20step_lag0, shweal992j_p90p100_lag0)] %>%
+        melt(id.vars = c("iso3c", "year")) %>%
+        .[, between := mean(value), .(iso3c, variable)] %>%
+        .[, within := value - between] %>%
+        melt(id.vars = c("iso3c", "variable", "year"), variable.name = "form") %>%
+        dcast.data.table(iso3c + year ~ variable + form)
+        
+
+
+        dcast.data.table(iso3c ~ variable, value.var = "within")
+
+    
+    ## .[, year_between := mean(year), iso3c] %>%
+        ## .[, year_within := year - year_between]
+
+        ## .[, tmitr_crymean := mean(tmitr), iso3c] %>%
+        ## .[, tmitr_crywin := tmitr - tmitr_crymean]
+
+    ## single FE? compare with plm: seems pretty much the same
+    r_tmitr_win <- glmmTMB(tmitr ~ year_crywin + (1 | iso3c), dtx)
+    sumry(r_tmitr_win) %>% coef() %>% chuck("cond")
+    
+    r_tmitr_plm <- plm(tmitr ~ year, dtx, model = "within", index = "iso3c")
+    sumry(r_tmitr_plm)
+    
+    ## what happens if I don't add random intercept?
+    r_tmitr_win2 <- glmmTMB(tmitr ~ year_within, dtx)
+    sumry(r_tmitr_win2) %>% coef() %>% chuck("cond")
+          
+
+    ## within-between decomposition
+    r_tmitr_wintwn <- glmmTMB(tmitr ~ year_within + year_between + (1 | iso3c), dtx)
+    r_tmitr_wintwn2 <- glmmTMB(tmitr ~ year_within + year_between + (1 + year_within | iso3c), dtx)
+    sumry(r_tmitr_wintwn)
+    sumry(r_tmitr_wintwn2)
+
+    ## next section: pure FE: need same FE coefs
+    ## 1. zero intercept 
+    r_tmitr_wintwn3 <- glmmTMB(tmitr_value ~ 0 + year_vlu_within + iso3c, dtx_wintwn)
+    sumry(r_tmitr_wintwn3) %>% coef() %>% chuck("cond") %>% adt(keep.rownames = "vrbl")
+    
+    ## 2. demeanded response 
+    r_tmitr_wintwn4 <- glmmTMB(tmitr_within ~ year_vlu_within + iso3c, dtx_wintwn)
+    sumry(r_tmitr_wintwn4) %>% coef() %>% chuck("cond") %>% adt(keep.rownames = "vrbl")
+
+    ## yup indeed the same
+
+    ## on to mixed model
+    r_tmitr_mixed <- glmmTMB(tmitr_value ~ year_vlu_within + year_vlu_between + (1 | iso3c), dtx_wintwn)
+    sumry(r_tmitr_mixed) %>% coef() %>% chuck("cond") %>% adt(keep.rownames = "vrbl")
+    ## within effect is still the same, noice
+    ## has slightly lower z tho 
+
+    ## dtx_wintwn[, .N, year_vlu_between]
+    ## compare with random effects model
+    r_tmitr_random <- glmmTMB(tmitr_value ~ year_vlu_value + (1 | iso3c), dtx_wintwn)
+    sumry(r_tmitr_random)
+    ## huh coef is pretty much the same..
+    ## hmm between coef is basically 0 so maybe not surprising
+
+    ## what does between mean substantially anyways? 
+    ## countries with higher mean year (later coverage) don't have higher/lower mean tmitrs
+    ## than those with lower mean year (only early years or entier period)
+    ## curious: there kinda should be, since there's a period effect?
+    ## maybe it's not after controlling for within-chnage?
+
+    model_performance(r_tmitr_mixed)
+    check_model(r_tmitr_mixed)
+
+    ## splines
+    knts <- quantile(dtx_wintwn$year_vlu_value, probs = seq(0.1, 0.9, 0.4))
+    knts <- quantile(dtx_wintwn$year_vlu_value, probs = seq(0.25, 0.75, 0.25))
+    
+    
+    r_tmitr_splines <- glmmTMB(tmitr_value ~ bs(year_vlu_value, knots = knts, degree = 1) +
+                                   (1 | iso3c), dtx_wintwn)
+
+    sumry(r_tmitr_splines) %>% coef()
+    
+    ## random slopes LUL
+    r_tmitr_splines_rs <- glmmTMB(tmitr_value ~ bs(year_vlu_value, knots = knts, degree = 1) +
+                                   (year_vlu_value | iso3c), dtx_wintwn)
+    
+    sumry(r_tmitr_splines_rs)
+
+    ## splines2: needs degree = 0 to get linear estimation
+    r_tmitr_splines2 <- glmmTMB(tmitr_value ~ ibs(year_vlu_value, knots = knts, degree = 0) +
+                                   (1 | iso3c), dtx_wintwn)
+    sumry(r_tmitr_splines2) %>% coef()
+
+    
+
+    dt_pred <- expand.grid(year_vlu_value = min(dtx_wintwn$year_vlu_value):max(dtx_wintwn$year_vlu_value),
+                           ## iso3c = c("DEU", "USA", "CHN", "overall", "CHL", "JPN", "ZAF", "SVN")) %>%
+                           iso3c = c("overall", sample(unique(dtx_wintwn$iso3c), 8))) %>% 
+        adt()
+        
+    dt_pred$pred <- predict(r_tmitr_splines, dt_pred)# , se.fit = T)
+    dt_pred$pred2 <- predict(r_tmitr_splines2, dt_pred)# , se.fit = T)
+    dt_pred$predrs <- predict(r_tmitr_splines_rs, dt_pred)# , se.fit = T)
+
+    dt_pred %>% melt(id.vars = c("year_vlu_value", "iso3c")) %>% 
+        ggplot(aes(x=year_vlu_value, y = value, color = iso3c)) +
+        geom_line() +
+        facet_grid(~variable)
+    
+    model_parameters(r_tmitr_splines)
+    
+    compare_performance(r_tmitr_splines, r_tmitr_splines2, r_tmitr_splines_rs)
+    compare_models(r_tmitr_splines, r_tmitr_splines2, r_tmitr_splines_rs)
+
+    
+
+    ## plotting spaghetti
+    ggplot() +
+        ## geom_smooth() + 
+        geom_line(dtx, mapping = aes(x=year, y = tmitr, group = iso3c), alpha = 0.5) +
+        geom_line(dtx[, .(mean_tmitr = mean(tmitr)), year],
+                  mapping = aes(x=year, y=mean_tmitr),
+                  linewidth = 3)
+
+    ## testing spline for density 
+    r_dens_sqrd <- glmmTMB(nbr_opened ~ pm_density_lag1 + pm_density_sqrd_lag1 +
+                               offset(log(SP_POP_TOTLm_lag0_uscld)) + (1 | iso3c), cbn_dfs_rates$cbn_all)
+
+
+    knts_spline <- gen_knts(cbn_dfs_rates$cbn_all$pm_density_lag1, 0.2)
+
+    knts_spline <- quantile(cbn_dfs_rates$cbn_all$pm_density_lag1, probs = seq(0.2, 0.8, 0.2))
+
+    
+    r_dens_spline <- glmmTMB(nbr_opened ~ bs(pm_density_lag1, knots = knts_spline, degree = 3) +
+                                 offset(log(SP_POP_TOTLm_lag0_uscld)) + (1 | iso3c), cbn_dfs_rates$cbn_all)
+
+    compare_performance(r_dens_sqrd, r_dens_spline)
+    ## not much difference, splines little better
+
+    dt_pred_dens <- expand.grid(iso3c = "ZAF",
+                                pm_density_lag1 = seq(min(cbn_dfs_rates$cbn_all$pm_density_lag1),
+                                                      max(cbn_dfs_rates$cbn_all$pm_density_lag1), 0.1),
+                                SP_POP_TOTLm_lag0_uscld = c(1,5,10,50)) %>% adt() %>%
+        .[, pm_density_sqrd_lag1 := pm_density_lag1^2]
+                                
+    dt_pred_dens$pred_spline <- predict(r_dens_spline, dt_pred_dens)
+    dt_pred_dens$pred_sqrd <- predict(r_dens_sqrd, dt_pred_dens)
+
+    dt_pred_dens %>% copy() %>% .[, pm_density_sqrd_lag1 := NULL] %>% # yeet sqrd (not needed)
+        melt(id.vars = c("iso3c", "pm_density_lag1", "SP_POP_TOTLm_lag0_uscld")) %>%
+        ggplot(aes(x=pm_density_lag1, y = exp(value), group = interaction(variable, SP_POP_TOTLm_lag0_uscld),
+                   color = variable, linetype = factor(SP_POP_TOTLm_lag0_uscld))) +
+        geom_line()
+                          
+    
+    ggplot(dt_pred_dens, aes(x=pm_density_lag1, y = pred_spline, color = factor(SP_POP_TOTLm_lag0_uscld))) +
+        geom_line()
+
+
+predict(r_dens_sqrd, cbn_dfs_rates$cbn_all)
+
+
+
+    ## check that my demeaning approach is the same as datawizard
+    dtx_dmeand <- cbind(
+        adt(dfx)[, .(iso3c, year, tmitr = tmitr_approx_linear20step_lag0)],
+        datawizard::demean(adt(dfx)[, .(iso3c, year, tmitr = tmitr_approx_linear20step_lag0)],
+                           select = "year", group = "iso3c"))
+
+    rbind(dtx[, .(iso3c, year, year_between, year_within, source = "manual")],
+          dtx_dmeand[, .(iso3c, year, year_between, year_within, source = "wizard")]) %>%
+        melt(id.vars = c("iso3c", "year", "source")) %>%
+        dcast.data.table(year + iso3c + variable ~ source) %>%
+        .[, diff := manual - wizard] %>%
+        .[, .N, diff]
+    ## looks good
+
+
+}
+
+gen_res_velps(cbn_dfs_rates)
 
 construct_df_anls_within_prep <- function(df_anls_base, optmzd) {
     if (as.character(match.call()[[1]]) %in% fstd){browser()}
