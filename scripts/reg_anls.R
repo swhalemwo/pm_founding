@@ -407,10 +407,6 @@ gen_res_velps <- function(cbn_dfs_rates) {
         melt(id.vars = c("iso3c", "variable", "year"), variable.name = "form") %>%
         dcast.data.table(iso3c + year ~ variable + form)
         
-
-
-        dcast.data.table(iso3c ~ variable, value.var = "within")
-
     
     ## .[, year_between := mean(year), iso3c] %>%
         ## .[, year_within := year - year_between]
@@ -521,12 +517,6 @@ gen_res_velps <- function(cbn_dfs_rates) {
                   mapping = aes(x=year, y=mean_tmitr),
                   linewidth = 3)
 
-    
-
-
-
-predict(r_dens_sqrd, cbn_dfs_rates$cbn_all)
-
 
 
     ## check that my demeaning approach is the same as datawizard
@@ -542,6 +532,102 @@ predict(r_dens_sqrd, cbn_dfs_rates$cbn_all)
         .[, diff := manual - wizard] %>%
         .[, .N, diff]
     ## looks good
+
+
+    ## within/between for actual analysis
+
+    dtx_dcpsd <- dfx %>% copy() %>% adt() %>% 
+        melt(id.vars = c("iso3c", "year")) %>%
+        .[, between := mean(value), .(iso3c, variable)] %>%
+        .[, within := value - between] %>%
+        melt(id.vars = c("iso3c", "variable", "year"), variable.name = "form") %>%
+        dcast.data.table(iso3c + year ~ variable + form)
+
+    r_dcpsd1 <- glmmTMB(nbr_opened_value ~ NY.GDP.PCAP.CDk_lag1_within + NY.GDP.PCAP.CDk_lag1_between +
+                            hnwi_nbr_30M_lag1_within + hnwi_nbr_30M_lag1_between + (1 | iso3c) +
+                            offset(log(SP_POP_TOTLm_lag0_uscld_value)),
+                        family = nbinom2, dtx_dcpsd)
+    sumry(r_dcpsd1)
+
+    r_dcpsd2 <- glmmTMB(nbr_opened_value ~ NY.GDP.PCAP.CDk_lag1_within + NY.GDP.PCAP.CDk_lag1_between +
+                            hnwi_nbr_30M_lag1_within + hnwi_nbr_30M_lag1_between + (1 | iso3c) +
+                            offset(log(SP_POP_TOTLm_lag0_uscld)),
+                        family = nbinom2, dtx_dcpsd)
+    
+    dtx_dcpsd[, .SD, .SDcols = c("iso3c", "year", keep(names(dtx_dcpsd), ~grepl("SP_POP", .x)))] %>%
+        summary()
+    
+
+
+    r_orig <- glmmTMB(nbr_opened_value ~ NY.GDP.PCAP.CDk_lag1_value + hnwi_nbr_30M_lag1_value + (1 | iso3c) +
+                          offset(log(SP_POP_TOTLm_lag0_uscld_value)),
+                      family = nbinom2, dtx_dcpsd)
+
+    sumry(r_orig)
+
+    r_fe <- glmmTMB(nbr_opened_value ~ NY.GDP.PCAP.CDk_lag1_within + hnwi_nbr_30M_lag1_within + (1 | iso3c) +
+                          offset(log(SP_POP_TOTLm_lag0_uscld_value)),
+                      family = nbinom2, dtx_dcpsd)
+
+    compare_models(r_dcpsd1, r_fe, r_orig)
+    compare_performance(r_dcpsd1, r_fe, r_orig)
+
+
+    set.seed(123)
+    n <- 5
+    b <- seq(1, 1.5, length.out = 5)
+    x <- seq(2, 2 * n, 2)
+
+    d <- do.call(rbind, lapply(1:n, function(i) {
+        data.frame(
+            x = seq(1, n, by = 0.2),
+            y = 2 * x[i] + b[i] * seq(1, n, by = 0.2) + rnorm(21),
+            grp = as.factor(2 * i)
+        )
+    }))
+
+    d <- d %>%
+        group_by(grp) %>%
+        mutate(x = rev(15 - (x + 1.5 * as.numeric(grp)))) %>%
+        ungroup()
+
+    labs <- c("very slow", "slow", "average", "fast", "very fast")
+    levels(d$grp) <- rev(labs)
+
+    d <- cbind(d, datawizard::demean(d, c("x", "y"), group = "grp")) %>% adt()
+
+    ## ggplot(d, aes(x=x, y=y)) + geom_point()
+    
+    rt1 <- glmmTMB(y ~ x_between + x_within + (1 | grp), d)
+
+    ## convert y to count, some pretty random population
+    d2 <- d %>% copy() %>% .[, y := as.integer(y)] %>%
+        .[, pop := sample(1e5:1e6,1), grp] %>%
+        .[, intx := 1:.N] %>% 
+        .[, pop := pop*runif(1, 0.1, 10), intx] %>% 
+        ## .[, pop := as.integer(grp)] %>%
+        .[, y_adj := as.integer(pop * y)] %>%
+        .[, pop_mean := mean(pop), grp]
+
+    ggplot(d2, aes(x=x, y =y_adj, color = grp)) + geom_point()
+
+    ## goal is to get same coefs with original and population adjusted data
+    ggplot(d2, aes(x=x, y =y)) + geom_point()
+
+    ## basic NB model with orignal data
+    r_nb1 <- glmmTMB(y ~ x_between + x_within + (1 | grp), d2, family = nbinom2)
+    ## offseted
+    r_nb2 <- glmmTMB(y_adj ~ x_between + x_within + (1 | grp) + offset(log(pop)), d2, family = nbinom2)
+    ## offseted also with between pop? leads to changed coef
+    r_nb3 <- glmmTMB(y_adj ~ x_between + x_within + (1 | grp) + offset(log(pop)) + offset(log(pop_mean)),
+                     d2, family = nbinom2)
+    ## only between offset
+    r_nb4 <- glmmTMB(y_adj ~ x_between + x_within + (1 | grp) + offset(log(pop_mean)),
+                   d2, family = nbinom2)
+    
+    compare_models(r_nb1, r_nb2, r_nb3, r_nb4)
+
+    
 
 
 }
