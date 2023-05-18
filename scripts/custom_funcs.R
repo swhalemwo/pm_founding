@@ -902,3 +902,4 @@ color_stretcher <- function(col_vec, midpt, minpt, maxpt, stretch, sharp_edge) {
     
     return(col_vec_cbnd)
 }
+sumry <- summary
