@@ -1134,7 +1134,7 @@ explr_within_between_decomposition <- function(cbn_dfs_rates) {
     ## between: always same as original variables: for cross-sectional, mean(variable) = var
     ## within: not always value (but always 0)
         
-        
+    
     
     dfx2 <- cbn_dfs_rates$cbn_no_cult_spending
     vrbls <- setdiff(names(dfx2), "iso3c")
@@ -1204,6 +1204,34 @@ explr_within_between_decomposition <- function(cbn_dfs_rates) {
         geom_line() +
         geom_ribbon(mapping = aes(ymin = lo, ymax = hi), alpha = 0.2) + 
         facet_grid(~src)
+
+
+    ## try overall model: manually add all variables, use lag 1
+    r_xx6 <- glmmTMB(nbr_opened ~ Ind.tax.incentives*tmitr_approx_linear20step_lag1_within +
+                Ind.tax.incentives*tmitr_approx_linear20step_lag1_between +
+                smorc_dollar_fxm_lag1_within + I(smorc_dollar_fxm_lag1_within^2) +
+                smorc_dollar_fxm_lag1_between + I(smorc_dollar_fxm_lag1_between^2) +
+                sptinc992j_p99p100_lag1_within + sptinc992j_p99p100_lag1_between +
+                shweal992j_p99p100_lag1_within + shweal992j_p99p100_lag1_between +
+                hnwi_nbr_5M_lag1_within + hnwi_nbr_5M_lag1_between +
+                NY.GDP.PCAP.CDk_lag1_within + NY.GDP.PCAP.CDk_lag1_between +
+                pm_density_lag1_within + I(pm_density_lag1_within^2) +
+                pm_density_lag1_between + I(pm_density_lag1_between^2) +
+                pm_density_global_lag1 + I(pm_density_global_lag1^2) +
+                clctr_cnt_cpaer_lag1_within + clctr_cnt_cpaer_lag1_between +
+                cnt_contemp_1990 + cnt_contemp_1990_sqrd +
+                nbr_closed_cum_global_lag1 + 
+                (1 | iso3c) + offset(log(SP_POP_TOTLm_lag0_uscld)),
+            family = nbinom2, dtx_dmnd)
+
+    compare_models(r_xx4, r_xx5, r_xx6, select = "{estimate}{stars} ({se}, {p})")
+
+    ## 
+    dtx_dmnd %>% copy() %>% .[, .SD, .SDcols = c("iso3c", "year", "pm_density_global_lag1",
+                                                 "pm_density_global_lag1_within", "pm_density_global_lag1_between")]
+
+    dtx_dmnd[, .N, pm_density_global_lag1_between]
+            
         
     
     
