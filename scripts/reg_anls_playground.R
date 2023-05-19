@@ -950,3 +950,158 @@ test_splines <- function(cbn_dfs_rates) {
         geom_line()
 
 }
+
+explr_within_between_decomposition <- function(cbn_dfs_rates) {
+    ## within/between for actual analysis
+    dfx <- cbn_dfs_rates$cbn_all
+
+
+    dtx_dcpsd <- dfx %>% copy() %>% adt() %>% 
+        melt(id.vars = c("iso3c", "year")) %>%
+        .[, between := mean(value), .(iso3c, variable)] %>%
+        .[, within := value - between] %>%
+        melt(id.vars = c("iso3c", "variable", "year"), variable.name = "form") %>%
+        dcast.data.table(iso3c + year ~ variable + form)
+
+    r_dcpsd1 <- glmmTMB(nbr_opened_value ~ NY.GDP.PCAP.CDk_lag1_within + NY.GDP.PCAP.CDk_lag1_between +
+                            hnwi_nbr_30M_lag1_within + hnwi_nbr_30M_lag1_between + (1 | iso3c) +
+                            offset(log(SP_POP_TOTLm_lag0_uscld_value)),
+                        family = nbinom2, dtx_dcpsd)
+    sumry(r_dcpsd1)
+
+    r_dcpsd2 <- glmmTMB(nbr_opened_value ~ NY.GDP.PCAP.CDk_lag1_within + NY.GDP.PCAP.CDk_lag1_between +
+                            hnwi_nbr_30M_lag1_within + hnwi_nbr_30M_lag1_between + (1 | iso3c) +
+                            offset(log(SP_POP_TOTLm_lag0_uscld)),
+                        family = nbinom2, dtx_dcpsd)
+    
+    dtx_dcpsd[, .SD, .SDcols = c("iso3c", "year", keep(names(dtx_dcpsd), ~grepl("SP_POP", .x)))] %>%
+        summary()
+    
+
+
+    r_orig <- glmmTMB(nbr_opened_value ~ NY.GDP.PCAP.CDk_lag1_value + hnwi_nbr_30M_lag1_value + (1 | iso3c) +
+                          offset(log(SP_POP_TOTLm_lag0_uscld_value)),
+                      family = nbinom2, dtx_dcpsd)
+
+    sumry(r_orig)
+
+    r_fe <- glmmTMB(nbr_opened_value ~ NY.GDP.PCAP.CDk_lag1_within + hnwi_nbr_30M_lag1_within + (1 | iso3c) +
+                          offset(log(SP_POP_TOTLm_lag0_uscld_value)),
+                      family = nbinom2, dtx_dcpsd)
+
+    compare_models(r_dcpsd1, r_fe, r_orig)
+    compare_performance(r_dcpsd1, r_fe, r_orig)
+
+
+    set.seed(123)
+    n <- 5
+    b <- seq(1, 1.5, length.out = 5)
+    x <- seq(2, 2 * n, 2)
+
+    d <- do.call(rbind, lapply(1:n, function(i) {
+        data.frame(
+            x = seq(1, n, by = 0.2),
+            y = 2 * x[i] + b[i] * seq(1, n, by = 0.2) + rnorm(21),
+            grp = as.factor(2 * i)
+        )
+    }))
+
+    d <- d %>%
+        group_by(grp) %>%
+        mutate(x = rev(15 - (x + 1.5 * as.numeric(grp)))) %>%
+        ungroup()
+
+    labs <- c("very slow", "slow", "average", "fast", "very fast")
+    levels(d$grp) <- rev(labs)
+
+    d <- cbind(d, datawizard::demean(d, c("x", "y"), group = "grp")) %>% adt()
+
+    ggplot(d, aes(x=x, y=y)) + geom_point()
+    
+    rt1 <- glmmTMB(y ~ x_between + x_within + (1 | grp), d)
+
+    ## convert y to count, some pretty random population
+    d2 <- d %>% copy() %>% .[, y := as.integer(y)] %>%
+        .[, pop := sample(1e5:1e6,1), grp] %>%
+        .[, intx := 1:.N] %>% 
+        .[, pop := pop*runif(1, 0.1, 10), intx] %>% 
+        ## .[, pop := as.integer(grp)] %>%
+        .[, y_adj := as.integer(pop * y)] %>% # to integer
+        .[, pop_mean := mean(pop), grp] %>%
+        .[, `:=`(y_sqrd = y^2, x_sqrd = x^2)]
+
+    ggplot(d2, aes(x=x, y =y_adj, color = grp)) + geom_point()
+
+    ## goal is to get same coefs with original and population adjusted data
+    ggplot(d2, aes(x=x, y =y)) + geom_point()
+
+    ## basic NB model with orignal data
+    r_nb1 <- glmmTMB(y ~ x_between + x_within + (1 | grp), d2, family = nbinom2)
+    ## offseted
+    r_nb2 <- glmmTMB(y_adj ~ x_between + x_within + (1 | grp) + offset(log(pop)), d2, family = nbinom2)
+    ## offseted also with between pop? leads to changed coef
+    r_nb3 <- glmmTMB(y_adj ~ x_between + x_within + (1 | grp) + offset(log(pop)) + offset(log(pop_mean)),
+                     d2, family = nbinom2)
+    ## only between offset
+    r_nb4 <- glmmTMB(y_adj ~ x_between + x_within + (1 | grp) + offset(log(pop_mean)),
+                   d2, family = nbinom2)
+    
+    compare_models(r_nb1, r_nb2, r_nb3, r_nb4)
+
+
+    ## check HNWI skew: there are especially some outliers on 30M for some reason
+    dfx %>% adt() %>% .[, .SD, .SDcols = keep(names(.), ~grepl("hnwi", .x))] %>%
+        .[, map(.SD, max)] %>% melt() %>% 
+        .[, thld := str_extract(variable, "[0-9]+")] %>% print(n=200) %>%
+        ggplot(aes(x=thld, y=value, grp = thld)) + geom_col(position = position_dodge2())
+
+
+    ## check squares/interactions
+    ggplot(d2, aes(x=x, y=y_sqrd)) + geom_point()
+
+    ## melt(id.vars = c("iso3c", "year")) %>%
+    ##     .[, between := mean(value), .(iso3c, variable)] %>%
+    ##     .[, within := value - between] %>%
+    ##     melt(id.vars = c("iso3c", "variable", "year"), variable.name = "form") %>%
+    ## dcast.data.table(iso3c + year ~ variable + form)
+
+
+    d3 <- data.table(grp = seq(4,20, by = 2)) %>% # set starting points
+        .[, `:=`(xmin = grp - 4, xmax = grp + 4)] %>% # set edge points
+        .[, .(x = seq(xmin, xmax)), grp] %>% # expand x-range
+        .[, y := -(x^2) + 2*grp*x + (10-grp)*20 + runif(.N, -2, 2)] %>% # awkward square calculation + noise
+        .[, xx := x] %>% 
+        melt(id.vars = c("grp", "xx")) %>% 
+        .[, between := mean(value), .(grp, variable)] %>%
+        .[, within := value - between] %>%
+        melt(id.vars = c("grp", "variable", "xx"), variable.name = "form") %>% ## 
+    ## d3 %>% copy() %>%
+    ##     .[, grp := factor(letters[grp])] %>% # unique() %>% 
+        dcast.data.table(grp + xx ~ variable + form)
+    ggplot(d3, aes(x=x_value, y=y_value, color = factor(grp))) + geom_line()
+    
+    # linear model: within effect insignificant
+    r_sq1 <- glmmTMB(y_value ~ x_within + x_between + (1 | grp), d3)
+    ## model_parameters(r_sq1)
+
+    r_sq2 <- glmmTMB(y_value ~ x_within + I(x_within^2) + x_between + (1 | grp), d3)
+
+    ## comparing linear coefs for the different lines
+    map_dfr(unique(d3$grp), ~lm(y_value ~ x_value + I(x_value^2), d3[grp==.x]) %>% summary() %>% coef() %>%
+                            adt(keep.rownames = "vrbl") %>% .[, .(vrbl, Estimate, grp = .x)])
+    # linear coef is slope at x=0
+
+    ## also add between squared
+    r_sq3 <- glmmTMB(y_value ~ x_within + I(x_within^2) + x_between + I(x_between^2) + (1 | grp),d3)
+
+    ## only between
+    r_sq4 <- glmmTMB(y_value ~ x_between + I(x_between^2) + (1 | grp), d3)
+
+    compare_models(r_sq1, r_sq2, r_sq3, r_sq4)
+
+    ## ggplot(d3, aes(x=x_within, y=y_value, color = factor(grp))) + geom_line()
+
+    data.table(x=seq(0,12, by = 0.2)) %>%
+        .[, y := -18.9 * x + 0.9*x^2] %>%
+        ggplot(aes(x=x, y=y)) + geom_line()
+}
