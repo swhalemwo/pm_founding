@@ -952,9 +952,11 @@ test_splines <- function(cbn_dfs_rates) {
 }
 
 explr_within_between_decomposition <- function(cbn_dfs_rates) {
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
+    
     ## within/between for actual analysis
     dfx <- cbn_dfs_rates$cbn_all
-
+    
 
     dtx_dcpsd <- dfx %>% copy() %>% adt() %>% 
         melt(id.vars = c("iso3c", "year")) %>%
@@ -1101,7 +1103,177 @@ explr_within_between_decomposition <- function(cbn_dfs_rates) {
 
     ## ggplot(d3, aes(x=x_within, y=y_value, color = factor(grp))) + geom_line()
 
-    data.table(x=seq(0,12, by = 0.2)) %>%
+    ## plot between non-linear relationship
+    data.table(x=seq(0,20, by = 0.2)) %>%
         .[, y := -18.9 * x + 0.9*x^2] %>%
         ggplot(aes(x=x, y=y)) + geom_line()
+
+    ## try interactions with actual data: txdctblt and tmitr
+
+    ## first improve .SD handling for demeaning etc
+
+    ## separate within and between calcs: works good enough
+    ## vrbls <- c("x", "j")
+    ## dtt %>% copy() %>% .[, paste0(vrbls, "_between") := map(.SD, mean), id, .SDcols = vrbls] %>%
+    ##     .[, paste0(vrbls, "_within") := map(.SD, ~.x - mean(.x)), id, .SDcols = vrbls]
+
+    ## for now use manual specified interactions
+
+    vrbls <- setdiff(names(dfx), "iso3c")
+    dtx_dmnd <- adt(dfx) %>% .[, paste0(vrbls, "_between") := map(.SD, mean), iso3c, .SDcols = vrbls] %>%
+        .[, paste0(vrbls, "_within") := map(.SD, ~.x - mean(.x)), iso3c, .SDcols = vrbls]
+
+    
+    ## check value for cross-sectional variables: 
+    dtx_dmnd[, .SD, .SDcols = keep(names(dtx_dmnd), ~grepl("Ind.tax.incentives", .x))] %>% copy() %>% 
+        .[, `:=`(check_between = (Ind.tax.incentives == Ind.tax.incentives_between),
+                 check_within = (Ind.tax.incentives == Ind.tax.incentives_within))]
+        ## .[, .N, Ind.tax.incentives_within] # within of cross-sectional always 0
+        ## .[, summary(.SD), .SDcols = keep(names(.), ~grepl("check", .x))]
+        
+    ## between: always same as original variables: for cross-sectional, mean(variable) = var
+    ## within: not always value (but always 0)
+        
+        
+    
+    dfx2 <- cbn_dfs_rates$cbn_no_cult_spending
+    vrbls <- setdiff(names(dfx2), "iso3c")
+    dtx_dmnd2 <- adt(dfx2) %>% .[, paste0(vrbls, "_between") := map(.SD, mean), iso3c, .SDcols = vrbls] %>%
+        .[, paste0(vrbls, "_within") := map(.SD, ~.x - mean(.x)), iso3c, .SDcols = vrbls]
+
+    ## interaction test 1: base model 
+    r_xx1 <- glmmTMB(nbr_opened ~ Ind.tax.incentives + (1 | iso3c) + offset(log(SP_POP_TOTLm_lag0_uscld)),
+                     family = nbinom2, dtx_dmnd)
+
+    ## add TMITR overall 
+    r_xx2 <- glmmTMB(nbr_opened ~ Ind.tax.incentives + tmitr_approx_linear20step_lag1 + 
+                         (1 | iso3c) + offset(log(SP_POP_TOTLm_lag0_uscld)),
+                     family = nbinom2, dtx_dmnd)
+
+    ## differentiate tmtir into within/between
+    r_xx3 <- glmmTMB(nbr_opened ~ Ind.tax.incentives + tmitr_approx_linear20step_lag1_within +
+                         tmitr_approx_linear20step_lag1_between + 
+                         (1 | iso3c) + offset(log(SP_POP_TOTLm_lag0_uscld)),
+                     family = nbinom2, dtx_dmnd)
+
+    ## add interactions
+        
+    r_xx4 <- glmmTMB(nbr_opened ~ Ind.tax.incentives*tmitr_approx_linear20step_lag1_within +
+                         Ind.tax.incentives*tmitr_approx_linear20step_lag1_between + 
+                         (1 | iso3c) + offset(log(SP_POP_TOTLm_lag0_uscld)),
+                     family = nbinom2, dtx_dmnd)
+
+    ## add interactions: cbn2
+    r_xx5 <- glmmTMB(nbr_opened ~ Ind.tax.incentives*tmitr_approx_linear20step_lag1_within +
+                         Ind.tax.incentives*tmitr_approx_linear20step_lag1_between + 
+                         (1 | iso3c) + offset(log(SP_POP_TOTLm_lag0_uscld)),
+                     family = nbinom2, dtx_dmnd2)
+
+    compare_models(r_xx1, r_xx2, r_xx3, r_xx4, select = "{estimate}{stars}")
+    compare_models(r_xx4, r_xx5, select = "{estimate}{stars} ({se}, {p})")
+
+
+    ## how to easily generate all the dts to predict?
+    ## would be best if I could reuse some
+    ## dt_pred <-
+    l_to_expand <- list(iso3c = "lul", SP_POP_TOTLm_lag0_uscld = 100, Ind.tax.incentives = c(0,1))
+
+    
+    l_tpred_within <- list(tmitr_approx_linear20step_lag1_within = dtx_dmnd2 %>% copy() %>%
+                               .[, seq(min(tmitr_approx_linear20step_lag1_within),
+                                       max(tmitr_approx_linear20step_lag1_within), by = 0.3)]) %>%
+        c(l_to_expand, list(tmitr_approx_linear20step_lag1_between = 0))
+
+    dt_pred_tmitr_within <- do.call("expand.grid", l_tpred_within) %>% adt() %>% 
+        .[, c("pred", "se") := predict(r_xx5, newdata = . , se.fit = T, type = "link")] %>% 
+        .[, .(tmitr = tmitr_approx_linear20step_lag1_within, Ind.tax.incentives, pred, se, src = "within")]
+
+    
+    dt_pred_tmitr_between <- list(tmitr_approx_linear20step_lag1_between = dtx_dmnd2 %>% copy() %>%
+             .[, seq(min(tmitr_approx_linear20step_lag1_between),
+                     max(tmitr_approx_linear20step_lag1_between), by = 0.3)]) %>%
+        c(l_to_expand, list(tmitr_approx_linear20step_lag1_within = 0)) %>%
+        do.call("expand.grid", .) %>% adt() %>% 
+        .[, c("pred", "se") := predict(r_xx5,newdata = ., se.fit = T, type = "link")] %>%
+        .[, .(tmitr = tmitr_approx_linear20step_lag1_between, Ind.tax.incentives, pred, se, src = "between")]
+
+    rbind(dt_pred_tmitr_within, dt_pred_tmitr_between) %>%
+        .[, `:=`(hi = pred + se, lo = pred - se, Ind.tax.incentives = factor(Ind.tax.incentives))] %>%
+        ggplot(aes(x=tmitr, y=pred, color = Ind.tax.incentives, fill = Ind.tax.incentives)) +
+        ## geom_point() +
+        geom_line() +
+        geom_ribbon(mapping = aes(ymin = lo, ymax = hi), alpha = 0.2) + 
+        facet_grid(~src)
+        
+    
+    
+    
+    
+
+
+    
+
+    
+}
+
+explr_within_between_decomposition(cbn_dfs_rates)
+
+explr_dt_SD_handling <- function() {
+    fx <- function(x) {
+        if (as.character(match.call()[[1]]) %in% fstd){browser()}
+        1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;
+        list(y=x, z=x)}
+
+    ## test data
+    dtt <- data.table(id = c("a", "a", "b", "b"), x= c(1,2,3,4), j = c(5,6,7,8))
+ 
+    ## doesn't work 
+    dtt[, map(.SD, ~c(y=.x, z=.x)), id]
+
+    ## works with single column 
+    dtt[, fx(x), id] 
+    
+    ## but not with .SD
+    dtt[, map(.SD, fx), id]
+
+    ## even when only specifying one column
+    dtt[, map(.SD, fx), id, .SDcols = "x"]
+
+    ## kinda works with passing .SD entirely to fx: then renames columns into y.id, y.x, y.j
+    dtt[, fx(.SD)]
+    ## works with .SDcols
+    dtt[, fx(.SD), .SDcols = c("x", "j")]
+    
+    ## but not with by=id: All items in j=list(...) should be atomic vectors or lists
+    dtt[, fx(.SD), by=id, .SDcols = c("x", "j")]
+    dtt[, fx(.SD), by=id]
+    
+    ## do I need to group by something?
+    ## yeah would be nice to be able to group by country: return original, demeaned and between value
+    dtt[, map(.SD, ~sum(is.na(.x)))]
+
+    ## try again with map(.SD)
+    dtt[, map(.SD, ~list(m=.x, k=.x))]
+
+    ## unlist
+    dtt[, map(.SD, ~list(m=.x, k=.x)), id, .SDcols = c("x", "j")] %>%
+        .[1, x]
+        ## .[, map(.SD, unlist)]
+    ## idk even the names are just gone.. 
+
+    ## try some unlisting/splitting result of mapping call:
+    ## "All items in j=list(...) should be atomic vectors or lists"
+    ## -> maybe if I just create enough lists it'll work? 
+
+    dtt[, c(map(.SD, ~list(m=.x, k=.x))), id, .SDcols = c("x", "j")]
+
+    ## dtt %>% copy() %>% .[, oo := "oo"] %>% 
+    ##     split(by = "oo", flatten = T)
+    ## split:
+
+    ## separate within and between calcs: works good enough
+    vrbls <- c("x", "j")
+    dtt %>% copy() %>% .[, paste0(vrbls, "_between") := map(.SD, mean), id, .SDcols = vrbls] %>%
+        .[, paste0(vrbls, "_within") := map(.SD, ~.x - mean(.x)), id, .SDcols = vrbls]
+
 }
