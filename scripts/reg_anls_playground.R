@@ -1207,6 +1207,7 @@ explr_within_between_decomposition <- function(cbn_dfs_rates) {
 
 
     ## try overall model: manually add all variables, use lag 1
+    t1 <- Sys.time()
     r_xx6 <- glmmTMB(nbr_opened ~ Ind.tax.incentives*tmitr_approx_linear20step_lag1_within +
                 Ind.tax.incentives*tmitr_approx_linear20step_lag1_between +
                 smorc_dollar_fxm_lag1_within + I(smorc_dollar_fxm_lag1_within^2) +
@@ -1222,9 +1223,11 @@ explr_within_between_decomposition <- function(cbn_dfs_rates) {
                 cnt_contemp_1990 + cnt_contemp_1990_sqrd +
                 nbr_closed_cum_global_lag1 + 
                 (1 | iso3c) + offset(log(SP_POP_TOTLm_lag0_uscld)),
-            family = nbinom2, dtx_dmnd)
+                family = nbinom2, dtx_dmnd)
+    t2 <- Sys.time()
+    t2-t1
 
-    compare_models(r_xx4, r_xx5, r_xx6, select = "{estimate}{stars} ({se}, {p})")
+    compare_models(r_xx4, r_xx6, select = "{estimate}{stars} ({se}, {p})")
 
     ## 
     dtx_dmnd %>% copy() %>% .[, .SD, .SDcols = c("iso3c", "year", "pm_density_global_lag1",
@@ -1232,9 +1235,21 @@ explr_within_between_decomposition <- function(cbn_dfs_rates) {
 
     dtx_dmnd[, .N, pm_density_global_lag1_between]
             
-        
+    r_xx7 <- glmmTMB(nbr_opened ~ Ind.tax.incentives*tmitr_approx_linear20step_lag1 +
+                         smorc_dollar_fxm_lag1 + I(smorc_dollar_fxm_lag1^2) +
+                         sptinc992j_p99p100_lag1 + 
+                         shweal992j_p99p100_lag1 + 
+                         hnwi_nbr_5M_lag1 + 
+                         NY.GDP.PCAP.CDk_lag1 + 
+                         pm_density_lag1 + I(pm_density_lag1^2) +
+                         pm_density_global_lag1 + I(pm_density_global_lag1^2) +
+                         clctr_cnt_cpaer_lag1  + 
+                         cnt_contemp_1990 + cnt_contemp_1990_sqrd +
+                         nbr_closed_cum_global_lag1 + 
+                         (1 | iso3c) + offset(log(SP_POP_TOTLm_lag0_uscld)),
+                     family = nbinom2, dtx_dmnd)
     
-    
+    compare_models(r_xx6, r_xx7, select = "{estimate}{stars} ({se}, {p})")
     
     
 
