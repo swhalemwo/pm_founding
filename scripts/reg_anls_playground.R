@@ -1261,6 +1261,137 @@ explr_within_between_decomposition <- function(cbn_dfs_rates) {
 
 explr_within_between_decomposition(cbn_dfs_rates)
 
+explr_cntrfctl <- function(cbn_dfs_rates) {
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
+    1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;
+
+    dtx <- adt(cbn_dfs_rates$cbn_all)[, .(iso3c, year, pm_density_lag1, pm_density_sqrd_lag1, nbr_opened,
+                                          NY.GDP.PCAP.CDk_lag1, SP_POP_TOTLm_lag0_uscld)]
+
+    r1 <- glmmTMB(nbr_opened ~ pm_density_lag1 + pm_density_sqrd_lag1 + NY.GDP.PCAP.CDk_lag1 + 
+                      (1 | iso3c) + offset(log(SP_POP_TOTLm_lag0_uscld)), dtx, family = nbinom2)
+
+    dtx$pred_r1 <- exp(predict(r1, dtx))
+    
+    ## ranef(r1) %>% adt() %>% ggplot(aes(x=condval, y=grp)) + geom_col()
+    ## fixef(r1)
+
+    
+    ## model 2 with DV pm_density_lag0
+    ## r2 <- glmmTMB(pm_density_lag0 ~ pm_density_lag1 + pm_density_sqrd_lag1 + NY.GDP.PCAP.CDk_lag1 +
+    ##                   (1 | iso3c), dtx)
+
+    ## dtx$pred_r2 <- predict(r2, dtx)
+    
+    ## gdp stays constant, not yet feedback into density
+    dtx_consgdp <- copy(dtx) %>%
+        .[, year_id := 1:.N, iso3c] %>% # set up year_ids, 
+        .[year_id != 1, NY.GDP.PCAP.CDk_lag1 := NA] %>% # use those year_ids to keep stuff constant
+        .[,  NY.GDP.PCAP.CDk_lag1 := nafill(NY.GDP.PCAP.CDk_lag1, type = "locf")]
+
+    ## ggplot(dtx_consgdp, aes(x= year, y = NY.GDP.PCAP.CDk_lag1, color = iso3c)) + geom_line()
+    dtx$pred_consgdp_nofdbk <- exp(predict(r1, dtx_consgdp))
+
+    ## gdp stays constant, feedback into density
+    
+    scale_pm_density <- scale(cbn_dfs_rates_uscld$cbn_all$pm_density_lag1)
+    
+    ## 
+    attr(scale_pm_density, "scaled:center") + attr(scale_pm_density, "scaled:scale")*-0.6
+
+    ## 0.0043022 is now our unstandardzized count
+
+    (0.0043022 - attr(scale_pm_density, "scaled:center"))/attr(scale_pm_density, "scaled:scale")
+    ## -0.5842529 is now the restandardized value
+
+    
+    copy(dtx) %>%
+        .[, year_id := 1:.N, iso3c] %>% # set up year_ids,
+        .[year_id %in% c(1,2), .(iso3c, year, nbr_opened, pm_density_lag1, pred_r1, pred_consgdp_nofdbk)]
+
+    ## use new dataframe: this will get written into
+    dtx_fdbk <- copy(dtx_consgdp) %>%
+        .[year_id != 1, `:=`(pm_density_lag1 = NA, pm_density_sqrd_lag1 = NA)]
+
+
+    for (yearx in sort(unique(dtx_fdbk$year))) {
+        ## first get the slice to predict
+
+        
+        dtx_year <- copy(dtx_fdbk)[year == yearx] %>%
+            .[, pred_consgdp_fdbk := exp(predict(r1, .))] # then predict nbr_opened
+        
+        ## check values 
+        dtx_year[, .(iso3c, year, pm_density_lag1, pred_r1, pred_consgdp_fdbk)]
+
+        ## udpate values that are to be added to next year
+        dtx_dens_updtd <- dtx_year %>% copy() %>%
+            .[, .(iso3c, year, pred_consgdp_fdbk, pm_density_lag1, SP_POP_TOTLm_lag0_uscld)] %>% 
+            .[, dens_rate_uscld := (attr(scale_pm_density, "scaled:center") + # convert density into nbr
+                                    attr(scale_pm_density, "scaled:scale")*pm_density_lag1)] %>%
+            ## prediction is number (offset gone), density is in per million -> need to
+            .[, opnd_rate_uscld := pred_consgdp_fdbk/SP_POP_TOTLm_lag0_uscld] %>% 
+            .[, dens_rate_plus_opng_rate := dens_rate_uscld + opnd_rate_uscld] %>%
+            .[, dens_new_std := (dens_rate_plus_opng_rate - attr(scale_pm_density, "scaled:center"))/
+                    attr(scale_pm_density, "scaled:scale")] # restandardize density
+
+        ## collect predicted values for current year
+        dtx_pred_fdbk <- dtx_dens_updtd[, .(iso3c, year, pred_consgdp_fdbk_new = pred_consgdp_fdbk)]
+        ## and assignn them to current year with update join
+        dtx_fdbk[dtx_pred_fdbk, pred_consgdp_fdbk := pred_consgdp_fdbk_new, on = .(iso3c, year)]
+
+
+        ## collect values to be assigned for next year
+        dtx_dens_new_vlus <- dtx_dens_updtd[, .(iso3c, dens_new_std, year = yearx+1)]
+        
+        ## update density and density squared for next year, with update join urg
+        dtx_fdbk[dtx_dens_new_vlus, `:=`(pm_density_lag1 = dens_new_std,
+                                         pm_density_sqrd_lag1 = dens_new_std^2), on = .(iso3c, year)]
+        
+    }
+    
+
+    dtx_fdbk[year %in% c(1995, 1996, 1997), .(iso3c, year, pm_density_lag1, pred_consgdp_fdbk)]
+    dtx_fdbk[, map(.SD, ~sum(is.na(.x)))]
+    
+    dtx$pred_consgdp_fdbk <- dtx_fdbk$pred_consgdp_fdbk
+
+
+    
+    ## also need smooth predictions for actual number of openings
+    dtx_predvs <- dtx[iso3c %in% c("DEU", "USA", "CHE", "POL", "CYP", "CHN")] %>% copy() %>%
+        .[, nbr_opened_smooth := predict(loess(nbr_opened ~ year),year), iso3c] %>%
+        melt(id.vars = c("iso3c", "year"),
+             measure.vars = c("nbr_opened_smooth", "pred_r1", "pred_consgdp_nofdbk", "pred_consgdp_fdbk"))
+    
+    ggplot(dtx_predvs, aes(x=year, y=value, color = iso3c, linetype = variable)) +
+        geom_line() +
+        facet_wrap(~iso3c)
+
+    ## ggplot() +
+    ##     geom_smooth(dtx_predvs, mapping = aes(x=year, y=pm_density_lag0, color = iso3c), se=F, span = 1) + 
+    ##     geom_line(dtx_predvs, mapping = aes(x=year, y=pred_r2, color = iso3c), linetype = "dashed")
+
+    ## seeing how many have opened at all:
+    ## by variable 
+    dtx_predvs[, .(nbr_opnd_ttl = sum(value)), variable]
+
+    ## by country*variable
+    dtx_predvs[, .(opngs = sum(value)), .(variable, iso3c)] %>%
+        dcast.data.table(iso3c ~ variable, value.var = "opngs")
+
+        
+    
+
+
+
+}
+
+explr_cntrfctl(cbn_dfs_rates)
+
+
+
+
 explr_dt_SD_handling <- function() {
     fx <- function(x) {
         if (as.character(match.call()[[1]]) %in% fstd){browser()}
