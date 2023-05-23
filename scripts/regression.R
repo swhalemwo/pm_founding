@@ -2217,6 +2217,131 @@ add_coef_sig <- function(coef_df,  df_reg_anls_cfgs_wide) {
 
 }
 
+pred_given_const_vrbl <- function(vrblx, rx, dfx, iv_vars) {
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
+    1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;
+    
+    #' predict openings in dfx from model rx holding vrblx constant
+
+    ## check squares: if squared version of variable is in iv_vars, add that squared version to vrblx
+    if (gsub("_lag", "_sqrd_lag", vrblx) %in% iv_vars) {
+        vrblx <- c(vrblx, gsub("_lag", "_sqrd_lag", vrblx))
+    }
+
+    ## check if we have taxdctbl*tmitr interaction: then also add interaction to 
+    if (all(grepl("tmitr_approx", vrblx) & any(grepl("ti_tmitr_interact", iv_vars)))) {
+        vrblx <- c(vrblx, iv_vars[grepl("ti_tmitr_interact", iv_vars)])
+    }
+
+    ## set vrblx to their first year value 
+    dtx_consvrbl <- dfx %>% adt() %>%
+        .[, year_id := 1:.N, iso3c] %>%
+        .[year_id != 1, (vrblx) := NA] %>% # .[, .(iso3c, year, hnwi_nbr_1M_lag4)] %>%
+        .[, (vrblx) := map(vrblx, ~nafill(get(.x), type = "locf")), iso3c] # map over columns to fill up
+    
+    ## more restricted version: only those CYs with data from 2000
+    dtx_consvrbl_2k <- dtx_consvrbl %>% copy() %>%
+        .[, min_year := min(year), iso3c] %>%
+        .[min_year <= 2000 & year >= 2000]
+
+        
+    ## dtx_consvrbl[, c(c("iso3c", "year"), vrblx), with = F]
+    
+    ## .[, .(iso3c, year, hnwi_nbr_1M_lag4)] %>% print(n=800)
+    
+    ## predict nbr of openings for entire dataset and only for those countries with data from 2000 onwards
+    dtx_consvrbl$pred <- exp(predict(rx, dtx_consvrbl))
+
+    dtx_consvrbl_2k$pred <- exp(predict(rx, dtx_consvrbl_2k))
+
+    list(vrblx = vrblx[1], # only first in case of squared/interactions
+         nbr_opened_all = sum(dtx_consvrbl$nbr_opened),
+         pred_all_N = sum(dtx_consvrbl$pred),
+         pred_all_prop = dtx_consvrbl[, .(prop_opnd = sum(nbr_opened)/sum(pred)), iso3c][, 1/mean(prop_opnd)],
+         nbr_opened_2k = sum(dtx_consvrbl_2k$nbr_opened),
+         pred_2k_N = sum(dtx_consvrbl_2k$pred),
+         ## inverse of mean of ratio of sum(obs) and sum(pred)
+         ## idea would be sum(pred)/sum(obs), but sum(obs) can be 0; predictions not 0 tho
+         ## values below one: more predicted under constant variable than observed
+         ## -> if variable stays at beginning, there will be more PMs
+         ## AZE: 4.45 times more founded than predicted -> inverse 1/4 = 0.22
+         ## if vrbl would have stayed constant, there would have been only 22% of the PMs founded than were founded
+         pred_2k_prop = dtx_consvrbl_2k[, .(prop_opnd = sum(nbr_opened)/sum(pred)), iso3c][, 1/mean(prop_opnd)]
+         )
+
+}
+        
+
+gen_preds_given_mdfd_vrbls <- function(idx, fldr_info) {
+    #' general prediction of DV under changed IVs
+    #' for now only has each IV being constant overall
+
+    ## example, wrap that into own function later
+    regspecx <- get_reg_spec_from_id(idx, fldr_info)
+    
+    dfx <- chuck(cbn_df_dict, "rates", chuck(regspecx, "cfg", "cbn_name"))
+    iv_vars <- keep(setdiff(regspecx$mdl_vars, vvs$base_vars), ~!grepl("^SP\\.POP\\.TOTLm", .x))
+
+    ## generate formula
+    fx <- gen_r_f("rates", iv_vars)
+
+    ## generate model 
+    rx <- glmmTMB(fx, dfx, family = nbinom2)
+
+    ## generate the variables that are to be modifed: filter with vvs: need to remove lag first.. 
+    iv_vars_unlag <- gsub("_lag[1-5]", "", iv_vars) %>%
+        setdiff(vvs$density_vars) %>%
+        setdiff(vvs$crscn_vars) %>%
+        keep(~!grepl("_sqrd", .x) & !grepl("_interact", .x))
+        
+    ## recover lag
+    vrbls_lagged <- adt(regspecx$lngtd_vrbls)[data.table(vrbl = iv_vars_unlag), on = "vrbl"] %>%
+        .[, paste0(vrbl, "_lag", lag)]
+
+    
+    vrblx <- "hnwi_nbr_1M_lag4"
+    ## vrblx <- "smorc_dollar_fxm_lag3"
+    ## vrblx <- "tmitr_approx_linear20step_lag5"
+
+    pred_given_const_vrbl(vrblx, rx, dfx, iv_vars)
+
+    ## actually run the predictions
+    dt_predres <- map(vrbls_lagged, ~pred_given_const_vrbl(.x, rx, dfx, iv_vars)) %>% rbindlist() %>%
+        .[, `:=`(mdl_id = idx, cbn_name = chuck(regspecx, "cfg", "cbn_name"))]
+
+    return(dt_predres)
+
+}
+
+
+gen_cntrfctl <- function(gof_df_cbn, fldr_info) {
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
+    1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;
+
+    ## get best models
+    mdl_id_dt <- gen_mdl_id_dt(gof_df_cbn)
+
+    idx <- mdl_id_dt$mdl_id[1]
+    
+    dt_cntrfctl_res <- mclapply(mdl_id_dt$mdl_id, \(x) gen_preds_given_mdfd_vrbls(x, fldr_info), mc.cores = 5) %>% 
+         rbindlist()
+
+    dt_cntrfctl_res %>% copy() %>% .[, vrbl := gsub("_lag[1-5]", "", vrblx)] %>% 
+        vvs$hyp_mep_dt[., on = "vrbl"] %>% 
+        ggplot(aes(x=pred_2k_N, y = vrbl)) +
+        geom_point() +
+        facet_grid(hyp ~ cbn_name, scales = "free", space = "free") +
+        geom_vline(mapping = aes(xintercept = nbr_opened_2k), linetype = "dashed")
+        
+
+
+    gen_preds_given_mdfd_vrbls(idx, fldr_info)
+    
+
+    
+
+}
+
 
 
 postestimation <- function(fldr_info) {
@@ -2228,6 +2353,9 @@ postestimation <- function(fldr_info) {
     
     gof_df_cbn <- reg_res_files$gof_df_cbn
     
+    gen_cntrfctl(gof_df_cbn, fldr_info)
+
+
     one_out_setup_and_run(fldr_info$batch_version, gof_df_cbn)
     
     
