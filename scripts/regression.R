@@ -2324,6 +2324,13 @@ gen_preds_given_mdfd_vrbls <- function(idx, fldr_info) {
     ## generate model 
     rx <- glmmTMB(fx, dfx, family = nbinom2)
 
+    ## fx2 <- sprintf("nbr_opened ~ %s + offset(log(SP_POP_TOTLm_lag0_uscld))",
+    ##                paste0(iv_vars, collapse = " + ")) %>% as.formula()
+    ## rx2 <- glmmTMB(fx2, dfx, family = nbinom2)
+
+    ## compare_models(rx,rx2)
+    ## compare_performance(rx,rx2)
+
     ## generate the variables that are to be modifed: filter with vvs: need to remove lag first.. 
     iv_vars_unlag <- gsub("_lag[1-5]", "", iv_vars) %>%
         setdiff(vvs$density_vars) %>%
