@@ -2244,9 +2244,13 @@ pred_given_const_vrbl <- function(vrblx, rx, dfx, iv_vars) {
     ## emmeans(rx, ~ pm_density_lag1 | hnwi_nbr_1M_lag1)
 
     ## more restricted version: only those CYs with data from 2000
-    dtx_consvrbl_2k <- dfx %>% adt() %>% 
+    dtx_consvrbl_2k_prep <- dfx %>% adt() %>% 
         .[, `:=`(min_year = min(year)), iso3c] %>% 
-        .[min_year <= 2000 & year >= 2000] %>% 
+        .[min_year <= 2000 & year >= 2000] %>%
+        .[, (paste0(vrblx, "_bu")) := get(vrblx)] # backup vrblx
+
+    
+    dtx_consvrbl_2k <- dtx_consvrbl_2k_prep %>% copy() %>% 
         .[year != 2000, (vrblx) := NA] %>%
         .[, (vrblx) := map(vrblx, ~nafill(get(.x), type = "locf")), iso3c]
 
@@ -2275,6 +2279,63 @@ pred_given_const_vrbl <- function(vrblx, rx, dfx, iv_vars) {
     ## predict nbr of openings for entire dataset and only for those countries with data from 2000 onwards
     dtx_consvrbl$pred <- exp(predict(rx, dtx_consvrbl))
     dtx_consvrbl_2k$pred <- exp(predict(rx, dtx_consvrbl_2k))
+
+    
+    ## get some country examples
+    dt_topchng_crys <- dtx_consvrbl_2k %>% copy() %>%
+        .[, pred_orig := exp(predict(rx, dtx_consvrbl_2k_prep))] %>% 
+        .[, .(diff1 = sum(nbr_opened) - sum(pred),
+              diff2 = sum(pred_orig) - sum(pred)), iso3c] %>%
+        ## .[order(-abs(diff1))] %>% head(6) %>% 
+        .[order(-abs(diff2))] %>% head(3)
+
+    ## get the data for those
+    dtiv_vis <- dtx_consvrbl_2k %>% copy() %>%
+        .[, pred_orig := exp(predict(rx, dtx_consvrbl_2k_prep))] %>%
+        .[, c(vvs$base_vars, paste0(vrblx, "_bu"), "pred", "pred_orig", "nbr_opened"), with = F] %>%
+        .[dt_topchng_crys[, .(iso3c)], on = .(iso3c)]
+        
+
+    ## construct scaler 
+    sclr <- dtiv_vis %>% copy() %>% # .[, .N, variable] %>%
+        melt(id.vars = c("iso3c", "year")) %>% 
+        # set variable type: either in scale of IV or DV 
+        .[, vrbltype := fifelse(variable == paste0(vrblx, "_bu"), "iv", "dv")] %>% 
+        .[, .(max = max(value), min = min(value), rng = max(value) - min(value)), vrbltype] %>%
+        melt() %>% dcast.data.table(...~vrbltype + variable) %$% # some awkward melting to get access as names 
+        list(a = dv_min - ((dv_rng/iv_rng) * iv_min), b = dv_rng/iv_rng) # intercept and slope
+        
+
+    ## actual rescaling of IV
+    dtiv_vis %>% copy() %>%
+        .[, shweal992j_p90p100_lag4_bu := (shweal992j_p90p100_lag4_bu * sclr$b) + sclr$a] %>%
+        melt(id.vars = c("iso3c", "year")) %>%
+        ggplot(aes(x=year, y=value, color = variable)) +
+        ## geom_smooth(se=F, span = 0.4) +
+        geom_line() + 
+        facet_wrap(~iso3c) +
+        scale_y_continuous("openings", sec.axis = sec_axis(~ (. * 1/sclr$b) - sclr$a, name = "closings"))
+
+
+    ## plotting in two facets
+    dtiv_vis %>% copy() %>%
+        melt(id.vars = c("iso3c", "year")) %>%
+        .[, vrbltype := fifelse(variable == paste0(vrblx, "_bu"), "iv", "dv")] %>% 
+        ggplot(aes(x=year, y=value, group = interaction(iso3c, variable), color = variable)) +
+        geom_smooth(se = F) +
+        facet_grid(vrbltype~iso3c, space = "free", scales = "free")
+    
+    ## plotting as scatterplot
+    ## there is just no fucking point, looks ugly af: lines criss-crossing everywhere
+    ## dtiv_vis %>% copy() %>%
+    ##     melt(id.vars = c("iso3c", "year", "shweal992j_p90p100_lag4_bu")) %>%
+    ##     ggplot(aes(x=shweal992j_p90p100_lag4_bu, y=value, color = variable)) +
+    ##     geom_path() +
+    ##     facet_grid(~iso3c, space = "free", scales = "free")
+        
+    
+    
+    
 
     ## predict for IV -1
     dtx_minusone_2k$pred <- exp(predict(rx, dtx_minusone_2k))
@@ -2345,10 +2406,10 @@ gen_preds_given_mdfd_vrbls <- function(idx, fldr_info) {
     ## vrblx <- "hnwi_nbr_1M_lag1"
     ## vrblx <- "smorc_dollar_fxm_lag3"
     ## vrblx <- "sptinc992j_p90p100_lag3"
+    vrblx <- "shweal992j_p90p100_lag4"
     ## ## vrblx <- "tmitr_approx_linear20step_lag5"
     ## sd(dfx$sptinc992j_p90p100_lag3)
     
-
     ## adt(dfx) %>%
     ##     .[, .(meanx = mean(get(vrblx))), iso3c] %>% 
     ##     ## .[, meanx :=  mean(get(vrblx)), iso3c] %>%
@@ -2357,7 +2418,7 @@ gen_preds_given_mdfd_vrbls <- function(idx, fldr_info) {
 
     ## xtsum(dfx, sptinc992j_p90p100_lag3, iso3c)
 
-    ## pred_given_const_vrbl(vrblx, rx, dfx, iv_vars)
+    pred_given_const_vrbl(vrblx, rx, dfx, iv_vars)
 
     ## actually run the predictions
     dt_predres <- map(vrbls_lagged, ~pred_given_const_vrbl(.x, rx, dfx, iv_vars)) %>% rbindlist() %>%
@@ -2423,7 +2484,7 @@ gen_cntrfctl <- function(gof_df_cbn, fldr_info) {
         geom_violin(bw = 5) + 
         facet_grid(hyp ~ cbn_name, scales = "free", space = "free") +
         geom_vline(mapping = aes(xintercept = 0), linetype = "dashed") +
-        labs(x="change in number of PM foundings resulting from variable not staying at 2000 value")
+        labs(x="additional PM foundings due to variable change since 2000")
         
 
 
