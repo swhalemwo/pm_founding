@@ -1451,3 +1451,56 @@ x <- dtx[, .SD^2, .SDcols = gsub("_sqrd", "", keep(names(dtx), ~grepl("_sqrd", .
         ## .[, lapply(.SD, sd)] %>% atb() ## %>% melt() %>% print(n=30)
         
     
+## ** country cherry picking
+## shitty way of getting example countries
+## get some country examples
+dt_topchng_crys <- dtx_consvrbl_2k %>% copy() %>%
+    .[, pred_orig := exp(predict(rx, dtx_consvrbl_2k_prep))] %>% 
+    .[, .(diff1 = sum(nbr_opened) - sum(pred),
+          diff2 = sum(pred_orig) - sum(pred)), iso3c] %>%
+    ## .[order(-abs(diff1))] %>% head(6) %>% 
+    .[order(-abs(diff2))] %>% head(3)
+
+## get the data for those
+dtiv_vis <- dtx_consvrbl_2k %>% copy() %>%
+    .[, pred_orig := exp(predict(rx, dtx_consvrbl_2k_prep))] %>%
+    .[, c(vvs$base_vars, paste0(vrblx, "_bu"), "pred", "pred_orig", "nbr_opened"), with = F] %>%
+    .[dt_topchng_crys[, .(iso3c)], on = .(iso3c)]
+
+
+## construct scaler 
+sclr <- dtiv_vis %>% copy() %>% # .[, .N, variable] %>%
+    melt(id.vars = c("iso3c", "year")) %>% 
+                                        # set variable type: either in scale of IV or DV 
+    .[, vrbltype := fifelse(variable == paste0(vrblx, "_bu"), "iv", "dv")] %>% 
+    .[, .(max = max(value), min = min(value), rng = max(value) - min(value)), vrbltype] %>%
+    melt() %>% dcast.data.table(...~vrbltype + variable) %$% # some awkward melting to get access as names 
+    list(a = dv_min - ((dv_rng/iv_rng) * iv_min), b = dv_rng/iv_rng) # intercept and slope
+
+
+## actual rescaling of IV
+dtiv_vis %>% copy() %>%
+    .[, shweal992j_p90p100_lag4_bu := (shweal992j_p90p100_lag4_bu * sclr$b) + sclr$a] %>%
+    melt(id.vars = c("iso3c", "year")) %>%
+    ggplot(aes(x=year, y=value, color = variable)) +
+    ## geom_smooth(se=F, span = 0.4) +
+    geom_line() + 
+    facet_wrap(~iso3c) +
+    scale_y_continuous("openings", sec.axis = sec_axis(~ (. * 1/sclr$b) - sclr$a, name = "closings"))
+
+
+## ## plotting in two facets
+## dtiv_vis %>% copy() %>%
+##     melt(id.vars = c("iso3c", "year")) %>%
+##     .[, vrbltype := fifelse(variable == paste0(vrblx, "_bu"), "iv", "dv")] %>% 
+##     ggplot(aes(x=year, y=value, group = interaction(iso3c, variable), color = variable)) +
+##     geom_smooth(se = F) +
+##     facet_grid(vrbltype~iso3c, space = "free", scales = "free")
+
+## plotting as scatterplot
+## there is just no fucking point, looks ugly af: lines criss-crossing everywhere
+## dtiv_vis %>% copy() %>%
+##     melt(id.vars = c("iso3c", "year", "shweal992j_p90p100_lag4_bu")) %>%
+##     ggplot(aes(x=shweal992j_p90p100_lag4_bu, y=value, color = variable)) +
+##     geom_path() +
+##     facet_grid(~iso3c, space = "free", scales = "free")
