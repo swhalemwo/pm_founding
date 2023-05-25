@@ -2385,12 +2385,15 @@ gen_cntrfctl <- function(gof_df_cbn, fldr_info) {
     ## get best models
     mdl_id_dt <- gen_mdl_id_dt(gof_df_cbn)
 
-    idx <- mdl_id_dt$mdl_id[7]
-    gen_preds_given_mdfd_vrbls(idx, fldr_info)
+    ## idx <- mdl_id_dt$mdl_id[7]
+    ## gen_preds_given_mdfd_vrbls(idx, fldr_info)
 
     dt_cntrfctl_res <- mclapply(mdl_id_dt$mdl_id, \(x) gen_preds_given_mdfd_vrbls(x, fldr_info), mc.cores = 5) %>% 
          rbindlist()
     
+    fwrite(dt_cntrfctl_res, paste0(fldr_info$BATCH_DIR, "cntrfctl_res.csv"))
+
+
     ## violin of pred_2k_prop
     dt_cntrfctl_res %>% copy() %>% .[, vrbl := gsub("_lag[1-5]", "", vrblx)] %>%
         vvs$hyp_mep_dt[., on = "vrbl"] %>%
@@ -2437,18 +2440,20 @@ gen_cntrfctl <- function(gof_df_cbn, fldr_info) {
         
 
 
-    gen_preds_given_mdfd_vrbls(idx, fldr_info)
+    ## gen_preds_given_mdfd_vrbls(idx, fldr_info)
     
     
 
 }
 
-gen_cryexmpls <- function(gof_df_cbn) {
+gen_cryexmpls <- function(top_coefs) {
     #' pick some countries for each variable
 
 
     if (as.character(match.call()[[1]]) %in% fstd){browser()}
     1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;
+
+    
 
     ## get up to two countries with highest correlation between rate_opened and vrblx
     dt_topcor_crys <- dtx_consvrbl_2k_prep %>% copy() %>%
@@ -2492,8 +2497,11 @@ postestimation <- function(fldr_info) {
     reg_res_files <- read_reg_res_files(fldr_info)    
     
     gof_df_cbn <- reg_res_files$gof_df_cbn
+    df_reg_anls_cfgs_wide <- reg_res_files$df_reg_anls_cfgs_wide
     
     gen_cntrfctl(gof_df_cbn, fldr_info)
+
+    gen_cryexmpls(top_coefs)
 
 
     one_out_setup_and_run(fldr_info$batch_version, gof_df_cbn)

@@ -32,9 +32,12 @@ read_reg_anls_files <- function(fldr_info) {
 
     dt_vif_res <- fread(paste0(fldr_info$BATCH_DIR, "VIF_res.csv"))
 
+    dt_cntrfctl_res <- fread(paste0(fldr_info$BATCH_DIR, "cntrfctl_res.csv"))
+
     return(c(reg_anls_base_objs,
              list(ou_objs = reg_anls_ou_objs),
-             list(dt_vif_res = dt_vif_res)
+             list(dt_vif_res = dt_vif_res),
+             list(dt_cntrfctl_res = dt_cntrfctl_res)
              ))
     
    
@@ -540,7 +543,7 @@ gen_res_velps <- function(cbn_dfs_rates) {
 
 }
 
-gen_res_velps(cbn_dfs_rates)
+## gen_res_velps(cbn_dfs_rates)
 
 construct_df_anls_within_prep <- function(df_anls_base, optmzd) {
     if (as.character(match.call()[[1]]) %in% fstd){browser()}
