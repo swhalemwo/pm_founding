@@ -2510,9 +2510,12 @@ postestimation <- function(fldr_info) {
 
     gen_cryexmpls(top_coefs)
 
-
-    one_out_setup_and_run(fldr_info$batch_version, gof_df_cbn)
     
+    one_out_setup_and_run(fldr_info$batch_version, gof_df_cbn)
+
+    test_dharma()
+
+
     
     ## generate top coefs, use it for VIF data
     df_anls_base <- add_coef_sig(reg_res_files$coef_df, reg_res_files$df_reg_anls_cfgs_wide)

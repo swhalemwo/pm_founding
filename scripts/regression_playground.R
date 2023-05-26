@@ -1508,18 +1508,35 @@ dtiv_vis %>% copy() %>%
 ## ** dharma testing
 
 test_dharma <- function() {
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
+    1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;
+
+    mdl_id_dt <- gen_mdl_id_dt(gof_df_cbn)
+    idx <- mdl_id_dt$mdl_id[7]
+    regspecx <- get_reg_spec_from_id(idx, fldr_info)
+
+    dfx <- chuck(cbn_df_dict, "rates", chuck(regspecx, "cfg", "cbn_name"))
+    iv_vars <- keep(setdiff(regspecx$mdl_vars, vvs$base_vars), ~!grepl("^SP\\.POP\\.TOTLm", .x))
+
+    ## generate formula
+    fx <- gen_r_f("rates", iv_vars)
+
+    ## generate model 
+    rx <- glmmTMB(fx, dfx, family = nbinom2)
+
+    
+
 
     library(DHARMa)
-    getSimulations
-    getSimulations(rx)
-    testDispersion(rx)
+    ## getSimulations
+    ## getSimulations(rx)
+    ## testDispersion(rx)
     simul_resid <- simulateResiduals(rx, n = 10000)
     ## simul_resid2 <- simulateResiduals(rx, n = 100, refit = T) # doesn't work 
     plot(simul_resid)
-    simulate.glmmTMB
-    simulate.merMod
+    ## simulate.glmmTMB
+    ## simulate.merMod
 
-        
     
     ## try to get residuals "per variable"
     plotResiduals(simul_resid, form = dfx$shweal992j_p90p100_lag4, quantreg = F, rank = F)
@@ -1548,8 +1565,8 @@ test_dharma <- function() {
     
     
     dfx$resid <- residuals(simul_resid)
-    dfx$resid_scaled <- simul_resid$scaledResiduals
-    dfx$pred <- predict(rx, dfx)
+    ## dfx$resid_scaled <- simul_resid$scaledResiduals
+    ## dfx$pred <- predict(rx, dfx)
     ## adt(dfx)[resid > 0.95, .(iso3c, year, resid)][,  %>%
     ##     adt(dfx)[, .(iso3c, year)
 
@@ -1607,8 +1624,99 @@ test_dharma <- function() {
     adt(dfx)[iso3c %in% c("RUS", "USA", "ITA")] %>%
         melt(id.vars = c("iso3c", "year"), measure.vars = c("nbr_opened", "shweal992j_p90p100_lag4")) %>%
         ggplot(aes(x=year, y=value, group = iso3c)) +
-        facet_wrap(variable ~ iso3c, scales = "free") +
+        facet_grid(variable ~ iso3c, scales = "free") +
+        geom_line(se = F) +
         geom_smooth(se = F)
+
+
+    ## contribution of intercepts
+    exp(predict(rx, adt(dfx)[, iso3c := "lul"])) %>% sum()
+    exp(predict(rx, adt(dfx))) %>% sum()
+    ## idk: in some cases there's more, in some less:
+    ## sum(abs(difference))
+
+    dt_decps <- adt(dfx)[, `:=`(pred_orig = exp(predict(rx, dfx)),
+                    pred_nocons = exp(predict(rx, adt(dfx)[, iso3c := "lul"])))]
+
+    dt_decps %>%
+        melt(id.vars = c("iso3c", "year"), measure.vars = c("pred_orig", "pred_nocons")) %>%
+        .[iso3c %in% c("DEU", "USA", "KOR", "IND", "CHN")] %>%
+        ggplot(aes(x=year, y=value, color = iso3c, linetype = variable)) + geom_line()
+        
+    ranef(rx)
+
+    ## more decomposition: make into superlong
+
+    ## get rx variables
+    dt_vrbl <- fixef(rx) %>% chuck("cond") %>% data.table(vrbl = names(.)) %>% .[, .(vrbl, coef = .)] %>% 
+        .[vrbl != "(Intercept)"] %>%
+        rbind(list(vrbl = "SP_POP_TOTLm_lag0_uscld", coef = 1)) # add population exposure
+
+    ## get country intercepts
+    
+    summary(rx) %>% coef()
+    
+    dt_ranef <- coef(rx) %>% chuck("cond", "iso3c") %>% adt(keep.rownames = "iso3c") %>%
+        .[, .(iso3c, coef = `(Intercept)`, value = 1, vrbl = "cons")] %>%
+        .[dt_decps[, .(iso3c, year)], on = "iso3c"] # expand with actual data to get years
+        
+    ## dt_ranef[iso3c == "DEU"]
+
+    ## melt into superlong
+    dt_decps_splong <- dt_decps[, c("iso3c", "year", dt_vrbl$vrbl), with = F] %>%
+        melt(id.vars = c("iso3c", "year"), variable.name = "vrbl") %>%
+        dt_vrbl[., on = "vrbl"] %>% ## merge fixed effects
+        .[vrbl == "SP_POP_TOTLm_lag0_uscld", value := log(value)] %>% # rescale population to exposure (log)
+        rbind(dt_ranef) # rbind intercepts
+
+    ## test that predictions work
+    dt_decps_splong[, .(pred_mnl = sum(coef * value)), .(iso3c, year)] %>%
+        .[, pred_orig := predict(rx, dfx)] %>%
+        .[, diff := pred_mnl - pred_orig] %>%
+        .[iso3c == "DEU"] %>% print(n=200)
+    ## looks good
+
+    dt_decps_pred <- dt_decps_splong %>% copy() %>%
+        .[, coef_cpnt := coef*value] %>% 
+        .[, pred_mnl := sum(coef_cpnt), .(iso3c, year)] %>%
+        ## .[, pred_prop := (coef*value)/pred_mnl] %>% # proportion of overall prediction explained by coef
+        .[, pred_diff := pred_mnl-coef_cpnt] # how different prediction would be without vrbl
+
+    dt_decps_vis <- dt_decps_pred[iso3c == "KOR"]#   & year == 2010]
+    dt_decps_vis[year == 2018]
+    ggplot() +
+        geom_line(dt_decps_vis, mapping = aes(x=year, y=coef_cpnt, color = vrbl)) + 
+        geom_text(dt_decps_vis[, .SD[which.max(year)-3], vrbl][order(-abs(coef_cpnt))][1:5],
+                  mapping= aes(x=max(year), y=coef_cpnt, label = vrbl))
+
+    ## maybe average proportion of variable? 
+    dt_decps_pred %>% copy() %>% # first get positive and negative parts
+        ## .[, sign := sign(coef_cpnt)] %>%
+        ## .[sign == 1, ctrbn_pos := sum(coef_cpnt), .(iso3c, year)] %>%
+        ## .[sign == -1, ctrbn_neg := sum(coef_cpnt), .(iso3c, year)] %>%
+        .[, .(iso3c, vrbl, coef_cpnt, sign = sign(coef_cpnt))] %>%
+        .[, ctrbn := sum(coef_cpnt), .(iso3c, vrbl, sign)] %>%
+        .[, ctrbn_prop := coef_cpnt/ctrbn] %>%
+        .[, mean(ctrbn_prop), .(vrbl, sign)] %>% print(n=50)
+        
+
+
+
+    # difference between predicted full and predicted without intercepts
+    # on CY level
+    dt_decps %>% copy() %>% 
+        .[, diff := pred_nocons - pred_orig] %$% sum(abs(diff))
+
+    ## on country-level
+    dt_decps %>% copy() %>% 
+        .[, .(sum_orig = sum(pred_orig), sum_nocons = sum(pred_nocons)), iso3c] %>%
+        .[, diff := sum_orig - sum_nocons] %$% # first aggregate expectations to country-level
+        sum(abs(diff))
+
+    ## for some strange reason they're the same 
+    
+    
+
 
     ## fit with population weights
     rx3 <- glmmTMB(fx2, dfx, family = nbinom2, weights = dfx$SP_POP_TOTLm_lag0_uscld)
