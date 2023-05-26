@@ -1504,3 +1504,141 @@ dtiv_vis %>% copy() %>%
 ##     ggplot(aes(x=shweal992j_p90p100_lag4_bu, y=value, color = variable)) +
 ##     geom_path() +
 ##     facet_grid(~iso3c, space = "free", scales = "free")
+
+## ** dharma testing
+
+test_dharma <- function() {
+
+    library(DHARMa)
+    getSimulations
+    getSimulations(rx)
+    testDispersion(rx)
+    simul_resid <- simulateResiduals(rx, n = 10000)
+    ## simul_resid2 <- simulateResiduals(rx, n = 100, refit = T) # doesn't work 
+    plot(simul_resid)
+    simulate.glmmTMB
+    simulate.merMod
+
+        
+    
+    ## try to get residuals "per variable"
+    plotResiduals(simul_resid, form = dfx$shweal992j_p90p100_lag4, quantreg = F, rank = F)
+    plotResiduals(simul_resid, form = dfx$hnwi_nbr_1M_lag4, quantreg = T, rank = T)
+    plotResiduals(simul_resid, form = dfx$smorc_dollar_fxm_lag3, quantreg = T, rank = T)
+    plotResiduals(simul_resid, form = dfx$pm_density_lag1, quantreg = T, rank = F)
+    plotResiduals(simul_resid, form = dfx$sptinc992j_p90p100_lag3, quantreg = T, rank = F)
+    testQuantiles(simul_resid, predictor = dfx$shweal992j_p90p100_lag4)
+
+    plotQQunif(simul_resid)
+
+    ## compare variables
+    dfx %>% adt() %>% .[, c(iv_vars, vvs$base_vars, "resid"), with = F] %>%
+        melt(id.vars = c(vvs$base_vars, "resid")) %>%
+        ggplot(aes(x=value, y = resid)) +
+        geom_point(size = 0.2) +
+        geom_smooth() + 
+        facet_wrap(~variable, scales = "free")
+    ## actually HNWI variables don't look great
+
+    residuals(simul_resid)
+    
+    ## testZeroInflation(simul_resid)
+    ## testOverdispersion(simul_resid)
+    ## hist(simul_resid)
+    
+    
+    dfx$resid <- residuals(simul_resid)
+    dfx$resid_scaled <- simul_resid$scaledResiduals
+    dfx$pred <- predict(rx, dfx)
+    ## adt(dfx)[resid > 0.95, .(iso3c, year, resid)][,  %>%
+    ##     adt(dfx)[, .(iso3c, year)
+
+    res = recalculateResiduals(res, sel = testData$location == 1)
+    testTemporalAutocorrelation(res, time = unique(testData$time))
+
+
+    ## temporal autocorrelation test: kinda irrelevant
+    split(dfx, dfx$iso3c) %>% keep(~nrow(.x) > 1) %>% map(~testTemporalAutocorrelation(
+                                      recalculateResiduals(simul_resid, sel = dfx$iso3c ==  unique(.x$iso3c)),
+                                      time = .x$year))
+
+    ## recalculateResiduals(simul_resid, group = dfx$iso3c) %>%
+    ##     adt(dfx)[, testTemporalAutocorrelation(., time = year), iso3c]
+
+    dfx %>% adt() %>%
+        .[, recalculateResiduals(simul_resid, group = iso3c) %>%
+            testTemporalAutocorrelation(., time = year), iso3c]
+
+    testTemporalAutocorrelation(simul_resid, time = dfx$year)
+
+    ggplot() +
+        geom_tile(dfx, mapping = aes(x=year, y=iso3c, fill = log(nbr_opened/SP_POP_TOTLm_lag0_uscld+0.00001))) +
+        geom_point(adt(dfx)[resid > 0.9], mapping = aes(x=year, y=iso3c), color = "red") 
+
+    ## aggregate residuals by country 
+    adt(dfx)[, .(mean_resid = mean(resid_scaled)), iso3c] %>%
+        .[, iso3c := factor(iso3c, levels = iso3c[order(mean_resid)])] %>% 
+        ggplot(aes(x=mean_resid, y = iso3c)) + geom_col()
+
+    dfx %>% adt() %>% .[iso3c == "SRB", .(pred, nbr_opened)]
+
+    
+    ## see what happens if variable is excluded
+    fx2 <- gen_r_f("rates", setdiff(iv_vars, "shweal992j_p90p100_lag4"))
+    rx2 <- glmmTMB(fx2, dfx, family = nbinom2)
+    resids2 <- simulateResiduals(rx2, n = 10000)
+    dfx$resid2 <- residuals(resids2)
+
+    adt(dfx) %>% .[, sum_opnd := sum(nbr_opened), iso3c] %>%
+        .[sum_opnd >= 3] %>%
+        melt(id.vars = c("iso3c"), measure.vars = c("resid", "resid2")) %>%
+        .[, .(mean_resid = abs(mean(0.5 - value))), .(iso3c, variable)] %>% # distance to 0.5
+        dcast.data.table(iso3c ~ variable, value.var = "mean_resid") %>%
+        .[, diff := resid2 - resid] %>% # how much smaller (better) distance to 0.5 is in rx2 vs rx1
+        .[order(diff)] %>% 
+        adt(dfx)[, sum_opened := sum(nbr_opened), iso3c][sum_opened >= 3][ # merge with correlation data: 
+          , .(corx = cor.test(nbr_opened, shweal992j_p90p100_lag4) %>% # cor data: visual match
+                  chuck("estimate")), iso3c][., on = "iso3c"] %>%
+        .[, maxmz := (-scale(diff))*scale(corx)] %>%
+        .[order(-maxmz)]
+        
+        
+        
+    adt(dfx)[iso3c %in% c("RUS", "USA", "ITA")] %>%
+        melt(id.vars = c("iso3c", "year"), measure.vars = c("nbr_opened", "shweal992j_p90p100_lag4")) %>%
+        ggplot(aes(x=year, y=value, group = iso3c)) +
+        facet_wrap(variable ~ iso3c, scales = "free") +
+        geom_smooth(se = F)
+
+    ## fit with population weights
+    rx3 <- glmmTMB(fx2, dfx, family = nbinom2, weights = dfx$SP_POP_TOTLm_lag0_uscld)
+    rx32 <- glmmTMB(fx2, dfx, family = nbinom2, weights = dfx$SP_POP_TOTLm_lag0_uscld/10)
+    rx4 <- glmmTMB(fx2, dfx, family = nbinom2, weights = asinh(dfx$SP_POP_TOTLm_lag0_uscld)) # scaled weights
+    compare_models(rx2, rx3, rx32, rx4)
+    ## oooof quite  different
+    ## affects N -> could check how to fit properly
+
+    
+    ranef(rx)
+    r2(rx)
+
+
+    ## add some squared term to model to improve fit
+    ## LUL nobody cares
+    
+    rx2 <- update.formula(fx, ~ . + I(hnwi_nbr_1M_lag4^2)) %>%
+        glmmTMB(dfx, family = nbinom2)
+    dharma_res2 <- simulateResiduals(rx2, n = 1000)
+    plotResiduals(dharma_res2, form = dfx$hnwi_nbr_1M_lag4, quantreg = T, rank = T) # no complains now, 
+    dfx$resid2 <- residuals(dharma_res2)
+
+    compare_models(rx, rx2) # no yuge difference, hwni still not significant
+
+    dfx %>% adt() %>% .[, c(iv_vars, vvs$base_vars, "resid2"), with = F] %>%
+        melt(id.vars = c(vvs$base_vars, "resid2")) %>%
+        ggplot(aes(x=value, y = resid2)) +
+        geom_point(size = 0.2) +
+        geom_smooth() + 
+        facet_wrap(~variable, scales = "free")
+
+}

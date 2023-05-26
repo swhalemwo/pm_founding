@@ -2334,6 +2334,11 @@ gen_preds_given_mdfd_vrbls <- function(idx, fldr_info) {
     ## generate model 
     rx <- glmmTMB(fx, dfx, family = nbinom2)
 
+
+    ## fit model by country
+    ## ehh idk this kinda assumes every slope is random
+    ## rx_deu <- glmmTMB(fx, adt(dfx)[iso3c == "DNK"], family = nbinom2)
+
     ## fx2 <- sprintf("nbr_opened ~ %s + offset(log(SP_POP_TOTLm_lag0_uscld))",
     ##                paste0(iv_vars, collapse = " + ")) %>% as.formula()
     ## rx2 <- glmmTMB(fx2, dfx, family = nbinom2)
@@ -2453,6 +2458,8 @@ gen_cryexmpls <- function(top_coefs) {
     if (as.character(match.call()[[1]]) %in% fstd){browser()}
     1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;
 
+
+    top_coefs %>% copy() %>% .[, .(vrbl_name = unique(vrbl_name))]
     
 
     ## get up to two countries with highest correlation between rate_opened and vrblx
