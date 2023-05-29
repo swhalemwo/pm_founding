@@ -1505,6 +1505,191 @@ dtiv_vis %>% copy() %>%
 ##     geom_path() +
 ##     facet_grid(~iso3c, space = "free", scales = "free")
 
+
+explr_decps <- function() {
+    #' try to decompose regression into coefficient components
+    #' but doesn't seem to work well: components can be fully negative (when all values are neg, and coef pos)
+    #' but still have positive contribution
+
+    mdl_id_dt <- gen_mdl_id_dt(gof_df_cbn)
+    idx <- mdl_id_dt$mdl_id[7]
+    regspecx <- get_reg_spec_from_id(idx, fldr_info)
+
+    dfx <- chuck(cbn_df_dict, "rates", chuck(regspecx, "cfg", "cbn_name"))
+    iv_vars <- keep(setdiff(regspecx$mdl_vars, vvs$base_vars), ~!grepl("^SP\\.POP\\.TOTLm", .x))
+
+    ## generate formula
+    fx <- gen_r_f("rates", iv_vars)
+
+    ## generate model 
+    rx <- glmmTMB(fx, dfx, family = nbinom2)
+
+    dt_decps <- adt(dfx)[, `:=`(pred_orig = exp(predict(rx, dfx)),
+                                pred_nocons = exp(predict(rx, adt(dfx)[, iso3c := "lul"])))]
+
+    dt_decps %>%
+        melt(id.vars = c("iso3c", "year"), measure.vars = c("pred_orig", "pred_nocons")) %>%
+        .[iso3c %in% c("DEU", "USA", "KOR", "IND", "CHN")] %>%
+        ggplot(aes(x=year, y=value, color = iso3c, linetype = variable)) + geom_line()
+    
+    ## more decomposition: make into superlong
+
+    ## get rx variables
+    dt_vrbl <- fixef(rx) %>% chuck("cond") %>% data.table(vrbl = names(.)) %>% .[, .(vrbl, coef = .)] %>% 
+        .[vrbl != "(Intercept)"] %>%
+        rbind(list(vrbl = "SP_POP_TOTLm_lag0_uscld", coef = 1)) # add population exposure
+
+    ## get country intercepts
+    
+    summary(rx) %>% coef()
+    
+    dt_ranef <- coef(rx) %>% chuck("cond", "iso3c") %>% adt(keep.rownames = "iso3c") %>%
+        .[, .(iso3c, coef = `(Intercept)`, value = 1, vrbl = "cons")] %>%
+        .[dt_decps[, .(iso3c, year)], on = "iso3c"] # expand with actual data to get years
+        
+    ## dt_ranef[iso3c == "DEU"]
+
+    ## melt into superlong
+    dt_decps_splong <- dt_decps[, c("iso3c", "year", dt_vrbl$vrbl), with = F] %>%
+        melt(id.vars = c("iso3c", "year"), variable.name = "vrbl") %>%
+        dt_vrbl[., on = "vrbl"] %>% ## merge fixed effects
+        .[vrbl == "SP_POP_TOTLm_lag0_uscld", value := log(value)] %>% # rescale population to exposure (log)
+        rbind(dt_ranef) # rbind intercepts
+
+    ## test that predictions work
+    dt_decps_splong[, .(pred_mnl = sum(coef * value)), .(iso3c, year)] %>%
+        .[, pred_orig := predict(rx, dfx)] %>%
+        .[, diff := pred_mnl - pred_orig] %>% summary()
+        .[iso3c == "DEU"] %>% print(n=200)
+    ## looks good
+
+    ## get coef components, some diagnostics 
+    dt_decps_pred <- dt_decps_splong %>% copy() %>%
+        .[ vrbl != "SP_POP_TOTLm_lag0_uscld"] %>% # filter out population -> per million rates
+        .[, coef_cpnt := coef*value] %>% 
+        .[, pred_mnl := sum(coef_cpnt), .(iso3c, year)] %>%
+        ## .[, pred_prop := (coef*value)/pred_mpnl] %>% # proportion of overall prediction explained by coef
+        .[, pred_diff := pred_mnl-coef_cpnt] # how different prediction would be without vrbl
+
+    ### aggregate coef_cpnts of squared terms
+    dt_decps_cbn <- copy(dt_decps_pred) %>%
+        .[grepl("tmitr", vrbl) | vrbl == "Ind.tax.incentives", vrbl := "tax_incentives"] %>% 
+        .[grepl("pm_density_global", vrbl), vrbl := "density_global"] %>% 
+        .[grepl("pm_density", vrbl), vrbl := "density_country"] %>%
+        ## .[grepl("smorc_dollar_fxm", vrbl), vrbl := "smorc_cbn"] %>%
+        .[grepl("cnt_contemp_1990", vrbl), vrbl := "muem_cbn"] %>%
+        .[, .(coef_cpnt = sum(coef_cpnt)), .(iso3c, year, vrbl)]
+
+    dt_decps_vis <- dt_decps_cbn[iso3c == "DEU" & vrbl != "cons"] # focus one country, filter out cons
+    
+    ## test single country
+    dt_decps_vis <- dt_decps_pred[iso3c == "DEU"]#   & year == 2010]
+    dt_decps_vis[year == 2019]
+
+    ggplot() +
+        geom_line(dt_decps_vis, mapping = aes(x=year, y=coef_cpnt, color = vrbl)) + 
+        geom_text(dt_decps_vis[, .SD[which.max(year)-2], vrbl][order(-abs(coef_cpnt))][1:5],
+                  mapping= aes(x=max(year), y=coef_cpnt, label = vrbl))
+
+    ## overall decomposition
+    dt_decps_splong %>% copy() %>%
+        ## .[vrbl != "shweal992j_p90p100_lag4"] %>%
+        .[vrbl != "sptinc992j_p90p100_lag3"] %>% 
+        .[, .(pred = exp(sum(coef*value))), .(iso3c, year)] %>%
+        .[, sum(pred)]
+    
+    ## one-out
+    dt_decps_splong[, unique(vrbl)] %>%
+        data.table(vrbl = .,
+                   predwo = map_dbl(.,
+                                    ~copy(dt_decps_splong)[vrbl != .x, .(pred = exp(sum(coef*value))),
+                                                           .(iso3c, year)] %>%
+                                        .[, sum(pred)]),
+                   predfull = dt_decps_splong[, .(pred = exp(sum(coef*value))), .(iso3c, year)][, sum(pred)]) %>%
+        .[, diff := predfull - predwo]
+
+    ## one-out with combined variable (already per million capita rate)
+    dt_decps_cbn[, unique(vrbl)] %>%
+        data.table(vrbl = .,
+                   predwo = map_dbl(., ~dt_decps_cbn[vrbl != .x, .(pred = exp(sum(coef_cpnt))), .(iso3c,year)] %>%
+                                           .[, mean(pred)]),
+                   predfull = dt_decps_cbn[, .(pred = exp(sum(coef_cpnt))), .(iso3c, year)][, mean(pred)]) %>%
+        .[, prop := predfull/predwo]
+
+    
+    dt_decps_cbn[vrbl == "shweal992j_p90p100_lag4"] %>%
+        ## .[iso3c %in% sample(iso3c, 5)] %>% 
+        ggplot(aes(x=year, y=coef_cpnt, group = iso3c)) + geom_line()
+
+
+    
+    ## look at density coef_cpnt in beginning: are negative
+    ## but probably due to taking entire CY range into account: if no PM would be even more negative
+    dt_decps_pred[iso3c == "DEU" & grepl("pm_density", vrbl) & !grepl("sity_global", vrbl)
+                  & year %in% c(2000, 2002, 2005)]
+
+
+
+    ## maybe average proportion of variable? 
+    dt_decps_pred %>% copy() %>% # first get positive and negative parts
+        ## .[, sign := sign(coef_cpnt)] %>%
+        ## .[sign == 1, ctrbn_pos := sum(coef_cpnt), .(iso3c, year)] %>%
+        ## .[sign == -1, ctrbn_neg := sum(coef_cpnt), .(iso3c, year)] %>%
+        .[, .(iso3c, vrbl, coef_cpnt, sign = sign(coef_cpnt))] %>%
+        .[, ctrbn := sum(coef_cpnt), .(iso3c, vrbl, sign)] %>%
+        .[, ctrbn_prop := coef_cpnt/ctrbn] %>%
+        .[, mean(ctrbn_prop), .(vrbl, sign)] %>% print(n=50)
+        
+
+    ## test relation between full prediction and without population
+    dt_cpr_dvfmts <- rbind(
+        copy(dt_decps_splong)[, src := "full"],
+        copy(dt_decps_splong)[vrbl != "SP_POP_TOTLm_lag0_uscld"][, src := "wopop"]) %>%
+        .[, .(pred_mnl = sum(coef*value)), .(iso3c, year, src)]
+
+    ## plot some countries against different sources (full model, wopop)
+    dt_cpr_dvfmts %>%
+        ## dcast.data.table(iso3c + year ~ src, value.var = "pred_mnl") %>%
+        .[iso3c %in% c("USA", "BEL", "NLD", "DEU")] %>%
+        ggplot(aes(x=year, y=pred_mnl, color = iso3c, linetype = src)) + geom_line()
+    
+    ## see if wopop predictions make sense as per million rates
+    copy(dt_cpr_dvfmts) %>% dcast.data.table(iso3c + year ~ src, value.var = "pred_mnl") %>%
+        .[dt_decps[, .(iso3c, year, pop = SP_POP_TOTLm_lag0_uscld)], on = .(iso3c, year)] %>%
+        .[, opng_rate_wopop := exp(wopop)] %>%
+        .[, opng_cnt := opng_rate_wopop * pop] %>%
+        .[, opng_cnt_log := log(opng_cnt)] %>%
+        .[, diff := opng_cnt_log - full] %>% summary()
+        
+          
+
+    ## test relation between constant and population: looks pretty linear
+    dt_decps_pred %>% copy() %>%
+        .[vrbl %in% c("cons", "SP_POP_TOTLm_lag0_uscld")] %>%
+        .[, .(value = mean(value), coef_cpnt = mean(coef_cpnt)), .(iso3c, vrbl)] %>%
+        dcast.data.table(iso3c ~ vrbl, value.var = c("value", "coef_cpnt")) %>% 
+        ## dcast.data.table(year + iso3c ~ vrbl, value.var = c("value", "coef_cpnt")) %>% 
+        ## lm(coef_cpnt_cons ~ value_SP_POP_TOTLm_lag0_uscld, .) %>% summary()
+        ggplot(aes(x=value_SP_POP_TOTLm_lag0_uscld, y=coef_cpnt_cons)) +
+        geom_point() + geom_smooth(method = "lm") +
+        geom_text_repel(mapping = aes(label = iso3c))
+
+
+    # difference between predicted full and predicted without intercepts
+    # on CY level
+    dt_decps %>% copy() %>% 
+        .[, diff := pred_nocons - pred_orig] %$% sum(abs(diff))
+
+    ## on country-level
+    dt_decps %>% copy() %>% 
+        .[, .(sum_orig = sum(pred_orig), sum_nocons = sum(pred_nocons)), iso3c] %>%
+        .[, diff := sum_orig - sum_nocons] %$% # first aggregate expectations to country-level
+        sum(abs(diff))
+
+    ## for some strange reason they're the same 
+    }
+
+
 ## ** dharma testing
 
 test_dharma <- function() {
@@ -1635,125 +1820,6 @@ test_dharma <- function() {
     ## idk: in some cases there's more, in some less:
     ## sum(abs(difference))
 
-    dt_decps <- adt(dfx)[, `:=`(pred_orig = exp(predict(rx, dfx)),
-                    pred_nocons = exp(predict(rx, adt(dfx)[, iso3c := "lul"])))]
-
-    dt_decps %>%
-        melt(id.vars = c("iso3c", "year"), measure.vars = c("pred_orig", "pred_nocons")) %>%
-        .[iso3c %in% c("DEU", "USA", "KOR", "IND", "CHN")] %>%
-        ggplot(aes(x=year, y=value, color = iso3c, linetype = variable)) + geom_line()
-        
-    ranef(rx)
-
-    ## more decomposition: make into superlong
-
-    ## get rx variables
-    dt_vrbl <- fixef(rx) %>% chuck("cond") %>% data.table(vrbl = names(.)) %>% .[, .(vrbl, coef = .)] %>% 
-        .[vrbl != "(Intercept)"] %>%
-        rbind(list(vrbl = "SP_POP_TOTLm_lag0_uscld", coef = 1)) # add population exposure
-
-    ## get country intercepts
-    
-    summary(rx) %>% coef()
-    
-    dt_ranef <- coef(rx) %>% chuck("cond", "iso3c") %>% adt(keep.rownames = "iso3c") %>%
-        .[, .(iso3c, coef = `(Intercept)`, value = 1, vrbl = "cons")] %>%
-        .[dt_decps[, .(iso3c, year)], on = "iso3c"] # expand with actual data to get years
-        
-    ## dt_ranef[iso3c == "DEU"]
-
-    ## melt into superlong
-    dt_decps_splong <- dt_decps[, c("iso3c", "year", dt_vrbl$vrbl), with = F] %>%
-        melt(id.vars = c("iso3c", "year"), variable.name = "vrbl") %>%
-        dt_vrbl[., on = "vrbl"] %>% ## merge fixed effects
-        .[vrbl == "SP_POP_TOTLm_lag0_uscld", value := log(value)] %>% # rescale population to exposure (log)
-        rbind(dt_ranef) # rbind intercepts
-
-    ## test that predictions work
-    dt_decps_splong[, .(pred_mnl = sum(coef * value)), .(iso3c, year)] %>%
-        .[, pred_orig := predict(rx, dfx)] %>%
-        .[, diff := pred_mnl - pred_orig] %>%
-        .[iso3c == "DEU"] %>% print(n=200)
-    ## looks good
-
-    ## get coef components, some diagnostics 
-    dt_decps_pred <- dt_decps_splong %>% copy() %>%
-        ## .[ vrbl != "SP_POP_TOTLm_lag0_uscld"] %>% # filter out density -> just rates for everybody? 
-        .[, coef_cpnt := coef*value] %>% 
-        .[, pred_mnl := sum(coef_cpnt), .(iso3c, year)] %>%
-        ## .[, pred_prop := (coef*value)/pred_mpnl] %>% # proportion of overall prediction explained by coef
-        .[, pred_diff := pred_mnl-coef_cpnt] # how different prediction would be without vrbl
-
-    
-    
-    ## test single country
-    dt_decps_vis <- dt_decps_pred[iso3c == "DEU"]#   & year == 2010]
-    dt_decps_vis[year == 2019]
-    ggplot() +
-        geom_line(dt_decps_vis, mapping = aes(x=year, y=coef_cpnt, color = vrbl)) + 
-        geom_text(dt_decps_vis[, .SD[which.max(year)-3], vrbl][order(-abs(coef_cpnt))][1:5],
-                  mapping= aes(x=max(year), y=coef_cpnt, label = vrbl))
-
-    ## maybe average proportion of variable? 
-    dt_decps_pred %>% copy() %>% # first get positive and negative parts
-        ## .[, sign := sign(coef_cpnt)] %>%
-        ## .[sign == 1, ctrbn_pos := sum(coef_cpnt), .(iso3c, year)] %>%
-        ## .[sign == -1, ctrbn_neg := sum(coef_cpnt), .(iso3c, year)] %>%
-        .[, .(iso3c, vrbl, coef_cpnt, sign = sign(coef_cpnt))] %>%
-        .[, ctrbn := sum(coef_cpnt), .(iso3c, vrbl, sign)] %>%
-        .[, ctrbn_prop := coef_cpnt/ctrbn] %>%
-        .[, mean(ctrbn_prop), .(vrbl, sign)] %>% print(n=50)
-        
-
-    ## test relation between full prediction and without population
-    dt_cpr_dvfmts <- rbind(
-        copy(dt_decps_splong)[, src := "full"],
-        copy(dt_decps_splong)[vrbl != "SP_POP_TOTLm_lag0_uscld"][, src := "wopop"]) %>%
-        .[, .(pred_mnl = sum(coef*value)), .(iso3c, year, src)]
-
-    ## plot some countries against different sources (full model, wopop)
-    dt_cpr_dvfmts %>%
-        ## dcast.data.table(iso3c + year ~ src, value.var = "pred_mnl") %>%
-        .[iso3c %in% c("USA", "BEL", "NLD", "DEU")] %>%
-        ggplot(aes(x=year, y=pred_mnl, color = iso3c, linetype = src)) + geom_line()
-    
-    ## see if wopop predictions make sense as per million rates
-    copy(dt_cpr_dvfmts) %>% dcast.data.table(iso3c + year ~ src, value.var = "pred_mnl") %>%
-        .[dt_decps[, .(iso3c, year, pop = SP_POP_TOTLm_lag0_uscld)], on = .(iso3c, year)] %>%
-        .[, opng_rate_wopop := exp(wopop)] %>%
-        .[, opng_cnt := opng_rate_wopop * pop] %>%
-        .[, opng_cnt_log := log(opng_cnt)] %>%
-        .[, diff := opng_cnt_log - full] %>% summary()
-        
-          
-
-    
-        
-
-    ## test relation between constant and population: looks pretty linear
-    dt_decps_pred %>% copy() %>%
-        .[vrbl %in% c("cons", "SP_POP_TOTLm_lag0_uscld")] %>%
-        .[, .(value = mean(value), coef_cpnt = mean(coef_cpnt)), .(iso3c, vrbl)] %>%
-        dcast.data.table(iso3c ~ vrbl, value.var = c("value", "coef_cpnt")) %>% 
-        ## dcast.data.table(year + iso3c ~ vrbl, value.var = c("value", "coef_cpnt")) %>% 
-        ## lm(coef_cpnt_cons ~ value_SP_POP_TOTLm_lag0_uscld, .) %>% summary()
-        ggplot(aes(x=value_SP_POP_TOTLm_lag0_uscld, y=coef_cpnt_cons)) +
-        geom_point() + geom_smooth(method = "lm") +
-        geom_text_repel(mapping = aes(label = iso3c))
-
-
-    # difference between predicted full and predicted without intercepts
-    # on CY level
-    dt_decps %>% copy() %>% 
-        .[, diff := pred_nocons - pred_orig] %$% sum(abs(diff))
-
-    ## on country-level
-    dt_decps %>% copy() %>% 
-        .[, .(sum_orig = sum(pred_orig), sum_nocons = sum(pred_nocons)), iso3c] %>%
-        .[, diff := sum_orig - sum_nocons] %$% # first aggregate expectations to country-level
-        sum(abs(diff))
-
-    ## for some strange reason they're the same 
     
     
     
