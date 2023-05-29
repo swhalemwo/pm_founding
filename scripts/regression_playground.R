@@ -1676,14 +1676,19 @@ test_dharma <- function() {
         .[iso3c == "DEU"] %>% print(n=200)
     ## looks good
 
+    ## get coef components, some diagnostics 
     dt_decps_pred <- dt_decps_splong %>% copy() %>%
+        ## .[ vrbl != "SP_POP_TOTLm_lag0_uscld"] %>% # filter out density -> just rates for everybody? 
         .[, coef_cpnt := coef*value] %>% 
         .[, pred_mnl := sum(coef_cpnt), .(iso3c, year)] %>%
-        ## .[, pred_prop := (coef*value)/pred_mnl] %>% # proportion of overall prediction explained by coef
+        ## .[, pred_prop := (coef*value)/pred_mpnl] %>% # proportion of overall prediction explained by coef
         .[, pred_diff := pred_mnl-coef_cpnt] # how different prediction would be without vrbl
 
-    dt_decps_vis <- dt_decps_pred[iso3c == "KOR"]#   & year == 2010]
-    dt_decps_vis[year == 2018]
+    
+    
+    ## test single country
+    dt_decps_vis <- dt_decps_pred[iso3c == "DEU"]#   & year == 2010]
+    dt_decps_vis[year == 2019]
     ggplot() +
         geom_line(dt_decps_vis, mapping = aes(x=year, y=coef_cpnt, color = vrbl)) + 
         geom_text(dt_decps_vis[, .SD[which.max(year)-3], vrbl][order(-abs(coef_cpnt))][1:5],
@@ -1700,6 +1705,41 @@ test_dharma <- function() {
         .[, mean(ctrbn_prop), .(vrbl, sign)] %>% print(n=50)
         
 
+    ## test relation between full prediction and without population
+    dt_cpr_dvfmts <- rbind(
+        copy(dt_decps_splong)[, src := "full"],
+        copy(dt_decps_splong)[vrbl != "SP_POP_TOTLm_lag0_uscld"][, src := "wopop"]) %>%
+        .[, .(pred_mnl = sum(coef*value)), .(iso3c, year, src)]
+
+    ## plot some countries against different sources (full model, wopop)
+    dt_cpr_dvfmts %>%
+        ## dcast.data.table(iso3c + year ~ src, value.var = "pred_mnl") %>%
+        .[iso3c %in% c("USA", "BEL", "NLD", "DEU")] %>%
+        ggplot(aes(x=year, y=pred_mnl, color = iso3c, linetype = src)) + geom_line()
+    
+    ## see if wopop predictions make sense as per million rates
+    copy(dt_cpr_dvfmts) %>% dcast.data.table(iso3c + year ~ src, value.var = "pred_mnl") %>%
+        .[dt_decps[, .(iso3c, year, pop = SP_POP_TOTLm_lag0_uscld)], on = .(iso3c, year)] %>%
+        .[, opng_rate_wopop := exp(wopop)] %>%
+        .[, opng_cnt := opng_rate_wopop * pop] %>%
+        .[, opng_cnt_log := log(opng_cnt)] %>%
+        .[, diff := opng_cnt_log - full] %>% summary()
+        
+          
+
+    
+        
+
+    ## test relation between constant and population: looks pretty linear
+    dt_decps_pred %>% copy() %>%
+        .[vrbl %in% c("cons", "SP_POP_TOTLm_lag0_uscld")] %>%
+        .[, .(value = mean(value), coef_cpnt = mean(coef_cpnt)), .(iso3c, vrbl)] %>%
+        dcast.data.table(iso3c ~ vrbl, value.var = c("value", "coef_cpnt")) %>% 
+        ## dcast.data.table(year + iso3c ~ vrbl, value.var = c("value", "coef_cpnt")) %>% 
+        ## lm(coef_cpnt_cons ~ value_SP_POP_TOTLm_lag0_uscld, .) %>% summary()
+        ggplot(aes(x=value_SP_POP_TOTLm_lag0_uscld, y=coef_cpnt_cons)) +
+        geom_point() + geom_smooth(method = "lm") +
+        geom_text_repel(mapping = aes(label = iso3c))
 
 
     # difference between predicted full and predicted without intercepts
