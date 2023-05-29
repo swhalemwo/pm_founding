@@ -2398,6 +2398,7 @@ gen_cntrfctl <- function(gof_df_cbn, fldr_info) {
     
     fwrite(dt_cntrfctl_res, paste0(fldr_info$BATCH_DIR, "cntrfctl_res.csv"))
 
+    ## dt_cntrfctl_res <- fread(paste0(fldr_info$BATCH_DIR, "cntrfctl_res.csv"))
 
     ## violin of pred_2k_prop
     dt_cntrfctl_res %>% copy() %>% .[, vrbl := gsub("_lag[1-5]", "", vrblx)] %>%
