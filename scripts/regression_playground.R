@@ -1716,9 +1716,16 @@ test_dharma <- function() {
     ## for some strange reason they're the same 
     
     
+    
+
+    
+
+}
 
 
-    ## fit with population weights
+model_weights <- function() {
+
+## fit with population weights
     rx3 <- glmmTMB(fx2, dfx, family = nbinom2, weights = dfx$SP_POP_TOTLm_lag0_uscld)
     rx32 <- glmmTMB(fx2, dfx, family = nbinom2, weights = dfx$SP_POP_TOTLm_lag0_uscld/10)
     rx4 <- glmmTMB(fx2, dfx, family = nbinom2, weights = asinh(dfx$SP_POP_TOTLm_lag0_uscld)) # scaled weights
@@ -1729,8 +1736,9 @@ test_dharma <- function() {
     
     ranef(rx)
     r2(rx)
+}
 
-
+added_squared_term_to_hnwi <- function() {
     ## add some squared term to model to improve fit
     ## LUL nobody cares
     
