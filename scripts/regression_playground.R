@@ -1616,13 +1616,27 @@ explr_decps <- function() {
                    predfull = dt_decps_cbn[, .(pred = exp(sum(coef_cpnt))), .(iso3c, year)][, mean(pred)]) %>%
         .[, prop := predfull/predwo]
 
+
+    ## 2000-constant values: prediction with 2000 values
+    dt_decps_cons <- copy(dt_decps_splong)[, min_year := min(year), iso3c][min_year <= 2000 & year >= 2000] %>%
+        .[year == 2000, value2k := value] %>%
+        .[, value2k := nafill(value2k, "locf"), .(iso3c, vrbl)] # %>% summary()
+        
+    vrblx <- "shweal992j_p90p100_lag4"
+    dt_decps_cons %>% copy() %>%
+        .[vrbl == vrblx, value := value2k] %>%
+        .[, .(pred = sum(coef*value)), .(iso3c, year)] %>%
+        .[, sum(exp(pred))]
+        
     
+
+
+    ## some plotting, idk why
     dt_decps_cbn[vrbl == "shweal992j_p90p100_lag4"] %>%
         ## .[iso3c %in% sample(iso3c, 5)] %>% 
         ggplot(aes(x=year, y=coef_cpnt, group = iso3c)) + geom_line()
 
 
-    
     ## look at density coef_cpnt in beginning: are negative
     ## but probably due to taking entire CY range into account: if no PM would be even more negative
     dt_decps_pred[iso3c == "DEU" & grepl("pm_density", vrbl) & !grepl("sity_global", vrbl)
@@ -1810,7 +1824,7 @@ test_dharma <- function() {
         melt(id.vars = c("iso3c", "year"), measure.vars = c("nbr_opened", "shweal992j_p90p100_lag4")) %>%
         ggplot(aes(x=year, y=value, group = iso3c)) +
         facet_grid(variable ~ iso3c, scales = "free") +
-        geom_line(se = F) +
+        geom_line() + 
         geom_smooth(se = F)
 
 
