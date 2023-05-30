@@ -2300,6 +2300,18 @@ pred_given_const_vrbl <- function(vrblx, rx, dfx, iv_vars) {
     dtx_consvrbl_2k <- dtx_consvrbl_2k_prep %>% copy() %>% 
         .[year != 2000, (vrblx) := NA] %>%
         .[, (vrblx) := map(vrblx, ~nafill(get(.x), type = "locf")), iso3c]
+    
+    ## constant value given on average of first 4 years
+    dtx_consvrbl_2k4 <- dtx_consvrbl_2k_prep %>% copy() %>% 
+        .[year >= 2004, (vrblx) := NA] %>%
+        .[, (vrblx) := mean(get(vrblx[1]), na.rm = T), iso3c]
+
+    ## dtx_consvrbl_2k4 %>% print(n=300)
+
+    ## fix the squares/interactions if necessary
+    dtx_consvrbl_2k4 <- recalc_interactions(dtx_consvrbl_2k4, vrblx)
+    ## dtx_consvrbl_2k4[, vrblx, with = F] %>% print(n=300)
+
 
     ## just subtract 1
     dtx_minusone_2k <- dfx %>% adt() %>%
@@ -2307,35 +2319,40 @@ pred_given_const_vrbl <- function(vrblx, rx, dfx, iv_vars) {
         .[min_year <= 2000 & year >= 2000] %>%
         .[, (vrblx[1]) := (get(vrblx[1])+1)] # only subtract from first: square/interaction has to be recomputed
 
-    ## need to deal with squares/interactions: maybe just recompute them all? 
-    if (len(vrblx) == 2) {
-        if (grepl("_sqrd", vrblx[2])) {
-            ## if variable is squared, recalculate the square
-            dtx_minusone_2k[, (vrblx[2]) := (get(vrblx[1])^2)]
-        } else if (grepl("interact", vrblx[2])) {
-            ## if variable is txdctblt*tmitr interaction, recalculate it
-            dtx_minusone_2k[, (vrblx[2]) := (get(vrblx[[1]]) * Ind.tax.incentives)]
-        }
-    }
+    ## fix the squares/interactions if necessary
+    dtx_minusone_2k <- recalc_interactions(dtx_minusone_2k, vrblx)
 
+    
     ## dtx_minusone_2k[, .(iso3c, year, tmitr_approx_linear20step_lag5, ti_tmitr_interact_lag5)]
     ## dtx_consvrbl[, .(iso3c, year, tmitr_approx_linear20step_lag5, ti_tmitr_interact_lag5)]
     
-    
-    
-    ## predict nbr of openings for entire dataset and only for those countries with data from 2000 onwards
-    dtx_consvrbl$pred <- exp(predict(rx, dtx_consvrbl))
-    dtx_consvrbl_2k$pred <- exp(predict(rx, dtx_consvrbl_2k))
+        
+    ## ## predict nbr of openings for entire dataset and only for those countries with data from 2000 onwards
+    ## dtx_consvrbl$pred <- exp(predict(rx, dtx_consvrbl))
+    ## dtx_consvrbl_2k$pred <- exp(predict(rx, dtx_consvrbl_2k))
+    ## dtx_consvrbl_2k4$pred <- exp(predict(rx, dtx_consvrbl_2k4))
+    ## dtx_minusone_2k$pred <- exp(predict(rx, dtx_minusone_2k))
 
+    ## melt(id.vars = "dt_id")
 
-    
     ## vrblx_coef <- summary(rx) %>% coef() %>% chuck("cond") %>% adt(keep.rownames = "vrbl") %>%
     ##     .[vrbl == vrblx, Estimate]
-
         
     ## predict for IV -1
-    dtx_minusone_2k$pred <- exp(predict(rx, dtx_minusone_2k))
+    
 
+
+    ## ## first predict IV with average, then use that to predict nbr_opened
+    ## r_vx <- glmmTMB(get(vrblx) ~ year + (1 + year | iso3c),
+    ##                 adt(dfx)[dtx_consvrbl_2k[, .(iso3c, year)], on = .(iso3c, year)])
+
+    ## dtx_consvrbl_2k$vrblx_pred <- predict(r_vx, adt(dfx)[dtx_consvrbl_2k[, .(iso3c, year)], on = .(iso3c, year)])
+
+    ## dtx_consvrbl_2k[iso3c %in% c("DEU", "USA", "KOR", "IND", "CHN", "BEL")] %>%
+    ##     melt(id.vars = c("iso3c", "year"), measure.vars = c("vrblx_pred", paste0(vrblx, "_bu"))) %>%
+    ##     ggplot(aes(x=year, y=value, color = iso3c, linetype = variable)) + geom_line() + geom_point()
+    
+    
     ## dtx_consvrbl_2k[is.na(pred)]
 
     ## ## look at countries with biggest diff between observed and predicted
@@ -2343,25 +2360,51 @@ pred_given_const_vrbl <- function(vrblx, rx, dfx, iv_vars) {
     ##     .[, .(diff = sum(nbr_opened) - sum(pred)), iso3c] %>%
     ##     .[order(abs(diff), decreasing = T)] %$% sum(diff)
 
+    ## look composition: countries that are disproportionately responsible for change
+    ## dtx_consvrbl_2k$pred_orig <- exp(predict(rx, adt(dfx)[dtx_consvrbl_2k[, .(iso3c, year)], on = .(iso3c, year)]))
 
-        
+    ## dtx_consvrbl_2k[, .(pred_orig = sum(pred_orig)
+    
+    pred_args <- list(
+        list(dtxx = dtx_consvrbl, rx = rx, dt_id = "all"),
+        list(dtxx = dtx_consvrbl_2k, rx = rx, dt_id = "2k"),
+        list(dtxx = dtx_consvrbl_2k4, rx = rx, dt_id = "2k4"),
+        list(dtxx = dtx_minusone_2k, rx = rx, dt_id = "minusone"))
 
-    list(vrblx = vrblx[1], # only first in case of squared/interactions
-         ## pred_orig_N = sum(dtx_consvrbl$pred_orig)
-         nbr_opened_all = sum(dtx_consvrbl$nbr_opened),
-         pred_all_N = sum(dtx_consvrbl$pred),
-         pred_all_prop = dtx_consvrbl[, .(prop_opnd = sum(nbr_opened)/sum(pred)), iso3c][, 1/mean(prop_opnd)],
-         nbr_opened_2k = sum(dtx_consvrbl_2k$nbr_opened),
-         pred_2k_N = sum(dtx_consvrbl_2k$pred),
-         ## inverse of mean of ratio of sum(obs) and sum(pred)
-         ## idea would be sum(pred)/sum(obs), but sum(obs) can be 0; predictions not 0 tho
-         ## values below one: more predicted under constant variable than observed
-         ## -> if variable stays at beginning, there will be more PMs
-         ## AZE: 4.45 times more founded than predicted -> inverse 1/4 = 0.22
-         ## if vrbl would have stayed constant, there would have been only 22% of the PMs founded than were founded
-         pred_2k_prop = dtx_consvrbl_2k[, .(prop_opnd = sum(nbr_opened)/sum(pred)), iso3c][, 1/mean(prop_opnd)],
-         pred_minusone = sum(dtx_minusone_2k$pred)
-         )
+    dtx_vlus <- map(pred_args, ~do.call("pred_collector", .x)) %>% rbindlist() %>%
+        .[, vrbl := vrblx[1]]
+
+    ## dtx_crydiff <- dtx_consvrbl_2k[, map(.SD, sum), iso3c, .SDcols = c("pred", "nbr_opened")] %>%
+    ##     .[, `:=`(diff = nbr_opened - pred, vrblx = vrblx[1])] # %>% print(n=200) #%>% .[, sum(diff)]
+    ##     ## .[, diff - min(diff)] %>% Gini()
+    
+    
+
+    ## l_pred_vlus <- list(vrblx = vrblx[1], # only first in case of squared/interactions
+    ##      ## pred_orig_N = sum(dtx_consvrbl$pred_orig)
+    ##      nbr_opened_all = sum(dtx_consvrbl$nbr_opened),
+    ##      pred_all_N = sum(dtx_consvrbl$pred),
+    ##      pred_all_prop = dtx_consvrbl[, .(prop_opnd = sum(nbr_opened)/sum(pred)), iso3c][, 1/mean(prop_opnd)],
+    ##      nbr_opened_2k = sum(dtx_consvrbl_2k$nbr_opened),
+    ##      pred_2k_N = sum(dtx_consvrbl_2k$pred),
+    ##      ## inverse of mean of ratio of sum(obs) and sum(pred)
+    ##      ## idea would be sum(pred)/sum(obs), but sum(obs) can be 0; predictions not 0 tho
+    ##      ## values below one: more predicted under constant variable than observed
+    ##      ## -> if variable stays at beginning, there will be more PMs
+    ##      ## AZE: 4.45 times more founded than predicted -> inverse 1/4 = 0.22
+    ##      ## if vrbl would have stayed constant, there would have been only 22% of the PMs founded than were founded
+    ##      pred_2k_prop = dtx_consvrbl_2k[, .(prop_opnd = sum(nbr_opened)/sum(pred)), iso3c][, 1/mean(prop_opnd)],
+    ##      pred_minusone = sum(dtx_minusone_2k$pred),
+    ##      gini_diff = dtx_crydiff[, Gini(diff - min(diff))]
+    ##      )
+
+    l_res <- list(
+        ## l_pred_vlus = l_pred_vlus,
+        dtx_vlus = dtx_vlus
+        ## dtx_crydiff = dtx_crydiff
+    )
+
+    return(l_res)
 
 }
         
@@ -2468,11 +2511,11 @@ gen_preds_given_mdfd_vrbls <- function(idx, fldr_info) {
         .[, paste0(vrbl, "_lag", lag)]
 
     
-    ## vrblx <- "hnwi_nbr_1M_lag1"
+    ## vrblx <- "hnwi_nbr_1M_lag4"
     ## vrblx <- "smorc_dollar_fxm_lag3"
     ## vrblx <- "sptinc992j_p90p100_lag3"
     ## vrblx <- "shweal992j_p90p100_lag4"
-    ## ## vrblx <- "tmitr_approx_linear20step_lag5"
+    vrblx <- "tmitr_approx_linear20step_lag5"
     ## sd(dfx$sptinc992j_p90p100_lag3)
     
     ## adt(dfx) %>%
@@ -2488,14 +2531,32 @@ gen_preds_given_mdfd_vrbls <- function(idx, fldr_info) {
     ## dt_predres_sdrange <- pred_sdrange(vrblx, rx, dfx, iv_vars)
     ## ggplot(dt_predres_sdrange, aes(x=updown, y=pred)) + geom_line()
 
+    l_predres_cons <- map(vrbls_lagged, ~pred_given_const_vrbl(.x, rx, dfx, iv_vars))
 
-    ## actually run the predictions
-    l_predres <- list(
-        dt_predres_cons = map(vrbls_lagged, ~pred_given_const_vrbl(.x, rx, dfx, iv_vars)) %>% rbindlist() %>%
-            .[, `:=`(mdl_id = idx, cbn_name = chuck(regspecx, "cfg", "cbn_name"))]
-        ## dt_predres_sdrange = map(vrbls_lagged, ~pred_sdrange(.x, rx, dfx, iv_vars)) %>% rbindlist() %>%
-        ##     .[, `:=`(mdl_id = idx, cbn_name = chuck(regspecx, "cfg", "cbn_name"))]
-    )
+    dt_predres_cons <- map(l_predres_cons, ~chuck(.x, "dtx_vlus")) %>% rbindlist() %>%
+        .[, `:=`(mdl_id = idx, cbn_name = chuck(regspecx, "cfg", "cbn_name"))]
+
+    ## dt_predres_cons %>% copy() %>%
+    ##     .[dt_id %!in% c("minusone", "all")] %>% 
+    ##     .[, diff := nbr_opened - pred] %>% 
+    ##     ggplot(aes(x=diff, y=vrbl, color = dt_id)) + geom_point()
+
+    ## map(l_predres_cons, ~chuck(.x, "dtx_crydiff")) %>% rbindlist() %>%
+    ##     ## .[iso3c %in% c("KOR", "USA", "DEU")] %>%
+    ##     .[abs(diff) > 3] %>% 
+    ##     ## .[order(diff)] %>% .[, iso3c := factor(iso3c)] %>% 
+    ##     ggplot(aes(x=diff, y=vrblx, color = iso3c, label = iso3c)) + geom_point() + geom_text_repel()
+
+
+
+    ## ## actually run the predictions
+    ## l_predres <- list(
+    ##     dt_predres_cons = map(vrbls_lagged, ~pred_given_const_vrbl(.x, rx, dfx, iv_vars) %>%
+    ##                                             chuck("l_pred_vlus")) %>% rbindlist() %>%
+    ##         .[, `:=`(mdl_id = idx, cbn_name = chuck(regspecx, "cfg", "cbn_name"))]
+    ##     ## dt_predres_sdrange = map(vrbls_lagged, ~pred_sdrange(.x, rx, dfx, iv_vars)) %>% rbindlist() %>%
+    ##     ##     .[, `:=`(mdl_id = idx, cbn_name = chuck(regspecx, "cfg", "cbn_name"))]
+    ## )
 
     
     ## l_predres$dt_predres_sdrange %>%
@@ -2507,7 +2568,8 @@ gen_preds_given_mdfd_vrbls <- function(idx, fldr_info) {
     ## x[, map(.SD, mean)] %>% melt()
 
 
-    return(l_predres$dt_predres_cons)
+    ## return(l_predres$dt_predres_cons)
+    return(dt_predres_cons)
     
 
 }
@@ -2526,7 +2588,7 @@ gen_cntrfctl <- function(gof_df_cbn, fldr_info) {
     dt_cntrfctl_res <- mclapply(mdl_id_dt$mdl_id, \(x) gen_preds_given_mdfd_vrbls(x, fldr_info), mc.cores = 5) %>% 
          rbindlist()
     
-    fwrite(dt_cntrfctl_res, paste0(fldr_info$BATCH_DIR, "cntrfctl_res.csv"))
+    ## fwrite(dt_cntrfctl_res, paste0(fldr_info$BATCH_DIR, "cntrfctl_res.csv"))
 
     ## dt_cntrfctl_res <- fread(paste0(fldr_info$BATCH_DIR, "cntrfctl_res.csv"))
     ## dt_cntrfctl_res[mdl_id == idx]
@@ -2576,8 +2638,21 @@ gen_cntrfctl <- function(gof_df_cbn, fldr_info) {
         labs(x="additional PM foundings due to variable change since 2000")
         
 
+    ## violin of difference between total opened observed and predicted
+    dt_cntrfctl_res %>% copy() %>% .[, vrbl := gsub("_lag[1-5]", "", vrbl)] %>%
+        .[, diff := nbr_opened - pred] %>% # effect of not staying constant since 2000
+        vvs$hyp_mep_dt[., on = "vrbl"] %>%
+        .[, vrbl := factor(vrbl, levels = rev(names(vvs$vrbl_lbls)))] %>%
+        .[dt_id %in% c("2k4")] %>% 
+        ggplot(aes(x=diff, y = vrbl, color = dt_id)) +
+        ## geom_point() +
+        geom_violin(bw = 5) + 
+        facet_grid(hyp ~ cbn_name, scales = "free", space = "free") +
+        geom_vline(mapping = aes(xintercept = 0), linetype = "dashed") +
+        labs(x="additional PM foundings due to variable change since 2000")
+        
 
-    ## gen_preds_given_mdfd_vrbls(idx, fldr_info)
+    
     
     
 
