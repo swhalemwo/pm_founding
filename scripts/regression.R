@@ -2331,6 +2331,68 @@ pred_given_const_vrbl <- function(vrblx, rx, dfx, iv_vars) {
 }
         
 
+pred_sdrange <- function(vrblx, rx, dfx, iv_vars) {
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
+    #' generate predictions of modifying entire dataset by 1SD
+
+    vrblx <- gen_vrblx_vec(vrblx, iv_vars)
+
+    ## maybe first make grid, then merge to that, then calculate actual value? 
+    dtx_grid <- adt(dfx) %$% 
+        expand.grid(iso3c = unique(iso3c), year = unique(year),
+                    ## updown = floor(min(get(vrblx))):ceiling(max(get(vrblx))),
+                    updown = (floor(min(get(vrblx[1])))-ceiling(max(get(vrblx[1])))):
+                        (ceiling(max(get(vrblx[1]))) - floor(min(get(vrblx[1]))))) %>% adt()
+    
+    ## this range is not enough: need updown big enough to move even highest value to bottom/lowest values up
+    ## should be better now
+    
+    dtx_grid[, .N, updown]
+
+    
+    dtx_gridfull <- adt(dfx)[dtx_grid, on = .(iso3c, year)] %>%
+        .[, c(vvs$base_vars, iv_vars, "updown", "SP_POP_TOTLm_lag0_uscld"), with = F] %>% na.omit() %>% 
+        ## na.omit() %>% .[, .N, updown] ## check presense: seems to be good
+        ## .[, (vrblx) := (get(vrblx) + updown)] %>% head() %>% adf()
+        .[, `:=`(minvrblx = min(get(vrblx[1])), maxvrblx = max(get(vrblx[1])))] %>%
+        ## .[, .(minvrblx, maxvrblx)] %>%
+        ## .[, .(iso3c, year, get(vrblx),  maxvrblx, minvrblx, updown)] %>% 
+        .[, (vrblx) := fifelse(updown >= 0,
+                               pmin(get(vrblx[1]) + updown, maxvrblx),
+                               pmax(get(vrblx[1]) + updown, minvrblx), # if below 1, ceiling to negative value
+                               )]
+        ## .[, .(iso3c, year, get(vrblx),  maxvrblx, minvrblx, updown)]
+        ## summary()
+        ## .[, mean(vrblx_mod), updown]
+    
+        ## .[updown %in% c(-7, 7), .N, vrblx_mod]
+    
+    if (len(vrblx) == 2) {
+        if (grepl("_sqrd", vrblx[2])) {
+            ## if variable is squared, recalculate the square
+            dtx_gridfull[, (vrblx[2]) := (get(vrblx[1])^2)]
+        } else if (grepl("interact", vrblx[2])) {
+            ## if variable is txdctblt*tmitr interaction, recalculate it
+            dtx_gridfull[, (vrblx[2]) := (get(vrblx[[1]]) * Ind.tax.incentives)]
+        }
+    }
+
+
+
+    ## dtx_gridfull[updown == 3, .(iso3c, year, get(vrblx))]
+    sdrange_res <- map(split(dtx_gridfull, dtx_gridfull$updown), ~sum(exp(predict(rx, .x))))
+
+    
+
+    dt_sdrange <- data.table(updown = as.numeric(names(sdrange_res)), pred = unlist(sdrange_res), vrblx = vrblx[1])
+    
+    ## dt_sdrange %>% ggplot(aes(x=updown, y=pred)) + geom_line()
+    return(dt_sdrange)
+
+}
+
+
+
 gen_preds_given_mdfd_vrbls <- function(idx, fldr_info) {
     if (as.character(match.call()[[1]]) %in% fstd){browser()}
     #' general prediction of DV under changed IVs
@@ -2372,7 +2434,7 @@ gen_preds_given_mdfd_vrbls <- function(idx, fldr_info) {
 
     
     ## vrblx <- "hnwi_nbr_1M_lag1"
-    ## vrblx <- "smorc_dollar_fxm_lag3"
+    vrblx <- "smorc_dollar_fxm_lag3"
     ## vrblx <- "sptinc992j_p90p100_lag3"
     ## vrblx <- "shweal992j_p90p100_lag4"
     ## ## vrblx <- "tmitr_approx_linear20step_lag5"
@@ -2386,13 +2448,25 @@ gen_preds_given_mdfd_vrbls <- function(idx, fldr_info) {
 
     ## xtsum(dfx, sptinc992j_p90p100_lag3, iso3c)
 
-    ## pred_given_const_vrbl(vrblx, rx, dfx, iv_vars)
+    pred_given_const_vrbl(vrblx, rx, dfx, iv_vars)
+
+    dt_predres_sdrange <- pred_sdrange(vrblx, rx, dfx, iv_vars)
+    ggplot(dt_predres_sdrange, aes(x=updown, y=pred)) + geom_line()
+
 
     ## actually run the predictions
-    dt_predres <- map(vrbls_lagged, ~pred_given_const_vrbl(.x, rx, dfx, iv_vars)) %>% rbindlist() %>%
-        .[, `:=`(mdl_id = idx, cbn_name = chuck(regspecx, "cfg", "cbn_name"))]
+    l_predres <- list(
+        dt_predres_cons = map(vrbls_lagged, ~pred_given_const_vrbl(.x, rx, dfx, iv_vars)) %>% rbindlist() %>%
+            .[, `:=`(mdl_id = idx, cbn_name = chuck(regspecx, "cfg", "cbn_name"))],
+        dt_predres_sdrange = map(vrbls_lagged, ~pred_sdrange(.x, rx, dfx, iv_vars)) %>% rbindlist() %>%
+            .[, `:=`(mdl_id = idx, cbn_name = chuck(regspecx, "cfg", "cbn_name"))])
 
-    return(dt_predres)
+    
+    l_predres$dt_predres_sdrange %>%
+        ggplot(aes(x=updown, y=pred, color = vrblx)) + geom_line()
+
+
+    return(l_predres)
 
 }
 
@@ -2404,9 +2478,9 @@ gen_cntrfctl <- function(gof_df_cbn, fldr_info) {
     ## get best models
     mdl_id_dt <- gen_mdl_id_dt(gof_df_cbn)
 
-    ## idx <- mdl_id_dt$mdl_id[7]
-    ## gen_preds_given_mdfd_vrbls(idx, fldr_info)
-
+    idx <- mdl_id_dt$mdl_id[7]
+    gen_preds_given_mdfd_vrbls(idx, fldr_info)
+    
     dt_cntrfctl_res <- mclapply(mdl_id_dt$mdl_id, \(x) gen_preds_given_mdfd_vrbls(x, fldr_info), mc.cores = 5) %>% 
          rbindlist()
     
