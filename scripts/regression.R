@@ -2434,7 +2434,7 @@ gen_preds_given_mdfd_vrbls <- function(idx, fldr_info) {
 
     
     ## vrblx <- "hnwi_nbr_1M_lag1"
-    vrblx <- "smorc_dollar_fxm_lag3"
+    ## vrblx <- "smorc_dollar_fxm_lag3"
     ## vrblx <- "sptinc992j_p90p100_lag3"
     ## vrblx <- "shweal992j_p90p100_lag4"
     ## ## vrblx <- "tmitr_approx_linear20step_lag5"
@@ -2448,25 +2448,32 @@ gen_preds_given_mdfd_vrbls <- function(idx, fldr_info) {
 
     ## xtsum(dfx, sptinc992j_p90p100_lag3, iso3c)
 
-    pred_given_const_vrbl(vrblx, rx, dfx, iv_vars)
+    ## pred_given_const_vrbl(vrblx, rx, dfx, iv_vars)
 
-    dt_predres_sdrange <- pred_sdrange(vrblx, rx, dfx, iv_vars)
-    ggplot(dt_predres_sdrange, aes(x=updown, y=pred)) + geom_line()
+    ## dt_predres_sdrange <- pred_sdrange(vrblx, rx, dfx, iv_vars)
+    ## ggplot(dt_predres_sdrange, aes(x=updown, y=pred)) + geom_line()
 
 
     ## actually run the predictions
     l_predres <- list(
         dt_predres_cons = map(vrbls_lagged, ~pred_given_const_vrbl(.x, rx, dfx, iv_vars)) %>% rbindlist() %>%
-            .[, `:=`(mdl_id = idx, cbn_name = chuck(regspecx, "cfg", "cbn_name"))],
-        dt_predres_sdrange = map(vrbls_lagged, ~pred_sdrange(.x, rx, dfx, iv_vars)) %>% rbindlist() %>%
-            .[, `:=`(mdl_id = idx, cbn_name = chuck(regspecx, "cfg", "cbn_name"))])
+            .[, `:=`(mdl_id = idx, cbn_name = chuck(regspecx, "cfg", "cbn_name"))]
+        ## dt_predres_sdrange = map(vrbls_lagged, ~pred_sdrange(.x, rx, dfx, iv_vars)) %>% rbindlist() %>%
+        ##     .[, `:=`(mdl_id = idx, cbn_name = chuck(regspecx, "cfg", "cbn_name"))]
+    )
 
     
-    l_predres$dt_predres_sdrange %>%
-        ggplot(aes(x=updown, y=pred, color = vrblx)) + geom_line()
+    ## l_predres$dt_predres_sdrange %>%
+    ##     ggplot(aes(x=updown, y=pred, color = vrblx)) + geom_line()
+
+    ## margins(rx)
+    ## x <- marginal_effects(rx) %>% adt()
+
+    ## x[, map(.SD, mean)] %>% melt()
 
 
-    return(l_predres)
+    return(l_predres$dt_predres_cons)
+    
 
 }
 
@@ -2487,6 +2494,7 @@ gen_cntrfctl <- function(gof_df_cbn, fldr_info) {
     fwrite(dt_cntrfctl_res, paste0(fldr_info$BATCH_DIR, "cntrfctl_res.csv"))
 
     ## dt_cntrfctl_res <- fread(paste0(fldr_info$BATCH_DIR, "cntrfctl_res.csv"))
+    ## dt_cntrfctl_res[mdl_id == idx]
 
     ## violin of pred_2k_prop
     dt_cntrfctl_res %>% copy() %>% .[, vrbl := gsub("_lag[1-5]", "", vrblx)] %>%
