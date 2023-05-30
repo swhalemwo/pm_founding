@@ -2234,6 +2234,41 @@ gen_vrblx_vec <- function(vrblx, iv_vars) {
     
 }
 
+recalc_interactions <- function(dtxx, vrblx) {
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
+    ## need to deal with squares/interactions: maybe just recompute them all?
+    
+    if (len(vrblx) == 2) {
+        if (grepl("_sqrd", vrblx[2])) {
+            ## if variable is squared, recalculate the square
+            dtxx[, (vrblx[2]) := (get(vrblx[1])^2)]
+        } else if (grepl("interact", vrblx[2])) {
+            ## if variable is txdctblt*tmitr interaction, recalculate it
+            dtxx[, (vrblx[2]) := (get(vrblx[[1]]) * Ind.tax.incentives)]
+        }
+    }
+    return(dtxx)
+
+}
+
+pred_collector <- function(dtxx, rx, dt_id) {
+    #' collect all kind of prediction values from a dataframe with adjusted values
+    
+    dtxx$pred <- exp(predict(rx, dtxx))
+
+    list(
+        dt_id = dt_id, 
+        nbr_opened = sum(dtxx$nbr_opened),
+        pred = sum(dtxx$pred),
+        gini = dtxx[, map(.SD, sum), iso3c, .SDcols = c("pred", "nbr_opened")] %>%
+            .[, diff := nbr_opened - pred] %>% .[, Gini(diff - min(diff))]
+        )
+    
+
+
+}
+
+
 
 
 pred_given_const_vrbl <- function(vrblx, rx, dfx, iv_vars) {
