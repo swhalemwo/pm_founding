@@ -2217,13 +2217,10 @@ add_coef_sig <- function(coef_df,  df_reg_anls_cfgs_wide) {
 
 }
 
-pred_given_const_vrbl <- function(vrblx, rx, dfx, iv_vars) {
-    if (as.character(match.call()[[1]]) %in% fstd){browser()}
-    1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;
-    
-    #' predict openings in dfx from model rx holding vrblx constant
+gen_vrblx_vec <- function(vrblx, iv_vars) {
+    #' check if vrblx has a squared term, or is part of interaction
+    #' if so, append those terms to vrblx
 
-    ## check squares: if squared version of variable is in iv_vars, add that squared version to vrblx
     if (gsub("_lag", "_sqrd_lag", vrblx) %in% iv_vars) {
         vrblx <- c(vrblx, gsub("_lag", "_sqrd_lag", vrblx))
     }
@@ -2232,7 +2229,22 @@ pred_given_const_vrbl <- function(vrblx, rx, dfx, iv_vars) {
     if (all(grepl("tmitr_approx", vrblx) & any(grepl("ti_tmitr_interact", iv_vars)))) {
         vrblx <- c(vrblx, iv_vars[grepl("ti_tmitr_interact", iv_vars)])
     }
+    
+    return(vrblx)
+    
+}
 
+
+
+pred_given_const_vrbl <- function(vrblx, rx, dfx, iv_vars) {
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
+    1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;
+    
+    #' predict openings in dfx from model rx holding vrblx constant
+
+    ## check squares: if squared version of variable is in iv_vars, add that squared version to vrblx
+    vrblx <- gen_vrblx_vec(vrblx, iv_vars)
+    
     ## set vrblx to their first year value 
     dtx_consvrbl <- dfx %>% adt() %>%
         ## .[, pred_orig := exp(predict(rx, .))] %>%  # predict with original variables before setting to constant
@@ -2296,6 +2308,8 @@ pred_given_const_vrbl <- function(vrblx, rx, dfx, iv_vars) {
     ##     .[, .(diff = sum(nbr_opened) - sum(pred)), iso3c] %>%
     ##     .[order(abs(diff), decreasing = T)] %$% sum(diff)
 
+
+        
 
     list(vrblx = vrblx[1], # only first in case of squared/interactions
          ## pred_orig_N = sum(dtx_consvrbl$pred_orig)
