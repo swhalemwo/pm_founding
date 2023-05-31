@@ -1551,3 +1551,78 @@ explr_dt_SD_handling <- function() {
         .[, paste0(vrbls, "_within") := map(.SD, ~.x - mean(.x)), id, .SDcols = vrbls]
 
 }
+## ** parallelization tests
+## ## create separate dataframes
+## l_dtx <- imap_dfr(vrbl_cbns[1:3], ~data.table(cbn_name = .y, vrbl = paste0(.x, "_lag0"))) %>%
+##     .[vrbl %in% vrbl_tdesc] %>%         
+##     split(by = c("cbn_name", "vrbl")) %>%
+##     map(~dtx[cbn_name == .x$cbn_name, .SD, .SDcols = c(vvs$base_vars, .x$vrbl, "cbn_name")])
+
+## regres <- map(l_dtx, glmmTMB()
+
+
+## cl <- makeCluster(4)
+## clusterEvalQ(cl, {library(glmmTMB)})
+
+## t1 = Sys.time()
+## res_clusterlapply <- clusterApply(cl, l_dtx[1:12], \(x) glmmTMB(get(names(x)[3]) ~ year + (1 | iso3c), x))
+## stopCluster(cl)
+
+## t2 = Sys.time()
+## res_mclapply <- mclapply(l_dtx, \(x) glmmTMB(get(names(x)[3]) ~ year + (1 | iso3c), x), mc.cores = 4)
+## t3 = Sys.time()
+## dtx_yearreg <- dtx_melt[, reg_helpr(.SD), .(variable, cbn_name)]
+## t4 = Sys.time()
+
+
+## ** test different hnwi ~ year model configurations
+## https://stats.stackexchange.com/questions/13166/rs-lmer-cheat-sheet different model specifications
+## slope and intercept deviations allowed to be correlated
+r_rs1 <- dtx_melt[cbn_name == "cbn_all" & variable == "hnwi_nbr_1M_lag0"] %>% copy() %>%
+    .[, year := year - 2000] %>% 
+    glmmTMB(value ~  year + (1 + year | iso3c), .)
+
+coef(r_rs1) %>% chuck("cond", "iso3c") %$% cor(`(Intercept)`, year)
+ranef(r_rs1) %>% chuck("cond", "iso3c") %$% cor(`(Intercept)`, year)
+
+
+r_rs2 <- dtx_melt[cbn_name == "cbn_all" & variable == "hnwi_nbr_1M_lag0"] %>% copy() %>%
+    glmmTMB(value ~ year + (1 | iso3c) + (0 + year | iso3c), .)
+
+
+## compare different offsets -> not that much difference
+## r_rs2_m2k <- dtx_melt[cbn_name == "cbn_all" & variable == "hnwi_nbr_1M_lag0"] %>% copy() %>%
+##     .[, year := year - 2000] %>% 
+##     glmmTMB(value ~ year + (1 | iso3c) + (0 + year | iso3c), .)
+
+## r_rs2_m2k10 <- dtx_melt[cbn_name == "cbn_all" & variable == "hnwi_nbr_1M_lag0"] %>% copy() %>%
+##     .[, year := year - 2010] %>% 
+##     glmmTMB(value ~ year + (1 | iso3c) + (0 + year | iso3c), .)
+
+## library(performance)
+## library(parameters)
+## compare_models(r_rs2, r_rs2_m2k, r_rs2_m2k10, exponentiate = T)
+
+## compare slopes between different year configurations
+rbind(
+    coef(r_rs2) %>% chuck("cond", "iso3c") %>% adt(keep.rownames = "iso3c") %>% .[, src := "rs2"],
+    coef(r_rs2_m2k) %>% chuck("cond", "iso3c") %>% adt(keep.rownames = "iso3c") %>% .[, src := "m2k"],
+    coef(r_rs2_m2k10) %>% chuck("cond", "iso3c") %>% adt(keep.rownames = "iso3c") %>% .[, src := "m2k10"]) %>%
+    ## ggplot(aes(x=year, y=iso3c, fill = src)) + geom_col(position = position_dodge2())
+    xtsum(year, iso3c)
+
+## compare different model configurations: "zero"- cor enforced or not
+rbind(
+    coef(r_rs1) %>% chuck("cond", "iso3c") %>% adt(keep.rownames = "iso3c") %>% .[, src := "rs1"],
+    coef(r_rs2) %>% chuck("cond", "iso3c") %>% adt(keep.rownames = "iso3c") %>% .[, src := "rs2"]) %>%
+    xtsum(year, iso3c)
+
+
+coef(r_rs2) %>% chuck("cond", "iso3c") %$% cor(`(Intercept)`, year)
+ranef(r_rs2) %>% chuck("cond", "iso3c") %$% cor(`(Intercept)`, year)
+
+r_rs2 %>% coef() %>% chuck("cond", "iso3c") %$% cor(`(Intercept)`, year)
+
+r_rs2_m2k10 %>% coef() %>% chuck("cond", "iso3c") %>%
+    adt(keep.rownames = "iso3c") %>% .[, setnames(.SD, "(Intercept)", "cons")] %>% #  %$% cor(cons, year)
+    ggplot(aes(x=cons, y=year)) + geom_point()

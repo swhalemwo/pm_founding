@@ -360,34 +360,166 @@ gen_res_velps <- function(cbn_dfs_rates) {
     if (as.character(match.call()[[1]]) %in% fstd){browser()}
     1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;
 
-    dfx <- cbn_dfs_rates$cbn_all
+    ## dfx <- cbn_dfs_rates$cbn_all
 
-    r_smorc <- glmmTMB(smorc_dollar_fxm_lag0 ~ year + (1 | iso3c), dfx)
+    ## r_smorc <- glmmTMB(smorc_dollar_fxm_lag0 ~ year + (1 | iso3c), dfx)
     
-    r_rs_smorc <- glmmTMB(smorc_dollar_fxm_lag0 ~ year + ( year | iso3c), dfx)
+    ## r_rs_smorc <- glmmTMB(smorc_dollar_fxm_lag0 ~ year + ( year | iso3c), dfx)
     
-    r_tmitr <- glmmTMB(tmitr_approx_linear20step_lag0 ~ year + (1 | iso3c), dfx)
-    ## summary(
+    ## r_tmitr <- glmmTMB(tmitr_approx_linear20step_lag0 ~ year + (1 | iso3c), dfx)
+    ## ## summary(
         
-    summary(r_rs_smorc)
-    summary(r_tmitr)
+    ## summary(r_rs_smorc)
+    ## summary(r_tmitr)
 
     
-    stargazer(r_smorc)
-    library(huxtable)
-    huxreg(r_smorc)
+    ## stargazer(r_smorc)
+    ## library(huxtable)
+    ## huxreg(r_smorc)
     
-    fixef(r_smorc)
+    ## fixef(r_smorc)
 
-    summary(r_smorc) %>% coef() %>% .[["cond"]] %>% adt()
+    ## summary(r_smorc) %>% coef() %>% .[["cond"]] %>% adt()
 
-    summary(r_rs_smorc) %>% coef() %>% chuck("cond") %>% adt(keep.rownames = "vrbl")
-    ## %$% createTexreg(coef.names = vrbl, coef = Estimate, se = `Std. Error`, pvalues = `Pr(>|z|)`) %>%
-    ##     screenreg()
-    get_r_gof(r_rs_smorc, summary(r_rs_smorc))
-    get_r_gof(r_smorc, summary(r_smorc))
+    ## summary(r_rs_smorc) %>% coef() %>% chuck("cond") %>% adt(keep.rownames = "vrbl")
+    ## ## %$% createTexreg(coef.names = vrbl, coef = Estimate, se = `Std. Error`, pvalues = `Pr(>|z|)`) %>%
+    ## ##     screenreg()
+    ## get_r_gof(r_rs_smorc, summary(r_rs_smorc))
+    ## get_r_gof(r_smorc, summary(r_smorc))
 
     
+    dtx <- adt(cbn_dfs_rates$cbn_all)
+
+    dtx <- imap_dfr(cbn_dfs_rates[1:3], ~adt(.x)[, cbn_name := .y])
+
+    ## get the variables to describe
+    vrbl_tdesc <- names(dtx) %>% keep(~grepl("lag0", .x)) %>%
+        keep(~!grepl("_sqrd", .x)) %>% ## yeet squares
+        keep(~!grepl("interact", .x)) %>% ## yeet interactions
+        keep(~!grepl("TOTLm_", .x)) ## yeet population
+
+    ## melt into long
+    
+    dtx_melt <- dtx %>% melt(id.vars = c(vvs$base_vars, "cbn_name"), measure.vars = vrbl_tdesc) %>%
+        .[, nbr_nas := sum(is.na(value)), .(cbn_name, variable)] %>%
+        .[nbr_nas == 0] ## filter out variables with missings (for datasets)
+
+    ## dtx_melt %>% copy() %>% .[, nbr_nas := sum(is.na(value)), .(cbn_name, variable)] %>%
+    ##     .[nbr_nas != 0, .N, .(variable, nbr_nas, cbn_name)]
+        
+    reg_helpr <- function(dtxx) {
+        #' collect constant/year coef/se
+        ## glmmTMB(value ~ year + (1 | iso3c), dtxx) %>% summary() %>% coef() %>% chuck("cond") %>%
+        ##     adt(keep.rownames = "vrbl") %$% setNames(Estimate, c("cons", "year")) %>% as.list()
+        glmmTMB(value ~ year + (1 | iso3c), dtxx) %>% summary() %>% coef() %>% chuck("cond") %>%
+        adt(keep.rownames = "vrbl") %>% .[, .(vrbl, coef = Estimate, se = `Std. Error`)] %>%
+        .[vrbl == "(Intercept)", vrbl := "cons"] %>% melt(id.vars = "vrbl") %$%
+        setNames(value, paste0(vrbl, "_", variable)) %>% as.list()
+    }
+
+    reg_helper_rs <- function(dtxx) {
+        #' collect random slopes
+        ## dtx_melt[variable == "gptinc992j_lag0" & cbn_name == "cbn_all"] %>% 
+        glmmTMB(value ~ year + (1 + year | iso3c), dtxx) %>% coef() %>% chuck("cond", "iso3c") %>%
+            adt(keep.rownames = "iso3c") %>% .[, setnames(.SD, "(Intercept)", "cons")]
+    }
+
+    
+
+    
+    dtx_yearreg <- dtx_melt[, reg_helpr(.SD), .(variable, cbn_name)]
+
+    dtx_yearreg_rs <- dtx_melt[, reg_helper_rs(.SD), .(variable, cbn_name)]
+
+    dtx_melt[cbn_name == "cbn_no_cult_spending" & variable == "hnwi_nbr_30M_lag0"] %>%
+        glmmTMB(value ~ year + (year | iso3c), .)
+        
+    
+    ## t4 = Sys.time()
+    ## %>% coef() %>% chuck("cond") %>%
+    ##     adt(keep.rownames = "vrbl") %>% .[, .(vrbl, coef = Estimate, se = `Std. Error`)] %>%
+    ##     .[vrbl == "(Intercept)", vrbl := "cons"] %>% melt(id.vars = "vrbl") %$%
+    ##     setNames(value, paste0(vrbl, "_", variable))
+
+    ## t2-t1
+    ## t3-t2
+    ## t4-t3
+    ## look at countries with largest slopes
+    dtx_yearreg_rs[variable == "hnwi_nbr_5M_lag0", head(.SD[order(-year)], 5), .(cbn_name)] #[, .N, iso3c]
+    
+    dtx_yearreg_rs[variable == "hnwi_nbr_1M_lag0"] %>%
+        ggplot(aes(x=year)) + geom_histogram() + facet_grid(cbn_name ~ ., scales = "free")
+
+    dtx_yearreg_rs[variable == "hnwi_nbr_1M_lag0"][, median(year), cbn_name]
+
+    dtx_yearreg_rs[variable == "hnwi_nbr_1M_lag0" & cbn_name == "cbn_no_cult_spending_and_mitr"] %>% print(n=300)
+
+    ## relation between slope and intercept
+    dtx_yearreg_rs[variable == "hnwi_nbr_1M_lag0" & cbn_name == "cbn_no_cult_spending_and_mitr"] %$%
+        cor(cons, year)
+    ## perfect negative HUH?
+    ## ggplot(aes(x=cons ,y=year)) + geom_point()
+
+    
+
+    
+
+    ## look at muh random slopes
+    cbn_dfs_rates_uscld$cbn_all %>%
+        ggplot(aes(x=year, y=hnwi_nbr_1M_lag0, group = iso3c)) + geom_point() +
+        geom_smooth(method = "lm", se = F, linewidth = 0.1)
+
+    hnwi_cols <- keep(names(dtx), ~grepl("hnwi_nbr_[0-9]+M_lag0", .x))
+
+    ## check how much hwni variables are zero: per CY and per country
+    imap_dfr(cbn_dfs_counts_uscld[1:3],
+         ~adt(.x) %>% .[, .SD, .SDcols = c("iso3c", hnwi_cols)] %>% 
+             rbind(.[, lapply(.SD, \(x) sum(x== 0)), .SDcols = hnwi_cols][, `:=`(measure = "CY", cbn_name = .y)],
+                   .[, lapply(.SD, \(x) all(x==0)), iso3c][, lapply(.SD, sum), .SDcols = hnwi_cols][
+                     , `:=`(measure = "cry", cbn_name = .y)],
+                   fill = T) %>% tail(2)) %>% # dt gets piped into rbind call -> has to be filtered out by tail
+        .[, iso3c := NULL] %>% ## iso3c is leftover from original loop, needs to be yeeted
+        melt(id.vars = c("measure", "cbn_name")) %>% dcast.data.table(variable + cbn_name ~ measure)
+        
+    
+    ## measures of distribution of random slopes: 
+    dtx_yearreg_rs[, .(variance = var(year), sd = sd(year), gini = Gini(year - min(year))), .(vrbl, cbn_name)] %>%
+        melt(id.vars = c("vrbl", "cbn_name"), variable.name = "measure", value.name = "size") %>%
+        ggplot(aes(x=size, y=vrbl, fill = cbn_name)) +
+        geom_col(position = position_dodge2()) +
+        facet_grid(~measure, scales = "free")
+    ## actually looks a lot like cbn_all is weird for all HNWI variables
+
+    ## plot slope distribution
+    dtx_yearreg_rs %>% .[, vrbl := gsub("_lag[0-5]", "", variable)] %>%
+        .[!grepl("closed_cum", vrbl) & !grepl("pm_density_global", vrbl)] %>% 
+        vvs$hyp_mep_dt[., on = "vrbl"] %>% 
+        .[, vrbl := factor(vrbl, levels = rev(names(vvs$vrbl_lbls)))] %>%
+        ## ggplot(aes(x=year)) + geom_density()
+        ggplot(aes(x=year, y=variable , fill = cbn_name)) +
+        geom_violin(bw = 0.005, alpha = 0.2, linewidth = 0.1) +
+        geom_jitter(mapping = aes(color = cbn_name), size = 0.5,
+                    position = position_jitterdodge(jitter.height = 0)) + 
+        facet_grid(hyp ~ ., scales = "free", space = "free") 
+    ## coord_cartesian(xlim = c(-0.5, 0.5))
+
+    
+    
+
+    dtx_yearreg %>% copy() %>% 
+        .[, vrbl := gsub("_lag[0-5]", "", variable)] %>%
+        .[!grepl("closed_cum", vrbl) & !grepl("pm_density_global", vrbl)] %>% 
+        vvs$hyp_mep_dt[., on = "vrbl"] %>% 
+        .[, vrbl := factor(vrbl, levels = rev(names(vvs$vrbl_lbls)))] %>% 
+        ggplot(aes(x=year_coef, y=variable, color = cbn_name)) +
+        geom_point() +
+        geom_errorbarh(mapping = aes(xmin = year_coef - 1.96*year_se, xmax = year_coef + 1.96*year_se)) + 
+        facet_grid(hyp ~ ., scales = "free", space = "free")
+    
+
+    map(l_dtx, ~glmmTMB(value ~ year + (1 | iso3c), .x))
+
+
 
 
     ## dfx %>% adt() %>%
