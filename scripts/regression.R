@@ -2745,14 +2745,18 @@ postestimation <- function(fldr_info) {
     gof_df_cbn <- reg_res_files$gof_df_cbn
     df_reg_anls_cfgs_wide <- reg_res_files$df_reg_anls_cfgs_wide
     
+    
     gen_cntrfctl(gof_df_cbn, fldr_info)
 
-    gen_cryexmpls(top_coefs)
+    ## gen_cryexmpls(top_coefs)
 
+    ## generate data for yearly developments
+    gen_res_velps(cbn_dfs_rates, fldr_info)
+  
     
     one_out_setup_and_run(fldr_info$batch_version, gof_df_cbn)
 
-    test_dharma()
+    ## test_dharma()
 
 
     
