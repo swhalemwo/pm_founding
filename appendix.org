@@ -251,11 +251,8 @@ dt_nbrs[, .(macro_str = sprintf("#+MACRO: %s %s", nbr_name, nbr_fmt)), grp] %>%
 #+MACRO: ynkplt_vrbl_cycnt (eval (concat "#+label: fig:vrbl_cycnt\n" "#+caption: Number of countries with per year per variable\n" "#+attr_latex: :width 18cm\n" "[[file:figures/plt_v75_vrbl_cycnt.pdf]]"))
 #+MACRO: ynkplt_cbn_cycnt (eval (concat "#+label: fig:cbn_cycnt\n" "#+caption: Number of countries per year per variable combination\n" "#+attr_latex: :width 18cm\n" "[[file:figures/plt_v75_cbn_cycnt.pdf]]"))
 #+MACRO: ynkplt_vif (eval (concat "#+label: fig:vif\n" "#+caption: Distribution of VIF estimates (Gaussian kernel density estimate; bandwidth = 0.1)\n" "#+attr_latex: :width 18cm\n" "[[file:figures/plt_v75_vif.pdf]]"))
+#+MACRO: ynkplt_velp (eval (concat "#+label: fig:velp\n" "#+caption: Results of regressing longitudinal variables on year\n" "#+attr_latex: :width 24cm\n" "[[file:figures/plt_v75_velp.pdf]]"))
 #+MACRO: ynkplt_oucoefchng (eval (concat "#+label: fig:oucoefchng\n" "#+caption: Coefficient changes given addition of other variables\n" "#+attr_latex: :width 24cm\n" "[[file:figures/plt_v75_oucoefchng.pdf]]"))
-#+MACRO: ynkplt_oucoefchng_tile (eval (concat "#+label: fig:oucoefchng_tile\n" "#+caption: Coefficient changes given addition of other variables\n" "#+attr_latex: :width 24cm\n" "[[file:figures/plt_v75_oucoefchng_tile.pdf]]"))
-#+MACRO: ynkplt_oucoefchng_cbn1 (eval (concat "#+label: fig:oucoefchng_cbn1\n" "#+caption: Coefficient changes given addition of other variables (DS all IVs)\n" "#+attr_latex: :width 14cm\n" "[[file:figures/plt_v75_oucoefchng_cbn1.pdf]]"))
-#+MACRO: ynkplt_oucoefchng_cbn2 (eval (concat "#+label: fig:oucoefchng_cbn2\n" "#+caption: Coefficient changes given addition of other variables (DS --CuSp)\n" "#+attr_latex: :width 14cm\n" "[[file:figures/plt_v75_oucoefchng_cbn2.pdf]]"))
-#+MACRO: ynkplt_oucoefchng_cbn3 (eval (concat "#+label: fig:oucoefchng_cbn3\n" "#+caption: Coefficient changes given addition of other variables (DS --CuSp/TMITR\n" "#+attr_latex: :width 14cm\n" "[[file:figures/plt_v75_oucoefchng_cbn3.pdf]]"))
 
 
 # figlbls
@@ -276,6 +273,7 @@ dt_nbrs[, .(macro_str = sprintf("#+MACRO: %s %s", nbr_name, nbr_fmt)), grp] %>%
 #+MACRO: rplt_vrbl_cycnt \ref{fig:vrbl_cycnt}
 #+MACRO: rplt_cbn_cycnt \ref{fig:cbn_cycnt}
 #+MACRO: rplt_vif \ref{fig:vif}
+#+MACRO: rplt_velp \ref{fig:velp}
 #+MACRO: rplt_oucoefchng \ref{fig:oucoefchng}
 #+MACRO: rplt_oucoefchng_tile \ref{fig:oucoefchng_tile}
 #+MACRO: rplt_oucoefchng_cbn1 \ref{fig:oucoefchng_cbn1}
@@ -489,8 +487,8 @@ It furthermore seem to be the case that the HNWI coefficients (which are not sig
 
 
 ** Multicollinearity 
-{{{ynkplt_vif}}}
 
+{{{ynkplt_vif}}}
 
 
 VIFs were calculated for the best-fitting model of each variable set and dataset (108 models in total given 1 of 4 HWNI variables \times 1 of 3 income inequality variables \times 1 of 3 wealth inequality variables \times 1 of 3 datasets) using the R =performance= package [[parencite:&Luedecke_etal_2021_performance]]. 
@@ -503,3 +501,37 @@ While VIFs can be substantial when including squared variables and interactions,
 #
 
 
+
+** Longitudinal development
+
+#+latex: \begin{landscape}
+
+{{{ynkplt_velp}}}
+
+#+latex: \end{landscape}
+
+Next to these overall statistics, the within-country changes were analyzed to characterize the development of the longitudinal variables over the observation period.
+#
+In particular, for each variable a separate regression model was run which regresses the variable in question at lag 0 against year while allowing slopes and intercepts to vary by country (year was set 0 at the beginning of the observation period, *X*).
+#
+*can only cover linear country trends*
+#
+Results are presented in figure {{{rplt_velp}}}.
+#
+The histogram shows the distribution of country slopes, while the dot and whiskper shows the overall slope estimate with a 95% confidence interval.
+#
+For example the overall slope of GDP is *X* (indicating an average growth of GDP by *X*, or *X* USD), however the histogram shows that countries can substantially diverge from this overall slope as country-slopes can range from a minimum of *X* to a maximum of *Y*, with 75% of slopes lying between *X* and *K*.
+#
+Furthermore, the correlation between slope and intercept is included:
+#
+A positive correlation indicates that countries with higher constants (i.e. predicted value in *1995*) achieve higher growth over the observation period than countries with lower constants (thereby "extending their lead"), whereas negative correlations indicate that countries with lower constants experience higher growth (thereby "catching up").
+
+
+main findings:
+- TI decrease
+- smorc increase
+- inequalities show much variation, depending on dataset
+- hwni increase, but very unequally, many 0s
+  not artifact of construction: many 0 slopes also for low thresholds where there are almost no zeroes
+  
+  
