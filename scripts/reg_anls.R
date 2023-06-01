@@ -357,10 +357,88 @@ gen_plt_oucoefchng <- function(dt_oucoefchng) {
 
 ## gen_plt_oucoefchng(reg_anls_base$ou_objs, reg_res_objs$df_anls_base)
 
+gen_plt_cntrfctl <- function(dt_cntrfctl_res) {
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
+    1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;
+
+    ## ## violin of pred_2k_prop
+    ## dt_cntrfctl_res %>% copy() %>% .[, vrbl := gsub("_lag[1-5]", "", vrblx)] %>%
+    ##     vvs$hyp_mep_dt[., on = "vrbl"] %>%
+    ##     .[, vrbl := factor(vrbl, levels = rev(names(vvs$vrbl_lbls)))] %>%
+    ##     ggplot(aes(x=pred_2k_prop, y = vrbl)) +
+    ##     ## geom_point() +
+    ##     geom_violin() + # bw = 0.05) + 
+    ##     facet_grid(hyp ~ cbn_name, scales = "free", space = "free") +
+    ##     geom_vline(mapping = aes(xintercept = 1), linetype = "dashed")
+    
+    
 
 
+    ## ## violin of minusone
+    ## dt_cntrfctl_res %>% copy() %>% .[, vrbl := gsub("_lag[1-5]", "", vrblx)] %>%
+    ##     .[, diff := pred_minusone - nbr_opened_2k] %>% # effect of not being 1 SD lower
+    ##     vvs$hyp_mep_dt[., on = "vrbl"] %>%
+    ##     .[, vrbl := factor(vrbl, levels = rev(names(vvs$vrbl_lbls)))] %>% 
+    ##     ggplot(aes(x=diff, y = vrbl)) +
+    ##     geom_violin() + # bw = 5) + 
+    ##     facet_grid(hyp ~ cbn_name, scales = "free", space = "free") +
+    ##     geom_vline(mapping = aes(xintercept = 0), linetype = "dashed") +
+    ##     labs(x="change in number of PM foundings if variable was 1 SD higher")
+
+    ## ## reproducing "coefs" from predicted change
+    ## dt_cntrfctl_res[, .(coef = log(mean(pred_minusone)/mean(pred_2k_N))),
+    ##                 by = .(vrbl = gsub("_lag[1-5]", "", vrblx), cbn_name)] %>%
+    ##     vvs$hyp_mep_dt[., on = "vrbl"] %>%
+    ##     dcast.data.table(vrbl + hyp ~ cbn_name, value.var = "coef") %>%
+    ##     .[order(hyp)]
+    
+        
 
 
+    ## ## violin of difference between total opened observed and predicted
+    ## dt_cntrfctl_res %>% copy() %>% .[, vrbl := gsub("_lag[1-5]", "", vrblx)] %>%
+    ##     .[, diff := nbr_opened_2k - pred_2k_N] %>% # effect of not staying constant since 2000
+    ##     vvs$hyp_mep_dt[., on = "vrbl"] %>%
+    ##     .[, vrbl := factor(vrbl, levels = rev(names(vvs$vrbl_lbls)))] %>% 
+    ##     ggplot(aes(x=diff, y = vrbl)) +
+    ##     ## geom_point() +
+    ##     geom_violin(bw = 5) + 
+    ##     facet_grid(hyp ~ cbn_name, scales = "free", space = "free") +
+    ##     geom_vline(mapping = aes(xintercept = 0), linetype = "dashed") +
+    ##     labs(x="additional PM foundings due to variable change since 2000")
+        
+
+    ## ## violin of difference between total opened observed and predicted
+    dt_cntrfctl_res %>% copy() %>% .[, vrbl := gsub("_lag[1-5]", "", vrbl)] %>%
+        .[, diff := nbr_opened - pred] %>% # effect of not staying constant since 2000
+        vvs$hyp_mep_dt[., on = "vrbl"] %>%
+        .[, vrbl := factor(vrbl, levels = rev(names(vvs$vrbl_lbls)))] %>%
+        .[dt_id %in% c("2k4")] %>% 
+        ggplot(aes(x=diff, y = vrbl, color = dt_id)) +
+        ## geom_point() +
+        geom_violin(bw = 5) + 
+        facet_grid(hyp ~ cbn_name, scales = "free", space = "free") +
+        geom_vline(mapping = aes(xintercept = 0), linetype = "dashed") +
+        labs(x="additional PM foundings due to variable change since 2000")
+        
+    
+    ## ## distribution of gini of distribution of difference between country-level observed and predicted
+    ## dt_cntrfctl_res %>% copy() %>% .[, vrbl := gsub("_lag[1-5]", "", vrbl)] %>%
+    ##     vvs$hyp_mep_dt[., on = "vrbl"] %>%
+    ##     .[, vrbl := factor(vrbl, levels = rev(names(vvs$vrbl_lbls)))] %>%
+    ##     .[dt_id != "minusone"] %>% 
+    ##     ggplot(aes(x=gini, y = vrbl, fill = dt_id)) +
+    ##     ## geom_point() +
+    ##     geom_violin(bw = 0.02) + 
+    ##     facet_grid(hyp ~ cbn_name, scales = "free", space = "free") +
+    ##     geom_vline(mapping = aes(xintercept = 0), linetype = "dashed")
+
+
+   
+}
+
+
+gen_plt_cntrfctl(reg_res_objs$dt_cntrfctl_res)
 
 
 gen_plt_velp <- function(dt_velp_crycoefs, dt_velp_scalars) {
@@ -787,6 +865,7 @@ proc_reg_res_objs <- function(reg_anls_base, vvs, NBR_MDLS) {
             ou_anls = ou_procd$ou_anls,
             dt_vif_res = reg_anls_base$dt_vif_res,
             dt_oucoefchng = dt_oucoefchng,
+            dt_cntrfctl_res = reg_anls_base$dt_cntrfctl_res,
             dt_velp_scalars = reg_anls_base$dt_velp_scalars,
             dt_velp_crycoefs = reg_anls_base$dt_velp_crycoefs
         )
@@ -1653,6 +1732,7 @@ gen_reg_res_plts <- function(reg_res_objs, vvs, NBR_MDLS, only_priority_plts, st
     ou_anls <- reg_res_objs$ou_anls
     dt_vif_res <- reg_res_objs$dt_vif_res
     dt_oucoefchng <- reg_res_objs$dt_oucoefchng
+    dt_cntrfctl_res <- reg_res_objs$dt_cntrfctl_res
     dt_velp_scalars <- reg_res_objs$dt_velp_scalars
     dt_velp_crycoefs <- reg_res_objs$dt_velp_crycoefs
     
@@ -1669,6 +1749,7 @@ gen_reg_res_plts <- function(reg_res_objs, vvs, NBR_MDLS, only_priority_plts, st
         plt_cbn_cycnt = gen_plt_cbn_cycnt(cbn_dfs_rates, stylecfg),
         plt_vif = gen_plt_vif(dt_vif_res, top_coefs),
         plt_oucoefchng = gen_plt_oucoefchng(dt_oucoefchng),
+        plt_cntrfctl = gen_plt_cntrfctl(dt_cntrfctl_res),
         plt_velp = gen_plt_velp(dt_velp_crycoefs, dt_velp_scalars)
         ## plt_oucoefchng_tile = gen_plt_oucoefchng_tile(dt_oucoefchng),
         ## plt_oucoefchng_cbn1 = gen_plt_oucoefchng(dt_oucoefchng[cbn_name == "cbn_all"]),

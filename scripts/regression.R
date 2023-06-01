@@ -2590,87 +2590,16 @@ gen_cntrfctl <- function(gof_df_cbn, fldr_info) {
     dt_cntrfctl_res <- mclapply(mdl_id_dt$mdl_id, \(x) gen_preds_given_mdfd_vrbls(x, fldr_info), mc.cores = 5) %>% 
          rbindlist()
     
-    ## fwrite(dt_cntrfctl_res, paste0(fldr_info$BATCH_DIR, "cntrfctl_res.csv"))
+    fwrite(dt_cntrfctl_res, paste0(fldr_info$BATCH_DIR, "cntrfctl_res.csv"))
 
     ## dt_cntrfctl_res <- fread(paste0(fldr_info$BATCH_DIR, "cntrfctl_res.csv"))
     ## dt_cntrfctl_res[mdl_id == idx]
 
-    ## violin of pred_2k_prop
-    dt_cntrfctl_res %>% copy() %>% .[, vrbl := gsub("_lag[1-5]", "", vrblx)] %>%
-        vvs$hyp_mep_dt[., on = "vrbl"] %>%
-        .[, vrbl := factor(vrbl, levels = rev(names(vvs$vrbl_lbls)))] %>%
-        ggplot(aes(x=pred_2k_prop, y = vrbl)) +
-        ## geom_point() +
-        geom_violin() + # bw = 0.05) + 
-        facet_grid(hyp ~ cbn_name, scales = "free", space = "free") +
-        geom_vline(mapping = aes(xintercept = 1), linetype = "dashed")
-
-
-    ## violin of minusone
-    dt_cntrfctl_res %>% copy() %>% .[, vrbl := gsub("_lag[1-5]", "", vrblx)] %>%
-        .[, diff := pred_minusone - nbr_opened_2k] %>% # effect of not being 1 SD lower
-        vvs$hyp_mep_dt[., on = "vrbl"] %>%
-        .[, vrbl := factor(vrbl, levels = rev(names(vvs$vrbl_lbls)))] %>% 
-        ggplot(aes(x=diff, y = vrbl)) +
-        geom_violin() + # bw = 5) + 
-        facet_grid(hyp ~ cbn_name, scales = "free", space = "free") +
-        geom_vline(mapping = aes(xintercept = 0), linetype = "dashed") +
-        labs(x="change in number of PM foundings if variable was 1 SD higher")
-
-    ## reproducing "coefs" from predicted change
-    dt_cntrfctl_res[, .(coef = log(mean(pred_minusone)/mean(pred_2k_N))),
-                    by = .(vrbl = gsub("_lag[1-5]", "", vrblx), cbn_name)] %>%
-        vvs$hyp_mep_dt[., on = "vrbl"] %>%
-        dcast.data.table(vrbl + hyp ~ cbn_name, value.var = "coef") %>%
-        .[order(hyp)]
-    
-        
-
-
-    ## violin of difference between total opened observed and predicted
-    dt_cntrfctl_res %>% copy() %>% .[, vrbl := gsub("_lag[1-5]", "", vrblx)] %>%
-        .[, diff := nbr_opened_2k - pred_2k_N] %>% # effect of not staying constant since 2000
-        vvs$hyp_mep_dt[., on = "vrbl"] %>%
-        .[, vrbl := factor(vrbl, levels = rev(names(vvs$vrbl_lbls)))] %>% 
-        ggplot(aes(x=diff, y = vrbl)) +
-        ## geom_point() +
-        geom_violin(bw = 5) + 
-        facet_grid(hyp ~ cbn_name, scales = "free", space = "free") +
-        geom_vline(mapping = aes(xintercept = 0), linetype = "dashed") +
-        labs(x="additional PM foundings due to variable change since 2000")
-        
-
-    ## violin of difference between total opened observed and predicted
-    dt_cntrfctl_res %>% copy() %>% .[, vrbl := gsub("_lag[1-5]", "", vrbl)] %>%
-        .[, diff := nbr_opened - pred] %>% # effect of not staying constant since 2000
-        vvs$hyp_mep_dt[., on = "vrbl"] %>%
-        .[, vrbl := factor(vrbl, levels = rev(names(vvs$vrbl_lbls)))] %>%
-        .[dt_id %in% c("2k4")] %>% 
-        ggplot(aes(x=diff, y = vrbl, color = dt_id)) +
-        ## geom_point() +
-        geom_violin(bw = 5) + 
-        facet_grid(hyp ~ cbn_name, scales = "free", space = "free") +
-        geom_vline(mapping = aes(xintercept = 0), linetype = "dashed") +
-        labs(x="additional PM foundings due to variable change since 2000")
-        
-    
-    ## distribution of gini of distribution of difference between country-level observed and predicted
-    dt_cntrfctl_res %>% copy() %>% .[, vrbl := gsub("_lag[1-5]", "", vrbl)] %>%
-        vvs$hyp_mep_dt[., on = "vrbl"] %>%
-        .[, vrbl := factor(vrbl, levels = rev(names(vvs$vrbl_lbls)))] %>%
-        .[dt_id != "minusone"] %>% 
-        ggplot(aes(x=gini, y = vrbl, fill = dt_id)) +
-        ## geom_point() +
-        geom_violin(bw = 0.02) + 
-        facet_grid(hyp ~ cbn_name, scales = "free", space = "free") +
-        geom_vline(mapping = aes(xintercept = 0), linetype = "dashed")
-
-    
-
-    
     
 
 }
+
+
 
 gen_cryexmpls <- function(top_coefs) {
     #' pick some countries for each variable
