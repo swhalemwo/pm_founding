@@ -528,6 +528,7 @@ A positive correlation indicates that countries with higher constants (i.e. pred
 
 
 main findings:
+- to the extent to which histograms of same variable are different between combinations, countries are not missing at random -> less biased estimates
 - TI decrease
 - smorc increase
 - inequalities show much variation, depending on dataset
@@ -535,3 +536,8 @@ main findings:
   not artifact of construction: many 0 slopes also for low thresholds where there are almost no zeroes
   
   
+
+
+
+
+
