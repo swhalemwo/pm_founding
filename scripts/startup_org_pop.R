@@ -72,7 +72,7 @@ IDA_DIR <- paste0(PROJECT_DIR, "data/degruyter/ida/")
 
 TAX_INCENTIVES_DIR <- paste0(PROJECT_DIR, "data/tax_incentives/")
 
-
+SKETCH_DIR <- "/home/johannes/Dropbox/phd/papers/org_pop/sketches/"
 
 
 PROC_DATA_DIR <- paste0(PROJECT_DIR, "data/processed/")
