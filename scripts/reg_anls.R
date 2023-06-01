@@ -4,6 +4,7 @@
 library(stringr)
 library(ggbeeswarm)
 library(patchwork)
+library(ggridges)
 
 library(sf)
 library(stars)
@@ -34,11 +35,16 @@ read_reg_anls_files <- function(fldr_info) {
 
     dt_cntrfctl_res <- fread(paste0(fldr_info$BATCH_DIR, "cntrfctl_res.csv"))
 
+    ## read value ~ year data back in 
+    dt_velp_scalars <- fread(paste0(fldr_info$BATCH_DIR, "dt_velp_scalars.csv"))
+    dt_velp_crycoefs <- fread(paste0(fldr_info$BATCH_DIR, "dt_velp_crycoefs.csv"))
+
     return(c(reg_anls_base_objs,
              list(ou_objs = reg_anls_ou_objs),
-             list(dt_vif_res = dt_vif_res),
-             list(dt_cntrfctl_res = dt_cntrfctl_res)
-             ))
+             list(dt_vif_res = dt_vif_res,
+                  dt_cntrfctl_res = dt_cntrfctl_res,
+                  dt_velp_scalars = dt_velp_scalars,
+                  dt_velp_crycoefs = dt_velp_crycoefs)))
     
    
 }
@@ -356,122 +362,15 @@ gen_plt_oucoefchng <- function(dt_oucoefchng) {
 
 
 
-gen_res_velps <- function(cbn_dfs_rates) {
+
+gen_plt_velp <- function(dt_velp_crycoefs, dt_velp_scalars) {
     if (as.character(match.call()[[1]]) %in% fstd){browser()}
-    1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;
-
-    ## dfx <- cbn_dfs_rates$cbn_all
-
-    ## r_smorc <- glmmTMB(smorc_dollar_fxm_lag0 ~ year + (1 | iso3c), dfx)
     
-    ## r_rs_smorc <- glmmTMB(smorc_dollar_fxm_lag0 ~ year + ( year | iso3c), dfx)
-    
-    ## r_tmitr <- glmmTMB(tmitr_approx_linear20step_lag0 ~ year + (1 | iso3c), dfx)
-    ## ## summary(
-        
-    ## summary(r_rs_smorc)
-    ## summary(r_tmitr)
-
-    
-    ## stargazer(r_smorc)
-    ## library(huxtable)
-    ## huxreg(r_smorc)
-    
-    ## fixef(r_smorc)
-
-    ## summary(r_smorc) %>% coef() %>% .[["cond"]] %>% adt()
-
-    ## summary(r_rs_smorc) %>% coef() %>% chuck("cond") %>% adt(keep.rownames = "vrbl")
-    ## ## %$% createTexreg(coef.names = vrbl, coef = Estimate, se = `Std. Error`, pvalues = `Pr(>|z|)`) %>%
-    ## ##     screenreg()
-    ## get_r_gof(r_rs_smorc, summary(r_rs_smorc))
-    ## get_r_gof(r_smorc, summary(r_smorc))
-
-    
-    dtx <- adt(cbn_dfs_rates$cbn_all)
-
-    dtx <- imap_dfr(cbn_dfs_rates[1:3], ~adt(.x)[, cbn_name := .y])
-
-    ## get the variables to describe
-    vrbl_tdesc <- names(dtx) %>% keep(~grepl("lag0", .x)) %>%
-        keep(~!grepl("_sqrd", .x)) %>% ## yeet squares
-        keep(~!grepl("interact", .x)) %>% ## yeet interactions
-        keep(~!grepl("TOTLm_", .x)) ## yeet population
-
-    ## melt into long
-    
-    dtx_melt <- dtx %>% melt(id.vars = c(vvs$base_vars, "cbn_name"), measure.vars = vrbl_tdesc) %>%
-        .[, nbr_nas := sum(is.na(value)), .(cbn_name, variable)] %>%
-        .[nbr_nas == 0] ## filter out variables with missings (for datasets)
-
-    ## dtx_melt %>% copy() %>% .[, nbr_nas := sum(is.na(value)), .(cbn_name, variable)] %>%
-    ##     .[nbr_nas != 0, .N, .(variable, nbr_nas, cbn_name)]
-        
-    reg_helpr <- function(dtxx) {
-        #' collect constant/year coef/se
-        ## glmmTMB(value ~ year + (1 | iso3c), dtxx) %>% summary() %>% coef() %>% chuck("cond") %>%
-        ##     adt(keep.rownames = "vrbl") %$% setNames(Estimate, c("cons", "year")) %>% as.list()
-        glmmTMB(value ~ year + (1 | iso3c), dtxx) %>% summary() %>% coef() %>% chuck("cond") %>%
-        adt(keep.rownames = "vrbl") %>% .[, .(vrbl, coef = Estimate, se = `Std. Error`)] %>%
-        .[vrbl == "(Intercept)", vrbl := "cons"] %>% melt(id.vars = "vrbl") %$%
-        setNames(value, paste0(vrbl, "_", variable)) %>% as.list()
-    }
-
-    reg_helper_rs <- function(dtxx) {
-        #' collect random slopes
-        ## dtx_melt[variable == "gptinc992j_lag0" & cbn_name == "cbn_all"] %>% 
-        glmmTMB(value ~ year + (1 + year | iso3c), dtxx) %>% coef() %>% chuck("cond", "iso3c") %>%
-            adt(keep.rownames = "iso3c") %>% .[, setnames(.SD, "(Intercept)", "cons")]
-    }
-
-    
-
-    
-    dtx_yearreg <- dtx_melt[, reg_helpr(.SD), .(variable, cbn_name)]
-
-    dtx_yearreg_rs <- dtx_melt[, reg_helper_rs(.SD), .(variable, cbn_name)]
-
-    dtx_melt[cbn_name == "cbn_no_cult_spending" & variable == "hnwi_nbr_30M_lag0"] %>%
-        glmmTMB(value ~ year + (year | iso3c), .)
-        
-    
-    ## t4 = Sys.time()
-    ## %>% coef() %>% chuck("cond") %>%
-    ##     adt(keep.rownames = "vrbl") %>% .[, .(vrbl, coef = Estimate, se = `Std. Error`)] %>%
-    ##     .[vrbl == "(Intercept)", vrbl := "cons"] %>% melt(id.vars = "vrbl") %$%
-    ##     setNames(value, paste0(vrbl, "_", variable))
-
-    ## t2-t1
-    ## t3-t2
-    ## t4-t3
-    ## look at countries with largest slopes
-    dtx_yearreg_rs[variable == "hnwi_nbr_5M_lag0", head(.SD[order(-year)], 5), .(cbn_name)] #[, .N, iso3c]
-    
-    dtx_yearreg_rs[variable == "hnwi_nbr_1M_lag0"] %>%
-        ggplot(aes(x=year)) + geom_histogram() + facet_grid(cbn_name ~ ., scales = "free")
-
-    dtx_yearreg_rs[variable == "hnwi_nbr_1M_lag0"][, median(year), cbn_name]
-
-    dtx_yearreg_rs[variable == "hnwi_nbr_1M_lag0" & cbn_name == "cbn_no_cult_spending_and_mitr"] %>% print(n=300)
-
-    ## relation between slope and intercept
-    dtx_yearreg_rs[variable == "hnwi_nbr_1M_lag0" & cbn_name == "cbn_no_cult_spending_and_mitr"] %$%
-        cor(cons, year)
-    ## perfect negative HUH?
-    ## ggplot(aes(x=cons ,y=year)) + geom_point()
-
-    
-
-    
-
-    ## look at muh random slopes
-    cbn_dfs_rates_uscld$cbn_all %>%
-        ggplot(aes(x=year, y=hnwi_nbr_1M_lag0, group = iso3c)) + geom_point() +
-        geom_smooth(method = "lm", se = F, linewidth = 0.1)
-
-    hnwi_cols <- keep(names(dtx), ~grepl("hnwi_nbr_[0-9]+M_lag0", .x))
-
     ## check how much hwni variables are zero: per CY and per country
+    ## FIXME: move to gen_nbrs? 
+    hnwi_cols <- paste0(vvs$hnwi_vars, "_lag0")
+    
+    
     imap_dfr(cbn_dfs_counts_uscld[1:3],
          ~adt(.x) %>% .[, .SD, .SDcols = c("iso3c", hnwi_cols)] %>% 
              rbind(.[, lapply(.SD, \(x) sum(x== 0)), .SDcols = hnwi_cols][, `:=`(measure = "CY", cbn_name = .y)],
@@ -482,200 +381,76 @@ gen_res_velps <- function(cbn_dfs_rates) {
         melt(id.vars = c("measure", "cbn_name")) %>% dcast.data.table(variable + cbn_name ~ measure)
         
     
-    ## measures of distribution of random slopes: 
-    dtx_yearreg_rs[, .(variance = var(year), sd = sd(year), gini = Gini(year - min(year))), .(vrbl, cbn_name)] %>%
-        melt(id.vars = c("vrbl", "cbn_name"), variable.name = "measure", value.name = "size") %>%
-        ggplot(aes(x=size, y=vrbl, fill = cbn_name)) +
-        geom_col(position = position_dodge2()) +
-        facet_grid(~measure, scales = "free")
-    ## actually looks a lot like cbn_all is weird for all HNWI variables
-
-    ## plot slope distribution
-    dtx_yearreg_rs %>% .[, vrbl := gsub("_lag[0-5]", "", variable)] %>%
-        .[!grepl("closed_cum", vrbl) & !grepl("pm_density_global", vrbl)] %>% 
+    
+    ## add hypothesis labeling, ordering
+    dt_velp_crycoefs_vis <- dt_velp_crycoefs %>%
+        .[vrbl %!in% c("nbr_closed_cum_global", "pm_density_global")] %>%
         vvs$hyp_mep_dt[., on = "vrbl"] %>% 
-        .[, vrbl := factor(vrbl, levels = rev(names(vvs$vrbl_lbls)))] %>%
-        ## ggplot(aes(x=year)) + geom_density()
-        ggplot(aes(x=year, y=variable , fill = cbn_name)) +
-        geom_violin(bw = 0.005, alpha = 0.2, linewidth = 0.1) +
-        geom_jitter(mapping = aes(color = cbn_name), size = 0.5,
-                    position = position_jitterdodge(jitter.height = 0)) + 
-        facet_grid(hyp ~ ., scales = "free", space = "free") 
-    ## coord_cartesian(xlim = c(-0.5, 0.5))
+        .[, vrbl := factor(vrbl, levels = rev(names(vvs$vrbl_lbls)))]
 
     
-    
-
-    dtx_yearreg %>% copy() %>% 
-        .[, vrbl := gsub("_lag[0-5]", "", variable)] %>%
-        .[!grepl("closed_cum", vrbl) & !grepl("pm_density_global", vrbl)] %>% 
+    dt_velp_scalars_vis <- dt_velp_scalars %>%
+        .[vrbl %!in% c("nbr_closed_cum_global", "pm_density_global")] %>%
         vvs$hyp_mep_dt[., on = "vrbl"] %>% 
-        .[, vrbl := factor(vrbl, levels = rev(names(vvs$vrbl_lbls)))] %>% 
-        ggplot(aes(x=year_coef, y=variable, color = cbn_name)) +
-        geom_point() +
-        geom_errorbarh(mapping = aes(xmin = year_coef - 1.96*year_se, xmax = year_coef + 1.96*year_se)) + 
-        facet_grid(hyp ~ ., scales = "free", space = "free")
+        .[, vrbl := factor(vrbl, levels = rev(names(vvs$vrbl_lbls)))]
     
-
-    map(l_dtx, ~glmmTMB(value ~ year + (1 | iso3c), .x))
-
-
-
-
-    ## dfx %>% adt() %>%
-    ##     .[, .(iso3c, year, tmitr = tmitr_approx_linear20step_lag0, shweal992j_p90p100_lag0)] %>% 
-    ##     ## .[, .(imap(.SD, ~list(paste0(.y, "asdf") = .x))), iso3c]
-    ##     ## .[, .(lapply(.SD, \(x) setNames(x, sample(letters, 1))))]
-    ##     ## .[, .(map(.SD, ~.x + 1)), .SDcols = c("year", "tmitr")]
-    ##     ## .[, map(.SD, ~sum(is.na(.x)))] # werks 
-    ##     ## .[, lapply(.SD, \(x) sum(is.na(x)))] # werks
-    ##     ## .[, imap(.SD, ~.x)] # werks
-    ##     ## .[, c(imap(.SD, ~setNames(.x, paste0(names(.x), "_lul"))))] # renaming doesn't seem to work well
-    ##     .[, c(imap(.SD, ~c("dd" = .x, "kk" = .x)))]
-                  
-    ## with melting
-    dtx_wintwn <- dfx %>% adt() %>%
-        .[, .(iso3c, year, year_vlu = year, tmitr = tmitr_approx_linear20step_lag0, shweal992j_p90p100_lag0)] %>%
-        melt(id.vars = c("iso3c", "year")) %>%
-        .[, between := mean(value), .(iso3c, variable)] %>%
-        .[, within := value - between] %>%
-        melt(id.vars = c("iso3c", "variable", "year"), variable.name = "form") %>%
-        dcast.data.table(iso3c + year ~ variable + form)
-        
-    
-    ## .[, year_between := mean(year), iso3c] %>%
-        ## .[, year_within := year - year_between]
-
-        ## .[, tmitr_crymean := mean(tmitr), iso3c] %>%
-        ## .[, tmitr_crywin := tmitr - tmitr_crymean]
-
-    ## single FE? compare with plm: seems pretty much the same
-    r_tmitr_win <- glmmTMB(tmitr ~ year_crywin + (1 | iso3c), dtx)
-    sumry(r_tmitr_win) %>% coef() %>% chuck("cond")
-    
-    r_tmitr_plm <- plm(tmitr ~ year, dtx, model = "within", index = "iso3c")
-    sumry(r_tmitr_plm)
-    
-    ## what happens if I don't add random intercept?
-    r_tmitr_win2 <- glmmTMB(tmitr ~ year_within, dtx)
-    sumry(r_tmitr_win2) %>% coef() %>% chuck("cond")
-          
-
-    ## within-between decomposition
-    r_tmitr_wintwn <- glmmTMB(tmitr ~ year_within + year_between + (1 | iso3c), dtx)
-    r_tmitr_wintwn2 <- glmmTMB(tmitr ~ year_within + year_between + (1 + year_within | iso3c), dtx)
-    sumry(r_tmitr_wintwn)
-    sumry(r_tmitr_wintwn2)
-
-    ## next section: pure FE: need same FE coefs
-    ## 1. zero intercept 
-    r_tmitr_wintwn3 <- glmmTMB(tmitr_value ~ 0 + year_vlu_within + iso3c, dtx_wintwn)
-    sumry(r_tmitr_wintwn3) %>% coef() %>% chuck("cond") %>% adt(keep.rownames = "vrbl")
-    
-    ## 2. demeanded response 
-    r_tmitr_wintwn4 <- glmmTMB(tmitr_within ~ year_vlu_within + iso3c, dtx_wintwn)
-    sumry(r_tmitr_wintwn4) %>% coef() %>% chuck("cond") %>% adt(keep.rownames = "vrbl")
-
-    ## yup indeed the same
-
-    ## on to mixed model
-    r_tmitr_mixed <- glmmTMB(tmitr_value ~ year_vlu_within + year_vlu_between + (1 | iso3c), dtx_wintwn)
-    sumry(r_tmitr_mixed) %>% coef() %>% chuck("cond") %>% adt(keep.rownames = "vrbl")
-    ## within effect is still the same, noice
-    ## has slightly lower z tho 
-
-    ## dtx_wintwn[, .N, year_vlu_between]
-    ## compare with random effects model
-    r_tmitr_random <- glmmTMB(tmitr_value ~ year_vlu_value + (1 | iso3c), dtx_wintwn)
-    sumry(r_tmitr_random)
-    ## huh coef is pretty much the same..
-    ## hmm between coef is basically 0 so maybe not surprising
-
-    ## what does between mean substantially anyways? 
-    ## countries with higher mean year (later coverage) don't have higher/lower mean tmitrs
-    ## than those with lower mean year (only early years or entier period)
-    ## curious: there kinda should be, since there's a period effect?
-    ## maybe it's not after controlling for within-chnage?
-
-    model_performance(r_tmitr_mixed)
-    check_model(r_tmitr_mixed)
-
-    ## splines
-    knts <- quantile(dtx_wintwn$year_vlu_value, probs = seq(0.1, 0.9, 0.4))
-    knts <- quantile(dtx_wintwn$year_vlu_value, probs = seq(0.25, 0.75, 0.25))
-    
-    
-    r_tmitr_splines <- glmmTMB(tmitr_value ~ bs(year_vlu_value, knots = knts, degree = 1) +
-                                   (1 | iso3c), dtx_wintwn)
-
-    sumry(r_tmitr_splines) %>% coef()
-    
-    ## random slopes LUL
-    r_tmitr_splines_rs <- glmmTMB(tmitr_value ~ bs(year_vlu_value, knots = knts, degree = 1) +
-                                   (year_vlu_value | iso3c), dtx_wintwn)
-    
-    sumry(r_tmitr_splines_rs)
-
-    ## splines2: needs degree = 0 to get linear estimation
-    r_tmitr_splines2 <- glmmTMB(tmitr_value ~ ibs(year_vlu_value, knots = knts, degree = 0) +
-                                   (1 | iso3c), dtx_wintwn)
-    sumry(r_tmitr_splines2) %>% coef()
 
     
 
-    dt_pred <- expand.grid(year_vlu_value = min(dtx_wintwn$year_vlu_value):max(dtx_wintwn$year_vlu_value),
-                           ## iso3c = c("DEU", "USA", "CHN", "overall", "CHL", "JPN", "ZAF", "SVN")) %>%
-                           iso3c = c("overall", sample(unique(dtx_wintwn$iso3c), 8))) %>% 
-        adt()
-        
-    dt_pred$pred <- predict(r_tmitr_splines, dt_pred)# , se.fit = T)
-    dt_pred$pred2 <- predict(r_tmitr_splines2, dt_pred)# , se.fit = T)
-    dt_pred$predrs <- predict(r_tmitr_splines_rs, dt_pred)# , se.fit = T)
-
-    dt_pred %>% melt(id.vars = c("year_vlu_value", "iso3c")) %>% 
-        ggplot(aes(x=year_vlu_value, y = value, color = iso3c)) +
-        geom_line() +
-        facet_grid(~variable)
+    ## density plot of random slopes 
     
-    model_parameters(r_tmitr_splines)
+    ggplot() + 
+        geom_density_ridges(
+            dt_velp_crycoefs_vis,
+            mapping = aes(x=year, y=vrbl, fill = hyp),
+            stat = "binline", scale = 0.95, binwidth = 0.0075, show.legend = F,
+            draw_baseline = F, # get rid of baseline -> outliers more visible
+            panel_scaling = T, # scale max histogram height per facet
+            size = 0) + 
+        geom_point(dt_velp_scalars_vis, mapping = aes(x=coef, y=vrbl), show.legend = F,
+                   size = 0.7,
+                   position = position_nudge(y=0.2)) +
+        geom_errorbarh(dt_velp_scalars_vis, mapping = aes(y=vrbl,
+                                                 xmin = coef - 1.96*se,
+                                                 xmax = coef + 1.96*se),
+                       height = 0.3,
+                       linewidth = 0.3,
+                       position = position_nudge(y=0.2)) +
+        geom_text(dt_velp_scalars_vis,
+                  mapping = aes(x=0.08, y = vrbl, label = format(round(cor_slpcons,2))),
+                  position = position_nudge(y=0.5),
+                  size = pt2mm(stylecfg$lbl_fntsz)) +
+        facet_grid(hyp~cbn_name, scales = "free", space = "free",
+                   switch = "y",
+                   labeller = as_labeller(c(# vvs$krnl_lbls,
+                       map_chr(vvs$krnl_lbls, ~paste0(strwrap(.x, 14), collapse = "\n")),
+                       vvs$cbn_lbls))) +
+        coord_cartesian(xlim = c(-0.1, 0.1)) +
+        geom_vline(xintercept = 0, linetype = "dashed", linewidth = 0.3) +
+        scale_y_discrete(expand = expansion(add = c(0.1, 1)),
+                         labels = map_chr(addline_format(vvs$vrbl_lbls),
+                                          ~paste(strwrap(.x, 16), collapse = "\n"))) + 
+        labs(caption = paste0(c("histogram: distribution of country slopes",
+                                "dot+whisker: overall regression coefficient and 95% CI",
+                                "number: correlation of country slopes and intercepts"),
+                              collapse = "\n"),
+             x = "year-coefficient", y= element_blank()) +
+        theme_orgpop()
+
+    ## stat_binline
     
-    compare_performance(r_tmitr_splines, r_tmitr_splines2, r_tmitr_splines_rs)
-    compare_models(r_tmitr_splines, r_tmitr_splines2, r_tmitr_splines_rs)
-
-    
-
-    ## plotting spaghetti
-    ggplot() +
-        ## geom_smooth() + 
-        geom_line(dtx, mapping = aes(x=year, y = tmitr, group = iso3c), alpha = 0.5) +
-        geom_line(dtx[, .(mean_tmitr = mean(tmitr)), year],
-                  mapping = aes(x=year, y=mean_tmitr),
-                  linewidth = 3)
-
-
-
-    ## check that my demeaning approach is the same as datawizard
-    dtx_dmeand <- cbind(
-        adt(dfx)[, .(iso3c, year, tmitr = tmitr_approx_linear20step_lag0)],
-        datawizard::demean(adt(dfx)[, .(iso3c, year, tmitr = tmitr_approx_linear20step_lag0)],
-                           select = "year", group = "iso3c"))
-
-    rbind(dtx[, .(iso3c, year, year_between, year_within, source = "manual")],
-          dtx_dmeand[, .(iso3c, year, year_between, year_within, source = "wizard")]) %>%
-        melt(id.vars = c("iso3c", "year", "source")) %>%
-        dcast.data.table(year + iso3c + variable ~ source) %>%
-        .[, diff := manual - wizard] %>%
-        .[, .N, diff]
-    ## looks good
-
-
-    
-    
-
-
 }
 
 ## gen_res_velps(cbn_dfs_rates)
+
+
+
+
+
+
+
+
+
 
 construct_df_anls_within_prep <- function(df_anls_base, optmzd) {
     if (as.character(match.call()[[1]]) %in% fstd){browser()}
@@ -1011,7 +786,9 @@ proc_reg_res_objs <- function(reg_anls_base, vvs, NBR_MDLS) {
             top_coefs_llrt = ou_procd$top_coefs_llrt,
             ou_anls = ou_procd$ou_anls,
             dt_vif_res = reg_anls_base$dt_vif_res,
-            dt_oucoefchng = dt_oucoefchng
+            dt_oucoefchng = dt_oucoefchng,
+            dt_velp_scalars = reg_anls_base$dt_velp_scalars,
+            dt_velp_crycoefs = reg_anls_base$dt_velp_crycoefs
         )
     )
     
@@ -1876,6 +1653,8 @@ gen_reg_res_plts <- function(reg_res_objs, vvs, NBR_MDLS, only_priority_plts, st
     ou_anls <- reg_res_objs$ou_anls
     dt_vif_res <- reg_res_objs$dt_vif_res
     dt_oucoefchng <- reg_res_objs$dt_oucoefchng
+    dt_velp_scalars <- reg_res_objs$dt_velp_scalars
+    dt_velp_crycoefs <- reg_res_objs$dt_velp_crycoefs
     
     l_plts <- list(
         plt_cbn_log_likelihoods = gen_plt_cbn_log_likelihoods(gof_df_cbn),
@@ -1890,10 +1669,11 @@ gen_reg_res_plts <- function(reg_res_objs, vvs, NBR_MDLS, only_priority_plts, st
         plt_cbn_cycnt = gen_plt_cbn_cycnt(cbn_dfs_rates, stylecfg),
         plt_vif = gen_plt_vif(dt_vif_res, top_coefs),
         plt_oucoefchng = gen_plt_oucoefchng(dt_oucoefchng),
-        plt_oucoefchng_tile = gen_plt_oucoefchng_tile(dt_oucoefchng),
-        plt_oucoefchng_cbn1 = gen_plt_oucoefchng(dt_oucoefchng[cbn_name == "cbn_all"]),
-        plt_oucoefchng_cbn2 = gen_plt_oucoefchng(dt_oucoefchng[cbn_name == "cbn_no_cult_spending"]),
-        plt_oucoefchng_cbn3 = gen_plt_oucoefchng(dt_oucoefchng[cbn_name == "cbn_no_cult_spending_and_mitr"])
+        plt_velp = gen_plt_velp(dt_velp_crycoefs, dt_velp_scalars)
+        ## plt_oucoefchng_tile = gen_plt_oucoefchng_tile(dt_oucoefchng),
+        ## plt_oucoefchng_cbn1 = gen_plt_oucoefchng(dt_oucoefchng[cbn_name == "cbn_all"]),
+        ## plt_oucoefchng_cbn2 = gen_plt_oucoefchng(dt_oucoefchng[cbn_name == "cbn_no_cult_spending"]),
+        ## plt_oucoefchng_cbn3 = gen_plt_oucoefchng(dt_oucoefchng[cbn_name == "cbn_no_cult_spending_and_mitr"])
     )
         
     
@@ -1923,7 +1703,7 @@ gen_reg_res_plts <- function(reg_res_objs, vvs, NBR_MDLS, only_priority_plts, st
         plt_cvrgnc = gen_plt_cvrgnc(gof_df_cbn)
         l_plts <- c(l_plts, list(plt_cvrgnc = plt_cvrgnc))
     }
-
+    
 
     return(l_plts)
 
@@ -1981,6 +1761,8 @@ gen_plt_cfgs <- function() {
             plt_vif = list(filename = "vif.pdf", width = 18, height = 18,
                            caption = paste0("Distribution of VIF estimates ",
                                             "(Gaussian kernel density estimate; bandwidth = 0.1)")),
+            plt_velp = list(filename = "velp.pdf", width = 24, height = 16,
+                            caption = "Results of regressing longitudinal variables on year"),
             plt_oucoefchng = list(filename = "oucoefchng.pdf", width = 24, height = 12,
                                   caption = "Coefficient changes given addition of other variables"),
             plt_oucoefchng_tile = list(filename = "oucoefchng_tile.pdf", width = 24, height = 12,
@@ -3011,8 +2793,8 @@ reg_res <- list()
 ## generate plots, construct configs
 reg_res$plts <- gen_reg_res_plts(reg_res_objs, vvs, NBR_MDLS, only_priority_plts = T, stylecfg)
 
-reg_res$plts$plt_oucoefchng <- gen_plt_oucoefchng(reg_res_objs$dt_oucoefchng)
-render_reg_res("plt_oucoefchng", reg_res, batch_version = "v75")
+reg_res$plts$plt_velp <- gen_plt_velp(reg_res_objs$dt_velp_crycoefs, reg_res_objs$dt_velp_scalars)
+render_reg_res("plt_velp", reg_res, batch_version = "v75")
 
 
 

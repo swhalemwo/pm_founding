@@ -1961,6 +1961,8 @@ gen_VIF_allres <- function(top_coefs, fldr_info) {
     
     dt_vif_res <- future_map_dfr(unique(top_coefs$mdl_id), ~gen_VIF_regspec_res(.x, fldr_info))
     fwrite(dt_vif_res, paste0(fldr_info$BATCH_DIR, "VIF_res.csv"))
+    
+    
 }
 
 
@@ -2651,8 +2653,20 @@ gen_cntrfctl <- function(gof_df_cbn, fldr_info) {
         geom_vline(mapping = aes(xintercept = 0), linetype = "dashed") +
         labs(x="additional PM foundings due to variable change since 2000")
         
+    
+    ## distribution of gini of distribution of difference between country-level observed and predicted
+    dt_cntrfctl_res %>% copy() %>% .[, vrbl := gsub("_lag[1-5]", "", vrbl)] %>%
+        vvs$hyp_mep_dt[., on = "vrbl"] %>%
+        .[, vrbl := factor(vrbl, levels = rev(names(vvs$vrbl_lbls)))] %>%
+        .[dt_id != "minusone"] %>% 
+        ggplot(aes(x=gini, y = vrbl, fill = dt_id)) +
+        ## geom_point() +
+        geom_violin(bw = 0.02) + 
+        facet_grid(hyp ~ cbn_name, scales = "free", space = "free") +
+        geom_vline(mapping = aes(xintercept = 0), linetype = "dashed")
 
     
+
     
     
 
@@ -2700,6 +2714,95 @@ gen_cryexmpls <- function(top_coefs) {
 
 }
 
+
+
+reg_helper_rscor <- function(dtxx) {
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
+    1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;
+    #' collect model statistics of random slopes and slope/intercept correlations
+
+    ## print(paste0(dtxx$cbn_name[1], "_", dtxx$variable[1]))
+    
+    resx <- glmmTMB(value ~ year + (1 + year | iso3c), dtxx)
+
+    
+    ## summary dt to collect main coef and se
+    dt_sumry <- summary(resx) %>% coef() %>% chuck("cond") %>% adt(keep.rownames = "vrbl")
+
+    ## collect single numbers: slpcons correlation, main coef/se
+    dt_scalars <- data.table(cor_slpcons = resx %>% summary() %>% chuck("varcor", "cond", "iso3c") %>%
+                                 attr(which="correlation") %>% .[1,2],
+                             coef = dt_sumry[vrbl == "year", Estimate],
+                             se = dt_sumry[vrbl == "year", `Std. Error`],
+                             cbn_name = dtxx$cbn_name[1], vrbl = dtxx$vrbl[1]
+                             )
+
+    dt_crycoefs <- resx %>% coef() %>% chuck("cond", "iso3c") %>%
+        adt(keep.rownames = "iso3c") %>% .[, setnames(.SD, "(Intercept)", "cons")] %>%
+        .[, `:=`(cbn_name = dtxx$cbn_name[1], vrbl = dtxx$vrbl[1])]
+
+    return(
+        list(dt_scalars = dt_scalars, 
+             dt_crycoefs = dt_crycoefs
+             )
+    )
+
+}
+
+
+
+gen_res_velps <- function(cbn_dfs_rates, fldr_info) {
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
+    1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;
+    #' generate data for yearly development of longitudinal variables
+        
+    dtx <- imap_dfr(cbn_dfs_rates[1:3], ~adt(.x)[, cbn_name := .y])
+
+    ## get the variables to describe
+    vrbl_tdesc <- names(dtx) %>% keep(~grepl("lag0", .x)) %>%
+        keep(~!grepl("_sqrd", .x)) %>% ## yeet squares
+        keep(~!grepl("interact", .x)) %>% ## yeet interactions
+        keep(~!grepl("TOTLm_", .x)) ## yeet population
+
+    ## melt into long
+    dtx_splong <- dtx %>% melt(id.vars = c(vvs$base_vars, "cbn_name"),
+                               measure.vars = vrbl_tdesc, variable.name = "vrbl") %>%
+        .[, nbr_nas := sum(is.na(value)), .(cbn_name, vrbl)] %>%
+        .[nbr_nas == 0] %>% ## filter out variables with missings (for datasets)
+        .[, vrbl := gsub("_lag[0-5]", "", vrbl)]
+
+    ## split into separate dts
+    dtx_split <- copy(dtx_splong) %>%
+        .[, year := year - min(year)] %>% # set min to 1995 (or min year for proper correlations)
+        split(by = c("vrbl", "cbn_name"), drop = T)
+
+    ## generate overall results
+     l_velpres <- lapply(dtx_split, reg_helper_rscor)
+
+    
+    ## collect results into separate dts
+    dt_velp_crycoefs <- map_dfr(l_velpres, ~chuck(.x, "dt_crycoefs"))
+        ## .[vrbl %!in% c("nbr_closed_cum_global", "pm_density_global")] %>%
+        ## vvs$hyp_mep_dt[., on = "vrbl"] %>% 
+        ## .[, vrbl := factor(vrbl, levels = rev(names(vvs$vrbl_lbls)))]
+
+    
+    dt_velp_scalars <- map_dfr(l_velpres, ~chuck(.x, "dt_scalars"))
+        ;;## .[vrbl %!in% c("nbr_closed_cum_global", "pm_density_global")] %>%
+        ## vvs$hyp_mep_dt[., on = "vrbl"] %>% 
+        ## .[, vrbl := factor(vrbl, levels = rev(names(vvs$vrbl_lbls)))]
+
+    ## write to file
+    fwrite(dt_velp_crycoefs, paste0(fldr_info$BATCH_DIR, "dt_velp_crycoefs.csv"))
+    fwrite(dt_velp_scalars, paste0(fldr_info$BATCH_DIR, "dt_velp_scalars.csv"))
+
+
+    ## keep for testing
+    ## dtx_splong %>% copy() %>%
+    ##     .[, year := year - min(year)] %>%
+    ##     .[cbn_name == "cbn_all" & vrbl =="hnwi_nbr_1M"] %>%
+    ##     reg_helper_rscor()
+}
 
 
 
