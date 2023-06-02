@@ -438,7 +438,7 @@ gen_plt_cntrfctl <- function(dt_cntrfctl_res) {
 }
 
 
-gen_plt_cntrfctl(reg_res_objs$dt_cntrfctl_res)
+## gen_plt_cntrfctl(reg_res_objs$dt_cntrfctl_res)
 
 
 gen_plt_velp <- function(dt_velp_crycoefs, dt_velp_scalars) {
@@ -2660,6 +2660,7 @@ gen_nbrs_pred <- function(top_coefs, cbn_dfs_rates_uscld, df_reg, print_examples
 
 
 gen_nbrs <- function(df_excl, df_open, cbn_dfs_rates, cbn_dfs_rates_uscld,  df_reg_anls_cfgs_wide, df_reg,
+                     dt_velp_scalars, dt_velp_crycoefs,
                      batch_version, print_examples = F, pltnames) {
     if (as.character(match.call()[[1]]) %in% fstd){browser()}
     1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;
@@ -2767,6 +2768,49 @@ gen_nbrs <- function(df_excl, df_open, cbn_dfs_rates, cbn_dfs_rates_uscld,  df_r
 
     l_cvrgnc$nbr_runs_p_cbn_spec <- adt(df_reg_anls_cfgs_wide)[, .N, .(cbn_name, base_lag_spec)][, round(mean(N),0)]
 
+    ## value ~ year development numbers (velp)
+    
+
+    ## should filter out only for min and max
+    dt_velp_tmitr_minmax <- cbn_dfs_rates$cbn_all %>% adt() %>% .[, .N, iso3c] %>% .[N >= 20, .(iso3c)] %>%
+        dt_velp_crycoefs[., on = "iso3c"] %>% # filter out countries with less than 20 CYs
+        .[vrbl == "tmitr_approx_linear20step" & cbn_name == "cbn_all"]
+    
+    tmitr_scale <- scale(cbn_dfs_counts_uscld$cbn_all$tmitr_approx_linear20step_lag0) %>% attr("scaled:scale")
+
+    ## generate minmax nbrs
+    l_velp_minmax <- dt_velp_tmitr_minmax %>%
+        .[year == min(year), src := "min"] %>% .[year == max(year), src := "max"] %>% na.omit() %>%         
+        .[, .(cryname = countrycode(iso3c, "iso3c", "country.name"),
+              year_scld = fmt_nbr_flex(year, 3), # coef (on standardized variable)
+              year_pct = fmt_nbr_flex(abs(tmitr_scale * year), 1), # absolute percentage change
+              src)] %>% 
+        melt(id.vars = "src", variable.name = "measure") %$%
+        setNames(value, paste0("velp_", measure , "_", src)) %>% as.list()
+
+
+    ## get average and quantiles from entire slope dataset
+    dt_velp_tmitr_ctrl <- copy(dt_velp_crycoefs)[vrbl == "tmitr_approx_linear20step" & cbn_name == "cbn_all"]
+
+    l_velp_mean <- dt_velp_tmitr_ctrl[, .(mean = mean(year),
+                      quantl25 = quantile(year, probs = c(0.25)),
+                      quantl75 = quantile(year, probs = c(0.75)))] %>%
+        melt(measure.vars = names(.), variable.name = "measure", value.name = "uscld") %>%
+        .[, scld := abs(uscld * tmitr_scale)] %>% # absolute percentage, refer to "decline" in text
+        melt(id.vars = "measure") %>%
+        .[, .(nbr_name = paste0("velp_", measure, "_", variable), nbr = value)] %>%
+        .[, digits := fifelse(grepl("uscld", nbr_name), 3,2)] %>% # uscld get three digits, scaled two (bc small)
+        ## adf() %>% split.data.frame(seq(nrow(.)))
+        split(by = "nbr_name") %>% map(as.list)
+        
+    
+    ## overall coefs are average of country-coefs, no weird weighting going on
+    ## dt_velp_crycoefs %>% copy() %>% .[, .(year_mean = mean(year)), .(cbn_name, vrbl)] %>%
+        ## dt_velp_scalars[, .(cbn_name, vrbl, coef)][., on = .(cbn_name, vrbl)] %>%
+        ## .[, diff := coef - year_mean] %$% hist(diff)
+        
+
+
     ## generate the macros for the plot insertions
     dt_pltcfgs <- gen_plt_cfgs() %>% rbindlist() %>%
         .[, lbl := gsub(".pdf", "", filename)] %>%
@@ -2800,7 +2844,8 @@ gen_nbrs <- function(df_excl, df_open, cbn_dfs_rates, cbn_dfs_rates_uscld,  df_r
         opng_rates_fmt = opng_rates_fmt,
         opng_prop_vlus = opng_prop_vlus,
         popnbrs_p1pm = popnbrs_p1pm,
-        cvrgnc = lapply(l_cvrgnc, nicely_fmt_number)))
+        cvrgnc = lapply(l_cvrgnc, nicely_fmt_number),
+        velp_minmax = l_velp_minmax))
 
     dt_nbrs_desc_prep <- imap_dfr(res_desc, ~data.table(nbr_name = names(.x),
                                                         nbr_fmt = as.character(unname(.x)), grp = .y)) 
@@ -2810,9 +2855,9 @@ gen_nbrs <- function(df_excl, df_open, cbn_dfs_rates, cbn_dfs_rates_uscld,  df_r
     lnbr_res <- list(
         rate_opng_glbl = rate_opng_glbl,
         rate_opng_glbl_yearly = rate_opng_glbl_yearly,
-        opng_p1m_glbl_yearly = opng_p1m_glbl_yearly)
+        opng_p1m_glbl_yearly = opng_p1m_glbl_yearly,
+        velp_mean = l_velp_mean)
 
-        
     dt_lnbr_res <- imap_dfr(lnbr_res, ~rbindlist(.x)[, grp := .y]) %>%
         .[, nbr_fmt := fmt_nbr_flex(nbr, digits)] %>%
         .[, .(nbr_name, nbr_fmt, grp)]
@@ -2909,7 +2954,9 @@ iwalk(res_tbls, ~do.call("render_xtbl", c(.x, gen_tblcfgs(TABLE_DIR)[[.y]])))
 ## gen_nbrs_pred(reg_res_objs$top_coefs, cbn_dfs_rates_uscld, df_reg, print_examples = F)
 
 dt_nbrs <- gen_nbrs(df_excl, df_open, cbn_dfs_rates, cbn_dfs_rates_uscld,
-                    reg_anls_base$df_reg_anls_cfgs_wide, df_reg, batch_version, print_examples = F,
+                    reg_anls_base$df_reg_anls_cfgs_wide, df_reg,
+                    reg_res_objs$dt_velp_scalars, reg_res_objs$dt_velp_crycoefs,
+                    batch_version, print_examples = F,
                     names(reg_res$plts))
 
 dt_nbrs %>% print(n=300)
