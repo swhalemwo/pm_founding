@@ -1879,7 +1879,12 @@ added_squared_term_to_hnwi <- function() {
 
 }
 ## ** comparing xtnbreg and glmmTMB
-mdl_id_dt <- gen_mdl_id_dt(gof_df_cbn)
+
+compare_r_stata <- function(gof_df_cbn) {
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
+    1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;
+
+    mdl_id_dt <- gen_mdl_id_dt(gof_df_cbn)
 
     idx <- mdl_id_dt$mdl_id[15]
     gen_preds_given_mdfd_vrbls(idx, fldr_info)
@@ -1904,3 +1909,4 @@ mdl_id_dt <- gen_mdl_id_dt(gof_df_cbn)
         dcast.data.table(vrbl_name ~ src) %>% na.omit() %>% 
         .[, `:=`(diff = glmmTMB - xtnbreg, ratio1 = glmmTMB/xtnbreg, ratio2 = xtnbreg/glmmTMB)] %>%
         .[ratio1 > 1.5 | ratio2 > 1.5]
+}

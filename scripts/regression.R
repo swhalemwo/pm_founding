@@ -536,10 +536,15 @@ gen_stata_code_xtnbreg <- function(iv_vars, dvfmt, gof_names, stata_output_vars,
 
     ## xtnbreg
     stata_code = list(
+        ## sleep_cmd = "sleep 10000",
         panel_setup = "xtset iso3c_num year",
         cvrgd_setup = sprintf("set maxiter %s", maxiter),
-        reg_cmd = paste0("capture xtnbreg nbr_opened ", paste(iv_vars_stata, collapse = " "),
+        ## ## default command
+        reg_cmd = paste0("capture xtnbreg nbr_opened ", paste(iv_vars_stata, collapse = " "), 
                          ", re ", exposure_cmd, difficult_str, " technique(", technique_str, ")"),
+        ## population averaged part
+        ## reg_cmd = paste0("capture xtnbreg nbr_opened ", paste(iv_vars_stata, collapse = " "),
+        ##                  ", pa ", exposure_cmd, difficult_str),
         ## cvrg_check= paste0(c("local nbr_itr = e(ic)", sprintf("if `nbr_itr' < %s {", maxiter)), collapse = "\n"),
         cvrg_check = paste0(c("if _rc == 0 {")),
         coef_cmd = "mata: b=st_matrix(\"e(b)\")' \n mata: st_matrix(\"b_stata\", b)",
@@ -568,7 +573,8 @@ run_xtnbreg <- function(iv_vars, dvfmt, gof_names, dfx, technique_str, difficult
     #' run xtnbreg command
 
     xtnbreg_output_vars <- c(iv_vars, c("cons", "ln_r", "ln_s"))
-    
+    ## xtnbreg_output_vars <- c(iv_vars, c("cons")) ## population average
+
     pid = prep_and_set_pid_fldr(fldr_info)
 
     stata_code_xtnbreg <- gen_stata_code_xtnbreg(iv_vars, dvfmt, gof_names, xtnbreg_output_vars,
@@ -801,9 +807,9 @@ reg_spec_run_dispatch <- function(iv_vars, dfx, regcmd, dvfmt, fldr_info, techni
     
 
     if (regcmd == "xtnbreg") {
-       
+        
         gof_names <- c("N", "log_likelihood", "N_g", "Chi2", "p", "df")
-
+        
         r_regspec <- run_xtnbreg(iv_vars, dvfmt, gof_names, dfx, technique_str, difficult_str, fldr_info, verbose)
            
     } else if (regcmd == "menbreg") {
@@ -2627,7 +2633,7 @@ gen_cntrfctl <- function(gof_df_cbn, fldr_info) {
 
     ## idx <- mdl_id_dt$mdl_id[7]
     ## gen_preds_given_mdfd_vrbls(idx, fldr_info)
-    
+        
     l_cntrfctl_res <- mclapply(mdl_id_dt$mdl_id, \(x) gen_preds_given_mdfd_vrbls(x, fldr_info), mc.cores = 5)
 
     dt_cntrfctl_cons <- map(l_cntrfctl_res, ~chuck(.x, "dt_predres_cons")) %>% rbindlist()
@@ -2764,7 +2770,7 @@ gen_res_velps <- function(cbn_dfs_rates, fldr_info) {
 
     
     dt_velp_scalars <- map_dfr(l_velpres, ~chuck(.x, "dt_scalars"))
-        ;;## .[vrbl %!in% c("nbr_closed_cum_global", "pm_density_global")] %>%
+        ## .[vrbl %!in% c("nbr_closed_cum_global", "pm_density_global")] %>%
         ## vvs$hyp_mep_dt[., on = "vrbl"] %>% 
         ## .[, vrbl := factor(vrbl, levels = rev(names(vvs$vrbl_lbls)))]
 
@@ -2792,6 +2798,8 @@ postestimation <- function(fldr_info) {
     gof_df_cbn <- reg_res_files$gof_df_cbn
     df_reg_anls_cfgs_wide <- reg_res_files$df_reg_anls_cfgs_wide
     
+
+    compare_r_stata(gof_df_cbn)
     
     gen_cntrfctl(gof_df_cbn, fldr_info)
 
