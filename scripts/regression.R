@@ -2262,9 +2262,20 @@ recalc_interactions <- function(dtxx, vrblx) {
 }
 
 pred_collector <- function(dtxx, rx, dt_id) {
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
     #' collect all kind of prediction values from a dataframe with adjusted values
     
-    dtxx$pred <- exp(predict(rx, dtxx))
+    ## for 2k4, predict outside with se.fit = T (don't have to predict twice then)
+    if ("pred" %!in% names(dtxx)) {
+
+        dtxx$pred <- exp(predict(rx, dtxx))
+    }
+    
+    ## dtxx[, .(pred, pred2, exp(pred2))]
+    ## rnorm(n=10, mean = 5, sd = 3)
+
+   ## rnorm(n = 5, mean = c(3,10), sd = c(1,1))
+
 
     list(
         dt_id = dt_id, 
@@ -2374,16 +2385,27 @@ pred_given_const_vrbl <- function(vrblx, rx, dfx, iv_vars) {
     ## dtx_consvrbl_2k$pred_orig <- exp(predict(rx, adt(dfx)[dtx_consvrbl_2k[, .(iso3c, year)], on = .(iso3c, year)]))
 
     ## dtx_consvrbl_2k[, .(pred_orig = sum(pred_orig)
+    ## do.call("pred_collector", pred_args[[3]])
+
+    ## predict(rx, se.fit = T)
+
+    ## for 2k4, predict with standard errors
+    dtx_consvrbl_2k4[, c("pred_log", "se") := map(predict(rx, .SD, se.fit = T), ~.x)] %>%
+        .[, pred := exp(pred_log)]
     
+    ## dtx with standard errors
+    dtx_wse <- dtx_consvrbl_2k4[, .(iso3c, year, pred = pred_log, se, vrbl = vrblx[1])]
+
     pred_args <- list(
         list(dtxx = dtx_consvrbl, rx = rx, dt_id = "all"),
         list(dtxx = dtx_consvrbl_2k, rx = rx, dt_id = "2k"),
         list(dtxx = dtx_consvrbl_2k4, rx = rx, dt_id = "2k4"),
         list(dtxx = dtx_minusone_2k, rx = rx, dt_id = "minusone"))
 
+    ## collect point results
     dtx_vlus <- map(pred_args, ~do.call("pred_collector", .x)) %>% rbindlist() %>%
         .[, vrbl := vrblx[1]]
-
+    
     ## dtx_crydiff <- dtx_consvrbl_2k[, map(.SD, sum), iso3c, .SDcols = c("pred", "nbr_opened")] %>%
     ##     .[, `:=`(diff = nbr_opened - pred, vrblx = vrblx[1])] # %>% print(n=200) #%>% .[, sum(diff)]
     ##     ## .[, diff - min(diff)] %>% Gini()
@@ -2410,7 +2432,8 @@ pred_given_const_vrbl <- function(vrblx, rx, dfx, iv_vars) {
 
     l_res <- list(
         ## l_pred_vlus = l_pred_vlus,
-        dtx_vlus = dtx_vlus
+        dtx_vlus = dtx_vlus,
+        dtx_wse = dtx_wse        
         ## dtx_crydiff = dtx_crydiff
     )
 
@@ -2525,7 +2548,7 @@ gen_preds_given_mdfd_vrbls <- function(idx, fldr_info) {
     ## vrblx <- "smorc_dollar_fxm_lag3"
     ## vrblx <- "sptinc992j_p90p100_lag3"
     ## vrblx <- "shweal992j_p90p100_lag4"
-    vrblx <- "tmitr_approx_linear20step_lag5"
+    ## vrblx <- "tmitr_approx_linear20step_lag5"
     ## sd(dfx$sptinc992j_p90p100_lag3)
     
     ## adt(dfx) %>%
@@ -2541,10 +2564,17 @@ gen_preds_given_mdfd_vrbls <- function(idx, fldr_info) {
     ## dt_predres_sdrange <- pred_sdrange(vrblx, rx, dfx, iv_vars)
     ## ggplot(dt_predres_sdrange, aes(x=updown, y=pred)) + geom_line()
 
+    ## collect all values
     l_predres_cons <- map(vrbls_lagged, ~pred_given_const_vrbl(.x, rx, dfx, iv_vars))
 
+    ## collect summary stats
     dt_predres_cons <- map(l_predres_cons, ~chuck(.x, "dtx_vlus")) %>% rbindlist() %>%
         .[, `:=`(mdl_id = idx, cbn_name = chuck(regspecx, "cfg", "cbn_name"))]
+
+    dt_predres_wse <- map(l_predres_cons, ~chuck(.x, "dtx_wse")) %>% rbindlist() %>%
+        .[, `:=`(mdl_id = idx, cbn_name = chuck(regspecx, "cfg", "cbn_name"))]
+
+    
 
     ## dt_predres_cons %>% copy() %>%
     ##     .[dt_id %!in% c("minusone", "all")] %>% 
@@ -2579,7 +2609,10 @@ gen_preds_given_mdfd_vrbls <- function(idx, fldr_info) {
 
 
     ## return(l_predres$dt_predres_cons)
-    return(dt_predres_cons)
+    return(list(
+        dt_predres_cons = dt_predres_cons,
+        dt_predres_wse = dt_predres_wse))
+    
     
 
 }
@@ -2592,13 +2625,19 @@ gen_cntrfctl <- function(gof_df_cbn, fldr_info) {
     ## get best models
     mdl_id_dt <- gen_mdl_id_dt(gof_df_cbn)
 
-    idx <- mdl_id_dt$mdl_id[7]
-    gen_preds_given_mdfd_vrbls(idx, fldr_info)
+    ## idx <- mdl_id_dt$mdl_id[7]
+    ## gen_preds_given_mdfd_vrbls(idx, fldr_info)
     
-    dt_cntrfctl_res <- mclapply(mdl_id_dt$mdl_id, \(x) gen_preds_given_mdfd_vrbls(x, fldr_info), mc.cores = 5) %>% 
-         rbindlist()
-    
-    fwrite(dt_cntrfctl_res, paste0(fldr_info$BATCH_DIR, "cntrfctl_res.csv"))
+    l_cntrfctl_res <- mclapply(mdl_id_dt$mdl_id, \(x) gen_preds_given_mdfd_vrbls(x, fldr_info), mc.cores = 5)
+
+    dt_cntrfctl_cons <- map(l_cntrfctl_res, ~chuck(.x, "dt_predres_cons")) %>% rbindlist()
+
+    ## collect model-country-year specific predictions + SEs
+    dt_cntrfctl_wse <-  map(l_cntrfctl_res, ~chuck(.x, "dt_predres_wse")) %>% rbindlist()
+     
+    fwrite(dt_cntrfctl_cons, paste0(fldr_info$BATCH_DIR, "cntrfctl_cons.csv"))
+
+    fwrite(dt_cntrfctl_wse, paste0(fldr_info$BATCH_DIR, "cntrfctl_wse.csv"))
 
     ## dt_cntrfctl_res <- fread(paste0(fldr_info$BATCH_DIR, "cntrfctl_res.csv"))
     ## dt_cntrfctl_res[mdl_id == idx]

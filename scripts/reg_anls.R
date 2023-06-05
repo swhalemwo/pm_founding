@@ -33,16 +33,19 @@ read_reg_anls_files <- function(fldr_info) {
 
     dt_vif_res <- fread(paste0(fldr_info$BATCH_DIR, "VIF_res.csv"))
 
-    dt_cntrfctl_res <- fread(paste0(fldr_info$BATCH_DIR, "cntrfctl_res.csv"))
+    dt_cntrfctl_cons <- fread(paste0(fldr_info$BATCH_DIR, "cntrfctl_cons.csv"))
 
     ## read value ~ year data back in 
     dt_velp_scalars <- fread(paste0(fldr_info$BATCH_DIR, "dt_velp_scalars.csv"))
     dt_velp_crycoefs <- fread(paste0(fldr_info$BATCH_DIR, "dt_velp_crycoefs.csv"))
 
+    dt_cntrfctl_wse <- fread(paste0(fldr_info$BATCH_DIR, "cntrfctl_wse.csv"))
+
     return(c(reg_anls_base_objs,
              list(ou_objs = reg_anls_ou_objs),
              list(dt_vif_res = dt_vif_res,
-                  dt_cntrfctl_res = dt_cntrfctl_res,
+                  dt_cntrfctl_cons = dt_cntrfctl_cons,
+                  dt_cntrfctl_wse = dt_cntrfctl_wse,
                   dt_velp_scalars = dt_velp_scalars,
                   dt_velp_crycoefs = dt_velp_crycoefs)))
     
@@ -357,7 +360,7 @@ gen_plt_oucoefchng <- function(dt_oucoefchng) {
 
 ## gen_plt_oucoefchng(reg_anls_base$ou_objs, reg_res_objs$df_anls_base)
 
-gen_plt_cntrfctl <- function(dt_cntrfctl_res) {
+gen_plt_cntrfctl <- function(dt_cntrfctl_cons, dt_cntrfctl_wse) {
     if (as.character(match.call()[[1]]) %in% fstd){browser()}
     1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;
 
@@ -409,7 +412,7 @@ gen_plt_cntrfctl <- function(dt_cntrfctl_res) {
         
 
     ## ## violin of difference between total opened observed and predicted
-    dt_cntrfctl_res %>% copy() %>% .[, vrbl := gsub("_lag[1-5]", "", vrbl)] %>%
+    dt_cntrfctl_cons %>% copy() %>% .[, vrbl := gsub("_lag[1-5]", "", vrbl)] %>%
         .[, diff := nbr_opened - pred] %>% # effect of not staying constant since 2000
         vvs$hyp_mep_dt[., on = "vrbl"] %>%
         .[, vrbl := factor(vrbl, levels = rev(names(vvs$vrbl_lbls)))] %>%
@@ -433,12 +436,65 @@ gen_plt_cntrfctl <- function(dt_cntrfctl_res) {
     ##     facet_grid(hyp ~ cbn_name, scales = "free", space = "free") +
     ##     geom_vline(mapping = aes(xintercept = 0), linetype = "dashed")
 
+    
+    ## simulate some predictions based on since 2k constance, CY-cbn-model-dataset predictions
+    dx <- dt_cntrfctl_wse %>% copy() %>% .[, rid := 1:.N] %>% 
+        ## .[, paste0("rnorm", 1:10) := map(as.list(rnorm(n = 10, mean = .SD$pred, sd = .SD$se)), ~.x), rid]
+        .[, paste0("rnorm", 1:50) := as.list(exp(rnorm(n = 50, mean = pred, sd = se))), rid] %>%
+        .[, map(.SD, sum), by = .(vrbl, cbn_name, mdl_id), .SDcols = keep(names(.), ~grepl("rnorm", .x))] %>%
+        melt(id.vars = c("vrbl", "cbn_name", "mdl_id"), variable.name = "rnorm_id", value.name = "pred") %>%
+        dt_cntrfctl_cons[dt_id == "2k4", unique(.SD[, .(nbr_opened, cbn_name)])][., on = "cbn_name"] %>%
+        .[, diff := nbr_opened - pred] %>%
+        .[, vrbl := gsub("_lag[0-9]", "", vrbl)] %>% 
+        vvs$hyp_mep_dt[., on = "vrbl"] %>%
+        .[, vrbl := factor(vrbl, levels = rev(names(vvs$vrbl_lbls)))]
+
+    ## individual lines for different models
+    dx %>%
+        ## .[mdl_id %in% sample(unique(mdl_id), 10)] %>%
+        ggplot(aes(x=diff, y=vrbl, group = interaction(mdl_id, cbn_name, vrbl))) +# , group = mdl_id)) +
+        geom_density_ridges(scale = 0.9, bandwidth = 1.5, show.legend = F,
+                            fill = NA,
+                            alpha = 0.2,
+                            size = 0.2,
+                            color = "#A0A0A0A0") + # need alpha color to get semi-transparent lines
+        facet_grid(hyp ~ cbn_name, scales = "free", space = "free") +
+        scale_y_discrete(expand = expansion(add = c(0.1, 1))) +
+        geom_vline(xintercept = 0, linetype = "dashed", linewidth = 0.5) 
+        ## scale_color_manual(values = rep("#A0A0A0A0", 108))
+        
+
+    ## overall plot
+    dx %>% 
+        ggplot(aes(x=diff, y=vrbl)) +
+        geom_density_ridges(scale = 0.9, bandwidth = 1.5) +
+        facet_grid(hyp ~ cbn_name, scales = "free", space = "free") +
+        scale_y_discrete(expand = expansion(add = c(0.1, 1))) +
+        geom_vline(xintercept = 0, linetype = "dashed", linewidth = 0.5)
+        
+
+    ## try without SE
+    ## dt_cntrfctl_wse %>% copy() %>% .[, pred_exp := exp(pred)] %>%
+    ##     .[, .(sum_pred = sum(pred_exp)), .(cbn_name, 
+
+
+    ## see why HNWI_5M coefficient changes between cbn1 and 2
+    
+
+    adt(cbn_dfs_rates$cbn_no_cult_spending) %>%
+        .[!adt(cbn_dfs_rates$cbn_all)[, .(iso3c, year)], on = .(iso3c, year)] %>%
+        .[, .(iso3c, year, mean_hnwi_200M = mean(hnwi_nbr_200M_lag0), hnwi_nbr_200M_lag0)] %>%
+        .[, diff := hnwi_nbr_200M_lag0 - mean_hnwi_200M] %>%
+        reg_res_objs$dt_velp_crycoefs[cbn_name == "cbn_no_cult_spending" & vrbl == "hnwi_nbr_200M", .(year, iso3c)][., on = "iso3c"] %>%
+        .[order(-diff)] %>% print(n=50)
+
+
 
    
 }
 
 
-## gen_plt_cntrfctl(reg_res_objs$dt_cntrfctl_res)
+gen_plt_cntrfctl(reg_res_objs$dt_cntrfctl_cons, reg_res_objs$dt_cntrfctl_wse)
 
 
 gen_plt_velp <- function(dt_velp_crycoefs, dt_velp_scalars) {
@@ -829,6 +885,8 @@ proc_reg_res_objs <- function(reg_anls_base, vvs, NBR_MDLS) {
     df_reg_anls_cfgs_wide <- reg_anls_base$df_reg_anls_cfgs_wide
     gof_df_cbn <- reg_anls_base$gof_df_cbn
 
+
+
     ## merging significance to all coefs (maybe can be 
     df_anls_base <- add_coef_sig(coef_df, df_reg_anls_cfgs_wide)
 
@@ -865,7 +923,8 @@ proc_reg_res_objs <- function(reg_anls_base, vvs, NBR_MDLS) {
             ou_anls = ou_procd$ou_anls,
             dt_vif_res = reg_anls_base$dt_vif_res,
             dt_oucoefchng = dt_oucoefchng,
-            dt_cntrfctl_res = reg_anls_base$dt_cntrfctl_res,
+            dt_cntrfctl_cons = reg_anls_base$dt_cntrfctl_cons,
+            dt_cntrfctl_wse = reg_anls_base$dt_cntrfctl_wse,
             dt_velp_scalars = reg_anls_base$dt_velp_scalars,
             dt_velp_crycoefs = reg_anls_base$dt_velp_crycoefs
         )
@@ -1732,7 +1791,8 @@ gen_reg_res_plts <- function(reg_res_objs, vvs, NBR_MDLS, only_priority_plts, st
     ou_anls <- reg_res_objs$ou_anls
     dt_vif_res <- reg_res_objs$dt_vif_res
     dt_oucoefchng <- reg_res_objs$dt_oucoefchng
-    dt_cntrfctl_res <- reg_res_objs$dt_cntrfctl_res
+    dt_cntrfctl_cons <- reg_res_objs$dt_cntrfctl_cons
+    dt_cntrfctl_wse <- reg_res_objs$dt_cntrfctl_wse
     dt_velp_scalars <- reg_res_objs$dt_velp_scalars
     dt_velp_crycoefs <- reg_res_objs$dt_velp_crycoefs
     
@@ -1749,7 +1809,7 @@ gen_reg_res_plts <- function(reg_res_objs, vvs, NBR_MDLS, only_priority_plts, st
         plt_cbn_cycnt = gen_plt_cbn_cycnt(cbn_dfs_rates, stylecfg),
         plt_vif = gen_plt_vif(dt_vif_res, top_coefs),
         plt_oucoefchng = gen_plt_oucoefchng(dt_oucoefchng),
-        plt_cntrfctl = gen_plt_cntrfctl(dt_cntrfctl_res),
+        plt_cntrfctl = gen_plt_cntrfctl(dt_cntrfctl_cons, dt_cntrfctl_wse),
         plt_velp = gen_plt_velp(dt_velp_crycoefs, dt_velp_scalars)
         ## plt_oucoefchng_tile = gen_plt_oucoefchng_tile(dt_oucoefchng),
         ## plt_oucoefchng_cbn1 = gen_plt_oucoefchng(dt_oucoefchng[cbn_name == "cbn_all"]),
