@@ -35,6 +35,7 @@ select <- dplyr::select
 lag <- dplyr::lag
 library(purrr)
 library(modelsummary)
+library(RSQLite)
 
 cleanup_old_r_procs <- function() {
     #' kill old R procs, not used so far
@@ -1598,9 +1599,7 @@ optmz_vrbl_lag <- function(reg_spec, vrblx, loop_nbr, fldr_info, reg_settings, v
 
     if (verbose) { print(paste0("vrblx: ", vrblx))}
     
-
     
-
     ##  generate models, need exception for ti_tmitr_interact
     base_lag_spec_orig <- reg_spec$base_lag_spec
     cfg_orig <- reg_spec$cfg
@@ -1611,7 +1610,7 @@ optmz_vrbl_lag <- function(reg_spec, vrblx, loop_nbr, fldr_info, reg_settings, v
                                     reg_spec$lngtd_vrbls %>% 
                                     mutate(lag = ifelse(vrbl==vrblx, x, lag)) %>%
                                     list(lngtd_vrbls = .))
-
+    
     ## reconstruct the full reg_spec again
     reg_settings2 <- reg_settings
     reg_settings2$cbns_to_include <- reg_spec$cfg$cbn_name
@@ -1627,29 +1626,78 @@ optmz_vrbl_lag <- function(reg_spec, vrblx, loop_nbr, fldr_info, reg_settings, v
     ## modify base_lag_spec back 
     reg_specs_full_again2 <- lapply(reg_specs_full_again, \(x)
                                     modfy_optmz_cfg(x, cfg_orig, base_lag_spec_orig, loop_nbr, vrblx))
-
+    
     ## add ids
     reg_specs_w_ids <- idfy_reg_specs(reg_specs_full_again2, vvs)
 
+    
+    db_mdlcache <- dbConnect(RSQLite::SQLite(), paste0(fldr_info$BATCH_DIR, "mdl_cache.sqlite"))
+    dbExecute(conn = db_mdlcache, "PRAGMA foreign_keys=ON")
 
+    cbn_lagspecs <- map(reg_specs_w_ids, ~list(cbn_name = chuck(.x, "cfg", "cbn_name"),
+                                               lag_spec = chuck(.x, "base_lag_spec")))
+
+    ## get data of which of the lags are already in mdl_cache 5
+    l_lagquery_res <- map(
+        cbn_lagspecs,
+        ~c(list(dt_lagquery_res = adt(dbGetQuery(
+                    db_mdlcache,
+                    paste0(
+                        sprintf("SELECT ll from mdl_cache where cbn_name = '%s'", .x$cbn_name),
+                        sprintf(" and lag_spec = '%s'", .x$lag_spec))))), .x))
+
+    ## check if ll is already there
+    l_lagquery_res2 <- map(
+        l_lagquery_res,
+        ~c(list(ll = ifelse(nrow(.x$dt_lagquery_res) == 0, NA, .x$dt_lagquery_res[, ll])), .x))
+
+    dt_presence <- map(l_lagquery_res2, ~.x[c("cbn_name", "lag_spec", "ll")]) %>% rbindlist() %>%
+        .[, missing_before := is.na(ll)] %>% # get those that are missing to save later
+        .[, ll := as.numeric(ll)] ## need to ensure that LLs are numeric (otherwise boolean)
+
+    print(sprintf("%s lags are already there", dt_presence[missing_before == F, .N]))
+
+    
     ## run_vrbl_mdl_vars(reg_specs_full_again2[[1]], vvs, fldr_info, return_objs = "log_likelihood")
     ## names(reg_specs_full_again2) <- as.character(seq(1,5))
-
-    lag_lls <- sapply(reg_specs_w_ids, \(x)
+    
+    
+    lag_lls <- sapply(reg_specs_w_ids[dt_presence[, is.na(ll)]], \(x)
                       run_vrbl_mdl_vars(x, vvs, fldr_info, return_objs = "log_likelihood"))
+    
+    
 
+    ## assign back
+    dt_presence[missing_before == T, ll := unlist(lag_lls)]
+        
     ## seems to be robust against non-convergence
     ## lag_lls[[3]] <- NA
 
-    if (all(is.na(lag_lls))) {
-        # time for break
+    ## if (all(is.na(lag_lls))) {
+    ##     # time for break
+    ##     best_lag <- sample(reg_settings$lags, 1)
+    ##  
+            
+    ## } else {
+    ##     best_lag <- which.max(lag_lls)
+    ## }
+
+    if (dt_presence[, all(is.na(ll))]) {
         best_lag <- sample(reg_settings$lags, 1)
         print("all lags of current model result in non-convergence, pick lag at random")
-            
-    } else {
-        best_lag <- which.max(lag_lls)
-    }
 
+    } else {
+        best_lag <- which.max(dt_presence$ll)
+    }
+     
+    ## write LL back to file    
+    dbAppendTable(db_mdlcache, "mdl_cache", dt_presence[missing_before == T, .(cbn_name, lag_spec, ll)])
+
+    ## TEST: only write some back
+    ## dbAppendTable(db_mdlcache, "mdl_cache", dt_presence[c(2,4), .(cbn_name, lag_spec, ll)])
+
+    
+    
     ## assign best_lag value back to reg_spec 
     reg_spec$lngtd_vrbls <- reg_spec$lngtd_vrbls %>%
         mutate(lag = ifelse(vrbl == vrblx, best_lag, lag))
@@ -1662,7 +1710,7 @@ optmz_vrbl_lag <- function(reg_spec, vrblx, loop_nbr, fldr_info, reg_settings, v
     reg_spec$lngtd_vrbls <- cstrn_vrbl_lags(reg_spec$lngtd_vrbls)
 
         
-           
+
     return(reg_spec)
     
 
@@ -1671,6 +1719,7 @@ optmz_vrbl_lag <- function(reg_spec, vrblx, loop_nbr, fldr_info, reg_settings, v
 
 
 ## optmz_vrbl_lag(reg_spec_mdls_optmz[[2]], "nbr_opened_cum", loop_nbr = 1, fldr_info_optmz)
+
 
 
 optmz_reg_spec_once <- function(reg_spec, loop_nbr, fldr_info, reg_settings) {
@@ -2928,6 +2977,15 @@ print(len(reg_spec_mdls_optmz))
 
 
 fldr_info_optmz <- setup_regression_folders_and_files(reg_settings_optmz$batch_version)
+
+
+## set up model cache
+db_mdlcache <- dbConnect(RSQLite::SQLite(), paste0(fldr_info_optmz$BATCH_DIR, "mdl_cache.sqlite"))
+
+dt_cacheschema <- data.table(cbn_name = "asdf", lag_spec = "asdf", ll = 11.1)
+prep_sqlitedb(db_mdlcache, dt_cacheschema, "mdl_cache", constraints = "PRIMARY KEY (cbn_name, lag_spec)")
+
+
 
 pbmclapply(reg_spec_mdls_optmz, \(x) optmz_reg_spec(x, fldr_info_optmz, reg_settings_optmz),
          mc.cores = 5)

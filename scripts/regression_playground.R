@@ -1910,3 +1910,36 @@ compare_r_stata <- function(gof_df_cbn) {
         .[, `:=`(diff = glmmTMB - xtnbreg, ratio1 = glmmTMB/xtnbreg, ratio2 = xtnbreg/glmmTMB)] %>%
         .[ratio1 > 1.5 | ratio2 > 1.5]
 }
+
+
+## ** caching test
+
+t1 = Sys.time()
+db_regres <- dbConnect(RSQLite::SQLite(), "/home/johannes/reg_res.sqlite")
+dbExecute(conn = db_regres, "PRAGMA foreign_keys=ON")
+t2 = Sys.time()
+print(t2-t1)
+
+prep_sqlitedb(dbx=db_regres, dfx=reg_anls_base$df_reg_anls_cfgs_wide, table_title = "df_reg_anls_cfgs_wide",
+              constraints = c("PRIMARY KEY (mdl_id)"), insert_data = T)
+
+dbGetQuery(conn = db_regres, "select * from df_reg_anls_cfgs_wide limit 5")
+
+t1 <- Sys.time()
+## dbGetQuery(db_regres, "select count(*) from df_reg_anls_cfgs_wide where lag_spec = '1XXXXX5XX5421124544343' and cbn_name = 'cbn_no_cult_spending'")
+dbGetQuery(db_regres, "select mdl_id, cbn_name from df_reg_anls_cfgs_wide where mdl_id = '1XXXXX5XX5221124544443--cbn_all--full--nr--TRUE--xtnbreg--rates--1X2X4X5XX5221124544323--0--hnwi_nbr_1M'")
+t2 <- Sys.time()
+t2-t1
+
+## shitty example 
+## 1XXXXX5XX5221124544443  
+## 2XXXXX5XX5221124544443  
+## 3XXXXX5XX5221124544443  
+## 4XXXXX5XX5221124544443  
+## 5XXXXX5XX5221124544443
+
+## cbn_all
+## cbn_all
+## cbn_all
+## cbn_all
+## cbn_all
