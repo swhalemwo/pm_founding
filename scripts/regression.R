@@ -2787,6 +2787,50 @@ gen_res_velps <- function(cbn_dfs_rates, fldr_info) {
 }
 
 
+gen_nolag <- function(fldr_info, gof_df_cbn) {
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
+    1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;
+   
+
+    mdl_id_dt <- gen_mdl_id_dt(gof_df_cbn)
+
+
+}
+
+compare_r_stata <- function(gof_df_cbn) {
+
+
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
+    1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;
+
+    mdl_id_dt <- gen_mdl_id_dt(gof_df_cbn)
+
+    idx <- mdl_id_dt$mdl_id[15]
+        
+    regspecx <- get_reg_spec_from_id(idx, fldr_info)
+
+    dt_glmmTMB <- run_vrbl_mdl_vars(regspecx, vvs, fldr_info, verbose = F,
+                                    wtf =F, return_objs = c("res_parsed")) %>%
+        chuck("res_parsed", "coef_df") %>% adt() %>% .[, src := "glmmTMB"] %>%
+        .[vrbl_name == "(Intercept)", vrbl_name := "cons"]
+    
+    
+    regspecx2 <- copy(regspecx)
+    pluck(regspecx2, "cfg", "regcmd") <- "xtnbreg"
+
+    dt_xtnbreg <- run_vrbl_mdl_vars(regspecx2, vvs, fldr_info, verbose = F,
+                                    wtf =F, return_objs = c("res_parsed")) %>%
+        chuck("res_parsed", "coef_df") %>% adt() %>% .[, src := "xtnbreg"]
+
+    rbind(dt_xtnbreg, dt_glmmTMB) %>%
+        melt(id.vars = c("vrbl_name", "src"), variable.name = "measure") %>% .[measure == "coef"] %>%
+        dcast.data.table(vrbl_name ~ src) %>% na.omit() %>% 
+        .[, `:=`(diff = glmmTMB - xtnbreg, ratio1 = glmmTMB/xtnbreg, ratio2 = xtnbreg/glmmTMB)] %>%
+        .[ratio1 > 1.5 | ratio2 > 1.5]
+
+}
+
+
 
 postestimation <- function(fldr_info) {
     if (as.character(match.call()[[1]]) %in% fstd){browser()}
