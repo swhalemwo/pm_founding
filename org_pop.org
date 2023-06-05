@@ -822,6 +822,8 @@ A number of countries have been excluded for various reasons:
 #
 The exchange rates for Zimbabwe and Venezuela were deemed unrealistic (Venezuela is discussed by [[textcite:&Blanchet_2017_conversions]]); both countries were therefore excluded.
 #
+The HNWI indicators for the United Arab Emirates display a strong decline between 2000 and 2010 of which both the starting value and the strength of the decline are extremely high and hence likely caused by data issues; the country is therefore excluded. 
+#
 Furthermore, a number of country-years have been removed for Yemen due to negative cultural spending.
 #
 For a number of years the wealth gini coefficient of South Africa was larger than 1; it has therefore been set to a ceiling of 0.95.
