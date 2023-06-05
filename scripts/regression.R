@@ -1872,17 +1872,25 @@ gen_mdl_id_dt <- function(gof_df_cbn) {
 cbn_splitted_files <- function(grep_pattern, fldr_info) {
     #' combines back together the CFG files
     #' 
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
+
     
     cfg_files <- list.files(fldr_info$BATCH_DIR) %>%
-        keep(~grepl(grep_pattern, .x)) %>%
+        keep(~grepl(grep_pattern, .x))
+
+    if (len(cfg_files) > 0) {
+        
+        cfg_files2 <- cfg_files %>%
         paste0(fldr_info$BATCH_DIR, .)
     
-    cbn_cfgs_cmd <- sprintf("cat %s > %s", paste(cfg_files, collapse = " "), fldr_info$REG_RES_FILE_CFGS)
+        cbn_cfgs_cmd <- sprintf("cat %s > %s", paste(cfg_files2, collapse = " "), fldr_info$REG_RES_FILE_CFGS)
     
-    system(cbn_cfgs_cmd)
+        system(cbn_cfgs_cmd)
 
-    cleanup_cmd <- sprintf("rm %s", paste0(cfg_files, collapse = " "))
-    system(cleanup_cmd)
+        cleanup_cmd <- sprintf("rm %s", paste0(cfg_files2, collapse = " "))
+        system(cleanup_cmd)
+    }
+    
 }
 
 
@@ -2833,7 +2841,7 @@ fldr_info_optmz <- setup_regression_folders_and_files(reg_settings_optmz$batch_v
 pbmclapply(reg_spec_mdls_optmz, \(x) optmz_reg_spec(x, fldr_info_optmz, reg_settings_optmz),
          mc.cores = 5)
 
-cbn_splitted_files("_cfgs.csv", fldr_info_optmz)
+cbn_splitted_files("_cfgs.csv[0-9]", fldr_info_optmz)
 
 ## run the one-out analysis
 
