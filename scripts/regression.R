@@ -2185,6 +2185,47 @@ read_reg_res <- function(idx, fldr_info) {
     
 }
 
+read_reg_res_files_ou <- function(fldr_info) {
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
+    #' reads the basic OU regression result files in
+    #' for now pretty lame copy of read_reg_res_files before it was changed to handle cached models
+    ## (which OU doesn't produce)
+
+    df_reg_anls_cfgs <- read.csv(paste0(fldr_info$REG_RES_FILE_CFGS), sep = " ", header = F,
+                                 col.names = c("variable", "value", "cfg_id", "lag_spec", "mdl_id", "cvrgd")) %>%
+        atb()
+
+    df_reg_anls_cfgs_wide <- df_reg_anls_cfgs %>%
+        select(variable, value, mdl_id, lag_spec, cvrgd) %>% unique() %>% 
+        pivot_wider(id_cols = c(mdl_id, lag_spec, cvrgd), names_from = variable, values_from = value)
+
+
+    all_mdl_res <- unique(filter(df_reg_anls_cfgs, cvrgd == 1)$mdl_id) %>%
+        lapply(\(x) read_reg_res(x, fldr_info))
+
+
+    coef_df <- mclapply(all_mdl_res, \(x) atb(x[["coef_df"]]), mc.cores = 6) %>% bind_rows()
+    gof_df <- mclapply(all_mdl_res, \(x) x[["gof_df"]], mc.cores = 6) %>% bind_rows() %>% atb()
+
+    ## add the model details as variables 
+    gof_df_cbn <- merge(gof_df, df_reg_anls_cfgs_wide) %>% atb() %>%
+        mutate(vrbl_choice = gsub("[1-5]", "0", base_lag_spec), ## add vrbl choice
+               cbn_name = factor(cbn_name, levels = names(vrbl_cbns)),
+               loop_nbr = as.integer(loop_nbr),
+               t_diff = as.numeric(t_diff))
+    
+                              
+
+    return(list(
+        df_reg_anls_cfgs_wide = df_reg_anls_cfgs_wide,
+        coef_df = coef_df,
+        gof_df_cbn = gof_df_cbn
+        ))
+
+}
+
+
+
 
 read_reg_res_files <- function(fldr_info) {
     if (as.character(match.call()[[1]]) %in% fstd){browser()}
@@ -2203,6 +2244,16 @@ read_reg_res_files <- function(fldr_info) {
         select(variable, value, mdl_id, lag_spec, cvrgd) %>% unique() %>% 
         pivot_wider(id_cols = c(mdl_id, lag_spec, cvrgd), names_from = variable, values_from = value)
 
+    ## also read the stuff in from mdllog
+    db_str <- paste0(fldr_info$BATCH_DIR, "mdl_cache.sqlite")
+    db_mdlcache <- dbConnect(RSQLite::SQLite(), db_str)
+    dt_mdllog <- dbGetQuery(db_mdlcache, "SELECT mdl_id, cbn_name, lag_spec, loop_nbr from mdl_log") %>% adt()
+
+    ## adt(df_reg_anls_cfgs_wide)[, uniqueN(paste0(cbn_name, lag_spec))]
+    
+    ## can I stretch df_reg_anls_cfgs_wide with dt_mdllog?
+    df_reg_anls_cfgs_wide2 <- adt(df_reg_anls_cfgs_wide)[, `:=`(mdl_id = NULL, loop_nbr = NULL)] %>%
+        .[dt_mdllog, on = .(cbn_name, lag_spec)]
 
     ## read_reg_res(df_reg_anls_cfgs$mdl_id[[1]])
 
@@ -2242,8 +2293,26 @@ read_reg_res_files <- function(fldr_info) {
     coef_df <- mclapply(all_mdl_res, \(x) atb(x[["coef_df"]]), mc.cores = 6) %>% bind_rows()
     gof_df <- mclapply(all_mdl_res, \(x) x[["gof_df"]], mc.cores = 6) %>% bind_rows() %>% atb()
 
-    ## add the model details as variables 
-    gof_df_cbn <- merge(gof_df, df_reg_anls_cfgs_wide) %>% atb() %>%
+    ## "inflate" the coef_df/gof_df with the models that have not actually been run (but identical have been)
+    ## first need to add cbn_name, lag_spec (unique identifiers)
+
+    coef_df2 <- df_reg_anls_cfgs_wide2[, .(mdl_id, cbn_name, lag_spec)][adt(coef_df), on = "mdl_id"] %>%
+        .[, mdl_id := NULL] %>% # don't need mdl_id anymore, merge back with cbn_name, lag_spec
+        df_reg_anls_cfgs_wide2[, .(mdl_id, cbn_name, lag_spec)][
+            ., on = .(cbn_name, lag_spec), allow.cartesian = T] %>% 
+        .[, .(vrbl_name, coef, se, pvalues, mdl_id)] 
+
+    ## same play with gof_df: first to cbn_name+lagspec, then backlink to all the mdl_ids
+    gof_df2 <- df_reg_anls_cfgs_wide2[, .(mdl_id, cbn_name, lag_spec)][adt(gof_df), on = "mdl_id"] %>%
+        .[, mdl_id := NULL] %>% 
+        df_reg_anls_cfgs_wide2[, .(mdl_id, cbn_name, lag_spec)][
+            ., on = .(cbn_name, lag_spec), allow.cartesian = T] %>% 
+        .[, .(gof_names, gof_value, mdl_id)] 
+
+
+    ## add the model details as variables
+    ## now with new dfs
+    gof_df_cbn <- merge(gof_df2, df_reg_anls_cfgs_wide2) %>% atb() %>%
         mutate(vrbl_choice = gsub("[1-5]", "0", base_lag_spec), ## add vrbl choice
                cbn_name = factor(cbn_name, levels = names(vrbl_cbns)),
                loop_nbr = as.integer(loop_nbr),
@@ -2283,8 +2352,8 @@ read_reg_res_files <- function(fldr_info) {
 
 
     return(list(
-        df_reg_anls_cfgs_wide = df_reg_anls_cfgs_wide,
-        coef_df = coef_df,
+        df_reg_anls_cfgs_wide = df_reg_anls_cfgs_wide2,
+        coef_df = coef_df2,
         gof_df_cbn = gof_df_cbn
         ))
 
