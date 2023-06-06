@@ -769,7 +769,27 @@ run_glmmtmb <- function(dfx, dvfmt, r_vars, verbose) {
     ## rx_glmmtmb2 <- glmmTMB(fx, dfx, family = nbinom1, verbose = verbose)
     ## rx_glmmtmb3 <- glmmTMB(fx, dfx, family = nbinom1, verbose = F, dispformula = ~iso3c)
     ## rx_glmmtmb4 <- glmmTMB(fx4, dfx, family = nbinom1, verbose = F, dispformula = ~iso3c)
-    
+
+    ## try fixest, but can only estimate fixed effects (
+    ## xx <- fenegbin(nbr_opened ~ Ind.tax.incentives + cnt_contemp_1990 + cnt_contemp_1990_sqrd + 
+    ##              hnwi_nbr_200M_lag4 + sptinc992j_p99p100_lag2 + shweal992j_p99p100_lag3 + 
+    ##              NY.GDP.PCAP.CDk_lag5 + clctr_cnt_cpaer_lag5 + pm_density_lag4 + 
+    ##              pm_density_sqrd_lag4 + pm_density_global_lag3 + pm_density_global_sqrd_lag3 + 
+    ##              nbr_closed_cum_global_lag4 + offset(log(SP_POP_TOTLm_lag0_uscld)) | iso3c,
+    ##          panel.id = c("iso3c", "year"),
+    ##          ## data = adt(dfx)[, nbr_opened_sum := sum(nbr_opened)]
+    ##          data = adt(dfx)[, `:=`(nbr_opened_sum = sum(nbr_opened)), iso3c][nbr_opened_sum > 0]
+    ##          )
+             
+    ## femlm(nbr_opened ~ Ind.tax.incentives + cnt_contemp_1990 + cnt_contemp_1990_sqrd + 
+    ##              hnwi_nbr_200M_lag4 + sptinc992j_p99p100_lag2 + shweal992j_p99p100_lag3 + 
+    ##              NY.GDP.PCAP.CDk_lag5 + clctr_cnt_cpaer_lag5 + pm_density_lag4 + 
+    ##              pm_density_sqrd_lag4 + pm_density_global_lag3 + pm_density_global_sqrd_lag3 + 
+    ##              nbr_closed_cum_global_lag4 + offset(log(SP_POP_TOTLm_lag0_uscld)) | iso3c,
+    ##       panel.id = c("iso3c", "year"),
+    ##       family = "negbin",
+    ##       data = dfx)
+
     
     ## df.residual
     ## library(parameters)
