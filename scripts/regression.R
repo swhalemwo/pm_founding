@@ -1764,7 +1764,7 @@ optmz_vrbl_lag <- function(reg_spec, vrblx, loop_nbr, fldr_info, reg_settings, v
     dbAppendTable(db_mdlcache, "mdl_cache", dt_presence[missing_before == T, .(cbn_name, lag_spec, ll)])
 
     ## write log of all the mdls that are run (either directly or indirectly)
-    dbAppendTable(db_mdlcache, "mdl_log", dt_presence[, .(mdl_id, cbn_name, lag_spec, loop_nbr)])
+    dbAppendTable(db_mdlcache, "mdl_log", dt_presence[, .(mdl_id, cbn_name, lag_spec, loop_nbr, vrbl_optmzd)])
 
     ## TEST: only write some back
     ## dbAppendTable(db_mdlcache, "mdl_cache", dt_presence[c(2,4), .(cbn_name, lag_spec, ll)])
@@ -2286,12 +2286,13 @@ read_reg_res_files <- function(fldr_info) {
     ## also read the stuff in from mdllog
     db_str <- paste0(fldr_info$BATCH_DIR, "mdl_cache.sqlite")
     db_mdlcache <- dbConnect(RSQLite::SQLite(), db_str)
-    dt_mdllog <- dbGetQuery(db_mdlcache, "SELECT mdl_id, cbn_name, lag_spec, loop_nbr from mdl_log") %>% adt()
+    dt_mdllog <- dbGetQuery(db_mdlcache, "SELECT mdl_id, cbn_name, lag_spec, loop_nbr, vrbl_optmzd from mdl_log") %>% adt()
 
     ## adt(df_reg_anls_cfgs_wide)[, uniqueN(paste0(cbn_name, lag_spec))]
     
     ## can I stretch df_reg_anls_cfgs_wide with dt_mdllog?
-    df_reg_anls_cfgs_wide2 <- adt(df_reg_anls_cfgs_wide)[, `:=`(mdl_id = NULL, loop_nbr = NULL)] %>%
+    df_reg_anls_cfgs_wide2 <- adt(df_reg_anls_cfgs_wide)[, `:=`(mdl_id = NULL, loop_nbr = NULL,
+                                                                vrbl_optmzd = NULL)] %>% # replace old values
         .[dt_mdllog, on = .(cbn_name, lag_spec)]
 
     ## read_reg_res(df_reg_anls_cfgs$mdl_id[[1]])
@@ -3136,7 +3137,8 @@ if (basename(db_str) %!in% list.files(fldr_info_optmz$BATCH_DIR)) {
     dt_cacheschema <- data.table(cbn_name = "asdf", lag_spec = "asdf", ll = 11.1)
     prep_sqlitedb(db_mdlcache, dt_cacheschema, "mdl_cache", constraints = "PRIMARY KEY (cbn_name, lag_spec)")
     ## add log: all the models that are run
-    dt_mdllog_schema <- data.table(mdl_id = "id", cbn_name = "cbnx", lag_spec = "lag_spec", loop_nbr = 1L)
+    dt_mdllog_schema <- data.table(mdl_id = "id", cbn_name = "cbnx", lag_spec = "lag_spec", loop_nbr = 1L,
+                                   vrbl_optmzd = "vrbl")
     prep_sqlitedb(db_mdlcache, dt_mdllog_schema, "mdl_log", constraints = "PRIMARY KEY (mdl_id)")
 }
 
