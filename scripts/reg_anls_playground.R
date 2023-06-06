@@ -1924,3 +1924,12 @@ gen_res_velp_tests <- function(cbn_dfs_rates) {
     ## cbn_dfs_rates_uscld$cbn_all %>%
     ##     ggplot(aes(x=year, y=hnwi_nbr_1M_lag0, group = iso3c)) + geom_point() +
     ##     geom_smooth(method = "lm", se = F, linewidth = 0.1)
+
+## ** more outlier hunting
+reg_res_objs$dt_velp_crycoefs[grepl("hnwi_nbr", vrbl)] %>%
+    .[, head(.SD[order(year)],3), .(cbn_name, vrbl)] %>%
+    ggplot(aes(x=year, y=vrbl, label = iso3c)) + geom_point() + facet_grid(~cbn_name) + geom_text_repel()
+
+filter(cbn_dfs_rates_uscld$cbn_no_cult_spending_and_mitr, iso3c %in% c("IRL", "QAT", "SAU", "DEU")) %>%
+    ## filter(iso3c == "SAU") %>% select(iso3c, year, hnwi_nbr_200M_lag0)
+    viz_lines(y="hnwi_nbr_200M_lag0", duration = 1)
