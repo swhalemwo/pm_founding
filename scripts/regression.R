@@ -1628,33 +1628,54 @@ optmz_vrbl_lag <- function(reg_spec, vrblx, loop_nbr, fldr_info, reg_settings, v
     reg_specs_vrblx_varied <- lapply(reg_settings$lags, \(x)
                                     reg_spec$lngtd_vrbls %>% 
                                     mutate(lag = ifelse(vrbl==vrblx, x, lag)) %>%
+                                    cstrn_vrbl_lags() %>%  # constrain lags here already
                                     list(lngtd_vrbls = .))
     
-    ## reconstruct the full reg_spec again
-    reg_settings2 <- reg_settings
-    reg_settings2$cbns_to_include <- reg_spec$cfg$cbn_name
-    reg_settings2$technique_strs <- reg_spec$cfg$technique_str
-    reg_settings2$difficulty_switches <- reg_spec$cfg$difficulty
-    reg_settings2$regcmds <- reg_spec$cfg$regcmd
-    
-    
-    reg_specs_full_again <- vary_batch_reg_spec(reg_specs_vrblx_varied, reg_settings2, vvs)
-    
-    ## lapply(reg_specs_full_again, \(x) x$lngtd_vrbls)
+    ## ## old way with vary_batch_reg_spec : takes around 2 secs of reproducing everything with mclapply
+    ## ## reconstruct the full reg_spec again
+    ## reg_settings2 <- reg_settings
+    ## reg_settings2$cbns_to_include <- reg_spec$cfg$cbn_name
+    ## reg_settings2$technique_strs <- reg_spec$cfg$technique_str
+    ## reg_settings2$difficulty_switches <- reg_spec$cfg$difficulty
+    ## reg_settings2$regcmds <- reg_spec$cfg$regcmd
+           
+    ## reg_specs_full_again <- vary_batch_reg_spec(reg_specs_vrblx_varied, reg_settings2, vvs)
+    ## ## names(reg_specs_full_again[[1]])
+    ## map(reg_specs_full_again, ~.x$base_lag_spec)
 
+    stuff_to_keep <- c("cfg", "base_vars", "spec_cbn", "ctrl_vars", "mdl_vars")
+
+
+    ## more efficient way of modifying lags (just replace lngtd_vrbls in passed regspec): 0.001 secs
+    reg_specs_full_again <- lapply(reg_specs_vrblx_varied, \(x)
+                                   `pluck<-`(copy(reg_spec)[stuff_to_keep], "lngtd_vrbls",
+                                             value = x$lngtd_vrbls)) %>%
+        lapply(., \(x) # redo the base lag spec
+               `pluck<-`(x, "base_lag_spec", value = paste0(gen_lag_id(x, vvs)$value, collapse = "")))
+    
+
+    ## map(reg_specs_full_again, ~chuck(.x, "base_lag_spec")) ## check them    
+    
+    
     ## modify base_lag_spec back 
     reg_specs_full_again2 <- lapply(reg_specs_full_again, \(x)
                                     modfy_optmz_cfg(x, cfg_orig, base_lag_spec_orig, loop_nbr, vrblx))
     
-    ## add ids
-    reg_specs_w_ids <- idfy_reg_specs(reg_specs_full_again2, vvs)
+    ## add ids: use gen_spec_id_info directly to save mclapply spinup
+    ## reg_specs_w_ids <- idfy_reg_specs(reg_specs_full_again2, vvs)
+    
+    reg_specs_w_ids <- map(reg_specs_full_again2, ~gen_spec_id_info(.x, vvs))
+    
+    ## identical(reg_specs_w_ids, reg_specs_w_ids2) ## comparison with old version -> noice
 
     
     db_mdlcache <- dbConnect(RSQLite::SQLite(), paste0(fldr_info$BATCH_DIR, "mdl_cache.sqlite"))
     dbExecute(conn = db_mdlcache, "PRAGMA foreign_keys=ON")
 
     cbn_lagspecs <- map(reg_specs_w_ids, ~list(cbn_name = chuck(.x, "cfg", "cbn_name"),
-                                               lag_spec = chuck(.x, "base_lag_spec")))
+                                               lag_spec = chuck(.x, "base_lag_spec"),
+                                               loop_nbr = chuck(.x, "cfg", "loop_nbr"),
+                                               mdl_id = chuck(.x, "mdl_id")))
 
     ## get data of which of the lags are already in mdl_cache 5
     l_lagquery_res <- map(
@@ -1670,7 +1691,8 @@ optmz_vrbl_lag <- function(reg_spec, vrblx, loop_nbr, fldr_info, reg_settings, v
         l_lagquery_res,
         ~c(list(ll = ifelse(nrow(.x$dt_lagquery_res) == 0, NA, .x$dt_lagquery_res[, ll])), .x))
 
-    dt_presence <- map(l_lagquery_res2, ~.x[c("cbn_name", "lag_spec", "ll")]) %>% rbindlist() %>%
+    dt_presence <- map(l_lagquery_res2,
+                       ~.x[c("cbn_name", "lag_spec", "ll", "mdl_id", "loop_nbr")]) %>% rbindlist() %>%
         .[, missing_before := is.na(ll)] %>% # get those that are missing to save later
         .[, ll := as.numeric(ll)] ## need to ensure that LLs are numeric (otherwise boolean)
 
@@ -1690,18 +1712,7 @@ optmz_vrbl_lag <- function(reg_spec, vrblx, loop_nbr, fldr_info, reg_settings, v
     ## assign back
     dt_presence[missing_before == T, ll := unlist(lag_lls)]
         
-    ## seems to be robust against non-convergence
-    ## lag_lls[[3]] <- NA
-
-    ## if (all(is.na(lag_lls))) {
-    ##     # time for break
-    ##     best_lag <- sample(reg_settings$lags, 1)
-    ##  
-            
-    ## } else {
-    ##     best_lag <- which.max(lag_lls)
-    ## }
-
+    ## pick best lag
     if (dt_presence[, all(is.na(ll))]) {
         best_lag <- sample(reg_settings$lags, 1)
         print("all lags of current model result in non-convergence, pick lag at random")
@@ -1712,6 +1723,9 @@ optmz_vrbl_lag <- function(reg_spec, vrblx, loop_nbr, fldr_info, reg_settings, v
      
     ## write LL back to file    
     dbAppendTable(db_mdlcache, "mdl_cache", dt_presence[missing_before == T, .(cbn_name, lag_spec, ll)])
+
+    ## write log of all the mdls that are run (either directly or indirectly)
+    dbAppendTable(db_mdlcache, "mdl_log", dt_presence[, .(mdl_id, cbn_name, lag_spec, loop_nbr)])
 
     ## TEST: only write some back
     ## dbAppendTable(db_mdlcache, "mdl_cache", dt_presence[c(2,4), .(cbn_name, lag_spec, ll)])
@@ -3006,13 +3020,17 @@ print(len(reg_spec_mdls_optmz))
 fldr_info_optmz <- setup_regression_folders_and_files(reg_settings_optmz$batch_version)
 
 
-## set up model cache
-db_mdlcache <- dbConnect(RSQLite::SQLite(), paste0(fldr_info_optmz$BATCH_DIR, "mdl_cache.sqlite"))
-
-dt_cacheschema <- data.table(cbn_name = "asdf", lag_spec = "asdf", ll = 11.1)
-prep_sqlitedb(db_mdlcache, dt_cacheschema, "mdl_cache", constraints = "PRIMARY KEY (cbn_name, lag_spec)")
-
-
+## set up model cache, but only if it not already exists (otherwise would overwrite)
+## so far assumes that cbn_name + lag_spec is unique (no other things allowed to vary)
+db_str <- paste0(fldr_info_optmz$BATCH_DIR, "mdl_cache.sqlite")
+if (basename(db_str) %!in% list.files(fldr_info_optmz$BATCH_DIR)) {
+    db_mdlcache <- dbConnect(RSQLite::SQLite(), db_str)
+    dt_cacheschema <- data.table(cbn_name = "asdf", lag_spec = "asdf", ll = 11.1)
+    prep_sqlitedb(db_mdlcache, dt_cacheschema, "mdl_cache", constraints = "PRIMARY KEY (cbn_name, lag_spec)")
+    ## add log: all the models that are run
+    dt_mdllog_schema <- data.table(mdl_id = "id", cbn_name = "cbnx", lag_spec = "lag_spec", loop_nbr = 1L)
+    prep_sqlitedb(db_mdlcache, dt_mdllog_schema, "mdl_log", constraints = "PRIMARY KEY (mdl_id)")
+}
 
 pbmclapply(reg_spec_mdls_optmz, \(x) optmz_reg_spec(x, fldr_info_optmz, reg_settings_optmz),
          mc.cores = 5)
