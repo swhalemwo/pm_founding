@@ -759,7 +759,22 @@ run_glmmtmb <- function(dfx, dvfmt, r_vars, verbose) {
 
     ## generate results
 
-    rx_glmmtmb <- glmmTMB(fx, dfx, family = nbinom2, verbose = verbose)
+    ## fx4 <- nbr_opened ~ Ind.tax.incentives + cnt_contemp_1990 + cnt_contemp_1990_sqrd + 
+    ##     hnwi_nbr_5M_lag5 + sptinc992j_p90p100_lag1 + shweal992j_p99p100_lag5 + 
+    ##     NY.GDP.PCAP.CDk_lag5 + clctr_cnt_cpaer_lag2 + pm_density_lag4 + 
+    ##     pm_density_sqrd_lag4 + pm_density_global_lag5 + pm_density_global_sqrd_lag5 + 
+    ##     nbr_closed_cum_global_lag5  + offset(log(SP_POP_TOTLm_lag0_uscld))
+
+    rx_glmmtmb <- glmmTMB(fx, dfx, family = nbinom1, verbose = verbose)
+    ## rx_glmmtmb2 <- glmmTMB(fx, dfx, family = nbinom1, verbose = verbose)
+    ## rx_glmmtmb3 <- glmmTMB(fx, dfx, family = nbinom1, verbose = F, dispformula = ~iso3c)
+    ## rx_glmmtmb4 <- glmmTMB(fx4, dfx, family = nbinom1, verbose = F, dispformula = ~iso3c)
+    
+    
+    ## df.residual
+    ## library(parameters)
+    ## library(performance)
+    ## compare_models(rx_glmmtmb, rx_glmmtmb2, rx_glmmtmb3, rx_glmmtmb4, select = "se_p")
 
     ## check_collinearity(rx_glmmtmb)
     ## check_model(rx_glmmtmb)
@@ -3025,6 +3040,7 @@ x <- reg_spec_mdls_optmz[[3]]
 
 ## x$cfg$dvfmt <- "counts"
 ## x$cfg$regcmd <- "menbreg"
+x$cfg$regcmd <- "glmmTMB"
 
 run_vrbl_mdl_vars(x, vvs, fldr_info_optmz, verbose = T, wtf = F)
 
