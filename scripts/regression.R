@@ -2829,7 +2829,7 @@ gen_cntrfctl <- function(gof_df_cbn, fldr_info) {
     ## get best models
     mdl_id_dt <- gen_mdl_id_dt(gof_df_cbn)
 
-    ## idx <- mdl_id_dt$mdl_id[7]
+    ## idx <- mdl_id_dt$mdl_id[1]
     ## gen_preds_given_mdfd_vrbls(idx, fldr_info)
         
     l_cntrfctl_res <- mclapply(mdl_id_dt$mdl_id, \(x) gen_preds_given_mdfd_vrbls(x, fldr_info), mc.cores = 5)
@@ -3041,7 +3041,7 @@ postestimation <- function(fldr_info) {
     df_reg_anls_cfgs_wide <- reg_res_files$df_reg_anls_cfgs_wide
     
 
-    compare_r_stata(gof_df_cbn)
+    ## compare_r_stata(gof_df_cbn)
     
     gen_cntrfctl(gof_df_cbn, fldr_info)
 
@@ -3102,12 +3102,12 @@ vrbl_thld_choices <- gen_vrbl_thld_choices(vvs$hnwi_vars, vvs$inc_ineq_vars, vvs
 ##                                   inc_ineq_var == "sptinc992j_p99p100", weal_ineq_var == "shweal992j_p99p100")
 
 
-vrbl_thld_choices_optmz <- slice_sample(vrbl_thld_choices, n=36)
+vrbl_thld_choices_optmz <- slice_sample(vrbl_thld_choices, n=2)
 
 reg_settings_optmz <- list(
-    nbr_specs_per_thld = 5,
+    nbr_specs_per_thld = 2,
     dvfmts = c("rates"), # should also be counts, but multiple dvfmts not yet supported by reg_anls
-    batch_version = "v76",
+    batch_version = "v82",
     lags = 1:5,
     vary_vrbl_lag = F,
     technique_strs = c("nr"),
@@ -3169,7 +3169,7 @@ stop("models are DONE")
 
 regspec_x <- reg_spec_mdls_optmz[[1]]
 
-optmz_reg_spec(reg_spec_mdls_optmz[[2]], fldr_info_optmz, reg_settings_optmz)
+optmz_reg_spec(reg_spec_mdls_optmz[[12]], fldr_info_optmz, reg_settings_optmz)
 
 ## reg_spec_mdls_optmz[[10]]$df_idx %>% print(n=30)
 x <- reg_spec_mdls_optmz[[12]]

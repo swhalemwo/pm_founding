@@ -1182,6 +1182,11 @@ gen_plt_cvrgnc <- function(gof_df_cbn) {
         mutate(step_base = 1, loop_nbr = as.numeric(loop_nbr))
                ## vrbl_choice = gsub("[1-5]", "0", base_lag_spec))
 
+    cvrgnc_df_prep %>% ggplot(aes(x=gof_value)) +
+        geom_density(bw = 0.3) +
+        facet_wrap(cbn_name~., scales = "free")
+
+
     ## developing analysis of value-analyzing
     ## dtx <- data.table(vlu = c(1,1,2, 1,2,2, 2, 2, 1), id = c(rep("a", 3), rep("b", 3), rep("c", 3)))
     ## dtx[id == "a", paste0(table(vlu), collapse = "")]
@@ -2968,11 +2973,13 @@ stop("functions done")
 stylecfg <- list(lbl_fntsz = 9)
 
 NBR_MDLS <- 1
-batch_version <- "v76"
+batch_version <- "v82"
 ## fldr_info <- fldr_info_optmz
 fldr_info <- setup_regression_folders_and_files(batch_version)
 reg_anls_base <- read_reg_anls_files(fldr_info)
 reg_res_objs <- proc_reg_res_objs(reg_anls_base, vvs, NBR_MDLS)
+
+
 
 reg_res <- list()
 
@@ -2984,12 +2991,13 @@ render_reg_res("plt_velp", reg_res, batch_version = "v75")
 
 
 
+
 ## reg_res$plts$plt_oucoefchng_tile <- gen_plt_oucoefchng_tile(reg_res_objs$dt_oucoefchng)
 ## render_reg_res("plt_oucoefchng_tile", reg_res, batch_version = "v75")
 
 
 
-plt_inspector(reg_res$plts)
+plt_inspector(reg_res$plts[12:20])
 ## reg_res$plts$plt_oneout_llrt_z
 
 purrr::map(names(reg_res$plts), ~render_reg_res(.x, reg_res, batch_version = batch_version))
