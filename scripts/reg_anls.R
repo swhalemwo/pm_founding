@@ -419,7 +419,7 @@ gen_plt_cntrfctl <- function(dt_cntrfctl_cons, dt_cntrfctl_wse) {
         .[dt_id %in% c("2k4")] %>% 
         ggplot(aes(x=diff, y = vrbl, color = dt_id)) +
         ## geom_point() +
-        geom_violin(bw = 5) + 
+        geom_violin() + # bw = 5) + 
         facet_grid(hyp ~ cbn_name, scales = "free", space = "free") +
         geom_vline(mapping = aes(xintercept = 0), linetype = "dashed") +
         labs(x="additional PM foundings due to variable change since 2000")
@@ -481,12 +481,12 @@ gen_plt_cntrfctl <- function(dt_cntrfctl_cons, dt_cntrfctl_wse) {
     ## see why HNWI_5M coefficient changes between cbn1 and 2
     
 
-    adt(cbn_dfs_rates$cbn_no_cult_spending) %>%
-        .[!adt(cbn_dfs_rates$cbn_all)[, .(iso3c, year)], on = .(iso3c, year)] %>%
-        .[, .(iso3c, year, mean_hnwi_200M = mean(hnwi_nbr_200M_lag0), hnwi_nbr_200M_lag0)] %>%
-        .[, diff := hnwi_nbr_200M_lag0 - mean_hnwi_200M] %>%
-        reg_res_objs$dt_velp_crycoefs[cbn_name == "cbn_no_cult_spending" & vrbl == "hnwi_nbr_200M", .(year, iso3c)][., on = "iso3c"] %>%
-        .[order(-diff)] %>% print(n=50)
+    ## adt(cbn_dfs_rates$cbn_no_cult_spending) %>%
+    ##     .[!adt(cbn_dfs_rates$cbn_all)[, .(iso3c, year)], on = .(iso3c, year)] %>%
+    ##     .[, .(iso3c, year, mean_hnwi_200M = mean(hnwi_nbr_200M_lag0), hnwi_nbr_200M_lag0)] %>%
+    ##     .[, diff := hnwi_nbr_200M_lag0 - mean_hnwi_200M] %>%
+    ##     reg_res_objs$dt_velp_crycoefs[cbn_name == "cbn_no_cult_spending" & vrbl == "hnwi_nbr_200M", .(year, iso3c)][., on = "iso3c"] %>%
+    ##     .[order(-diff)] %>% print(n=50)
 
 
 
@@ -494,7 +494,7 @@ gen_plt_cntrfctl <- function(dt_cntrfctl_cons, dt_cntrfctl_wse) {
 }
 
 
-gen_plt_cntrfctl(reg_res_objs$dt_cntrfctl_cons, reg_res_objs$dt_cntrfctl_wse)
+## gen_plt_cntrfctl(reg_res_objs$dt_cntrfctl_cons, reg_res_objs$dt_cntrfctl_wse)
 
 
 gen_plt_velp <- function(dt_velp_crycoefs, dt_velp_scalars) {
