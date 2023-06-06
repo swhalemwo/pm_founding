@@ -1631,8 +1631,8 @@ optmz_vrbl_lag <- function(reg_spec, vrblx, loop_nbr, fldr_info, reg_settings, v
                                     cstrn_vrbl_lags() %>%  # constrain lags here already
                                     list(lngtd_vrbls = .))
     
-    ## ## old way with vary_batch_reg_spec : takes around 2 secs of reproducing everything with mclapply
-    ## ## reconstruct the full reg_spec again
+    ## ## ## old way with vary_batch_reg_spec : takes around 2 secs of reproducing everything with mclapply
+    ## ## ## reconstruct the full reg_spec again
     ## reg_settings2 <- reg_settings
     ## reg_settings2$cbns_to_include <- reg_spec$cfg$cbn_name
     ## reg_settings2$technique_strs <- reg_spec$cfg$technique_str
@@ -1643,7 +1643,7 @@ optmz_vrbl_lag <- function(reg_spec, vrblx, loop_nbr, fldr_info, reg_settings, v
     ## ## names(reg_specs_full_again[[1]])
     ## map(reg_specs_full_again, ~.x$base_lag_spec)
 
-    stuff_to_keep <- c("cfg", "base_vars", "spec_cbn", "ctrl_vars", "mdl_vars")
+    stuff_to_keep <- c("cfg", "base_vars", "mdl_vars") # "ctrl_vars", "mdl_vars")
 
 
     ## more efficient way of modifying lags (just replace lngtd_vrbls in passed regspec): 0.001 secs
@@ -1651,10 +1651,20 @@ optmz_vrbl_lag <- function(reg_spec, vrblx, loop_nbr, fldr_info, reg_settings, v
                                    `pluck<-`(copy(reg_spec)[stuff_to_keep], "lngtd_vrbls",
                                              value = x$lngtd_vrbls)) %>%
         lapply(., \(x) # redo the base lag spec
-               `pluck<-`(x, "base_lag_spec", value = paste0(gen_lag_id(x, vvs)$value, collapse = "")))
+               `pluck<-`(x, "base_lag_spec", value = paste0(gen_lag_id(x, vvs)$value, collapse = ""))) %>%
+        lapply(., \(x) ## modify mdl_vars
+               `pluck<-`(x, "mdl_vars",
+                         ## get values of unchanged variables
+                         ## value = c(x$mdl_vars[gsub("_lag[0-5]", "", x$mdl_vars) != vrblx],
+                         ##           ## modify vrblx
+                         ##           paste0(vrblx, "_lag", adt(x$lngtd_vrbls)[vrbl == vrblx, lag]))
+                         ## keep cross-sectional variables
+                         value = c(keep(x$mdl_vars, ~!grepl("_lag[1-5]", .x)),
+                                   ## generate lagged variables based on (constrained) lngtd_vrbls
+                                   adt(x$lngtd_vrbls)[vrbl %in% gsub("_lag[1-5]", "", x$mdl_vars)][
+                                     , paste0(vrbl, "_lag", lag)])))
     
-
-    ## map(reg_specs_full_again, ~chuck(.x, "base_lag_spec")) ## check them    
+    ## map(reg_specs_full_again, ~chuck(.x, "mdl_vars")) ## check them    
     
     
     ## modify base_lag_spec back 
