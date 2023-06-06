@@ -896,7 +896,7 @@ run_vrbl_mdl_vars <- function(reg_spec, vvs, fldr_info, return_objs = c("converg
     dfx <- select(df_cbn, all_of(c(vvs$base_vars, "iso3c_num", "nbr_opened",iv_vars, "SP_POP_TOTLm_lag0_uscld")))
 
     ## saving reg spec information to debug later
-    if (wtf) {saveRDS(reg_spec, file = paste0(fldr_info$REG_SPEC_DIR, file_id))}
+    ## if (wtf) {saveRDS(reg_spec, file = paste0(fldr_info$REG_SPEC_DIR, file_id))}
     ## write model id to start_file to see which models don't converge
     if (wtf) {write.table(file_id, fldr_info$MDL_START_FILE, append = T, col.names = F, row.names = F)}
 
@@ -1721,10 +1721,19 @@ optmz_vrbl_lag <- function(reg_spec, vrblx, loop_nbr, fldr_info, reg_settings, v
         l_lagquery_res,
         ~c(list(ll = ifelse(nrow(.x$dt_lagquery_res) == 0, NA, .x$dt_lagquery_res[, ll])), .x))
 
+    if (reg_settings$wtf) {
+        map(reg_specs_w_ids, ~saveRDS(.x, file = paste0(fldr_info$REG_SPEC_DIR, .x$mdl_id)))
+    }
+
+    ## saveRDS(reg_spec, file = paste0(fldr_info$REG_SPEC_DIR, file_id))}
+
+    
+
     dt_presence <- map(l_lagquery_res2,
                        ~.x[c("cbn_name", "lag_spec", "ll", "mdl_id", "loop_nbr")]) %>% rbindlist() %>%
         .[, missing_before := is.na(ll)] %>% # get those that are missing to save later
-        .[, ll := as.numeric(ll)] ## need to ensure that LLs are numeric (otherwise boolean)
+        .[, ll := as.numeric(ll)] %>% ## need to ensure that LLs are numeric (otherwise boolean) 
+        .[, vrbl_optmzd := vrblx]
 
     print(sprintf("%s lags are already there", dt_presence[missing_before == F, .N]))
 
