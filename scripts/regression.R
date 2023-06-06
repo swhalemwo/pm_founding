@@ -693,17 +693,21 @@ run_menbreg <- function(iv_vars, dvfmt, gof_names, dfx, fldr_info, verbose) {
 
 
 get_r_gof <- function(rx_glmmtmb, rx_smry){
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
     #' get the goodness of fits stats from glmmTMB run 
 
     r_gof_prep1 <- get_gof(rx_glmmtmb)
     r_gof_prep2 <- data.frame(gof_names = names(r_gof_prep1), gof_value = as.numeric(r_gof_prep1[1,]))
 
+    
     ## some more gofs from AICtab
     r_gof_prep_aictab <- adf(rx_smry$AICtab)
     r_gof_prep_aictab2 <- data.table(gof_names = rownames(r_gof_prep_aictab), gof_value = r_gof_prep_aictab[,1]) %>%
         .[gof_names %in% c("logLik", "deviance", "df.resid")] %>% adf()
     
-    
+    ## add degrees of freedom (of log likelihood?)
+    r_gof_df <- data.table(gof_names = "df", gof_value = attr(rx_smry$logLik, "df"))
+
     ## some additional gof
     disp_sigma <- glmmTMB::sigma(rx_glmmtmb)
     N_g <- rx_smry$ngrps$cond
@@ -712,7 +716,7 @@ get_r_gof <- function(rx_glmmtmb, rx_smry){
     algns_gof <- data.frame(gof_names = c("disp_sigma", "N_g", "intcpt_var"),
                             gof_value = c(disp_sigma,    N_g,   intcpt_var))
 
-    r_gof_cbn <- Reduce(\(x,y) rbind(x,y), list(r_gof_prep2, r_gof_prep_aictab2, algns_gof))
+    r_gof_cbn <- Reduce(\(x,y) rbind(x,y), list(r_gof_prep2, r_gof_prep_aictab2, algns_gof, r_gof_df))
 
     ## rename some gofs to ensure consistency with stata gof names
     r_gof_cbn2 <- r_gof_cbn %>% adt() %>%
