@@ -1682,7 +1682,8 @@ optmz_vrbl_lag <- function(reg_spec, vrblx, loop_nbr, fldr_info, reg_settings, v
     
     
     lag_lls <- sapply(reg_specs_w_ids[dt_presence[, is.na(ll)]], \(x)
-                      run_vrbl_mdl_vars(x, vvs, fldr_info, return_objs = "log_likelihood"))
+                      run_vrbl_mdl_vars(x, vvs, fldr_info, return_objs = "log_likelihood",
+                                        wtf = reg_settings$wtf))
     
     
 
@@ -1757,15 +1758,21 @@ optmz_reg_spec_once <- function(reg_spec, loop_nbr, fldr_info, reg_settings) {
     ## new way of selecting the variables that need to be optimized: skip the ones to be constrained 
     ## setdiff(adt(reg_spec$lngtd_vrbls)[, vrbl], vvs$dt_cstrnd_vrbls[, cstrnd])
     
+    vrbls_to_yeet <- vvs$dt_cstrnd_vrbls[, cstrnd]
+    if (reg_spec$cfg$dvfmt == "rates") {
+        vrbls_to_yeet <- c(vrbls_to_yeet, "SP.POP.TOTLm")
+    }
     
-    for (v in setdiff(reg_spec$lngtd_vrbls$vrbl, vvs$dt_cstrnd_vrbls[, cstrnd])) {
 
+    for (v in sample(setdiff(reg_spec$lngtd_vrbls$vrbl, vrbls_to_yeet))) {
+        print(v)
         
         cur_lag_id <- gen_lag_id(reg_spec, vvs) %>% pull(value) %>% paste0(collapse = "")
 
         ## if variable hasn't run yet with current lag spec, run it now 
         if (cur_lag_id %!in% reg_spec$run_lag_specs[[v]]) {
 
+            
             reg_spec <- optmz_vrbl_lag(reg_spec, v, loop_nbr, fldr_info, reg_settings)
             ## reg_spec2 <- optmz_vrbl_lag(reg_spec, v, loop_nbr, fldr_info, verbose = T)
             reg_spec$run_lag_specs[[v]] <- c(reg_spec$run_lag_specs[[v]], cur_lag_id)
@@ -2985,7 +2992,8 @@ reg_settings_optmz <- list(
     regcmds = c("glmmTMB"),
     ## cbns_to_include = c("cbn_all"),
     cbns_to_include = names(cbn_dfs_counts)[1:3],
-    mdls_to_include = c("full")
+    mdls_to_include = c("full"),
+    wtf = T
 )
 
 
@@ -3033,18 +3041,47 @@ stop("models are DONE")
 
 regspec_x <- reg_spec_mdls_optmz[[1]]
 
-optmz_reg_spec(reg_spec_mdls_optmz[[1]], fldr_info_optmz, reg_settings_optmz)
+optmz_reg_spec(reg_spec_mdls_optmz[[2]], fldr_info_optmz, reg_settings_optmz)
 
 ## reg_spec_mdls_optmz[[10]]$df_idx %>% print(n=30)
-x <- reg_spec_mdls_optmz[[3]]
-
+x <- reg_spec_mdls_optmz[[12]]
 ## x$cfg$dvfmt <- "counts"
 ## x$cfg$regcmd <- "menbreg"
 x$cfg$regcmd <- "glmmTMB"
-
-run_vrbl_mdl_vars(x, vvs, fldr_info_optmz, verbose = T, wtf = F)
+run_vrbl_mdl_vars(x, vvs, fldr_info_optmz, verbose = F, wtf = F)
 
 ## ** debugging lack of convergence
+
+## *** v78
+
+## run ~150 unoptimized models, but all converge
+ii <- 12
+while (T) {
+    x <- reg_spec_mdls_optmz[[ii]]
+
+    x$cfg$regcmd <- "glmmTMB"
+    resx <- run_vrbl_mdl_vars(x, vvs, fldr_info_optmz, verbose = F, wtf = F)
+
+    print(ii)
+    if (!resx$converged) {break}
+    ii <- ii+1
+    
+}
+
+## try running single model in detail; don't find failure there neither
+optmz_reg_spec(reg_spec_mdls_optmz[[2]], fldr_info_optmz, reg_settings_optmz)
+
+## search the results
+mdl_ids_fail <- reg_anls_base$df_reg_anls_cfgs_wide %>% adt() %>% #.[, .N, cvrgd]
+    .[cvrgd == 0, mdl_id]
+
+regspec_fail <- get_reg_spec_from_id(mdl_id_fail, fldr_info)
+
+run_vrbl_mdl_vars(regspec_fail, vvs, fldr_info_optmz, verbose = F, wtf = F)
+
+cvrg_res <- map(mdl_ids_fail[1:30], ~get_reg_spec_from_id(.x, fldr_info) %>%
+                      run_vrbl_mdl_vars(., vvs, fldr_info_optmz, verbose = F, wtf = F))
+
 
 ## *** v38
 
