@@ -1178,7 +1178,7 @@ gen_plt_cvrgnc <- function(gof_df_cbn) {
     ## first: get the top values (values only go up)
 
     cvrgnc_df_prep <- filter(gof_df_cbn, gof_names == "log_likelihood") %>%
-        select(gof_value, base_lag_spec, loop_nbr, vrbl_optmzd, cbn_name, regcmd, vrbl_choice) %>%
+        select(mdl_id, gof_value, base_lag_spec, loop_nbr, vrbl_optmzd, cbn_name, regcmd, vrbl_choice) %>%
         mutate(step_base = 1, loop_nbr = as.numeric(loop_nbr))
                ## vrbl_choice = gsub("[1-5]", "0", base_lag_spec))
 
@@ -1200,6 +1200,9 @@ gen_plt_cvrgnc <- function(gof_df_cbn) {
         summarize(n_gof = len(gof_value), n_distinct_gof = n_distinct(gof_value), var_gof = sd(gof_value),
                   vlu_proc = paste0(table(gof_value), collapse = "")) %>%
         adt()
+
+    ## adt(cvrgnc_df_prep)[, .N, .(cbn_name, vrbl_choice)]
+    
 
     ## generate summary table of how many times the different starting values reached the same/different results
     print("convergence summary")
@@ -1228,13 +1231,38 @@ gen_plt_cvrgnc <- function(gof_df_cbn) {
         mutate(step = ave(step_base, FUN = cumsum)) 
 
 
-    plt_cvrgnc <- cvrgnc_df_prep3 %>% 
-        ggplot(aes(x=step, y=gof_value, group = interaction(base_lag_spec, regcmd), color = vrbl_choice,
-                   linetype =regcmd)) +
-        geom_line() +
-        facet_wrap(~cbn_name, ncol = 1, scales = "free_y")
+    ## find those that didn't converge
+    dt_ncvrg <- cvrgnc_df_prep3 %>% adt() %>% 
+        .[order(cbn_name, base_lag_spec, regcmd, step)] %>% 
+        .[, gof_value_lag := shift(gof_value), .(cbn_name, base_lag_spec, regcmd)] %>%
+        .[, diff := gof_value - gof_value_lag] %>% # look at "slope"
+        .[, .SD[which.max(step)], .(cbn_name, base_lag_spec, regcmd)] %>% # look at last point
+        .[, .(mdl_id, cbn_name, base_lag_spec, regcmd, gof_value, gof_value_lag, step, diff, vrbl_choice)] %>%
+        .[diff != 0]
 
-    return(plt_cvrgnc)
+
+    cvrgnc_df_prep4 <- adt(cvrgnc_df_prep3)[dt_ncvrg, on = .(cbn_name, base_lag_spec, vrbl_choice, regcmd)]
+
+    ##    test_id <- dt_ncvrg$mdl_id[2]
+    ##     test_regspec <- get_reg_spec_from_id(test_id, fldr_info)
+
+    ##     reg_setgs_debug <- copy(reg_settings_optmz) %>% `pluck<-`("wtf", value =F)
+    ##     optmz_reg_spec(test_regspec, fldr_info, reg_setgs_debug)
+    ##     lngtd_vrbls_bu <- reg_spec$lngtd_vrbls
+    
+    cvrgnc_df_prep3 %>% 
+        ggplot(aes(x=step, y=gof_value,
+                   group = interaction(base_lag_spec, regcmd), color = vrbl_choice,
+                   linetype =regcmd)) +
+        geom_line(show.legend = ifelse(adt(cvrgnc_df_prep3)[, .N, .(base_lag_spec, regcmd)][, .N] > 5, F, T),
+                  linewidth = 0.3) +
+        geom_point(dt_ncvrg, mapping = aes(x=step, y=gof_value), show.legend = F) +
+        geom_label_repel(dt_ncvrg, mapping = aes(x=step, y=gof_value, label = round(diff,2)),
+                         show.legend = F) +
+        facet_wrap(~cbn_name, ncol = 1, scales = "free_y")
+    
+
+    
 }
 
 
@@ -2986,7 +3014,7 @@ reg_res <- list()
 ## generate plots, construct configs
 reg_res$plts <- gen_reg_res_plts(reg_res_objs, vvs, NBR_MDLS, only_priority_plts = T, stylecfg)
 
-reg_res$plts$plt_velp <- gen_plt_velp(reg_res_objs$dt_velp_crycoefs, reg_res_objs$dt_velp_scalars)
+reg_res$plts$plt_cvrgnc <- gen_plt_cvrgnc(reg_res_objs$gof_df_cbn)
 render_reg_res("plt_velp", reg_res, batch_version = "v75")
 
 
