@@ -3001,7 +3001,7 @@ stop("functions done")
 stylecfg <- list(lbl_fntsz = 9)
 
 NBR_MDLS <- 1
-batch_version <- "v82"
+batch_version <- "v83"
 ## fldr_info <- fldr_info_optmz
 fldr_info <- setup_regression_folders_and_files(batch_version)
 reg_anls_base <- read_reg_anls_files(fldr_info)
@@ -3025,7 +3025,7 @@ render_reg_res("plt_velp", reg_res, batch_version = "v75")
 
 
 
-plt_inspector(reg_res$plts[12:20])
+plt_inspector(reg_res$plts)
 ## reg_res$plts$plt_oneout_llrt_z
 
 purrr::map(names(reg_res$plts), ~render_reg_res(.x, reg_res, batch_version = batch_version))
