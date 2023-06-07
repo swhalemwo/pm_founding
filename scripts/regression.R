@@ -2094,13 +2094,25 @@ gen_VIF_allres <- function(top_coefs, fldr_info) {
 
     ## mdl_cbn_all <- top_coefs[cbn_name == "cbn_all", mdl_id[5]]
     
-    plan(multicore, workers = 5)
+    ## plan(multicore, workers = 2) ## doesn't handle scheduling after finishing
+    ## plan(multisession, workers = 2) # doesn't give new task to free worker either 
+    ## plan(cluster, workers = 2)
+
+    ## tester <- function(sleep_time) {
+    ##     print(sprintf("pid: %s, sleep time: %s", Sys.getpid(), sleep_time))
+    ##     Sys.sleep(sleep_time)
+    ## }
 
     ## t1 = Sys.time()
-    ## nothingness <- future_map(c(2, 2, 2), ~Sys.sleep(.x))
+    ## nothingness <- future_map(c(5, 0.1,0.1,0.1), tester)
     ## t2 = Sys.time()
+    ## t2-t1
     
+    ## t1 = Sys.time()
+    ## mclapply(c(5,0.1,0.1, 0.1), tester, mc.cores = 2, mc.preschedule = F)
     
+    plan(multicore, workers = 5)
+
     dt_vif_res <- future_map_dfr(unique(top_coefs$mdl_id), ~gen_VIF_regspec_res(.x, fldr_info))
     fwrite(dt_vif_res, paste0(fldr_info$BATCH_DIR, "VIF_res.csv"))
     
