@@ -254,9 +254,9 @@ gen_cbns <- function(rel_vars, base_vars) {
     #' should be own function to allow the combination generation when generating the dfs (broad) and within specification
 
     vrbl_cbns <- list(
-        cbn_all=rel_vars,
-        cbn_no_cult_spending = rel_vars[!grepl("smorc_dollar_fx", rel_vars)],
-        cbn_no_cult_spending_and_mitr = rel_vars[!grepl("smorc_dollar_fx|tmitr_approx_linear20step|ti_tmitr_interact", rel_vars)],
+        cbn1=rel_vars,
+        cbn2 = rel_vars[!grepl("smorc_dollar_fx", rel_vars)],
+        cbn3 = rel_vars[!grepl("smorc_dollar_fx|tmitr_approx_linear20step|ti_tmitr_interact", rel_vars)],
         cbn_controls = rel_vars[rel_vars %in% c(base_vars) | grepl("SP.POP.TOTLm|NY.GDP.PCAP.CDk", rel_vars)])
 
     return(vrbl_cbns)
