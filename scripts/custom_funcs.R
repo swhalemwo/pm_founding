@@ -741,6 +741,13 @@ prep_sqlitedb <- function(dbx, dfx, table_title, constraints, insert_data = F) {
     return(invisible(T))
 }
 
+reg6_lbls <- list(
+    EU = "Europe",
+    AS = "Asia",
+    AF = "Africa",
+    NALUL = "North America",
+    LA = "Latin America",
+    OC = "Oceania")
 
 
 rcd_iso3c_reg6 <- function(iso3cs) {
