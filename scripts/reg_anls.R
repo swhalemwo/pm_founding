@@ -1178,8 +1178,10 @@ gen_plt_cvrgnc <- function(gof_df_cbn) {
     ## first: get the top values (values only go up)
 
     cvrgnc_df_prep <- filter(gof_df_cbn, gof_names == "log_likelihood") %>%
-        select(mdl_id, gof_value, base_lag_spec, loop_nbr, vrbl_optmzd, cbn_name, regcmd, vrbl_choice) %>%
-        mutate(step_base = 1, loop_nbr = as.numeric(loop_nbr))
+        select(mdl_id, gof_value, loop_nbr, vrbl_optmzd, cbn_name, regcmd, vrbl_choice, vrbl_choice_cbn_nbr) %>%
+        mutate(step_base = 1,
+               loop_nbr = as.numeric(loop_nbr),
+               base_lag_spec = paste0(cbn_name, vrbl_choice, vrbl_choice_cbn_nbr))
                ## vrbl_choice = gsub("[1-5]", "0", base_lag_spec))
 
     cvrgnc_df_prep %>% ggplot(aes(x=gof_value)) +
@@ -1192,8 +1194,11 @@ gen_plt_cvrgnc <- function(gof_df_cbn) {
     ## dtx[id == "a", paste0(table(vlu), collapse = "")]
     ## dtx[, paste0(table(vlu), collapse = ""), by="id"]
 
+    
+
     cvrgnc_df_test <- cvrgnc_df_prep %>% 
-        group_by(vrbl_choice, base_lag_spec, regcmd, cbn_name) %>% # get top values of each run 
+        ## group_by(vrbl_choice, vrbl_choice_cbn_nbr, regcmd, cbn_name) %>% # get top values of each run
+        group_by(base_lag_spec, regcmd, cbn_name) %>% # get top values of each run 
         ## group_by(vrbl_choice, base_lag_spec, regcmd, cbn_name) %>% # get top values 
         slice_max(gof_value, n=1, with_ties = F) %>%
         group_by(cbn_name, vrbl_choice, regcmd) %>% ## group by nbr_specs per thld
@@ -1217,7 +1222,7 @@ gen_plt_cvrgnc <- function(gof_df_cbn) {
     ## progress after each variable
     ## variables are randomly chosen, so step is different for each base_lag_spec
     cvrgnc_df_prep2 <- cvrgnc_df_prep %>% 
-        group_by(vrbl_choice, cbn_name, base_lag_spec, loop_nbr, vrbl_optmzd, regcmd) %>%
+        group_by(cbn_name, base_lag_spec, loop_nbr, vrbl_optmzd, regcmd) %>%
         slice_max(gof_value, with_ties = F)
 
     ## group_vrbls <- c("vrbl_choice", "cbn_name", "base_lag_spec", "loop_nbr", "vrbl_optmzd", "regcmd")
@@ -1226,7 +1231,7 @@ gen_plt_cvrgnc <- function(gof_df_cbn) {
     ##     .[, .(gof_value = max(gof_value), step_base = 1), by = group_vrbls] %>% atb()
 
     cvrgnc_df_prep3 <- cvrgnc_df_prep2 %>% 
-        group_by(cbn_name,base_lag_spec,regcmd) %>% 
+        group_by(cbn_name, base_lag_spec, regcmd) %>% 
         arrange(gof_value) %>%
         mutate(step = ave(step_base, FUN = cumsum)) 
 

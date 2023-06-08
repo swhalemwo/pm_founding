@@ -135,6 +135,8 @@ gen_lag <- function(dfx, vrbl, lag) {
 
 
 gen_vrbl_thld_choices <- function(hnwi_vars, inc_ineq_vars, weal_ineq_vars) {
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
+    1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;
     #' generate threshold (hnwi, shares 
 
 
@@ -142,6 +144,17 @@ gen_vrbl_thld_choices <- function(hnwi_vars, inc_ineq_vars, weal_ineq_vars) {
                                 inc_ineq_var = inc_ineq_vars,
                                 weal_ineq_var = weal_ineq_vars, stringsAsFactors = F) %>%
         atb()
+
+    vrbl_choices %>% adt() %>% .[, `:=`(hnwi_code = str_extract(hnwi_var, "[0-9]+"),
+                                        inc_ineq_code = fifelse(substring(inc_ineq_var,1,1) == "g", "g",
+                                                                str_extract(inc_ineq_var, "(\\d)+(?=p)")),
+                                        weal_ineq_code = fifelse(substring(weal_ineq_var,1,1) == "g", "g",
+                                                                 str_extract(weal_ineq_var, "(\\d)+(?=p)"))
+                                        )] %>% 
+        .[, .(hnwi_var, inc_ineq_var, weal_ineq_var,
+              vrblchoice_id = sprintf("hn%sii%swi%s", hnwi_code, inc_ineq_code, weal_ineq_code))]
+
+
 }
 
 
@@ -1483,6 +1496,20 @@ setup_regression_folders_and_files <- function(batch_version, batch_dir_addgn = 
     )
 }
 
+get_vrblchoice_id <- function(lngtd_vrbls) {
+    #' get the vrblchoice_id from lngtd_vrbls
+   
+    dt_lngtd_vrbls <- adt(lngtd_vrbls)
+    hnwi_vrbl <- dt_lngtd_vrbls[grepl("hnwi_nbr", vrbl), vrbl]
+    ii_vrbl <- dt_lngtd_vrbls[grepl("ptinc992j", vrbl), vrbl]
+    wi_vrbl <- dt_lngtd_vrbls[grepl("hweal992j", vrbl), vrbl]
+    ## print(hnwi_vrbl)
+    ## print(ii_vrbl)
+    ## print(wi_vrbl)
+    vrbl_thld_choices[hnwi_var == hnwi_vrbl & inc_ineq_var == ii_vrbl & weal_ineq_var == wi_vrbl, 
+                      vrblchoice_id]
+}
+
 gen_batch_reg_specs <- function(reg_settings, vvs, vrbl_thld_choices) {
     if (as.character(match.call()[[1]]) %in% fstd){browser()}
     #' generate the regression specs for a batch 
@@ -1504,11 +1531,43 @@ gen_batch_reg_specs <- function(reg_settings, vvs, vrbl_thld_choices) {
     ##                     gen_reg_spec(vvs$non_thld_lngtd_vars, vrbl_thld_choices)) %>%
     ##     unique() #
     
+    ## get_vrbl_choice_cd(reg_specs[[3]]$lngtd_vrbls)
+
 
     reg_spec_mdls <- vary_batch_reg_spec(reg_specs, reg_settings, vvs)
-
-    reg_spec_mdls_with_ids <- idfy_reg_specs(reg_spec_mdls, vvs)
+    ## reg_spec_mdls[[1]]
     
+    ## bolt base_reg_spec and vrbl_choice on there 
+    reg_spec_mdls2 <- map(reg_spec_mdls,
+                          ~`pluck<-`(.x, "cfg", ## extend existing cfg by overwriting
+                                     value = c(.x$cfg, # add to cfg base_lag_spec and vrbl_choice
+                                               list(base_lag_spec = .x$base_lag_spec,
+                                                    vrbl_choice = get_vrblchoice_id(.x$lngtd_vrbls)
+                                                    )))) %>%
+        map(~.x[names(.x) != "base_lag_spec"]) ## yeet base_lag_spec from top layer (only have it in cfg)
+
+    ## reg_spec_mdls2[[3]]
+
+    ## enumerate the variable choices by combination
+    dt_vrbl_choice <- data.table(
+        vrbl_choice = map_chr(reg_spec_mdls2, ~chuck(.x, "cfg", "vrbl_choice")),
+        cbn_name = map_chr(reg_spec_mdls2, ~chuck(.x, "cfg", "cbn_name"))) %>%
+        .[, nbr := 1:.N, .(vrbl_choice, cbn_name)]
+    
+        
+    ## assign vrbl choice combination number to cfg
+    reg_spec_mdls3 <- map2(reg_spec_mdls2, dt_vrbl_choice$nbr,
+                           ~`pluck<-`(.x, "cfg", "vrbl_choice_cbn_nbr", value =  .y))
+
+    ## reg_spec_mdls3[[303]]
+
+    
+    reg_spec_mdls_with_ids <- idfy_reg_specs(reg_spec_mdls3, vvs)
+    
+    ## reg_spec_mdls3[[3]]
+    ## reg_spec_mdls_with_ids[[3]]
+    ## nchar(reg_spec_mdls_with_ids[[3]]$mdl_id)
+
     
     t2 = Sys.time()
     print(t2-t1)
@@ -1587,7 +1646,7 @@ idfy_reg_specs <- function(reg_spec_mdls, vvs){
     
     reg_spec_mdls_with_ids <- mclapply(reg_spec_mdls, \(x) gen_spec_id_info(x, vvs), mc.cores = 6)
     
-    gen_spec_id_info(reg_spec_mdls[[1]], vvs)
+    ## gen_spec_id_info(reg_spec_mdls[[1]], vvs)
 
 
     return(reg_spec_mdls_with_ids)
@@ -1640,8 +1699,8 @@ optmz_vrbl_lag <- function(reg_spec, vrblx, loop_nbr, fldr_info, reg_settings, v
     
     
     ##  generate models, need exception for ti_tmitr_interact
-    base_lag_spec_orig <- reg_spec$base_lag_spec
-    cfg_orig <- reg_spec$cfg
+    ## base_lag_spec_orig <- chuck(reg_spec, "base_lag_spec")
+    ## cfg_orig <- chuck(reg_spec, "cfg")
     
 
     ## only pick the lngtd_vrbls, and vary vrblx
@@ -1671,7 +1730,7 @@ optmz_vrbl_lag <- function(reg_spec, vrblx, loop_nbr, fldr_info, reg_settings, v
                                    `pluck<-`(copy(reg_spec)[stuff_to_keep], "lngtd_vrbls",
                                              value = x$lngtd_vrbls)) %>%
         lapply(., \(x) # redo the base lag spec
-               `pluck<-`(x, "base_lag_spec", value = paste0(gen_lag_id(x, vvs)$value, collapse = ""))) %>%
+               `pluck<-`(x, "cfg", "lag_spec", value = paste0(gen_lag_id(x, vvs)$value, collapse = ""))) %>%
         lapply(., \(x) ## modify mdl_vars
                `pluck<-`(x, "mdl_vars",
                          ## get values of unchanged variables
@@ -1687,14 +1746,20 @@ optmz_vrbl_lag <- function(reg_spec, vrblx, loop_nbr, fldr_info, reg_settings, v
     ## map(reg_specs_full_again, ~chuck(.x, "mdl_vars")) ## check them    
     
     
-    ## modify base_lag_spec back 
-    reg_specs_full_again2 <- lapply(reg_specs_full_again, \(x)
-                                    modfy_optmz_cfg(x, cfg_orig, base_lag_spec_orig, loop_nbr, vrblx))
+    ## modify base_lag_spec back: effectively add loop_nbr and vrblx
+    ## reg_specs_full_again2 <- lapply(reg_specs_full_again, \(x)
+    ##                                 modfy_optmz_cfg(x, cfg_orig, x$cfg$base_lag_spec, loop_nbr, vrblx))
     
+    reg_specs_full_again2 <- map(reg_specs_full_again,
+                                 ~`pluck<-`(.x, "cfg", value = c(.x$cfg, 
+                                                                 list(loop_nbr = loop_nbr,
+                                                                      vrblx = vrblx))))
+
     ## add ids: use gen_spec_id_info directly to save mclapply spinup
     ## reg_specs_w_ids <- idfy_reg_specs(reg_specs_full_again2, vvs)
     
     reg_specs_w_ids <- map(reg_specs_full_again2, ~gen_spec_id_info(.x, vvs))
+    ## reg_specs_w_ids[[3]]
     
     ## identical(reg_specs_w_ids, reg_specs_w_ids2) ## comparison with old version -> noice
 
@@ -1703,7 +1768,7 @@ optmz_vrbl_lag <- function(reg_spec, vrblx, loop_nbr, fldr_info, reg_settings, v
     dbExecute(conn = db_mdlcache, "PRAGMA foreign_keys=ON")
 
     cbn_lagspecs <- map(reg_specs_w_ids, ~list(cbn_name = chuck(.x, "cfg", "cbn_name"),
-                                               lag_spec = chuck(.x, "base_lag_spec"),
+                                               lag_spec = chuck(.x, "cfg", "lag_spec"),
                                                loop_nbr = chuck(.x, "cfg", "loop_nbr"),
                                                mdl_id = chuck(.x, "mdl_id")))
 
@@ -2292,8 +2357,11 @@ read_reg_res_files <- function(fldr_info) {
         atb()
 
     df_reg_anls_cfgs_wide <- df_reg_anls_cfgs %>%
-        select(variable, value, mdl_id, lag_spec, cvrgd) %>% unique() %>% 
+        select(variable, value, mdl_id, lag_spec, cvrgd) %>% unique() %>%
+        filter(variable != "lag_spec") %>% # filter out lag specs (are separate column)
         pivot_wider(id_cols = c(mdl_id, lag_spec, cvrgd), names_from = variable, values_from = value)
+
+    ## adt(df_reg_anls_cfgs_wide)[variable == "lag_spec" & value != lag_spec]
 
     ## also read the stuff in from mdllog
     db_str <- paste0(fldr_info$BATCH_DIR, "mdl_cache.sqlite")
@@ -2365,7 +2433,7 @@ read_reg_res_files <- function(fldr_info) {
     ## add the model details as variables
     ## now with new dfs
     gof_df_cbn <- merge(gof_df2, df_reg_anls_cfgs_wide2) %>% atb() %>%
-        mutate(vrbl_choice = gsub("[1-5]", "0", base_lag_spec), ## add vrbl choice
+        mutate(# vrbl_choice = gsub("[1-5]", "0", base_lag_spec), ## add vrbl choice
                cbn_name = factor(cbn_name, levels = names(vrbl_cbns)),
                loop_nbr = as.integer(loop_nbr),
                t_diff = as.numeric(t_diff))
