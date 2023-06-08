@@ -1805,12 +1805,13 @@ optmz_vrbl_lag <- function(reg_spec, vrblx, loop_nbr, fldr_info, reg_settings, v
     
     ## run_vrbl_mdl_vars(reg_specs_full_again2[[1]], vvs, fldr_info, return_objs = "log_likelihood")
     ## names(reg_specs_full_again2) <- as.character(seq(1,5))
-    
-    
+
+    ## t1 = Sys.time()
     lag_lls <- sapply(reg_specs_w_ids[dt_presence[, is.na(ll)]], \(x)
                       run_vrbl_mdl_vars(x, vvs, fldr_info, return_objs = "log_likelihood",
                                         wtf = reg_settings$wtf))
-    
+    ## t2 = Sys.time()
+    ## print(sprintf("time on running models: %s", t2-t1))
     
 
     ## assign back
@@ -1834,7 +1835,9 @@ optmz_vrbl_lag <- function(reg_spec, vrblx, loop_nbr, fldr_info, reg_settings, v
     ## TEST: only write some back
     ## dbAppendTable(db_mdlcache, "mdl_cache", dt_presence[c(2,4), .(cbn_name, lag_spec, ll)])
 
-    
+    ## keep track of how many models were run 
+    reg_spec$nbr_mdls_run <- dt_presence[, sum(missing_before == T)]
+
     
     ## assign best_lag value back to reg_spec 
     reg_spec$lngtd_vrbls <- reg_spec$lngtd_vrbls %>%
@@ -1860,43 +1863,37 @@ optmz_vrbl_lag <- function(reg_spec, vrblx, loop_nbr, fldr_info, reg_settings, v
 
 
 
-optmz_reg_spec_once <- function(reg_spec, loop_nbr, fldr_info, reg_settings) {
+optmz_reg_spec_once <- function(reg_spec, loop_nbr, vrbls_to_vary, fldr_info, reg_settings) {
     if (as.character(match.call()[[1]]) %in% fstd){browser()}
     #' one round of optimization
     #' need for loop, because nbr_skipped_in_row has to be reassinged
-    #' although maybe could generate them afterwards
-    #' maybe the cur_lag_id tracking would also not work in mapping
     
-    ## v = sample(reg_spec$lngtd_vrbls$vrbl[reg_spec$lngtd_vrbls$vrbl != "ti_tmitr_interact"])[1]
-    ## reg_spec_bu <- reg_spec
-    ## reg_spec <- reg_spec_bu 
+    
+    v <- sample(vrbls_to_vary)[1]
 
-    ## for (v in sample(reg_spec$lngtd_vrbls$vrbl[reg_spec$lngtd_vrbls$vrbl != "ti_tmitr_interact"])) {
-        
-    ## new way of selecting the variables that need to be optimized: skip the ones to be constrained 
-    ## setdiff(adt(reg_spec$lngtd_vrbls)[, vrbl], vvs$dt_cstrnd_vrbls[, cstrnd])
-    
-    vrbls_to_yeet <- vvs$dt_cstrnd_vrbls[, cstrnd]
-    if (reg_spec$cfg$dvfmt == "rates") {
-        vrbls_to_yeet <- c(vrbls_to_yeet, "SP.POP.TOTLm")
-    }
-    
 
-    for (v in sample(setdiff(reg_spec$lngtd_vrbls$vrbl, vrbls_to_yeet))) {
+    for (v in sample(vrbls_to_vary)) {
         print(v)
         
         cur_lag_id <- gen_lag_id(reg_spec, vvs) %>% pull(value) %>% paste0(collapse = "")
 
         ## if variable hasn't run yet with current lag spec, run it now 
-        if (cur_lag_id %!in% reg_spec$run_lag_specs[[v]]) {
+        ## if (cur_lag_id %!in% reg_spec$run_lag_specs[[v]]) {
 
-            
-            reg_spec <- optmz_vrbl_lag(reg_spec, v, loop_nbr, fldr_info, reg_settings)
-            ## reg_spec2 <- optmz_vrbl_lag(reg_spec, v, loop_nbr, fldr_info, verbose = T)
-            reg_spec$run_lag_specs[[v]] <- c(reg_spec$run_lag_specs[[v]], cur_lag_id)
+        ## t1 = Sys.time()
+        reg_spec <- optmz_vrbl_lag(reg_spec, v, loop_nbr, fldr_info, reg_settings)
+        ## t2 = Sys.time()
+        
+        ## print(sprintf("time on entire optimization process once: %s", t2-t1))
+
+## reg_spec2 <- optmz_vrbl_lag(reg_spec, v, loop_nbr, fldr_info, verbose = T)
+        ## reg_spec$run_lag_specs[[v]] <- c(reg_spec$run_lag_specs[[v]], cur_lag_id)
+
+        if (reg_spec$nbr_mdls_run > 0) {
             reg_spec$nbr_skipped_in_row <- 0
-
         } else {
+
+        ## } else {
             ## cat(paste0("skip lag id: ", cur_lag_id))
             reg_spec$nbr_skipped_in_row <- reg_spec$nbr_skipped_in_row + 1
         }
@@ -1917,20 +1914,38 @@ optmz_reg_spec <- function(reg_spec, fldr_info, reg_settings) {
     
     ## add lists of lag_specs already run for each variable 
     
-    reg_spec_vrbls <- reg_spec$lngtd_vrbls$vrbl
-    names(reg_spec_vrbls) <- reg_spec_vrbls
-    reg_spec$run_lag_specs <- lapply(reg_spec_vrbls, \(x) c())
+    ## reg_spec_vrbls <- reg_spec$lngtd_vrbls$vrbl
+    ## names(reg_spec_vrbls) <- reg_spec_vrbls
+    ## reg_spec$run_lag_specs <- lapply(reg_spec_vrbls, \(x) c())
 
     ## add counter of how many regs have been skipped 
     reg_spec$nbr_skipped_in_row <- 0
-
     l <- 0
+
+    ## select the variables that need to be optimized: skip the ones to be constrained 
+    ## setdiff(adt(reg_spec$lngtd_vrbls)[, vrbl], vvs$dt_cstrnd_vrbls[, cstrnd])
+    vrbls_to_yeet <- vvs$dt_cstrnd_vrbls[, cstrnd] # exclude variables whose lag is determined by others
+    if (reg_spec$cfg$dvfmt == "rates") {
+        vrbls_to_yeet <- c(vrbls_to_yeet,
+                           "SP.POP.TOTLm", # exclude population 
+                           ## also exclude variables not used in that combination
+                           setdiff(reg_spec$lngtd_vrbls$vrbl, chuck(vrbl_cbns, reg_spec$cfg$cbn_name))
+                           )
+    }
+    
+    vrbls_to_vary <- setdiff(reg_spec$lngtd_vrbls$vrbl, vrbls_to_yeet)
+
+    
     ## run until no more improvement 
     while (T) {
 
-        reg_spec <- optmz_reg_spec_once(reg_spec, loop_nbr = l, fldr_info, reg_settings)
+        
+        reg_spec <- optmz_reg_spec_once(reg_spec, loop_nbr = l, vrbls_to_vary, fldr_info, reg_settings)
+        
 
-        if (reg_spec$nbr_skipped_in_row > nrow(reg_spec$lngtd_vrbls)+1) {break}
+        
+
+        if (reg_spec$nbr_skipped_in_row > len(vrbls_to_vary)+1) {break}
         l <- l+1
 
     }
@@ -3247,12 +3262,13 @@ stop("models are DONE")
 
 ## ** garage for inspection
 
-regspec_x <- reg_spec_mdls_optmz[[1]]
+regspec_x <- reg_spec_mdls_optmz[[2]]
 
-optmz_reg_spec(reg_spec_mdls_optmz[[12]], fldr_info_optmz, reg_settings_optmz)
+reg_settings_garage <- copy(reg_settings_optmz) %>% `pluck<-`("wtf", value = F)
+optmz_reg_spec(reg_spec_mdls_optmz[[3]], fldr_info_optmz, reg_settings_garage)
 
 ## reg_spec_mdls_optmz[[10]]$df_idx %>% print(n=30)
-x <- reg_spec_mdls_optmz[[12]]
+x <- reg_spec_mdls_optmz[[2]]
 ## x$cfg$dvfmt <- "counts"
 ## x$cfg$regcmd <- "menbreg"
 x$cfg$regcmd <- "glmmTMB"
