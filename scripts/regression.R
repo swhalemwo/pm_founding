@@ -1340,9 +1340,9 @@ gen_vrbl_vectors <- function() {
                    all_dens_close = "density variables + closings"
                    )
 
-    cbn_lbls <- c("cbn_all" = "DS all IVs",      
-                  "cbn_no_cult_spending" = "DS --CuSp",       
-                  "cbn_no_cult_spending_and_mitr" = "DS --CuSp/TMITR")
+    cbn_lbls <- c("cbn1" = "DS all IVs",      
+                  "cbn2" = "DS --CuSp",       
+                  "cbn3" = "DS --CuSp/TMITR")
 
 
     regcmd_lbls <- c(xtnbreg = "xtnbreg",
