@@ -182,3 +182,255 @@ right_join(
 
     ggplot(aes(x=nbr_closed_cum_global, y=nbr_closed_cum_global_lag0)) +
     geom_jitter(width = 3, height = 0.5)
+
+## ** within/between simulation
+
+## first generate one country
+
+gen_x_cons <- function(dtx, vrbls) {
+    #' hold x constant at first yhear within group
+    ## copy(dtx)[year != 0, x := NA][, x := nafill(x, type = "locf"), id]
+    copy(dtx)[year != 0, (vrbls) := NA] %>%
+        .[, (vrbls) := map(vrbls, ~nafill(get(.x), type = "locf")), id]
+}
+
+gen_wb_vrbls <- function(dtx, vrbls) {
+    #' generate within/between variables for vrblx in dtx
+    copy(dtx)[, paste0(vrbls, "_between") := map(.SD, mean), id, .SDcols = vrbls] %>%
+        .[, paste0(vrbls, "_within") := map(.SD, ~.x - mean(.x)), id, .SDcols = vrbls]
+}
+
+gen_re_res <- function(dtx) {
+    vrbls <- setdiff(names(dtx), c("id", "year", "y"))
+
+    fx <- sprintf("y ~ %s + (1 | id)",
+                  paste0(vrbls, collapse = " + ")) %>%
+        as.formula()
+
+    r_cbn <- glmmTMB(fx, dtx)
+    print(summary(r_cbn))
+
+    ## dt_wb$pred <- predict(r_cbn, dt_wb)
+
+    ## plot predicted 
+    ## ggplot(dt_wb, aes(x=year, y=pred, color = id)) + geom_line()
+
+    ## hold x constant at 0
+    dt_wb_cons <- gen_x_cons(dtx, "x")
+    ## ggplot(dt_wb_cons, aes(x=x, y=y, color = id)) + geom_line()
+
+    dt_wb_cons$pred <- predict(r_cbn, dt_wb_cons)
+
+    return(dt_wb_cons)
+
+}
+
+
+gen_wb_res <- function(dtx) {
+    #' generate within/between predictions under constant x
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
+
+    vrbls <- setdiff(names(dtx), c("id", "year", "y"))
+    vrbls_wb <- CJ(vrbls, c("_between", "_within"))[, paste0(vrbls,V2)]
+## vrbls <- c("x")
+
+    dtx_wb_dcps <- copy(dtx) %>% gen_wb_vrbls(vrbls)
+
+    fx <- sprintf("y ~ %s + (1 | id)",
+                  paste0(vrbls_wb, collapse = " + ")) %>%
+        as.formula()
+
+    r_dcps <- glmmTMB(fx, dtx_wb_dcps)
+    print(summary(r_dcps))
+    ## constant x: generate new data
+    dtx_wb_dcps_cons <- copy(dtx_wb_dcps) %>% gen_x_cons(vrbls = c("x_within", "x_between"))
+
+    dtx_wb_dcps$pred <- predict(r_dcps, dtx_wb_dcps_cons)
+
+    return(dtx_wb_dcps)
+}
+
+
+dt_wba <- data.table(year = 0:20, id = "a", x = jitter(0:20), y = jitter((0:20))*0.5)
+
+## positive within, positive between 
+dt_wbb <- copy(dt_wba)[, `:=`(id = "b", x = (x*0.5) + 2, y = (y*0.3) + 4)]
+
+## create overall 
+dt_wb <- rbind(dt_wba, dt_wbb)
+
+
+## descriptive plots
+ggplot(dt_wb, aes(x=year, y=x, color = id)) + geom_line()
+## ggplot(dt_wb, aes(x=year, y=y, color = id)) + geom_line()
+## ggplot(dt_wb, aes(x=x, y=y, color = id)) + geom_line()
+
+gen_re_res(dt_wb) %>% ggplot(aes(x=year, y=pred, color = id)) + geom_line()
+    
+## plot predictions -> flat line
+## ggplot(dt_wb_cons, aes(x=year, y=pred, color = id)) + geom_line()
+
+## seems plausible
+
+## look at within/between
+## base model
+
+gen_wb_res(dt_wb) %>% ggplot(aes(x=year, y=pred, color = id)) + geom_line()
+
+## ggplot(dt_wb_cons_dcsp, aes(x=year, y=pred, color = id)) + geom_line()
+## ggplot(dt_wb_dcsp_cons, aes(x=year, y=pred, color = id)) + geom_line()
+
+
+## weak negative within effect, strong positive between effect
+dt_wbc <- copy(dt_wba)[, `:=`(id = "c", x = x + 15, y = (-y*.1) + 4)]
+dt_wbd <- copy(dt_wba)[, `:=`(id = "d", x = x, y = (-y*.1) + 1)]
+dt_wb2 <- rbind(dt_wbc, dt_wbd)
+ggplot(dt_wb2, aes(x=x, y=y, group = id)) + geom_line()
+
+gen_re_res(dt_wb2) %>%  ggplot(aes(x=year, y=pred, color = id)) + geom_line()
+gen_wb_res(dt_wb2) %>%  ggplot(aes(x=year, y=pred, color = id)) + geom_line()
+
+dt_res <- rbind(
+    copy(dt_wb2)[, .(year, id, y = y, src = "data")],
+    gen_re_res(dt_wb2)[, .(year, id, y = pred, src = "re")],
+    gen_wb_res(dt_wb2)[, .(year, id, y = pred, src = "wb")])
+    
+ggplot(dt_res, aes(x=year, y=y, color = id, linetype = src)) + geom_line() +
+    facet_wrap(~src)
+
+## not really a difference between RE and WB models
+
+
+
+## add more variables
+dt_wbe <- copy(dt_wba)[, `:=`(id = "e", x = x + 15, y = (y*.1) + 4 , z = x * 0.2)]
+dt_wbf <- copy(dt_wba)[, `:=`(id = "f", x = (x * -1) + 35, y = (y*.1) + 1  , z = x * 0.2)]
+dt_wb3 <- rbind(dt_wbe, dt_wbf)
+ggplot(dt_wb3, aes(x=x, y=y, color = id)) + geom_line()
+
+ggplot(dt_wb3, aes(x=year, y=y, color = id)) + geom_line()
+ggplot(dt_wb3, aes(x=year, y=x, color = id)) + geom_line()
+
+dt_res3 <- rbind(
+    ## copy(dt_wb3)[, .(year = x, y=y, id, src = "scatter")],
+    copy(dt_wb3)[, .(year, id, y = y, src = "data")],
+    gen_re_res(dt_wb3)[, .(year, id, y = pred, src = "re")],
+    gen_wb_res(dt_wb3)[, .(year, id, y = pred, src = "wb")])
+
+ggplot(dt_res3, aes(x=year, y=y, color = id, linetype = src)) + geom_line() +
+    facet_wrap(~src, nrow = 1, scales = "free")
+
+
+## ** chatgpt: garbage
+# Load required libraries
+library(lme4)
+
+# Set seed for reproducibility
+set.seed(123)
+
+# Simulate data for demonstration
+N <- 100  # Number of individuals
+T <- 5    # Number of time points
+
+# Simulated predictor variable X
+X <- rnorm(N*T)
+
+# Simulated outcome variable Y
+Y <- 2*X + rnorm(N*T)
+
+# Create a data frame
+data <- data.frame(ID = rep(1:N, each = T),
+                   Time = rep(1:T, times = N),
+                   X,
+                   Y)
+
+## *** try 1
+
+# Random intercepts model
+model_intercepts <- lmer(Y ~ X + (1 | ID), data = data)
+
+# Random effects within-between model
+data$X_between <- ave(data$X, data$ID)  # Calculate subject means of X
+data$X_within <- data$X - data$X_between  # Calculate within-person component of X
+model_within_between <- lmer(Y ~ X_between + X_within + (1 | ID), data = data)
+
+# Generate predictions from both models
+new_data <- data.frame(X = seq(from = -3, to = 3, by = 0.1))
+new_data$X_between <- mean(data$X_between)  # Use average subject mean for between-person component
+new_data$X_within <- 0  # Set within-person component to 0 for predictions
+new_data$ID <- 1
+
+# Predict using random intercepts model
+new_data$predicted_intercepts <- predict(model_intercepts, newdata = new_data)
+
+# Predict using random effects within-between model
+new_data$predicted_within_between <- predict(model_within_between, newdata = adt(new_data))
+
+# Plot the predicted values
+plot(data$X, data$Y, xlab = "X", ylab = "Y", main = "Predicted Values")
+lines(new_data$X, new_data$predicted_intercepts, col = "blue", lwd = 2, lty = 1, 
+      main = "Predicted Values - Random Intercept Model")
+lines(new_data$X, new_data$predicted_within_between, col = "red", lwd = 2, lty = 2,
+      main = "Predicted Values - Random Effects Within-Between Model")
+legend("topleft", legend = c("Random Intercept Model", "Random Effects Within-Between Model"),
+       col = c("blue", "red"), lwd = 2, lty = c(1, 2))
+
+
+
+
+
+## *** dt version
+# Load required libraries
+library(lme4)
+library(data.table)
+library(ggplot2)
+
+# Set seed for reproducibility
+set.seed(123)
+
+# Simulate data for demonstration
+N <- 100  # Number of individuals
+T <- 5    # Number of time points
+
+# Simulated predictor variable X
+X <- rnorm(N * T)
+
+# Simulated outcome variable Y
+Y <- 2 * X + rnorm(N * T)
+
+# Create a data table
+data <- data.table(ID = rep(1:N, each = T),
+                   Time = rep(1:T, times = N),
+                   X,
+                   Y)
+
+# Random intercepts model
+model_intercepts <- lmer(Y ~ X + (1 | ID), data = data)
+
+# Random effects within-between model
+data[, X_between := mean(X), by = ID]  # Calculate subject means of X
+data[, X_within := X - X_between]  # Calculate within-person component of X
+model_within_between <- lmer(Y ~ X_between + X_within + (1 | ID), data = data)
+
+# Generate predictions from both models
+new_data <- data.table(X = seq(from = -3, to = 3, by = 0.1), id = 2) %>%
+    gen_wb_vrbls(vrbls = c("X"))
+
+## new_data[, X_between := mean(data$X_between)]  # Use average subject mean for between-person component
+## new_data[, X_within := 0]  # Set within-person component to 0 for predictions
+## new_data[, ID := 1]
+
+# Predict using random intercepts model
+new_data[, predicted_intercepts := predict(model_intercepts, newdata = new_data, re.form = NA)]
+# Predict using random effects within-between model
+new_data[, predicted_within_between := predict(model_within_between, newdata = new_data, re.form = NA)]
+
+# Plot the predicted values
+ggplot(data, aes(x = X, y = Y)) +
+  geom_point() +
+  geom_line(data = new_data, aes(x = X, y = predicted_intercepts), color = "blue", linetype = "solid") +
+  geom_line(data = new_data, aes(x = X, y = predicted_within_between), color = "red", linetype = "dashed") +
+  labs(x = "X", y = "Y", title = "Predicted Values") +
+  scale_color_manual(values = c("blue", "red")) +
+  scale_linetype_manual(values = c("solid", "dashed")) +
+  theme_minimal()
