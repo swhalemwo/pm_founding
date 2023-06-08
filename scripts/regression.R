@@ -3135,6 +3135,8 @@ postestimation <- function(fldr_info) {
     gof_df_cbn <- reg_res_files$gof_df_cbn
     df_reg_anls_cfgs_wide <- reg_res_files$df_reg_anls_cfgs_wide
     
+    ## gen_plt_cvrgnc(gof_df_cbn)
+
 
     ## compare_r_stata(gof_df_cbn)
     
@@ -3202,7 +3204,7 @@ vrbl_thld_choices_optmz <- slice_sample(vrbl_thld_choices, n=36)
 reg_settings_optmz <- list(
     nbr_specs_per_thld = 4,
     dvfmts = c("rates"), # should also be counts, but multiple dvfmts not yet supported by reg_anls
-    batch_version = "v83",
+    batch_version = "v85",
     lags = 1:5,
     vary_vrbl_lag = F,
     technique_strs = c("nr"),
@@ -3238,7 +3240,7 @@ if (basename(db_str) %!in% list.files(fldr_info_optmz$BATCH_DIR)) {
 }
 
 pbmclapply(reg_spec_mdls_optmz, \(x) optmz_reg_spec(x, fldr_info_optmz, reg_settings_optmz),
-         mc.cores = 5)
+         mc.cores = 5, mc.preschedule = F)
 
 cbn_splitted_files("_cfgs.csv[0-9]", fldr_info_optmz)
 
@@ -3275,6 +3277,14 @@ x$cfg$regcmd <- "glmmTMB"
 run_vrbl_mdl_vars(x, vvs, fldr_info_optmz, verbose = F, wtf = F)
 
 ## ** debugging lack of convergence
+
+## *** v85
+## termlog inspection
+dt_termlog <- fread(paste0(fldr_info_optmz$BATCH_DIR, "termlog.txt"), header = F, col.names = c("garbage", "msg"))
+
+dt_termlog %>%
+    .[!grepl("already there", msg)] %>% 
+    .[msg %!in% names(vvs$vrbl_lbls)]
 
 ## *** v78
 
