@@ -2844,22 +2844,71 @@ gen_preds_given_mdfd_vrbls <- function(idx, fldr_info) {
         .[, paste0(vrbl, "_lag", lag)]
 
     
-    ## vrblx <- "hnwi_nbr_1M_lag4"
-    ## vrblx <- "smorc_dollar_fxm_lag3"
-    ## vrblx <- "sptinc992j_p90p100_lag3"
-    ## vrblx <- "shweal992j_p90p100_lag4"
-    ## vrblx <- "tmitr_approx_linear20step_lag5"
-    ## sd(dfx$sptinc992j_p90p100_lag3)
+    ## ## vrblx <- "hnwi_nbr_1M_lag4"
+    ## vrblx <- "hnwi_nbr_30M_lag2"
+    ## ## vrblx <- "smorc_dollar_fxm_lag3"
+    ## ## vrblx <- "sptinc992j_p90p100_lag3"
+    ## ## vrblx <- "shweal992j_p90p100_lag4"
+    ## ## vrblx <- "tmitr_approx_linear20step_lag5"
+    ## ## sd(dfx$sptinc992j_p90p100_lag3)
+    ## fx_rs <- sprintf("nbr_opened ~ %s + (1 + %s | iso3c) + %s",
+    ##                  paste0(iv_vars, collapse = " + "),
+    ##                  vrblx,
+    ##                  "offset(log(SP_POP_TOTLm_lag0_uscld))") %>% as.formula()
     
-    ## adt(dfx) %>%
-    ##     .[, .(meanx = mean(get(vrblx))), iso3c] %>% 
-    ##     ## .[, meanx :=  mean(get(vrblx)), iso3c] %>%
-    ##     ## .[, .(iso3c, year, sptinc992j_p90p100_lag3, meanx)]
-    ##     .[, sd(meanx)]
+    ## rx_rs <- glmmTMB(fx_rs, dfx, family = nbinom2)
+    
 
-    ## xtsum(dfx, sptinc992j_p90p100_lag3, iso3c)
+    ## ## calculate with random intercept and random slopes
+    ## res_re <- pred_given_const_vrbl(vrblx, rx, dfx, iv_vars)
+    ## res_rs <- pred_given_const_vrbl(vrblx, rx_rs, dfx, iv_vars)
+    
+    ## ## compare values 
+    ## dt_slpcprn <- rbind(copy(res_re$dtx_vlus)[, src := "re"],
+    ##       copy(res_rs$dtx_vlus)[, src := "rs"]) %>%
+    ##     .[, vrbl := NULL] %>% 
+    ##     melt(id.vars = c("dt_id", "src")) %>%
+    ##     dcast.data.table(dt_id + variable ~ src) %>%
+    ##     .[, diff := re-rs]
+    
+    ## ## compare rs/re densities
+    ## rbind(
+    ##     copy(res_re$dtx_wse)[, src := "re"],
+    ##     copy(res_rs$dtx_wse)[, src := "rs"]) %>%
+    ##     .[, rid := 1:.N] %>% 
+    ##     ## .[, paste0("rnorm", 1:10) := map(as.list(rnorm(n = 10, mean = .SD$pred, sd = .SD$se)), ~.x), rid]
+    ##     .[, paste0("rnorm", 1:50) := as.list(exp(rnorm(n = 50, mean = pred, sd = se))), rid] %>%
+    ##     .[, map(.SD, sum), by = .(vrbl, src), .SDcols = keep(names(.), ~grepl("rnorm", .x))] %>%
+    ##     melt(id.vars = c("vrbl", "src"), variable.name = "rnorm_id", value.name = "pred") %>%
+    ##     .[, nbr_opened := dt_slpcprn[dt_id == "2k4" & variable == "nbr_opened", re]] %>%
+    ##     .[, diff := nbr_opened - pred] %>%
+    ##     ggplot(aes(x=diff, y=src)) +
+    ##     geom_density_ridges(scale = 0.9, bandwidth = 1.5) +
+    ##     scale_y_discrete(expand = expansion(add = c(0.1, 1))) +
+    ##     geom_vline(xintercept = 0, linetype = "dashed", linewidth = 0.5)
 
-    ## pred_given_const_vrbl(vrblx, rx, dfx, iv_vars)
+    ## ## debugging SE predictions
+    ## exp(res_re$dtx_wse$pred) %>% sum()
+
+    ## ## generate at set ranges
+    ## res_re$dtx_wse %>% copy() %>% .[, rid := 1:.N] %>% 
+    ##     .[, paste0("rnorm", 1:13) := as.list(exp(seq(-3,3,0.5)*se + pred)), rid] %>%
+    ##     .[, map(.SD, sum), .SDcols = keep(names(.), ~grepl("rnorm", .x))]
+
+    ## ## generate at random again
+    ## res_re$dtx_wse %>% copy() %>% .[, rid := 1:.N] %>%
+    ##     .[, paste0("rnorm", 1:500) := as.list(exp(
+    ##             Winsorize(rnorm(n=500, mean = pred, sd = se), maxval = pred, minval = -100000))), rid] %>%
+    ##     .[, map(.SD, sum), .SDcols = keep(names(.), ~grepl("rnorm", .x))] %>%
+    ##     melt() %>%
+    ##     ggplot(aes(x=value)) + geom_density(trim = T) + 
+    ##     geom_vline(xintercept = sum(exp(res_re$dtx_wse$pred)))
+
+    ## ## 
+    ## res_re$dtx_wse %>% copy() %>% .[, rid := 1:.N] %>%
+    ##     .[, paste0("rnorm", 1:100) := as.list(rnorm(n=100, mean = pred, sd = se)), rid]
+
+        
 
     ## dt_predres_sdrange <- pred_sdrange(vrblx, rx, dfx, iv_vars)
     ## ggplot(dt_predres_sdrange, aes(x=updown, y=pred)) + geom_line()
@@ -2925,7 +2974,7 @@ gen_cntrfctl <- function(gof_df_cbn, fldr_info) {
     ## get best models
     mdl_id_dt <- gen_mdl_id_dt(gof_df_cbn)
 
-    ## idx <- mdl_id_dt$mdl_id[1]
+    ## idx <- mdl_id_dt$mdl_id[5]
     ## gen_preds_given_mdfd_vrbls(idx, fldr_info)
         
     l_cntrfctl_res <- mclapply(mdl_id_dt$mdl_id, \(x) gen_preds_given_mdfd_vrbls(x, fldr_info), mc.cores = 5)
@@ -3142,6 +3191,7 @@ postestimation <- function(fldr_info) {
     ## compare_r_stata(gof_df_cbn)
     
     gen_cntrfctl(gof_df_cbn, fldr_info)
+    ## gen_cntrfctl(reg_anls_base$gof_df_cbn, fldr_info)
 
     ## gen_cryexmpls(top_coefs)
 
