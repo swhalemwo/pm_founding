@@ -418,8 +418,8 @@ gen_plt_cntrfctl <- function(dt_cntrfctl_cons, dt_cntrfctl_wse) {
         .[, vrbl := factor(vrbl, levels = rev(names(vvs$vrbl_lbls)))] %>%
         .[dt_id %in% c("2k4")] %>% 
         ggplot(aes(x=diff, y = vrbl, color = dt_id)) +
-        ## geom_point() +
-        geom_violin() + # bw = 5) + 
+        geom_point() +
+        ## geom_violin() + # bw = 5) + 
         facet_grid(hyp ~ cbn_name, scales = "free", space = "free") +
         geom_vline(mapping = aes(xintercept = 0), linetype = "dashed") +
         labs(x="additional PM foundings due to variable change since 2000")
@@ -1942,6 +1942,8 @@ gen_plt_cfgs <- function() {
                                             "(Gaussian kernel density estimate; bandwidth = 0.1)")),
             plt_velp = list(filename = "velp.pdf", width = 24, height = 16,
                             caption = "Results of regressing longitudinal variables on year"),
+            plt_cntrfctl = list(filename = "cntrfctl.pdf", width = 16, height = 12,
+                            caption = "Counterfactual simulations"),
             plt_oucoefchng = list(filename = "oucoefchng.pdf", width = 24, height = 12,
                                   caption = "Coefficient changes given addition of other variables"),
             plt_oucoefchng_tile = list(filename = "oucoefchng_tile.pdf", width = 24, height = 12,
