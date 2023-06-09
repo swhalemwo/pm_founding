@@ -2889,21 +2889,46 @@ gen_preds_given_mdfd_vrbls <- function(idx, fldr_info) {
     ##     geom_vline(xintercept = 0, linetype = "dashed", linewidth = 0.5)
 
     ## ## debugging SE predictions
-    ## exp(res_re$dtx_wse$pred) %>% sum()
+    exp(res_re$dtx_wse$pred) %>% sum()
 
     ## ## generate at set ranges
-    ## res_re$dtx_wse %>% copy() %>% .[, rid := 1:.N] %>% 
-    ##     .[, paste0("rnorm", 1:13) := as.list(exp(seq(-3,3,0.5)*se + pred)), rid] %>%
-    ##     .[, map(.SD, sum), .SDcols = keep(names(.), ~grepl("rnorm", .x))]
+    res_re$dtx_wse %>% copy() %>% .[, rid := 1:.N] %>% 
+        .[, paste0("rnorm", 1:13) := as.list(exp(seq(-3,3,0.5)*se + pred)), rid] %>%
+        .[, map(.SD, sum), .SDcols = keep(names(.), ~grepl("rnorm", .x))] %>%
+        melt() %$% plot(value, type = 'l')
 
-    ## ## generate at random again
-    ## res_re$dtx_wse %>% copy() %>% .[, rid := 1:.N] %>%
-    ##     .[, paste0("rnorm", 1:500) := as.list(exp(
-    ##             Winsorize(rnorm(n=500, mean = pred, sd = se), maxval = pred, minval = -100000))), rid] %>%
-    ##     .[, map(.SD, sum), .SDcols = keep(names(.), ~grepl("rnorm", .x))] %>%
-    ##     melt() %>%
-    ##     ggplot(aes(x=value)) + geom_density(trim = T) + 
-    ##     geom_vline(xintercept = sum(exp(res_re$dtx_wse$pred)))
+    ## generate at random again
+    res_re$dtx_wse %>% copy() %>% .[, rid := 1:.N] %>%
+        .[, paste0("rnorm", 1:500) := as.list(exp(
+                ## Winsorize(rnorm(n=500, mean = pred, sd = se), maxval = pred, minval = -100000))), rid] %>%
+                rnorm(n=500, mean = pred, sd= se))), rid] %>% 
+        .[, map(.SD, sum), .SDcols = keep(names(.), ~grepl("rnorm", .x))] %>%
+        melt() %>%
+        ggplot(aes(x=value)) + geom_density(trim = T) + 
+        geom_vline(xintercept = sum(exp(res_re$dtx_wse$pred)))
+
+    
+    ## first look at nonmodified data: same issue? 
+    dtx <- adt(dfx) %>% .[, c("pred", "se") := predict(rx, dfx, se.fit = T)]
+    
+    dtx[, pred_exp := predict(rx, dfx, type = "response")]
+    dtx[, .(pred, se, pred_exp)]
+
+    map_dbl(1:5000, ~sum(dtx$pred_exp[sample(nrow(dtx), replace = T)])) %>% hist()
+    
+                        
+
+    dispersion <- sumry(rx) %>% chuck("sigma")
+
+    
+    dtx[, .(pred, se)] %>% .[, rid := 1:.N] %>%
+        ## .[, paste0("rnorm", 1:100) := as.list(exp(rnorm(n=500, mean = pred, sd= se))), rid] %>%
+        .[, paste0("rgamma", 1:100) := as.list(exp(rgamma(n = 500, shape = 1, rate = 0.10))), rid]
+    ## .[, paste0("rgamma", 1:100) := as.list(exp(rgamma(n = 500, shape = pred^2 / dispersion, rate = avg_pred / dispersion))), rid] %>%
+        .[, map(.SD, sum), .SDcols = keep(names(.), ~grepl("rnorm", .x))]
+
+    rgamma(n=100, shape = 0.1) %>% hist()
+    
 
     ## ## 
     ## res_re$dtx_wse %>% copy() %>% .[, rid := 1:.N] %>%

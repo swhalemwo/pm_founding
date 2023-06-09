@@ -414,16 +414,20 @@ gen_plt_cntrfctl <- function(dt_cntrfctl_cons, dt_cntrfctl_wse) {
     ## ## violin of difference between total opened observed and predicted
     dt_cntrfctl_cons %>% copy() %>% .[, vrbl := gsub("_lag[1-5]", "", vrbl)] %>%
         .[, diff := nbr_opened - pred] %>% # effect of not staying constant since 2000
+        .[dt_id %in% c("2k4")] %>% 
+        .[, .(diff = mean(diff)), .(vrbl, cbn_name, dt_id)] %>% 
         vvs$hyp_mep_dt[., on = "vrbl"] %>%
         .[, vrbl := factor(vrbl, levels = rev(names(vvs$vrbl_lbls)))] %>%
-        .[dt_id %in% c("2k4")] %>% 
-        ggplot(aes(x=diff, y = vrbl, color = dt_id)) +
-        geom_point() +
+        ggplot(aes(x=diff, y = vrbl, color = dt_id, fill = dt_id)) +
+        geom_point(color = "black") +
+        geom_col() + 
         ## geom_violin() + # bw = 5) + 
         facet_grid(hyp ~ cbn_name, scales = "free", space = "free") +
         geom_vline(mapping = aes(xintercept = 0), linetype = "dashed") +
         labs(x="additional PM foundings due to variable change since 2000")
         
+        
+
     
     ## ## distribution of gini of distribution of difference between country-level observed and predicted
     ## dt_cntrfctl_res %>% copy() %>% .[, vrbl := gsub("_lag[1-5]", "", vrbl)] %>%
@@ -449,6 +453,20 @@ gen_plt_cntrfctl <- function(dt_cntrfctl_cons, dt_cntrfctl_wse) {
         vvs$hyp_mep_dt[., on = "vrbl"] %>%
         .[, vrbl := factor(vrbl, levels = rev(names(vvs$vrbl_lbls)))]
 
+
+    ## calculate bootstrap prediction
+    dx_bs <- dt_cntrfctl_wse %>% copy() %>% .[, rid := 1:.N] %>%
+        .[, pred_exp := exp(pred)] %>%
+        .[, map(1:500, ~sum(sample(pred_exp, replace = T))), by = .(vrbl, cbn_name, mdl_id)] %>%
+        melt(measure.vars = keep(names(.), ~grepl("V[0-9]", .x))) %>% 
+        .[, vrbl := gsub("_lag[0-9]", "", vrbl)] %>%
+        vvs$hyp_mep_dt[., on = "vrbl"] %>%
+        .[, vrbl := factor(vrbl, levels = rev(names(vvs$vrbl_lbls)))] %>%
+        dt_cntrfctl_cons[dt_id == "2k4", unique(.SD[, .(nbr_opened, cbn_name)])][., on = "cbn_name"] %>%
+        .[, diff := nbr_opened - value]
+
+    
+
     ## individual lines for different models
     dx %>%
         ## .[mdl_id %in% sample(unique(mdl_id), 10)] %>%
@@ -465,7 +483,7 @@ gen_plt_cntrfctl <- function(dt_cntrfctl_cons, dt_cntrfctl_wse) {
         
 
     ## overall plot
-    dx %>% 
+    dx_bs %>% 
         ggplot(aes(x=diff, y=vrbl)) +
         geom_density_ridges(scale = 0.9, bandwidth = 1.5) +
         facet_grid(hyp ~ cbn_name, scales = "free", space = "free") +
