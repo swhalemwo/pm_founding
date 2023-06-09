@@ -2820,7 +2820,7 @@ gen_preds_given_mdfd_vrbls <- function(idx, fldr_info) {
     
 
     ## generate model 
-    rx <- glmmTMB(fx, dfx, family = nbinom2)
+    rx <- glmmTMB(fx, dfx, family = nbinom1)
 
     
     ## fit model by country
