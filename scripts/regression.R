@@ -2327,7 +2327,8 @@ read_reg_res_files_ou <- function(fldr_info) {
         atb()
 
     df_reg_anls_cfgs_wide <- df_reg_anls_cfgs %>%
-        select(variable, value, mdl_id, lag_spec, cvrgd) %>% unique() %>% 
+        select(variable, value, mdl_id, lag_spec, cvrgd) %>% unique() %>%
+        filter(variable != "lag_spec") %>% # filter out lag specs (are separate column)
         pivot_wider(id_cols = c(mdl_id, lag_spec, cvrgd), names_from = variable, values_from = value)
 
 
