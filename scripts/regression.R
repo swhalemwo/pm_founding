@@ -2819,9 +2819,9 @@ gen_preds_given_mdfd_vrbls <- function(idx, fldr_info) {
     fx <- gen_r_f("rates", iv_vars)
     
 
-    ## generate model 
+    ## generate model
+    
     rx <- glmmTMB(fx, dfx, family = nbinom1)
-
     
     ## fit model by country
     ## ehh idk this kinda assumes every slope is random
@@ -2848,7 +2848,7 @@ gen_preds_given_mdfd_vrbls <- function(idx, fldr_info) {
     ## ## vrblx <- "hnwi_nbr_1M_lag4"
     ## vrblx <- "hnwi_nbr_30M_lag2"
     ## ## vrblx <- "smorc_dollar_fxm_lag3"
-    ## ## vrblx <- "sptinc992j_p90p100_lag3"
+    ## vrblx <- "sptinc992j_p90p100_lag3"
     ## ## vrblx <- "shweal992j_p90p100_lag4"
     ## ## vrblx <- "tmitr_approx_linear20step_lag5"
     ## ## sd(dfx$sptinc992j_p90p100_lag3)
@@ -2858,12 +2858,9 @@ gen_preds_given_mdfd_vrbls <- function(idx, fldr_info) {
     ##                  "offset(log(SP_POP_TOTLm_lag0_uscld))") %>% as.formula()
     
     ## rx_rs <- glmmTMB(fx_rs, dfx, family = nbinom2)
+    ## just scale by population (millions)
     
-
-    ## ## calculate with random intercept and random slopes
-    ## res_re <- pred_given_const_vrbl(vrblx, rx, dfx, iv_vars)
-    ## res_rs <- pred_given_const_vrbl(vrblx, rx_rs, dfx, iv_vars)
-    
+        
     ## ## compare values 
     ## dt_slpcprn <- rbind(copy(res_re$dtx_vlus)[, src := "re"],
     ##       copy(res_rs$dtx_vlus)[, src := "rs"]) %>%
@@ -2889,45 +2886,44 @@ gen_preds_given_mdfd_vrbls <- function(idx, fldr_info) {
     ##     geom_vline(xintercept = 0, linetype = "dashed", linewidth = 0.5)
 
     ## ## debugging SE predictions
-    exp(res_re$dtx_wse$pred) %>% sum()
+    ## exp(res_re$dtx_wse$pred) %>% sum()
 
-    ## ## generate at set ranges
-    res_re$dtx_wse %>% copy() %>% .[, rid := 1:.N] %>% 
-        .[, paste0("rnorm", 1:13) := as.list(exp(seq(-3,3,0.5)*se + pred)), rid] %>%
-        .[, map(.SD, sum), .SDcols = keep(names(.), ~grepl("rnorm", .x))] %>%
-        melt() %$% plot(value, type = 'l')
+    ## ## ## generate at set ranges
+    ## res_re$dtx_wse %>% copy() %>% .[, rid := 1:.N] %>% 
+    ##     .[, paste0("rnorm", 1:13) := as.list(exp(seq(-3,3,0.5)*se + pred)), rid] %>%
+    ##     .[, map(.SD, sum), .SDcols = keep(names(.), ~grepl("rnorm", .x))] %>%
+    ##     melt() %$% plot(value, type = 'l')
 
-    ## generate at random again
-    res_re$dtx_wse %>% copy() %>% .[, rid := 1:.N] %>%
-        .[, paste0("rnorm", 1:500) := as.list(exp(
-                ## Winsorize(rnorm(n=500, mean = pred, sd = se), maxval = pred, minval = -100000))), rid] %>%
-                rnorm(n=500, mean = pred, sd= se))), rid] %>% 
-        .[, map(.SD, sum), .SDcols = keep(names(.), ~grepl("rnorm", .x))] %>%
-        melt() %>%
-        ggplot(aes(x=value)) + geom_density(trim = T) + 
-        geom_vline(xintercept = sum(exp(res_re$dtx_wse$pred)))
+    ## ## generate at random again
+    ## res_re$dtx_wse %>% copy() %>% .[, rid := 1:.N] %>%
+    ##     .[, paste0("rnorm", 1:500) := as.list(exp(
+    ##             ## Winsorize(rnorm(n=500, mean = pred, sd = se), maxval = pred, minval = -100000))), rid] %>%
+    ##             rnorm(n=500, mean = pred, sd= se))), rid] %>% 
+    ##     .[, map(.SD, sum), .SDcols = keep(names(.), ~grepl("rnorm", .x))] %>%
+    ##     melt() %>%
+    ##     ggplot(aes(x=value)) + geom_density(trim = T) + 
+    ##     geom_vline(xintercept = sum(exp(res_re$dtx_wse$pred)))
 
     
     ## first look at nonmodified data: same issue? 
-    dtx <- adt(dfx) %>% .[, c("pred", "se") := predict(rx, dfx, se.fit = T)]
+    ## dtx <- adt(dfx) %>% .[, c("pred", "se") := predict(rx, dfx, se.fit = T)]
     
-    dtx[, pred_exp := predict(rx, dfx, type = "response")]
-    dtx[, .(pred, se, pred_exp)]
+    ## dtx[, pred_exp := predict(rx, dfx, type = "response")]
+    ## dtx[, .(pred, se, pred_exp)]
 
-    map_dbl(1:5000, ~sum(dtx$pred_exp[sample(nrow(dtx), replace = T)])) %>% hist()
+    ## map_dbl(1:5000, ~sum(dtx$pred_exp[sample(nrow(dtx), replace = T)])) %>% hist()
     
-                        
+    
 
-    dispersion <- sumry(rx) %>% chuck("sigma")
+    ## dispersion <- sumry(rx) %>% chuck("sigma")
 
     
-    dtx[, .(pred, se)] %>% .[, rid := 1:.N] %>%
-        ## .[, paste0("rnorm", 1:100) := as.list(exp(rnorm(n=500, mean = pred, sd= se))), rid] %>%
-        .[, paste0("rgamma", 1:100) := as.list(exp(rgamma(n = 500, shape = 1, rate = 0.10))), rid]
-    ## .[, paste0("rgamma", 1:100) := as.list(exp(rgamma(n = 500, shape = pred^2 / dispersion, rate = avg_pred / dispersion))), rid] %>%
-        .[, map(.SD, sum), .SDcols = keep(names(.), ~grepl("rnorm", .x))]
+    ## dtx[, .(pred, se)] %>% .[, rid := 1:.N] %>%
+    ##     ## .[, paste0("rnorm", 1:100) := as.list(exp(rnorm(n=500, mean = pred, sd= se))), rid] %>%
+    ##     .[, paste0("rgamma", 1:100) := as.list(exp(rgamma(n = 500, shape = 1, rate = 0.10))), rid] %>% 
+    ##     .[, map(.SD, sum), .SDcols = keep(names(.), ~grepl("rnorm", .x))]
 
-    rgamma(n=100, shape = 0.1) %>% hist()
+    ## rgamma(n=100, shape = 0.1) %>% hist()
     
 
     ## ## 
@@ -3000,8 +2996,8 @@ gen_cntrfctl <- function(gof_df_cbn, fldr_info) {
     ## get best models
     mdl_id_dt <- gen_mdl_id_dt(gof_df_cbn)
 
-    ## idx <- mdl_id_dt$mdl_id[5]
-    ## gen_preds_given_mdfd_vrbls(idx, fldr_info)
+    idx <- mdl_id_dt$mdl_id[5]
+    gen_preds_given_mdfd_vrbls(idx, fldr_info)
         
     l_cntrfctl_res <- mclapply(mdl_id_dt$mdl_id, \(x) gen_preds_given_mdfd_vrbls(x, fldr_info), mc.cores = 5)
 
@@ -3217,7 +3213,7 @@ postestimation <- function(fldr_info) {
     ## compare_r_stata(gof_df_cbn)
     
     gen_cntrfctl(gof_df_cbn, fldr_info)
-    ## gen_cntrfctl(reg_anls_base$gof_df_cbn, fldr_info)
+    gen_cntrfctl(reg_anls_base$gof_df_cbn, fldr_info)
 
     ## gen_cryexmpls(top_coefs)
 

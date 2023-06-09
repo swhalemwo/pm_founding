@@ -324,6 +324,78 @@ ggplot(dt_res3, aes(x=year, y=y, color = id, linetype = src)) + geom_line() +
 ## ** counterfactual prediction testing
 
 
+rxw <- glmmTMB(fx, dfx, family = nbinom1,
+               weights = SP_POP_TOTLm_lag0_uscld)
+
+
+## scale them total weights to 1
+rxw2 <- glmmTMB(fx, dfx, family = nbinom1,
+                weights = SP_POP_TOTLm_lag0_uscld/sum(SP_POP_TOTLm_lag0_uscld))
+
+## multiply population by 0.1
+rxw3 <- glmmTMB(fx, dfx, family = nbinom1,
+                weights = SP_POP_TOTLm_lag0_uscld * 0.1)
+
+rxw4 <- glmmTMB(fx, dfx, family = nbinom1,
+                weights = SP_POP_TOTLm_lag0_uscld * 0.5)
+
+rxw5 <- glmmTMB(fx, dfx, family = nbinom1,
+                weights = SP_POP_TOTLm_lag0_uscld * 0.25)
+
+rxw6 <- glmmTMB(fx, dfx, family = nbinom1,
+                weights = SP_POP_TOTLm_lag0_uscld * 0.01)
+
+## compare_models(rx, rxw, rxw2, rxw3, select = "se_p")
+compare_models(rxw, rxw3, rxw4, rxw5, select = "se_p")
+
+compare_models(rxw3, rxw4, rxw5, rxw6, select = "se_p")
+
+
+## adt(dfx)[, SP_POP_TOTLm_lag0_uscld/sum(SP_POP_TOTLm_lag0_uscld)*.N, year][, V1])
+
+## compare_models(rx, rxw)
+
+## see whether coef changes based on weight scale also occurs in OLS
+r_olsw1 <- glmmTMB(fx, dfx, weights = SP_POP_TOTLm_lag0_uscld)
+r_olsw2 <- glmmTMB(fx, dfx, weights = SP_POP_TOTLm_lag0_uscld * 0.01)
+
+compare_models(r_olsw1, r_olsw2, r_olsw3)
+
+
+## ## calculate with random intercept and random slopes
+## compare with population weights
+res_re <- pred_given_const_vrbl(vrblx, rx, dfx, iv_vars)
+res_wt <- pred_given_const_vrbl(vrblx, rxw, dfx, iv_vars)
+res_wt2 <- pred_given_const_vrbl(vrblx, rxw2, dfx, iv_vars)
+res_wt3 <- pred_given_const_vrbl(vrblx, rxw3, dfx, iv_vars)
+## res_rs <- pred_given_const_vrbl(vrblx, rx_rs, dfx, iv_vars)
+
+
+
+
+## comparison to glmer.nb
+res_glm <- glmer.nb(fx, dfx)
+res_glmw <- glmer.nb(fx, dfx, weights = SP_POP_TOTLm_lag0_uscld)
+res_glmw2 <- glmer.nb(fx, dfx, weights = SP_POP_TOTLm_lag0_uscld*0.1)
+## screenreg(res_glm, res_glmw)
+
+compare_models(rx, res_glm, rxw, res_glmw, select = "se_p")
+
+## compare glmer.nb models of different weights -> also different
+compare_models(res_glm, res_glmw, res_glmw2)
+
+## check how weights work
+mtcars %>% ggplot(aes(x=wt, y=carb)) + geom_point()
+## test expansion of dt
+rt_base <- glmmTMB(carb ~ wt + qsec + gear, mtcars, family = nbinom1)
+rt_w1 <- glmmTMB(carb ~ wt + qsec +gear , mtcars, family = nbinom1, weights = gear)
+dt_mtcars <- adt(mtcars, keep.rownames = "name")[, .(nbr = 1:gear), .(name, carb, wt, qsec, gear)]
+rt_w2 <- glmmTMB(carb ~ wt + qsec + gear, dt_mtcars, family = nbinom1)
+rt_w3 <- glmmTMB(carb ~ wt + qsec +gear , mtcars, family = nbinom1, weights = gear*0.1)
+rt_w4 <- glmmTMB(carb ~ wt + qsec +gear , mtcars, family = nbinom1, weights = gear*100)
+
+compare_models(rt_base, rt_w1, rt_w2, rt_w3, rt_w4, select = "se_p")
+
 
 
 
