@@ -1875,7 +1875,7 @@ optmz_reg_spec_once <- function(reg_spec, loop_nbr, vrbls_to_vary, fldr_info, re
     for (v in sample(vrbls_to_vary)) {
         print(v)
         
-        cur_lag_id <- gen_lag_id(reg_spec, vvs) %>% pull(value) %>% paste0(collapse = "")
+        ## cur_lag_id <- gen_lag_id(reg_spec, vvs) %>% pull(value) %>% paste0(collapse = "")
 
         ## if variable hasn't run yet with current lag spec, run it now 
         ## if (cur_lag_id %!in% reg_spec$run_lag_specs[[v]]) {
@@ -2817,11 +2817,12 @@ gen_preds_given_mdfd_vrbls <- function(idx, fldr_info) {
 
     ## generate formula
     fx <- gen_r_f("rates", iv_vars)
+    
 
     ## generate model 
     rx <- glmmTMB(fx, dfx, family = nbinom2)
 
-
+    
     ## fit model by country
     ## ehh idk this kinda assumes every slope is random
     ## rx_deu <- glmmTMB(fx, adt(dfx)[iso3c == "DNK"], family = nbinom2)
@@ -3199,9 +3200,6 @@ postestimation <- function(fldr_info) {
     gen_res_velps(cbn_dfs_rates, fldr_info)
   
     
-    one_out_setup_and_run(fldr_info$batch_version, gof_df_cbn)
-
-    ## test_dharma()
 
 
     
@@ -3209,6 +3207,10 @@ postestimation <- function(fldr_info) {
     df_anls_base <- add_coef_sig(reg_res_files$coef_df, reg_res_files$df_reg_anls_cfgs_wide)
     top_coefs <- gen_top_coefs(df_anls_base, gof_df_cbn)
     gen_VIF_allres(top_coefs, fldr_info)
+
+
+    one_out_setup_and_run(fldr_info$batch_version, gof_df_cbn)
+    ## test_dharma()
 
 
 }

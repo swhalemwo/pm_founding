@@ -321,6 +321,12 @@ ggplot(dt_res3, aes(x=year, y=y, color = id, linetype = src)) + geom_line() +
     facet_wrap(~src, nrow = 1, scales = "free")
 
 
+## ** counterfactual prediction testing
+
+
+
+
+
 ## ** chatgpt: garbage
 # Load required libraries
 library(lme4)

@@ -3022,15 +3022,12 @@ reg_res <- list()
 reg_res$plts <- gen_reg_res_plts(reg_res_objs, vvs, NBR_MDLS, only_priority_plts = T, stylecfg)
 
 reg_res$plts$plt_cvrgnc <- gen_plt_cvrgnc(reg_res_objs$gof_df_cbn)
-render_reg_res("plt_velp", reg_res, batch_version = "v75")
-
-
+reg_res$plts$plt_cntrfctl <- gen_plt_cntrfctl(reg_res_objs$dt_cntrfctl_cons, reg_res_objs$dt_cntrfctl_wse)
+render_reg_res("plt_cntrfctl", reg_res, batch_version = "v85")
 
 
 ## reg_res$plts$plt_oucoefchng_tile <- gen_plt_oucoefchng_tile(reg_res_objs$dt_oucoefchng)
 ## render_reg_res("plt_oucoefchng_tile", reg_res, batch_version = "v75")
-
-
 
 plt_inspector(reg_res$plts)
 ## reg_res$plts$plt_oneout_llrt_z
