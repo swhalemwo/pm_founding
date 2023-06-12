@@ -1,0 +1,108 @@
+#+TITLE: Testing theories of private museum founding
+
+# #+DATE: 2023-06-15 do
+
+#+OPTIONS:   H:2 num:t toc:2 \n:t @:t ::t |:t ^:t -:t f:t *:t <:t
+
+#+LaTeX_CLASS_OPTIONS: [aspectratio=169, t]
+
+#+latex_header: \usepackage{tikz}
+
+#+latex_header: \setbeamertemplate{itemize items}[circle]
+
+#+BIND: org-export-filter-bold-functions (org-beamer-bold-as-textbf)
+
+
+
+* overview
+
+** Private museums
+
+NWO-funded
+
+- Olav Velthuis
+- Kristina Kolbe
+- Andrea Friedman Rozenbaum
+- Mingxue Zhang
+- Marton Gera
+
+
+** website
+*** website :B_frame:
+:PROPERTIES:
+:BEAMER_env: frame
+:END:
+
+https://privatemuseumresearch.org/
+
+#+ATTR_LaTeX: :width 12cm
+file:pres_imgs/map.png
+
+*** website :B_frame:
+:PROPERTIES:
+:BEAMER_env: frame
+:END:
+
+https://privatemuseumresearch.org/
+
+#+ATTR_LaTeX: :width 12cm
+file:pres_imgs/map_male.png
+
+*** website :B_frame:
+:PROPERTIES:
+:BEAMER_env: frame
+:END:
+
+https://privatemuseumresearch.org/
+
+#+ATTR_LaTeX: :width 12cm
+file:pres_imgs/map_female.png
+
+** RQ
+Why are private museums founded? 
+
+
+** hypotheses
+- Tax incentives
+- Government cultural spending
+- Inequality
+- Elite wealth 
+
+
+
+
+
+* data
+** data sources
+
+|-------------------+----------------------------------+---------------------------|
+| Concept           | Indicator                        | Data source               |
+|-------------------+----------------------------------+---------------------------|
+| Tax Incentives    | Tax deductibility of donations   | Charities Aid Foundation  |
+|                   | Top Marginal Income Tax Rates    | Fraser Institute          |
+|-------------------+----------------------------------+---------------------------|
+| Cultural spending | Total government expenditure on   | OECD, UN, Eurostat, IMF   |
+|                   | Culture, Recreation and Religion |                           |
+|                   | (COFOG 08)                       |                           |
+|-------------------+----------------------------------+---------------------------|
+| Inequality        | Wealth/Income inequality:        | World Inequality Database |
+|                   | 10% share, 1% share, Gini        |                           |
+|-------------------+----------------------------------+---------------------------|
+| Elite Wealth      | Population above threshold of    | World Inequality Database |
+|                   | 1M, 5M, 30M, 200M USD            |                           |
+|-------------------+----------------------------------+---------------------------|
+
+
+** Controls
+
+| Concept | Indicator | Data source |
+|---------+-----------+-------------|
+|         |           |             |
+
+
+
+* Extra slides
+** the plot with all the regression models
+
+
+
