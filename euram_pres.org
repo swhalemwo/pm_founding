@@ -68,11 +68,29 @@ Why are private museums founded?
 - Inequality
 - Elite wealth 
 
+*** tax incentives
+Diverse motivations (hobby, prestige, philanthropy)
+expensive, large scale -> likely financial considerations
 
+Tax incentives
+- Tax deductibility of donations
+- Top marginal income tax rates
 
+reduces taxable income/tax owed
 
+*** 
 
 * data
+** DV
+
+number of openings
+population offset (per capita rates)
+standardize
+
+variable choices
+lag length optimization
+
+
 ** data sources
 
 |-------------------+----------------------------------+---------------------------|
@@ -81,7 +99,7 @@ Why are private museums founded?
 | Tax Incentives    | Tax deductibility of donations   | Charities Aid Foundation  |
 |                   | Top Marginal Income Tax Rates    | Fraser Institute          |
 |-------------------+----------------------------------+---------------------------|
-| Cultural spending | Total government expenditure on   | OECD, UN, Eurostat, IMF   |
+| Cultural spending | Total government expenditure on  | OECD, UN, Eurostat, IMF   |
 |                   | Culture, Recreation and Religion |                           |
 |                   | (COFOG 08)                       |                           |
 |-------------------+----------------------------------+---------------------------|
@@ -95,14 +113,46 @@ Why are private museums founded?
 
 ** Controls
 
-| Concept | Indicator | Data source |
-|---------+-----------+-------------|
-|         |           |             |
+|--------------------------------+----------------------+-------------------|
+| Concept                        | Indicator            | Data source       |
+|--------------------------------+----------------------+-------------------|
+| Size                           | Population           | World Bank        |
+| Development/art demand         | GDP                  | World Bank        |
+| Presence of potential founders | Number of art        | Artnews top200    |
+|                                | collectors           | collector ranking |
+| Museum population              | Number of modern/    | Museums of the    |
+|                                | contemp. art museums | World Database    |
+|--------------------------------+----------------------+-------------------|
 
+
+
+
+
+
+
+
+
+* Analytical Strategy
+
+random intercept negative binomial regression
+
+
+* Results
+** regression coefficients
+
+#+attr_latex: :width 14cm
+[[file:figures/plt_v88_best_coefs_single_cbn1.pdf]]
+
+** Tax incentives
+
+#+attr_latex: width 14cm
+[[file:figures/plt_v88_pred_taxinc.pdf]]
 
 
 * Extra slides
 ** the plot with all the regression models
 
+** world map
+** counterfactual
 
 

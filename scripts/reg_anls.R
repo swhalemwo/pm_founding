@@ -419,8 +419,8 @@ gen_plt_cntrfctl <- function(dt_cntrfctl_cons, dt_cntrfctl_wse) {
         vvs$hyp_mep_dt[., on = "vrbl"] %>%
         .[, vrbl := factor(vrbl, levels = rev(names(vvs$vrbl_lbls)))] %>%
         ggplot(aes(x=diff, y = vrbl, color = dt_id, fill = dt_id)) +
-        geom_point(color = "black") +
-        geom_col() + 
+        ## geom_point(color = "black") +
+        geom_col(show.legend = F) + 
         ## geom_violin() + # bw = 5) + 
         facet_grid(hyp ~ cbn_name, scales = "free", space = "free") +
         geom_vline(mapping = aes(xintercept = 0), linetype = "dashed") +
@@ -441,54 +441,54 @@ gen_plt_cntrfctl <- function(dt_cntrfctl_cons, dt_cntrfctl_wse) {
     ##     geom_vline(mapping = aes(xintercept = 0), linetype = "dashed")
 
     
-    ## simulate some predictions based on since 2k constance, CY-cbn-model-dataset predictions
-    dx <- dt_cntrfctl_wse %>% copy() %>% .[, rid := 1:.N] %>% 
-        ## .[, paste0("rnorm", 1:10) := map(as.list(rnorm(n = 10, mean = .SD$pred, sd = .SD$se)), ~.x), rid]
-        .[, paste0("rnorm", 1:50) := as.list(exp(rnorm(n = 50, mean = pred, sd = se))), rid] %>%
-        .[, map(.SD, sum), by = .(vrbl, cbn_name, mdl_id), .SDcols = keep(names(.), ~grepl("rnorm", .x))] %>%
-        melt(id.vars = c("vrbl", "cbn_name", "mdl_id"), variable.name = "rnorm_id", value.name = "pred") %>%
-        dt_cntrfctl_cons[dt_id == "2k4", unique(.SD[, .(nbr_opened, cbn_name)])][., on = "cbn_name"] %>%
-        .[, diff := nbr_opened - pred] %>%
-        .[, vrbl := gsub("_lag[0-9]", "", vrbl)] %>% 
-        vvs$hyp_mep_dt[., on = "vrbl"] %>%
-        .[, vrbl := factor(vrbl, levels = rev(names(vvs$vrbl_lbls)))]
+    ## ## simulate some predictions based on since 2k constance, CY-cbn-model-dataset predictions
+    ## dx <- dt_cntrfctl_wse %>% copy() %>% .[, rid := 1:.N] %>% 
+    ##     ## .[, paste0("rnorm", 1:10) := map(as.list(rnorm(n = 10, mean = .SD$pred, sd = .SD$se)), ~.x), rid]
+    ##     .[, paste0("rnorm", 1:50) := as.list(exp(rnorm(n = 50, mean = pred, sd = se))), rid] %>%
+    ##     .[, map(.SD, sum), by = .(vrbl, cbn_name, mdl_id), .SDcols = keep(names(.), ~grepl("rnorm", .x))] %>%
+    ##     melt(id.vars = c("vrbl", "cbn_name", "mdl_id"), variable.name = "rnorm_id", value.name = "pred") %>%
+    ##     dt_cntrfctl_cons[dt_id == "2k4", unique(.SD[, .(nbr_opened, cbn_name)])][., on = "cbn_name"] %>%
+    ##     .[, diff := nbr_opened - pred] %>%
+    ##     .[, vrbl := gsub("_lag[0-9]", "", vrbl)] %>% 
+    ##     vvs$hyp_mep_dt[., on = "vrbl"] %>%
+    ##     .[, vrbl := factor(vrbl, levels = rev(names(vvs$vrbl_lbls)))]
 
 
-    ## calculate bootstrap prediction
-    dx_bs <- dt_cntrfctl_wse %>% copy() %>% .[, rid := 1:.N] %>%
-        .[, pred_exp := exp(pred)] %>%
-        .[, map(1:500, ~sum(sample(pred_exp, replace = T))), by = .(vrbl, cbn_name, mdl_id)] %>%
-        melt(measure.vars = keep(names(.), ~grepl("V[0-9]", .x))) %>% 
-        .[, vrbl := gsub("_lag[0-9]", "", vrbl)] %>%
-        vvs$hyp_mep_dt[., on = "vrbl"] %>%
-        .[, vrbl := factor(vrbl, levels = rev(names(vvs$vrbl_lbls)))] %>%
-        dt_cntrfctl_cons[dt_id == "2k4", unique(.SD[, .(nbr_opened, cbn_name)])][., on = "cbn_name"] %>%
-        .[, diff := nbr_opened - value]
+    ## ## calculate bootstrap prediction
+    ## dx_bs <- dt_cntrfctl_wse %>% copy() %>% .[, rid := 1:.N] %>%
+    ##     .[, pred_exp := exp(pred)] %>%
+    ##     .[, map(1:500, ~sum(sample(pred_exp, replace = T))), by = .(vrbl, cbn_name, mdl_id)] %>%
+    ##     melt(measure.vars = keep(names(.), ~grepl("V[0-9]", .x))) %>% 
+    ##     .[, vrbl := gsub("_lag[0-9]", "", vrbl)] %>%
+    ##     vvs$hyp_mep_dt[., on = "vrbl"] %>%
+    ##     .[, vrbl := factor(vrbl, levels = rev(names(vvs$vrbl_lbls)))] %>%
+    ##     dt_cntrfctl_cons[dt_id == "2k4", unique(.SD[, .(nbr_opened, cbn_name)])][., on = "cbn_name"] %>%
+    ##     .[, diff := nbr_opened - value]
 
     
 
-    ## individual lines for different models
-    dx %>%
-        ## .[mdl_id %in% sample(unique(mdl_id), 10)] %>%
-        ggplot(aes(x=diff, y=vrbl, group = interaction(mdl_id, cbn_name, vrbl))) +# , group = mdl_id)) +
-        geom_density_ridges(scale = 0.9, bandwidth = 1.5, show.legend = F,
-                            fill = NA,
-                            alpha = 0.2,
-                            size = 0.2,
-                            color = "#A0A0A0A0") + # need alpha color to get semi-transparent lines
-        facet_grid(hyp ~ cbn_name, scales = "free", space = "free") +
-        scale_y_discrete(expand = expansion(add = c(0.1, 1))) +
-        geom_vline(xintercept = 0, linetype = "dashed", linewidth = 0.5) 
-        ## scale_color_manual(values = rep("#A0A0A0A0", 108))
+    ## ## individual lines for different models
+    ## dx %>%
+    ##     ## .[mdl_id %in% sample(unique(mdl_id), 10)] %>%
+    ##     ggplot(aes(x=diff, y=vrbl, group = interaction(mdl_id, cbn_name, vrbl))) +# , group = mdl_id)) +
+    ##     geom_density_ridges(scale = 0.9, bandwidth = 1.5, show.legend = F,
+    ##                         fill = NA,
+    ##                         alpha = 0.2,
+    ##                         size = 0.2,
+    ##                         color = "#A0A0A0A0") + # need alpha color to get semi-transparent lines
+    ##     facet_grid(hyp ~ cbn_name, scales = "free", space = "free") +
+    ##     scale_y_discrete(expand = expansion(add = c(0.1, 1))) +
+    ##     geom_vline(xintercept = 0, linetype = "dashed", linewidth = 0.5) 
+    ##     ## scale_color_manual(values = rep("#A0A0A0A0", 108))
         
 
-    ## overall plot
-    dx_bs %>% 
-        ggplot(aes(x=diff, y=vrbl)) +
-        geom_density_ridges(scale = 0.9, bandwidth = 1.5) +
-        facet_grid(hyp ~ cbn_name, scales = "free", space = "free") +
-        scale_y_discrete(expand = expansion(add = c(0.1, 1))) +
-        geom_vline(xintercept = 0, linetype = "dashed", linewidth = 0.5)
+    ## ## overall plot
+    ## dx_bs %>% 
+    ##     ggplot(aes(x=diff, y=vrbl)) +
+    ##     geom_density_ridges(scale = 0.9, bandwidth = 1.5) +
+    ##     facet_grid(hyp ~ cbn_name, scales = "free", space = "free") +
+    ##     scale_y_discrete(expand = expansion(add = c(0.1, 1))) +
+    ##     geom_vline(xintercept = 0, linetype = "dashed", linewidth = 0.5)
         
 
     ## try without SE
@@ -1548,6 +1548,106 @@ gen_plt_best_coefs_single <- function(top_coefs) {
 }
 
 
+gen_plt_best_coefs_single_cbn1 <- function(top_coefs) {
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
+    1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;
+
+    #' most important coefs for cbn1
+        
+    top_coefs %>%
+        .[cbn_name == "cbn1"] %>%
+        .[, .SD[which.max(log_likelihood)], by = .(vrbl_name_unlag, cbn_name)] %>%
+        copy(vvs$hyp_mep_dt)[., on = .(vrbl = vrbl_name_unlag)] %>% # original
+        .[hyp %in% c("h1b", "h2", "h3a", "h3b", "h4")] %>% 
+        ggplot(aes(x=coef, y=vrbl, color = factor(sig))) +
+        geom_point(show.legend = F) +
+        geom_errorbarh(aes(xmin = coef - 1.96*se, xmax = coef + 1.96*se), height = 0, show.legend = F) + 
+        facet_grid(hyp~., scales = "free", space =  "free", switch = "y",
+                   labeller = as_labeller(c(vvs$krnl_lbls, vvs$cbn_lbls, vvs$vrbl_lbls))) + 
+        scale_y_discrete(labels = map_chr(addline_format(vvs$vrbl_lbls),
+                                          ~paste(strwrap(.x, 500), collapse = "\n"))) + 
+        geom_vline(xintercept = 0, linetype = "dashed") +
+        scale_color_manual(values = c("#1C5BA6", "#BD0017")) +
+        theme_orgpop() +
+        labs(x=NULL, y=NULL)
+
+}
+
+## gen_plt_best_coefs_single_cbn1(reg_res_objs$top_coefs)
+
+gen_plt_pred_taxinc <- function(top_coefs) {
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
+    1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;
+    #' generate Tax incentives predicted probabilities
+    
+    ## actually try to use predict
+
+    
+    mdl_idx <- top_coefs[vrbl_name_unlag == "Ind.tax.incentives" & cbn_name == "cbn1",
+              .SD[which.max(log_likelihood), mdl_id]]
+    
+    regspecx <- get_reg_spec_from_id(mdl_idx, fldr_info)
+
+    tmitr_vrbl <- keep(regspecx$mdl_vars, ~grepl("tmitr_approx_linear20step_lag[0-5]", .x))
+    interact_vrbl <- keep(regspecx$mdl_vars, ~grepl("ti_tmitr_interact_lag1", .x))
+
+
+    tmitr_scale_cbn1 <- scale(chuck(cbn_dfs_rates_uscld$cbn1, tmitr_vrbl))
+        
+
+    dfx <- chuck(cbn_df_dict, "rates", chuck(regspecx, "cfg", "cbn_name"))
+    iv_vars <- keep(setdiff(regspecx$mdl_vars, vvs$base_vars), ~!grepl("^SP\\.POP\\.TOTLm", .x))
+
+    ## generate formula
+    fx <- gen_r_f("rates", iv_vars)
+    
+    ## generate model
+    rx <- glmmTMB(fx, dfx, family = nbinom1)
+
+    ## set up prediction dataframe
+    dt_ti_pred <- expand.grid(Ind.tax.incentives = c(0,1),
+                tmitr_vrbl = seq(round(min(tmitr_scale_cbn1),2),
+                                 round(max(tmitr_scale_cbn1),2), 0.05)) %>% adt() %>%
+        .[, interact_vrbl := Ind.tax.incentives * tmitr_vrbl] %>%
+        setnames(old = c("tmitr_vrbl", "interact_vrbl"), new = c(tmitr_vrbl, interact_vrbl)) %>%
+        ## add other variables at the mean
+        .[, (setdiff(iv_vars, c(tmitr_vrbl, interact_vrbl, "Ind.tax.incentives"))) := 0] %>%
+        .[, `:=`(iso3c = "asdf", SP_POP_TOTLm_lag0_uscld = 100)]
+
+    ## convert back to actual scale
+    dt_ti_pred[, c("pred", "se") :=  map(predict(rx, dt_ti_pred, se.fit = T), ~.x)] %>% 
+        .[, (tmitr_vrbl) := attr(tmitr_scale_cbn1, "scaled:center") +
+                attr(tmitr_scale_cbn1, "scaled:scale")*get(tmitr_vrbl)]
+
+    ## dt_ti_pred[, .(xx)] %>% summary()
+    
+
+    dt_ti_pred %>% copy() %>% .[, `:=`(min = pred - 1.96 * se, max = pred + 1.96 * se)] %>% 
+        ggplot(aes(x=get(tmitr_vrbl), y=pred, color = factor(Ind.tax.incentives))) +
+        geom_ribbon(mapping = aes(ymin = min, ymax = max, fill = factor(Ind.tax.incentives)),
+                    alpha = 0.1, show.legend = F,
+                    linetype = 2) + 
+        geom_line(linewidth = 1.5, show.legend = F) +
+        coord_cartesian(ylim = c(-2, 2)) +
+        labs(y=NULL, x= "Top Marginal Income Tax Rate (%)") +
+        geom_text(head(copy(dt_ti_pred)[get(tmitr_vrbl) > 55],2)[
+          , lbl := fifelse(Ind.tax.incentives == 0,
+                           paste0("donations not tax deductible"),
+                           paste0("donations tax deductible"))][
+            Ind.tax.incentives == 1, pred := pred + 0.2][
+            Ind.tax.incentives == 0, pred := pred - 0.2],
+            hjust = 1,
+            mapping = aes(label = lbl),
+            show.legend = F,
+            size = pt2mm(stylecfg$lbl_fntsz) + 1) +
+        theme_bw() + 
+        theme_orgpop() 
+        
+                                                         
+}
+
+## gen_plt_pred_taxinc(reg_res_objs$top_coefs)
+
 gen_plt_lag_dens <- function(top_coefs) {
     #' violin plot of lags
     if (as.character(match.call()[[1]]) %in% fstd){browser()}
@@ -1857,6 +1957,8 @@ gen_reg_res_plts <- function(reg_res_objs, vvs, NBR_MDLS, only_priority_plts, st
         plt_coef_violin = gen_plt_coef_violin(top_coefs),
         plt_best_coefs_cloud = gen_plt_best_coefs_cloud(top_coefs),
         plt_best_coefs_single = gen_plt_best_coefs_single(top_coefs),
+        plt_best_coefs_single_cbn1 = gen_plt_best_coefs_single_cbn1(top_coefs),
+        plt_pred_taxinc = gen_plt_pred_taxinc(top_coefs),
         plt_lag_dens = gen_plt_lag_dens(top_coefs),
         plt_oneout_coefs = gen_plt_oneout_coefs(ou_anls, top_coefs_llrt),
         plt_oneout_llrt_z = gen_plt_oneout_llrt_z(ou_anls),
@@ -1938,6 +2040,9 @@ gen_plt_cfgs <- function() {
                                         caption = "Coefficient point estimate and 95% CI"),
             plt_best_coefs_single = list(filename = "best_coefs_single.pdf", width = 18, height = 12,
                                          caption = "Model coefficients (best fitting model)"),
+            plt_best_coefs_single_cbn1 = list(filename = "best_coefs_single_cbn1.pdf",
+                                              caption = "asdf",
+                                              width = 14, height = 7.5),
             plt_lag_dens = list(filename = "lag_dens.pdf", width = 18, height = 14,
                                 caption = "Distribution of lag choice after optimization"),
             plt_oneout_coefs = list(filename = "oneout_coefs.pdf", width = 18, height = 12,
@@ -1961,7 +2066,9 @@ gen_plt_cfgs <- function() {
             plt_velp = list(filename = "velp.pdf", width = 24, height = 16,
                             caption = "Results of regressing longitudinal variables on year"),
             plt_cntrfctl = list(filename = "cntrfctl.pdf", width = 16, height = 12,
-                            caption = "Counterfactual simulations"),
+                                caption = "Counterfactual simulations"),
+            plt_pred_taxinc = list(filename = "pred_taxinc.pdf", width = 14, height = 7.5,
+                            caption = "asdf"),
             plt_oucoefchng = list(filename = "oucoefchng.pdf", width = 24, height = 12,
                                   caption = "Coefficient changes given addition of other variables"),
             plt_oucoefchng_tile = list(filename = "oucoefchng_tile.pdf", width = 24, height = 12,
@@ -3039,9 +3146,9 @@ reg_res <- list()
 ## generate plots, construct configs
 reg_res$plts <- gen_reg_res_plts(reg_res_objs, vvs, NBR_MDLS, only_priority_plts = T, stylecfg)
 
-reg_res$plts$plt_cvrgnc <- gen_plt_cvrgnc(reg_res_objs$gof_df_cbn)
-reg_res$plts$plt_cntrfctl <- gen_plt_cntrfctl(reg_res_objs$dt_cntrfctl_cons, reg_res_objs$dt_cntrfctl_wse)
-render_reg_res("plt_cntrfctl", reg_res, batch_version = "v85")
+reg_res$plts$plt_pred_taxinc <- gen_plt_pred_taxinc(reg_res_objs$top_coefs)
+## reg_res$plts$plt_cntrfctl <- gen_plt_cntrfctl(reg_res_objs$dt_cntrfctl_cons, reg_res_objs$dt_cntrfctl_wse)
+render_reg_res("plt_pred_taxinc", reg_res, batch_version = "v88")
 
 
 ## reg_res$plts$plt_oucoefchng_tile <- gen_plt_oucoefchng_tile(reg_res_objs$dt_oucoefchng)
