@@ -7,8 +7,16 @@
 #+LaTeX_CLASS_OPTIONS: [aspectratio=169, t]
 
 #+latex_header: \usepackage{tikz}
+#+latex_header: \usepackage{booktabs}
 
 #+latex_header: \setbeamertemplate{itemize items}[circle]
+
+#+latex_header: \usepackage{bibentry}
+#+latex_header: \usepackage[style=apa, backend=biber]{biblatex} 
+#+latex_header: \addbibresource{/home/johannes/Dropbox/references.bib}
+#+latex_header: \addbibresource{/home/johannes/Dropbox/references2.bib}
+
+
 
 #+BIND: org-export-filter-bold-functions (org-beamer-bold-as-textbf)
 
@@ -26,6 +34,20 @@ NWO-funded
 - Mingxue Zhang
 - Marton Gera
 
+
+[[file:pres_imgs/v1_plt_opng_line_glbl.pdf]]
+
+
+
+
+
+** Definition
+- established by art collector/couple (no corporate museums)
+- if original founders died: still controlled by family
+- building
+- collection
+- accessible
+- modern/contemporary art (created since 1900)
 
 ** website
 *** website :B_frame:
@@ -62,31 +84,86 @@ file:pres_imgs/map_female.png
 Why are private museums founded? 
 
 
-** hypotheses
-- Tax incentives
-- Government cultural spending
-- Inequality
-- Elite wealth 
 
-*** tax incentives
-Diverse motivations (hobby, prestige, philanthropy)
-expensive, large scale -> likely financial considerations
+** Hypotheses
+*** H1: Tax Incentives
+reduce taxable income/tax owed -> reduce net cost [[parencite:&Peloza_Steel_2005_elasticities;&Walker_2019_collector;&Hemels_2017_incentives]]
 
-Tax incentives
-- Tax deductibility of donations
-- Top marginal income tax rates
 
-reduces taxable income/tax owed
+** Hypotheses
+*** \color{gray}H1: Tax Incentives
+\color{gray} reduce taxable income/tax owed -> reduce net cost [[parencite:&Peloza_Steel_2005_elasticities;&Walker_2019_collector;&Hemels_2017_incentives]]
 
-*** 
+*** H2: Government cultural spending
+Competition -> crowding out  [[parencite:&Walker_2019_collector;&Boloten_Hacking_2021_foreword]]
+Legitimation/infrastructure -> crowding in  [[parencite:&DeWit_etal_2018_philanthropy;&Lena_2019_entitled]]
 
-* data
-** DV
 
+
+** Hypotheses
+*** \color{gray} H1: Tax Incentives
+\color{gray} reduce taxable income/tax owed -> reduce net cost [[parencite:&Peloza_Steel_2005_elasticities;&Walker_2019_collector;&Hemels_2017_incentives]]
+
+*** \color{gray} H2: Government cultural spending
+\color{gray} Competition -> crowding out  [[parencite:&Walker_2019_collector;&Boloten_Hacking_2021_foreword]]
+\color{gray} Legitimation/infrastructure -> crowding in  [[parencite:&DeWit_etal_2018_philanthropy;&Lena_2019_entitled]]
+
+*** H3: Inequality
+Legitimacy deficit [[parencite:&Brown_2019_private;&Maclean_etal_2021_philanthropy;&Giridharadas_2018_winners]]
+
+
+** Hypotheses
+*** \color{gray} H1: Tax Incentives
+\color{gray} reduce taxable income/tax owed -> reduce net cost [[parencite:&Peloza_Steel_2005_elasticities;&Walker_2019_collector;&Hemels_2017_incentives]]
+
+*** \color{gray} H2: Government cultural spending
+\color{gray} Competition -> crowding out  [[parencite:&Walker_2019_collector;&Boloten_Hacking_2021_foreword]]
+Legitimation/infrastructure -> crowding in  [[parencite:&DeWit_etal_2018_philanthropy;&Lena_2019_entitled]]
+
+*** \color{gray} H3: Inequality
+\color{gray} Legitimacy deficit [[parencite:&Brown_2019_private;&Maclean_etal_2021_philanthropy;&Giridharadas_2018_winners]]
+
+*** H4: Elite Wealth
+Substantial resources required [[parencite:&Gnyp_2015_shift;&Zorloni_Resch_2016_opportunities]]
+
+
+
+** Hypotheses
+***  H1: Tax Incentives
+ reduce taxable income/tax owed -> reduce net cost [[parencite:&Peloza_Steel_2005_elasticities;&Walker_2019_collector;&Hemels_2017_incentives]]
+
+***  H2: Government cultural spending
+ Competition -> crowding out  [[parencite:&Walker_2019_collector;&Boloten_Hacking_2021_foreword]]
+Legitimation/infrastructure -> crowding in  [[parencite:&DeWit_etal_2018_philanthropy;&Lena_2019_entitled]]
+
+***  H3: Inequality
+ Legitimacy deficit [[parencite:&Brown_2019_private;&Maclean_etal_2021_philanthropy;&Giridharadas_2018_winners]]
+
+*** H4: Elite Wealth
+Substantial resources required [[parencite:&Gnyp_2015_shift;&Zorloni_Resch_2016_opportunities]]
+
+
+
+
+
+
+* Data
+** DV 
+
+Country-years
 number of openings
 
+~80%: 0 openings
 
-** data sources
+
+[[file:pres_imgs/v1_plt_opng_line_glbl.pdf]]
+
+[[file:pres_imgs/v1_plt_reg_dens.pdf]]
+
+
+
+
+** Data Sources
 
 |-------------------+----------------------------------+---------------------------|
 | Concept           | Indicator                        | Data source               |
@@ -106,7 +183,7 @@ number of openings
 |-------------------+----------------------------------+---------------------------|
 
 
-** Controls
+** Control Variables
 
 |--------------------------------+----------------------+-------------------|
 | Concept                        | Indicator            | Data source       |
@@ -117,26 +194,32 @@ number of openings
 |                                | collectors           | collector ranking |
 | Museum population              | Number of modern/    | Museums of the    |
 |                                | contemp. art museums | World Database    |
+| Density: Legitimacy            | Number of PMs open   | PM Database       |
+| Density Competition            | Number of PMs open^2 | PM Database       |
 |--------------------------------+----------------------+-------------------|
 
 
 
+** Data coverage
+1245 country years,
+85 countries
+mostly 2000-2020
+
+#+latex: \vspace{1cm}
 
 
+#+attr_latex: :align lrr :center nil
+|---------------+-----+---------|
+| region        |   N | Percent |
+|---------------+-----+---------|
+| Africa        | 108 |    8.6% |
+| Asia          | 334 |   26.7% |
+| Europe        | 663 |   53.0% |
+| Latin America |  75 |    6.0% |
+| North America |  34 |    2.7% |
+| Oceania       |  36 |    2.9% |
+|---------------+-----+---------|
 
-
-
-
-* Analytical Strategy
-
-variable choices
-lag length optimization
-
-population offset
-
-
-random intercept negative binomial regression
--> impact of IV on per capita founding rate
 
 
 * Results
@@ -155,6 +238,12 @@ random intercept negative binomial regression
 #+attr_latex: width 14cm
 [[file:figures/plt_v88_pred_smorc.pdf]]
 
+** Regression results
+
+#+attr_latex: :width 14cm
+[[file:figures/plt_v88_best_coefs_single_cbn1.pdf]]
+
+
 ** Conclusion
 
 ** Conclusion
@@ -164,6 +253,11 @@ j.aengenheyster@uva.nl
 
 
 
+** References
+:PROPERTIES:
+:BEAMER_opt: allowframebreaks,label=
+:END:
+#+Latex: \printbibliography
 ** Extra slides
 ** all datasets + variables
 
