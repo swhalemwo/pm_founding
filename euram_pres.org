@@ -84,11 +84,6 @@ reduces taxable income/tax owed
 ** DV
 
 number of openings
-population offset (per capita rates)
-standardize
-
-variable choices
-lag length optimization
 
 
 ** data sources
@@ -134,11 +129,18 @@ lag length optimization
 
 * Analytical Strategy
 
+variable choices
+lag length optimization
+
+population offset
+
+
 random intercept negative binomial regression
+-> impact of IV on per capita founding rate
 
 
 * Results
-** regression coefficients
+** Regression results
 
 #+attr_latex: :width 14cm
 [[file:figures/plt_v88_best_coefs_single_cbn1.pdf]]
@@ -148,11 +150,30 @@ random intercept negative binomial regression
 #+attr_latex: width 14cm
 [[file:figures/plt_v88_pred_taxinc.pdf]]
 
+** Cultural Spending
 
-* Extra slides
-** the plot with all the regression models
+#+attr_latex: width 14cm
+[[file:figures/plt_v88_pred_smorc.pdf]]
+
+** Conclusion
+
+** Conclusion
+Thanks for your attention! any questions?
+
+j.aengenheyster@uva.nl
+
+
+
+** Extra slides
+** all datasets + variables
+
+[[file:figures/plt_v88_best_coefs_single.pdf]]
 
 ** world map
+
+#+attr_latex: :width 8cm
+[[file:figures/world_plot_faceted_v2.pdf]]
+
 ** counterfactual
 
-
+[[file:figures/plt_v88_cntrfctl.pdf]]

@@ -422,9 +422,14 @@ gen_plt_cntrfctl <- function(dt_cntrfctl_cons, dt_cntrfctl_wse) {
         ## geom_point(color = "black") +
         geom_col(show.legend = F) + 
         ## geom_violin() + # bw = 5) + 
-        facet_grid(hyp ~ cbn_name, scales = "free", space = "free") +
+        facet_grid(hyp ~ cbn_name, scales = "free", space = "free", switch = "y",
+                   labeller = as_labeller(c(vvs$krnl_lbls, vvs$cbn_lbls, vvs$vrbl_lbls))) +
+        scale_y_discrete(labels = map_chr(addline_format(vvs$vrbl_lbls),
+                                          ~paste(strwrap(.x, 35), collapse = "\n"))) + 
         geom_vline(mapping = aes(xintercept = 0), linetype = "dashed") +
-        labs(x="additional PM foundings due to variable change since 2000")
+        labs(x="additional PM foundings due to variable change since 2000") +
+        theme_bw() +
+        theme_orgpop()
         
         
 
@@ -1539,13 +1544,18 @@ gen_plt_best_coefs_single <- function(top_coefs) {
         ## dtx[., on = .(vrbl = vrbl_name_unlag)] %>%
         .[!is.na(hyp)] %>% 
         ggplot(aes(x=coef, y=vrbl, color = factor(sig))) +
-        geom_point() +
-        geom_errorbarh(aes(xmin = coef - 1.96*se, xmax = coef + 1.96*se), height = 0) + 
-        facet_grid(hyp~cbn_name, scales = "free", space =  "free") +
+        geom_point(show.legend = F) +
+        geom_errorbarh(aes(xmin = coef - 1.96*se, xmax = coef + 1.96*se), height = 0, show.legend = F) + 
+        facet_grid(hyp~cbn_name, scales = "free", space =  "free", switch = "y",
+                   labeller = as_labeller(c(vvs$krnl_lbls, vvs$cbn_lbls, vvs$vrbl_lbls))) +
+        scale_y_discrete(labels = map_chr(addline_format(vvs$vrbl_lbls),
+                                          ~paste(strwrap(.x, 35), collapse = "\n"))) + 
         geom_vline(xintercept = 0, linetype = "dashed") +
         scale_color_manual(values = c("#1C5BA6", "#BD0017")) 
 
 }
+
+## gen_plt_best_coefs_single(reg_res_objs$top_coefs)
 
 
 gen_plt_best_coefs_single_cbn1 <- function(top_coefs) {
@@ -1568,6 +1578,7 @@ gen_plt_best_coefs_single_cbn1 <- function(top_coefs) {
                                           ~paste(strwrap(.x, 500), collapse = "\n"))) + 
         geom_vline(xintercept = 0, linetype = "dashed") +
         scale_color_manual(values = c("#1C5BA6", "#BD0017")) +
+        theme_bw() + 
         theme_orgpop() +
         labs(x=NULL, y=NULL)
 
@@ -1606,8 +1617,8 @@ gen_plt_pred_taxinc <- function(top_coefs) {
 
     ## set up prediction dataframe
     dt_ti_pred <- expand.grid(Ind.tax.incentives = c(0,1),
-                tmitr_vrbl = seq(round(min(tmitr_scale_cbn1),2),
-                                 round(max(tmitr_scale_cbn1),2), 0.05)) %>% adt() %>%
+                              tmitr_vrbl = seq(round(min(tmitr_scale_cbn1),2),
+                                               round(max(tmitr_scale_cbn1),2), 0.05)) %>% adt() %>%
         .[, interact_vrbl := Ind.tax.incentives * tmitr_vrbl] %>%
         setnames(old = c("tmitr_vrbl", "interact_vrbl"), new = c(tmitr_vrbl, interact_vrbl)) %>%
         ## add other variables at the mean
@@ -1647,6 +1658,56 @@ gen_plt_pred_taxinc <- function(top_coefs) {
 }
 
 ## gen_plt_pred_taxinc(reg_res_objs$top_coefs)
+
+gen_plt_pred_smorc <- function(top_coefs) {
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
+    1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;
+
+    mdl_idx <- top_coefs[vrbl_name_unlag == "smorc_dollar_fxm" & cbn_name == "cbn1",
+                         .SD[which.max(log_likelihood), mdl_id]]
+
+    regspecx <- get_reg_spec_from_id(mdl_idx, fldr_info)
+
+    smorc_vrbl <- keep(regspecx$mdl_vars, ~grepl("smorc_dollar_fxm_lag", .x))
+    smorc_vrbl_sqrd <- keep(regspecx$mdl_vars, ~grepl("smorc_dollar_fxm_sqrd_lag", .x))
+    smorc_scale <- scale(chuck(cbn_dfs_rates_uscld$cbn1, smorc_vrbl))
+
+    dfx <- chuck(cbn_df_dict, "rates", chuck(regspecx, "cfg", "cbn_name"))
+    iv_vars <- keep(setdiff(regspecx$mdl_vars, vvs$base_vars), ~!grepl("^SP\\.POP\\.TOTLm", .x))
+
+    fx <- gen_r_f("rates", iv_vars)
+    
+    ## generate model
+    rx <- glmmTMB(fx, dfx, family = nbinom1)
+
+    dt_smorc_pred <- expand.grid(
+        smorc_vrbl = seq(round(min(smorc_scale),2),
+                         round(max(smorc_scale)/2,2), 0.05)) %>% adt() %>%
+        .[, smorc_vrbl_sqrd := smorc_vrbl^2] %>%
+        setnames(old = c("smorc_vrbl", "smorc_vrbl_sqrd"), new = c(smorc_vrbl, smorc_vrbl_sqrd)) %>%
+        .[, (setdiff(iv_vars, c(smorc_vrbl, smorc_vrbl_sqrd))) := 0] %>%
+        .[, `:=`(iso3c = "asdf", SP_POP_TOTLm_lag0_uscld = 100)]
+
+    dt_smorc_pred[, c("pred", "se") :=  map(predict(rx, dt_smorc_pred, se.fit = T), ~.x)] %>% 
+        .[, (smorc_vrbl) := attr(smorc_scale, "scaled:center") +
+                attr(smorc_scale, "scaled:scale")*get(smorc_vrbl)]
+
+    dt_smorc_pred %>% copy() %>%
+        .[, `:=`(min = pred - 1.96 * se, max = pred + 1.96 * se)] %>% 
+        ggplot(aes(x=get(smorc_vrbl), y=pred)) +
+        geom_ribbon(mapping = aes(ymin = min, ymax = max),
+                    linetype = "dashed",
+                    color = "black",
+                    alpha = 0.15, show.legend = F) +
+        geom_line(linewidth = 1.5) +
+        labs(y=NULL, x= "Gvt Cultural Spending (2021 USD)") +
+        theme_bw() +
+        theme_orgpop()
+    
+
+}
+    
+## gen_plt_pred_smorc(reg_res_objs$top_coefs)
 
 gen_plt_lag_dens <- function(top_coefs) {
     #' violin plot of lags
@@ -1959,6 +2020,7 @@ gen_reg_res_plts <- function(reg_res_objs, vvs, NBR_MDLS, only_priority_plts, st
         plt_best_coefs_single = gen_plt_best_coefs_single(top_coefs),
         plt_best_coefs_single_cbn1 = gen_plt_best_coefs_single_cbn1(top_coefs),
         plt_pred_taxinc = gen_plt_pred_taxinc(top_coefs),
+        plt_pred_smorc = gen_plt_pred_smorc(top_coefs),
         plt_lag_dens = gen_plt_lag_dens(top_coefs),
         plt_oneout_coefs = gen_plt_oneout_coefs(ou_anls, top_coefs_llrt),
         plt_oneout_llrt_z = gen_plt_oneout_llrt_z(ou_anls),
@@ -2065,10 +2127,12 @@ gen_plt_cfgs <- function() {
                                             "(Gaussian kernel density estimate; bandwidth = 0.1)")),
             plt_velp = list(filename = "velp.pdf", width = 24, height = 16,
                             caption = "Results of regressing longitudinal variables on year"),
-            plt_cntrfctl = list(filename = "cntrfctl.pdf", width = 16, height = 12,
+            plt_cntrfctl = list(filename = "cntrfctl.pdf", width = 19, height = 11,
                                 caption = "Counterfactual simulations"),
             plt_pred_taxinc = list(filename = "pred_taxinc.pdf", width = 14, height = 7.5,
-                            caption = "asdf"),
+                                   caption = "asdf"),
+            plt_pred_smorc = list(filename = "pred_smorc.pdf", width = 14, height = 7.5,
+                            caption = "smorc smorc"),
             plt_oucoefchng = list(filename = "oucoefchng.pdf", width = 24, height = 12,
                                   caption = "Coefficient changes given addition of other variables"),
             plt_oucoefchng_tile = list(filename = "oucoefchng_tile.pdf", width = 24, height = 12,
@@ -3146,10 +3210,12 @@ reg_res <- list()
 ## generate plots, construct configs
 reg_res$plts <- gen_reg_res_plts(reg_res_objs, vvs, NBR_MDLS, only_priority_plts = T, stylecfg)
 
-reg_res$plts$plt_pred_taxinc <- gen_plt_pred_taxinc(reg_res_objs$top_coefs)
-## reg_res$plts$plt_cntrfctl <- gen_plt_cntrfctl(reg_res_objs$dt_cntrfctl_cons, reg_res_objs$dt_cntrfctl_wse)
-render_reg_res("plt_pred_taxinc", reg_res, batch_version = "v88")
+## nreg_res$plts$plt_best_coefs_single_cbn1 <- gen_plt_best_coefs_single_cbn1(reg_res_objs$top_coefs)
+reg_res$plts$plt_cntrfctl <- gen_plt_cntrfctl(reg_res_objs$dt_cntrfctl_cons, reg_res_objs$dt_cntrfctl_wse)
+render_reg_res("plt_cntrfctl", reg_res, batch_version = "v88")
 
+
+gen_plt_best_coefs_single
 
 ## reg_res$plts$plt_oucoefchng_tile <- gen_plt_oucoefchng_tile(reg_res_objs$dt_oucoefchng)
 ## render_reg_res("plt_oucoefchng_tile", reg_res, batch_version = "v75")
@@ -3157,8 +3223,9 @@ render_reg_res("plt_pred_taxinc", reg_res, batch_version = "v88")
 plt_inspector(reg_res$plts)
 ## reg_res$plts$plt_oneout_llrt_z
 
+## regenerate and render all plots
+reg_res$plts <- gen_reg_res_plts(reg_res_objs, vvs, NBR_MDLS, only_priority_plts = T, stylecfg)
 purrr::map(names(reg_res$plts), ~render_reg_res(.x, reg_res, batch_version = batch_version))
-
 ## only render those plots that are generated (not all version plots)
 pdftk_cmd <- sprintf("cd %s && pdftk %s output plts_%s.pdf", FIG_DIR,
                      paste0(paste0("plt_", batch_version, "_", gsub("plt_", "", names(reg_res$plts)), ".pdf"),
