@@ -1,4 +1,5 @@
 #+TITLE: Testing theories of private museum founding
+#+email: j.aengenheyster@uva.nl
 
 # #+DATE: 2023-06-15 do
 
@@ -22,22 +23,60 @@
 
 
 
-* overview
+* Overview
 
-** Private museums
 
-NWO-funded
 
+** examples
+#+attr_latex: :height 7cm
+[[file:pres_imgs/broad.png]]
+
+
+** examples 
+#+attr_latex: :height 7cm
+[[file:pres_imgs/crystal_bridges.jpg]]
+
+
+** examples
+#+attr_latex: :height 7cm
+[[file:pres_imgs/sammlung-boros-boros.jpg]]
+
+** examples
+#+attr_latex: :height 7cm
+[[file:pres_imgs/bourse_de_commerce_pinault_paris-scaled.jpg]]
+
+** examples
+#+attr_latex: :height 7cm
+[[file:pres_imgs/Instituto_Inhotim_(7).jpg]]
+
+
+** Research Project
+
+Art consumption reflecting larger social trends
+- early modern period: Medici
+- 19/20th century: nation building
+- post-war: welfare state
+- now: new gilded age? 
+
+
+** Research Project
+
+Art consumption reflecting larger social trends
+- early modern period: Medici
+- 19/20th century: nation building
+- post-war: welfare state
+- now: new gilded age? 
+
+#+latex: \vspace{0.5cm}
+
+
+NWO project at UvA: 
 - Olav Velthuis
-- Kristina Kolbe
 - Andrea Friedman Rozenbaum
+- Johannes Aengenheyster
+- Kristina Kolbe
 - Mingxue Zhang
 - Marton Gera
-
-
-[[file:pres_imgs/v1_plt_opng_line_glbl.pdf]]
-
-
 
 
 
@@ -49,31 +88,31 @@ NWO-funded
 - accessible
 - modern/contemporary art (created since 1900)
 
+-> around 450 private museums open in 2023  
+
+
+** Foundings
+
+[[file:pres_imgs/v1_plt_opng_line_glbl.pdf]]
+
+
 ** website
-*** website :B_frame:
-:PROPERTIES:
-:BEAMER_env: frame
-:END:
+
 
 https://privatemuseumresearch.org/
 
 #+ATTR_LaTeX: :width 12cm
 file:pres_imgs/map.png
 
-*** website :B_frame:
-:PROPERTIES:
-:BEAMER_env: frame
-:END:
+** website 
 
 https://privatemuseumresearch.org/
 
 #+ATTR_LaTeX: :width 12cm
 file:pres_imgs/map_male.png
 
-*** website :B_frame:
-:PROPERTIES:
-:BEAMER_env: frame
-:END:
+** website
+
 
 https://privatemuseumresearch.org/
 
@@ -85,6 +124,7 @@ Why are private museums founded?
 
 
 
+* Hypotheses
 ** Hypotheses
 *** H1: Tax Incentives
 reduce taxable income/tax owed -> reduce net cost [[parencite:&Peloza_Steel_2005_elasticities;&Walker_2019_collector;&Hemels_2017_incentives]]
@@ -153,7 +193,7 @@ Substantial resources required [[parencite:&Gnyp_2015_shift;&Zorloni_Resch_2016_
 Country-years
 number of openings
 
-~80%: 0 openings
+~80% of CYs: 0 openings
 
 
 [[file:pres_imgs/v1_plt_opng_line_glbl.pdf]]
@@ -195,7 +235,7 @@ number of openings
 | Museum population              | Number of modern/    | Museums of the    |
 |                                | contemp. art museums | World Database    |
 | Density: Legitimacy            | Number of PMs open   | PM Database       |
-| Density Competition            | Number of PMs open^2 | PM Database       |
+| Density: Competition           | Number of PMs open^2 | PM Database       |
 |--------------------------------+----------------------+-------------------|
 
 
@@ -233,6 +273,13 @@ mostly 2000-2020
 #+attr_latex: width 14cm
 [[file:figures/plt_v88_pred_taxinc.pdf]]
 
+
+** Regression results
+
+#+attr_latex: :width 14cm
+[[file:figures/plt_v88_best_coefs_single_cbn1.pdf]]
+
+
 ** Cultural Spending
 
 #+attr_latex: width 14cm
@@ -244,12 +291,45 @@ mostly 2000-2020
 [[file:figures/plt_v88_best_coefs_single_cbn1.pdf]]
 
 
-** Conclusion
+** Income Inequality
 
-** Conclusion
-Thanks for your attention! any questions?
+#+attr_latex: :width 14cm
+[[file:figures/plt_v88_pred_ptinc.pdf]]
 
-j.aengenheyster@uva.nl
+** Wealth Inequality
+#+attr_latex: :width 14cm
+[[file:figures/plt_v88_pred_hweal.pdf]]
+
+
+
+
+** Regression results
+
+#+attr_latex: :width 14cm
+[[file:figures/plt_v88_best_coefs_single_cbn1.pdf]]
+
+** HNWIs
+
+#+attr_latex: :width 14cm
+[[file:figures/plt_v88_pred_hnwi.pdf]]
+
+
+
+** Regression results
+
+#+attr_latex: :width 14cm
+[[file:figures/plt_v88_best_coefs_single_cbn1.pdf]]
+
+# ** Conclusion
+
+# Do private museums reflect wider social trends? it depends!
+
+
+
+** Thanks!
+Thanks for your attention!
+
+
 
 
 
@@ -258,7 +338,7 @@ j.aengenheyster@uva.nl
 :BEAMER_opt: allowframebreaks,label=
 :END:
 #+Latex: \printbibliography
-** Extra slides
+* Extra slides
 ** all datasets + variables
 
 [[file:figures/plt_v88_best_coefs_single.pdf]]
@@ -271,3 +351,21 @@ j.aengenheyster@uva.nl
 ** counterfactual
 
 [[file:figures/plt_v88_cntrfctl.pdf]]
+
+
+** development
+
+[[file:figures/plt_v88_velp.pdf]]
+
+
+** coef violin
+
+#+attr_latex: :width 8cm
+[[file:figures/plt_v88_coef_violin.pdf]]
+** one out
+[[file:figures/plt_v88_oucoefchng.pdf]]
+
+
+
+
+

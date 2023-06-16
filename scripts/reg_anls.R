@@ -1640,7 +1640,10 @@ gen_plt_pred_taxinc <- function(top_coefs) {
                     linetype = 2) + 
         geom_line(linewidth = 1.5, show.legend = F) +
         coord_cartesian(ylim = c(-2, 2)) +
-        labs(y=NULL, x= "Top Marginal Income Tax Rate (%)") +
+        scale_y_continuous(labels = trans_format("exp", \(x) format(x, scientific = F, digits = 2))) + 
+            ## breaks = trans_breaks("exp", \(x) log(x))) + 
+        ## coord_cartesian(ylim = c(0, 6)) +
+        labs(y="Number of Foundings", x= "Top Marginal Income Tax Rate (%)") +
         geom_text(head(copy(dt_ti_pred)[get(tmitr_vrbl) > 55],2)[
           , lbl := fifelse(Ind.tax.incentives == 0,
                            paste0("donations not tax deductible"),
@@ -1700,14 +1703,142 @@ gen_plt_pred_smorc <- function(top_coefs) {
                     color = "black",
                     alpha = 0.15, show.legend = F) +
         geom_line(linewidth = 1.5) +
-        labs(y=NULL, x= "Gvt Cultural Spending (2021 USD)") +
+        labs(y="Number of foundings", x= "Gvt Cultural Spending (2021 USD)") +
+        scale_y_continuous(labels = trans_format("exp", \(x) format(x, scientific = F, nsmall = 0, digits = 1))) + 
         theme_bw() +
         theme_orgpop()
     
 
 }
     
+format2 <- format
 ## gen_plt_pred_smorc(reg_res_objs$top_coefs)
+
+predder <- function(mdl_id, vrbl) {
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
+    1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;
+
+    
+    vrbl_scale <- scale(chuck(cbn_dfs_rates_uscld$cbn1, vrbl))
+
+    regspecx <- get_reg_spec_from_id(mdl_id, fldr_info)
+
+    dfx <- chuck(cbn_df_dict, "rates", chuck(regspecx, "cfg", "cbn_name"))
+    iv_vars <- keep(setdiff(regspecx$mdl_vars, vvs$base_vars), ~!grepl("^SP\\.POP\\.TOTLm", .x))
+
+    fx <- gen_r_f("rates", iv_vars)
+
+    rx <- glmmTMB(fx, dfx, family = nbinom1)
+
+    dt_pred <- expand.grid(vrbl = seq(min(vrbl_scale), max(vrbl_scale), by = 0.05)) %>% adt() %>% 
+        setnames(old = "vrbl", new = vrbl) %>%
+        .[, (setdiff(iv_vars, vrbl)) := 0] %>%
+        .[, `:=`(iso3c = "asdf", SP_POP_TOTLm_lag0_uscld = 100)]
+
+    
+    dt_pred %>% copy() %>% .[, c("pred", "se") :=  map(predict(rx, dt_pred, se.fit = T), ~.x)] %>% 
+        .[, xvlu := attr(vrbl_scale, "scaled:center") +
+                attr(vrbl_scale, "scaled:scale")*get(vrbl)] %>%
+        .[, .(xvlu, pred, se, vrbl = vrbl)]
+
+        
+    
+}
+
+
+
+gen_plt_pred_ptinc <- function(top_coefs) {
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
+    1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;
+
+    ## mdl_idx <-
+    dt_ptinc_mdls <- top_coefs[cbn_name == "cbn1" & vrbl_name_unlag %in% c("sptinc992j_p90p100",
+                                                                           "sptinc992j_p99p100",
+                                                                           "gptinc992j"),
+              .SD[which.max(log_likelihood), .(mdl_id, vrbl_name)], vrbl_name_unlag]
+
+
+    predder(dt_ptinc_mdls$mdl_id[1], dt_ptinc_mdls$vrbl_name[1])
+    
+    dt_ptinc_pred <- dt_ptinc_mdls[, predder(mdl_id, as.character(vrbl_name)), vrbl_name_unlag]
+
+    dt_ptinc_pred %>% 
+        ggplot(aes(x=xvlu, y=pred)) + geom_line() +
+        geom_ribbon(mapping = aes(ymin = pred - 1.96*se, ymax = pred + 1.96*se), alpha = 0.15,
+                    color = "black", linetype = "dashed") + 
+        facet_grid(~vrbl_name_unlag, scales = "free",
+                   labeller = as_labeller(addline_format(vvs$vrbl_lbls))) +
+        scale_y_continuous(labels = trans_format("exp", \(x) format(x, scientific = F, nsmall = 0, digits = 1))) + 
+        theme_bw() +
+        theme_orgpop() +
+        labs(x=NULL, y="Number of foundings")
+
+
+
+}
+
+## gen_plt_pred_ptinc(reg_res_objs$top_coefs)
+
+
+gen_plt_pred_hweal <- function(top_coefs) {
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
+    1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;
+
+    ## mdl_idx <-
+    dt_hweal_mdls <- top_coefs[cbn_name == "cbn1" & vrbl_name_unlag %in% c("shweal992j_p90p100",
+                                                                           "shweal992j_p99p100",
+                                                                           "ghweal992j"),
+              .SD[which.max(log_likelihood), .(mdl_id, vrbl_name)], vrbl_name_unlag]
+
+
+    predder(dt_hweal_mdls$mdl_id[1], dt_hweal_mdls$vrbl_name[1])
+    
+    dt_hweal_pred <- dt_hweal_mdls[, predder(mdl_id, as.character(vrbl_name)), vrbl_name_unlag]
+
+    dt_hweal_pred %>% 
+        ggplot(aes(x=xvlu, y=pred)) + geom_line() +
+        geom_ribbon(mapping = aes(ymin = pred - 1.96*se, ymax = pred + 1.96*se), alpha = 0.15,
+                    color = "black", linetype = "dashed") + 
+        facet_grid(~vrbl_name_unlag, scales = "free",
+                   labeller = as_labeller(addline_format(vvs$vrbl_lbls))) +
+        scale_y_continuous(labels = trans_format("exp", \(x) format(x, scientific = F, nsmall = 0, digits = 1))) + 
+        theme_bw() +
+        theme_orgpop() +
+        labs(x=NULL, y="Number of foundings")
+
+}
+
+## gen_plt_pred_hweal(reg_res_objs$top_coefs)
+
+gen_plt_pred_hnwi <- function(top_coefs) {
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
+    1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;
+
+    ## mdl_idx <-
+    dt_hnwi_mdls <- top_coefs[cbn_name == "cbn1" & vrbl_name_unlag %in% c("hnwi_nbr_5M", "hnwi_nbr_1M",
+                                                                           "hnwi_nbr_30M", "hnwi_nbr_200M"),
+              .SD[which.max(log_likelihood), .(mdl_id, vrbl_name)], vrbl_name_unlag]
+
+
+    predder(dt_hnwi_mdls$mdl_id[1], dt_hnwi_mdls$vrbl_name[1])
+    
+    dt_hnwi_pred <- dt_hnwi_mdls[, predder(mdl_id, as.character(vrbl_name)), vrbl_name_unlag]
+
+    dt_hnwi_pred %>% 
+        ggplot(aes(x=xvlu, y=pred)) + geom_line() +
+        geom_ribbon(mapping = aes(ymin = pred - 1.96*se, ymax = pred + 1.96*se), alpha = 0.15,
+                    color = "black", linetype = "dashed") + 
+        facet_grid(~vrbl_name_unlag, scales = "free",
+                   labeller = as_labeller(addline_format(vvs$vrbl_lbls))) +
+        scale_y_continuous(labels = trans_format("exp", \(x) format(x, scientific = F, nsmall = 0, digits = 1))) + 
+        theme_bw() +
+        theme_orgpop() +
+        labs(x=NULL, y="Number of foundings")
+
+}
+
+## gen_plt_pred_hnwi(reg_res_objs$top_coefs)
+
 
 gen_plt_lag_dens <- function(top_coefs) {
     #' violin plot of lags
@@ -2021,6 +2152,9 @@ gen_reg_res_plts <- function(reg_res_objs, vvs, NBR_MDLS, only_priority_plts, st
         plt_best_coefs_single_cbn1 = gen_plt_best_coefs_single_cbn1(top_coefs),
         plt_pred_taxinc = gen_plt_pred_taxinc(top_coefs),
         plt_pred_smorc = gen_plt_pred_smorc(top_coefs),
+        plt_pred_ptinc = gen_plt_pred_ptinc(top_coefs),
+        plt_pred_hweal = gen_plt_pred_hweal(top_coefs),
+        plt_pred_hnwi = gen_plt_pred_hnwi(top_coefs),
         plt_lag_dens = gen_plt_lag_dens(top_coefs),
         plt_oneout_coefs = gen_plt_oneout_coefs(ou_anls, top_coefs_llrt),
         plt_oneout_llrt_z = gen_plt_oneout_llrt_z(ou_anls),
@@ -2132,7 +2266,13 @@ gen_plt_cfgs <- function() {
             plt_pred_taxinc = list(filename = "pred_taxinc.pdf", width = 14, height = 7.5,
                                    caption = "asdf"),
             plt_pred_smorc = list(filename = "pred_smorc.pdf", width = 14, height = 7.5,
-                            caption = "smorc smorc"),
+                                  caption = "smorc smorc"),
+            plt_pred_ptinc = list(filename = "pred_ptinc.pdf", width = 14, height = 7.5,
+                                  caption = "ptinc"),
+            plt_pred_hweal = list(filename = "pred_hweal.pdf", width = 14, height = 7.5,
+                                  caption = "hweal"),
+            plt_pred_hnwi = list(filename = "pred_hnwi.pdf", width = 18, height = 7.5,
+                            caption = "hweal"),
             plt_oucoefchng = list(filename = "oucoefchng.pdf", width = 24, height = 12,
                                   caption = "Coefficient changes given addition of other variables"),
             plt_oucoefchng_tile = list(filename = "oucoefchng_tile.pdf", width = 24, height = 12,
@@ -3212,7 +3352,7 @@ reg_res$plts <- gen_reg_res_plts(reg_res_objs, vvs, NBR_MDLS, only_priority_plts
 
 ## nreg_res$plts$plt_best_coefs_single_cbn1 <- gen_plt_best_coefs_single_cbn1(reg_res_objs$top_coefs)
 reg_res$plts$plt_cntrfctl <- gen_plt_cntrfctl(reg_res_objs$dt_cntrfctl_cons, reg_res_objs$dt_cntrfctl_wse)
-render_reg_res("plt_cntrfctl", reg_res, batch_version = "v88")
+render_reg_res("plt_pred_hnwi", reg_res, batch_version = "v88")
 
 
 gen_plt_best_coefs_single
