@@ -783,26 +783,37 @@ run_glmmtmb <- function(dfx, dvfmt, r_vars, verbose) {
     ## rx_glmmtmb3 <- glmmTMB(fx, dfx, family = nbinom1, verbose = F, dispformula = ~iso3c)
     ## rx_glmmtmb4 <- glmmTMB(fx4, dfx, family = nbinom1, verbose = F, dispformula = ~iso3c)
 
-    ## try fixest, but can only estimate fixed effects (
+    ## ## try fixest, but can only estimate fixed effects (
     ## xx <- fenegbin(nbr_opened ~ Ind.tax.incentives + cnt_contemp_1990 + cnt_contemp_1990_sqrd + 
-    ##              hnwi_nbr_200M_lag4 + sptinc992j_p99p100_lag2 + shweal992j_p99p100_lag3 + 
-    ##              NY.GDP.PCAP.CDk_lag5 + clctr_cnt_cpaer_lag5 + pm_density_lag4 + 
-    ##              pm_density_sqrd_lag4 + pm_density_global_lag3 + pm_density_global_sqrd_lag3 + 
-    ##              nbr_closed_cum_global_lag4 + offset(log(SP_POP_TOTLm_lag0_uscld)) | iso3c,
+    ##                    hnwi_nbr_5M_lag5 + gptinc992j_lag5 + ghweal992j_lag4 + tmitr_approx_linear20step_lag5 + 
+    ##                    ti_tmitr_interact_lag5 + NY.GDP.PCAP.CDk_lag4 + clctr_cnt_cpaer_lag1 + 
+    ##                    pm_density_lag2 + pm_density_sqrd_lag2 + pm_density_global_lag3 + 
+    ##                    pm_density_global_sqrd_lag3 + nbr_closed_cum_global_lag2 + 
+    ##                    offset(log(SP_POP_TOTLm_lag0_uscld)) | iso3c,
     ##          panel.id = c("iso3c", "year"),
     ##          ## data = adt(dfx)[, nbr_opened_sum := sum(nbr_opened)]
-    ##          data = adt(dfx)[, `:=`(nbr_opened_sum = sum(nbr_opened)), iso3c][nbr_opened_sum > 0]
+    ##          data = adt(dfx) #[, `:=`(nbr_opened_sum = sum(nbr_opened)), iso3c][nbr_opened_sum > 0]
     ##          )
-             
-    ## femlm(nbr_opened ~ Ind.tax.incentives + cnt_contemp_1990 + cnt_contemp_1990_sqrd + 
-    ##              hnwi_nbr_200M_lag4 + sptinc992j_p99p100_lag2 + shweal992j_p99p100_lag3 + 
-    ##              NY.GDP.PCAP.CDk_lag5 + clctr_cnt_cpaer_lag5 + pm_density_lag4 + 
-    ##              pm_density_sqrd_lag4 + pm_density_global_lag3 + pm_density_global_sqrd_lag3 + 
-    ##              nbr_closed_cum_global_lag4 + offset(log(SP_POP_TOTLm_lag0_uscld)) | iso3c,
-    ##       panel.id = c("iso3c", "year"),
-    ##       family = "negbin",
-    ##       data = dfx)
 
+                 
+    ## femlm(nbr_opened ~ gptinc992j_lag5 + hnwi_nbr_5M_lag5 | iso3c, # cnt_contemp_1990, # cnt_contemp_1990_sqrd,
+    ##           # hnwi_nbr_5M_lag5 +
+    ##           # gptinc992j_lag5 +
+    ##           # ghweal992j_lag4 +
+    ##           # tmitr_approx_linear20step_lag5 + 
+    ##                    ## ti_tmitr_interact_lag5 + NY.GDP.PCAP.CDk_lag4 + clctr_cnt_cpaer_lag1 + 
+    ##                    ## pm_density_lag2 + pm_density_sqrd_lag2 + pm_density_global_lag3 + 
+    ##                    ## pm_density_global_sqrd_lag3 + nbr_closed_cum_global_lag2 + 
+    ##           ## panel.id = c("iso3c", "year"),
+    ##       family = "poisson",
+    ##       fixef.iter = 10000000,
+    ##       ## verbose = 1,
+    ##       data = dfx) 
+    ## no kind of fixest model will work because
+    ## 1. it removes countries with all 0s
+    ## 2. time invariant variables can't be included (colinear with country dummies)
+
+    ## offset(log(SP_POP_TOTLm_lag0_uscld))
     
     ## df.residual
     ## library(parameters)
