@@ -528,14 +528,14 @@ gen_plt_velp <- function(dt_velp_crycoefs, dt_velp_scalars) {
     hnwi_cols <- paste0(vvs$hnwi_vars, "_lag0")
     
     
-    imap_dfr(cbn_dfs_counts_uscld[1:3],
-         ~adt(.x) %>% .[, .SD, .SDcols = c("iso3c", hnwi_cols)] %>% 
-             rbind(.[, lapply(.SD, \(x) sum(x== 0)), .SDcols = hnwi_cols][, `:=`(measure = "CY", cbn_name = .y)],
-                   .[, lapply(.SD, \(x) all(x==0)), iso3c][, lapply(.SD, sum), .SDcols = hnwi_cols][
-                     , `:=`(measure = "cry", cbn_name = .y)],
-                   fill = T) %>% tail(2)) %>% # dt gets piped into rbind call -> has to be filtered out by tail
-        .[, iso3c := NULL] %>% ## iso3c is leftover from original loop, needs to be yeeted
-        melt(id.vars = c("measure", "cbn_name")) %>% dcast.data.table(variable + cbn_name ~ measure)
+    ## imap_dfr(cbn_dfs_counts_uscld[1:3],
+    ##      ~adt(.x) %>% .[, .SD, .SDcols = c("iso3c", hnwi_cols)] %>% 
+    ##          rbind(.[, lapply(.SD, \(x) sum(x== 0)), .SDcols = hnwi_cols][, `:=`(measure = "CY", cbn_name = .y)],
+    ##                .[, lapply(.SD, \(x) all(x==0)), iso3c][, lapply(.SD, sum), .SDcols = hnwi_cols][
+    ##                  , `:=`(measure = "cry", cbn_name = .y)],
+    ##                fill = T) %>% tail(2)) %>% # dt gets piped into rbind call -> has to be filtered out by tail
+    ##     .[, iso3c := NULL] %>% ## iso3c is leftover from original loop, needs to be yeeted
+    ##     melt(id.vars = c("measure", "cbn_name")) %>% dcast.data.table(variable + cbn_name ~ measure)
         
     
     
@@ -597,6 +597,8 @@ gen_plt_velp <- function(dt_velp_crycoefs, dt_velp_scalars) {
     ## stat_binline
     
 }
+
+## gen_plt_velp(reg_res_objs$dt_velp_crycoefs, reg_res_objs$dt_velp_scalars)
 
 ## gen_res_velps(cbn_dfs_rates)
 
@@ -3348,7 +3350,7 @@ debug_hnwi5m <- function(top_coefs) {
     
     ## potentially modify
     rgspc_cbn2$cfg$cbn_name <- "cbn1"
-    rgspc_cbn2$mdl_vars <- c(rgspc_cbn2$mdl_vars, c("smorc_dollar_fxm_lag3", "smorc_dollar_fxm_sqrd_lag3"))
+    ## rgspc_cbn2$mdl_vars <- c(rgspc_cbn2$mdl_vars, c("smorc_dollar_fxm_lag3", "smorc_dollar_fxm_sqrd_lag3"))
 
     res_cbn2 <- run_vrbl_mdl_vars(rgspc_cbn2, vvs, fldr_info, verbose = F, wtf = F, return_objs = "res_parsed")
 
@@ -3379,7 +3381,7 @@ debug_hnwi5m <- function(top_coefs) {
     ## generate formula
     fx <- gen_r_f("rates", iv_vars)
     ## generate model 
-    rx <- glmmTMB(fx, cbn_dfs_rates$cbn2, family = nbinom1)
+    rx <- glmmTMB(fx, filter(cbn_dfs_rates$cbn2, iso3c %!in% c("CYP", "SVK", "GEO", "MDA")), family = nbinom1)
 
     library(DHARMa)
     
@@ -3428,7 +3430,7 @@ debug_hnwi5m <- function(top_coefs) {
 
 }
 
-## debug_hnwi5m(reg_res_objs$top_coefs)
+debug_hnwi5m(reg_res_objs$top_coefs)
 
 
 theme_orgpop <- function(extra_space_top=2) {

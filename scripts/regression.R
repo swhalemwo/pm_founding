@@ -3050,13 +3050,25 @@ gen_res_velps <- function(cbn_dfs_rates, fldr_info) {
         .[nbr_nas == 0] %>% ## filter out variables with missings (for datasets)
         .[, vrbl := gsub("_lag[0-5]", "", vrbl)]
 
+    ## ## log some variables
+    ## vrbls_tolog <- keep(unique(dtx_splong$vrbl), ~grepl("hnwi_nbr_", .x) | grepl("smorc", .x) |
+    ##                                                  .x == "NY.GDP.PCAP.CDk")
+
+    ## ## actually log variables: first move to positive range, than log, than scale again
+    ## dtx_splong[vrbl %in% vrbls_tolog, value := scale(log((value - min(value)) + 0.001)), .(vrbl, cbn_name)]
+
+    ## ## check that logging werks
+    ## dtx_splong[vrbl == "hnwi_nbr_5M" & cbn_name == "cbn2" & iso3c %in% c("DEU", "FRA", "USA", "CHE")] %>%
+    ##     atb() %>% viz_lines(y="value")
+
+
     ## split into separate dts
     dtx_split <- copy(dtx_splong) %>%
         .[, year := year - min(year)] %>% # set min to 1995 (or min year for proper correlations)
         split(by = c("vrbl", "cbn_name"), drop = T)
 
     ## generate overall results
-     l_velpres <- lapply(dtx_split, reg_helper_rscor)
+    l_velpres <- lapply(dtx_split, reg_helper_rscor)
 
     
     ## collect results into separate dts
@@ -3071,6 +3083,8 @@ gen_res_velps <- function(cbn_dfs_rates, fldr_info) {
         ## vvs$hyp_mep_dt[., on = "vrbl"] %>% 
         ## .[, vrbl := factor(vrbl, levels = rev(names(vvs$vrbl_lbls)))]
 
+    ## gen_plt_velp(dt_velp_crycoefs, dt_velp_scalars)
+
     ## write to file
     fwrite(dt_velp_crycoefs, paste0(fldr_info$BATCH_DIR, "dt_velp_crycoefs.csv"))
     fwrite(dt_velp_scalars, paste0(fldr_info$BATCH_DIR, "dt_velp_scalars.csv"))
@@ -3082,6 +3096,8 @@ gen_res_velps <- function(cbn_dfs_rates, fldr_info) {
     ##     .[cbn_name == "cbn_all" & vrbl =="hnwi_nbr_1M"] %>%
     ##     reg_helper_rscor()
 }
+
+## gen_res_velps(cbn_dfs_rates, fldr_info_optmz)
 
 
 gen_nolag <- function(fldr_info, gof_df_cbn) {
@@ -3145,7 +3161,7 @@ postestimation <- function(fldr_info) {
     ## compare_r_stata(gof_df_cbn)
     
     gen_cntrfctl(gof_df_cbn, fldr_info)
-    gen_cntrfctl(reg_anls_base$gof_df_cbn, fldr_info)
+    ## gen_cntrfctl(reg_anls_base$gof_df_cbn, fldr_info)
 
     ## gen_cryexmpls(top_coefs)
 

@@ -1927,9 +1927,25 @@ gen_res_velp_tests <- function(cbn_dfs_rates) {
 
 ## ** more outlier hunting
 reg_res_objs$dt_velp_crycoefs[grepl("hnwi_nbr", vrbl)] %>%
-    .[, head(.SD[order(year)],5), .(cbn_name, vrbl)] %>%
-    ggplot(aes(x=year, y=vrbl, label = iso3c)) + geom_point() + facet_grid(~cbn_name) + geom_text_repel()
+    .[, rbind(head(.SD[order(year)],3), head(.SD[order(-year)],4)), .(cbn_name, vrbl)] %>%
+    ggplot(aes(x=year, y=vrbl, label = iso3c)) + geom_point() + facet_grid(~cbn_name) + geom_text_repel() +
+    geom_vline(xintercept = 0, linetype = "dashed")
 
-filter(cbn_dfs_rates_uscld$cbn_no_cult_spending_and_mitr, iso3c %in% c("IRL", "QAT", "SAU", "DEU")) %>%
+## filter(cbn_dfs_rates_uscld$cbn3, iso3c %in% c("IRL", "QAT", "SAU", "DEU", "USA", "CHE", "AUS")) %>%
+## filter(cbn_dfs_rates_uscld$cbn3, iso3c %in% c("NLD", "FRA", "BEL", "DEU", "CZE")) %>%
+filter(cbn_dfs_rates_uscld$cbn3, iso3c %in% c("USA", "CHE", "DEU", "AUS", "CYP")) %>% copy() %>% 
+    mutate(hnwi_nbr_5M_lag0 = log(hnwi_nbr_5M_lag0)) %>% 
     ## filter(iso3c == "SAU") %>% select(iso3c, year, hnwi_nbr_200M_lag0)
     viz_lines(y="hnwi_nbr_5M_lag0", duration = 1)
+
+
+filter(cbn_dfs_rates_uscld$cbn3, iso3c %in% sample(unique(cbn_dfs_rates_uscld$cbn3$iso3c),5)) %>%
+    viz_lines(y="hnwi_nbr_5M_lag0", duration = 1)
+
+## check countries that differ between cbn 1 and 2
+dcry_cbn12 <- setdiff(unique(cbn_dfs_rates_uscld$cbn2$iso3c), unique(cbn_dfs_rates_uscld$cbn1$iso3c))
+
+
+filter(cbn_dfs_rates_uscld$cbn2, iso3c %in% dcry_cbn12) %>%
+    mutate(region = countrycode(iso3c, "iso3c", "un.region.name")) %>%
+    viz_lines(y="hnwi_nbr_5M_lag0", facets = "region")
