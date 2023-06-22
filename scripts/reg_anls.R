@@ -3315,6 +3315,122 @@ gen_nbrs <- function(df_excl, df_open, cbn_dfs_rates, cbn_dfs_rates_uscld,  df_r
 
 }
 
+highleverage <- function(fit) {
+    p <- length(coefficients(fit))
+    n <- length(fitted(fit))
+    ratio <-p/n
+    plot(hatvalues(fit), main="Index Plot of Ratio")
+    abline(h=c(2,3)*ratio, col="red", lty=2)
+    identify(1:n, hatvalues(fit), names(hatvalues(fit)))
+}
+
+## highleverage(rx)
+
+debug_hnwi5m <- function(top_coefs) {
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
+    1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;
+
+    
+
+    dt_hnwi5m_res <- top_coefs[vrbl_name_unlag == "hnwi_nbr_5M"]
+
+    ## get the variable choice for cbn2
+    
+    ## get the vrbl_choices in wide format so that I can focus on cbn1-cbn2 contrast 
+    dt_hnwi5m_wd <- dt_hnwi5m_res[, .(vrbl_choice, coef, cbn_name)][order(cbn_name)] %>%
+        dcast.data.table(vrbl_choice ~ cbn_name, value.var = "coef")
+
+    ## get model id for model with lowest coef for hnwi5 for cbn2
+    mdl_id_cbn2 <- dt_hnwi5m_wd[cbn1 > 0, .SD[which.min(cbn2), .(vrbl_choice)]] %>%
+        dt_hnwi5m_res[. , on = "vrbl_choice"] %>% .[cbn_name == "cbn2", mdl_id]
+
+    rgspc_cbn2 <- get_reg_spec_from_id(mdl_id_cbn2, fldr_info)
+    
+    ## potentially modify
+    rgspc_cbn2$cfg$cbn_name <- "cbn1"
+    rgspc_cbn2$mdl_vars <- c(rgspc_cbn2$mdl_vars, c("smorc_dollar_fxm_lag3", "smorc_dollar_fxm_sqrd_lag3"))
+
+    res_cbn2 <- run_vrbl_mdl_vars(rgspc_cbn2, vvs, fldr_info, verbose = F, wtf = F, return_objs = "res_parsed")
+
+    ## get model for cbn1
+    mdl_id_cbn1 <- dt_hnwi5m_wd[cbn1 > 0, .SD[which.min(cbn2), .(vrbl_choice)]] %>%
+        dt_hnwi5m_res[. , on = "vrbl_choice"] %>% .[cbn_name == "cbn1", mdl_id]
+
+    rgspc_cbn1 <- get_reg_spec_from_id(mdl_id_cbn1, fldr_info)
+
+    res_cbn1 <- run_vrbl_mdl_vars(rgspc_cbn1, vvs, fldr_info, verbose = F, wtf = F, return_objs = "res_parsed")
+
+    ## rbind(
+    rbind(
+        res_cbn2$res_parsed$coef_df %>% adt() %>%
+        .[grepl("_lag[1-5]", vrbl_name), lag := as.numeric(substring(str_extract(vrbl_name, "_lag(\\d+)"), 5))] %>%
+        .[, vrbl_name_unlag := gsub("_lag[1-5]", "", vrbl_name)] %>%
+        melt(id.vars = "vrbl_name_unlag", measure.vars = c("coef", "se", "lag"), variable.name = "measure") %>%
+        .[, src := "cbn2"], 
+        res_cbn1$res_parsed$coef_df %>% adt() %>%
+        .[grepl("_lag[1-5]", vrbl_name), lag := as.numeric(substring(str_extract(vrbl_name, "_lag(\\d+)"), 5))] %>%
+        .[, vrbl_name_unlag := gsub("_lag[1-5]", "", vrbl_name)] %>%
+        melt(id.vars = "vrbl_name_unlag", measure.vars = c("coef", "se", "lag"), variable.name = "measure") %>%
+        .[, src := "cbn1"]) %>%
+        dcast.data.table(vrbl_name_unlag ~ measure + src) %>%
+        .[, lag_diff := lag_cbn2 - lag_cbn1]
+
+    iv_vars <- keep(setdiff(rgspc_cbn2$mdl_vars, vvs$base_vars), ~!grepl("^SP\\.POP\\.TOTLm", .x))
+    ## generate formula
+    fx <- gen_r_f("rates", iv_vars)
+    ## generate model 
+    rx <- glmmTMB(fx, cbn_dfs_rates$cbn2, family = nbinom1)
+
+    library(DHARMa)
+    
+    simul_resid <- simulateResiduals(rx, n = 1000)
+                                     
+    ## simul_resid2 <- simulateResiduals(rx, n = 100, refit = T) # doesn't work 
+    plot(simul_resid)
+
+    plotResiduals(simul_resid, form = cbn_dfs_rates$cbn2$hnwi_nbr_5M_lag5, quantreg = T, rank = F)
+
+    dt_dharma <- cbn_dfs_rates$cbn2 %>% adt() %>% .[, c("iso3c", "year", iv_vars), with = F] %>%
+        .[, c("e_scld", "e_fit") := map(c("scaledResiduals", "fittedResiduals"), ~chuck(simul_resid, .x))]
+
+    ## look at residuals values
+    dt_dharma[hnwi_nbr_5M_lag5 > 3, .N, iso3c]
+    ## compare to cbn1
+    ## cbn_dfs_rates$cbn1 %>% adt() %>% .[hnwi_nbr_5M_lag5 > 3, .N, iso3c]
+    
+    
+    
+    dt_dharma[hnwi_nbr_5M_lag5 > 3] %>%
+        ggplot(aes(x=hnwi_nbr_5M_lag5, y=e_scld, color = iso3c, size = year)) + geom_point() 
+
+    ## yeet extreme values
+    rx_cut <- glmmTMB(fx, adt(cbn_dfs_rates$cbn2)[hnwi_nbr_5M_lag5 < 3], family = nbinom1)
+    ## coef still negative
+
+
+    ## bruteforcing: dcy: delta country years: 
+    dt_dcy <- adt(cbn_dfs_rates$cbn2)[, .(iso3c, year)][adt(cbn_dfs_rates$cbn1)[, .(iso3c, year)],
+                                                        on = .(iso3c, year)]
+
+    dt_dcy_test <- dt_dcy[sample(1:.N, 50)]
+
+    dt_cyslctn <- rbind(adt(cbn_dfs_rates$cbn1)[, .(iso3c, year)], dt_dcy_test)
+
+    dtx <- adt(cbn_dfs_rates$cbn2)[dt_cyslctn, on = .(iso3c, year)]
+    
+    rx <- glmmTMB(fx, dtx, family = nbinom1)
+    
+
+    
+
+
+
+
+}
+
+## debug_hnwi5m(reg_res_objs$top_coefs)
+
+
 theme_orgpop <- function(extra_space_top=2) {
     ## pmdb theme for minimal layout
     
