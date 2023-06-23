@@ -1906,8 +1906,6 @@ optmz_reg_spec_once <- function(reg_spec, loop_nbr, vrbls_to_vary, fldr_info, re
             reg_spec$nbr_skipped_in_row <- 0
         } else {
 
-        ## } else {
-            ## cat(paste0("skip lag id: ", cur_lag_id))
             reg_spec$nbr_skipped_in_row <- reg_spec$nbr_skipped_in_row + 1
         }
         

@@ -1220,9 +1220,9 @@ gen_plt_cvrgnc <- function(gof_df_cbn) {
                base_lag_spec = paste0(cbn_name, vrbl_choice, vrbl_choice_cbn_nbr))
                ## vrbl_choice = gsub("[1-5]", "0", base_lag_spec))
 
-    cvrgnc_df_prep %>% ggplot(aes(x=gof_value)) +
-        geom_density(bw = 0.3) +
-        facet_wrap(cbn_name~., scales = "free")
+    ## cvrgnc_df_prep %>% ggplot(aes(x=gof_value)) +
+    ##     geom_density(bw = 0.3) +
+    ##     facet_wrap(cbn_name~., scales = "free")
 
 
     ## developing analysis of value-analyzing
@@ -1293,8 +1293,7 @@ gen_plt_cvrgnc <- function(gof_df_cbn) {
     
     cvrgnc_df_prep3 %>% 
         ggplot(aes(x=step, y=gof_value,
-                   group = interaction(base_lag_spec, regcmd), color = vrbl_choice,
-                   linetype =regcmd)) +
+                   group = base_lag_spec, color = vrbl_choice)) + 
         geom_line(show.legend = ifelse(adt(cvrgnc_df_prep3)[, .N, .(base_lag_spec, regcmd)][, .N] > 5, F, T),
                   linewidth = 0.3) +
         geom_point(dt_ncvrg, mapping = aes(x=step, y=gof_value), show.legend = F) +
@@ -1306,6 +1305,7 @@ gen_plt_cvrgnc <- function(gof_df_cbn) {
     
 }
 
+## gen_plt_cvrgnc(reg_res_objs$gof_df_cbn)
 
 
 
@@ -3430,7 +3430,7 @@ debug_hnwi5m <- function(top_coefs) {
 
 }
 
-debug_hnwi5m(reg_res_objs$top_coefs)
+## debug_hnwi5m(reg_res_objs$top_coefs)
 
 
 theme_orgpop <- function(extra_space_top=2) {
