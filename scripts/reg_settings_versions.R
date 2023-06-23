@@ -641,6 +641,42 @@ reg_settings_optmz <- list(
     wtf = T
 )
 
+## ** v90: test new convergence, still doesn't work properly :(
+vrbl_thld_choices_optmz <- slice_sample(vrbl_thld_choices, n=3)
+
+reg_settings_optmz <- list(
+    nbr_specs_per_thld = 4,
+    dvfmts = c("rates"), # should also be counts, but multiple dvfmts not yet supported by reg_anls
+    batch_version = "v90",
+    lags = 1:5,
+    vary_vrbl_lag = F,
+    technique_strs = c("nr"),
+    difficulty_switches = T,
+    regcmds = c("glmmTMB"),
+    ## cbns_to_include = c("cbn_all"),
+    cbns_to_include = names(cbn_dfs_counts)[1:3],
+    mdls_to_include = c("full"),
+    wtf = T
+)
+## ** v91: test full models again whether convergence works (after yeeting gulf states), still doesn't fully
+vrbl_thld_choices_optmz <- slice_sample(vrbl_thld_choices, n=36)
+
+reg_settings_optmz <- list(
+    nbr_specs_per_thld = 4,
+    dvfmts = c("rates"), # should also be counts, but multiple dvfmts not yet supported by reg_anls
+    batch_version = "v91",
+    lags = 1:5,
+    vary_vrbl_lag = F,
+    technique_strs = c("nr"),
+    difficulty_switches = T,
+    regcmds = c("glmmTMB"),
+    cbns_to_include = names(cbn_dfs_counts)[1:3],
+    mdls_to_include = c("full"),
+    wtf = T
+)
+
+
+
 
 ## * read settings back in 
 

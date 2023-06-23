@@ -1951,14 +1951,10 @@ optmz_reg_spec <- function(reg_spec, fldr_info, reg_settings) {
     
     ## run until no more improvement 
     while (T) {
-
         
         reg_spec <- optmz_reg_spec_once(reg_spec, loop_nbr = l, vrbls_to_vary, fldr_info, reg_settings)
-        
 
-        
-
-        if (reg_spec$nbr_skipped_in_row > len(vrbls_to_vary)+1) {break}
+        if (reg_spec$nbr_skipped_in_row > (len(vrbls_to_vary)*len(reg_settings$lags))+1) {break}
         l <- l+1
 
     }
@@ -3221,18 +3217,17 @@ vrbl_thld_choices <- gen_vrbl_thld_choices(vvs$hnwi_vars, vvs$inc_ineq_vars, vvs
 ##                                   inc_ineq_var == "sptinc992j_p99p100", weal_ineq_var == "shweal992j_p99p100")
 
 
-vrbl_thld_choices_optmz <- slice_sample(vrbl_thld_choices, n=3)
+vrbl_thld_choices_optmz <- slice_sample(vrbl_thld_choices, n=36)
 
 reg_settings_optmz <- list(
-    nbr_specs_per_thld = 6,
+    nbr_specs_per_thld = 4,
     dvfmts = c("rates"), # should also be counts, but multiple dvfmts not yet supported by reg_anls
-    batch_version = "v89",
+    batch_version = "v91",
     lags = 1:5,
     vary_vrbl_lag = F,
     technique_strs = c("nr"),
     difficulty_switches = T,
     regcmds = c("glmmTMB"),
-    ## cbns_to_include = c("cbn_all"),
     cbns_to_include = names(cbn_dfs_counts)[1:3],
     mdls_to_include = c("full"),
     wtf = T

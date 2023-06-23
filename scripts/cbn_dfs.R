@@ -152,7 +152,7 @@ get_df_reg <- function(df_anls) {
     meme_countries <- c("ZWE", # ZWE: cur_df has weird values -> virtually everything affected
                         "ISL", # small population -> high clctr_cnt_cpaer/cnt_contemp_1990
                         "BHS",  # small population -> high clctr_cnt_cpaer
-                        "ARE") # yuge decrease in HNWI
+                        "ARE", "SAU", "QAT") # yuge decrease in HNWI
     df_reg2 <- filter(df_reg, iso3c %!in% meme_countries)
 
     return(df_reg2)
