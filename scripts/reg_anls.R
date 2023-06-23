@@ -2250,8 +2250,8 @@ gen_plt_cfgs <- function() {
             plt_best_coefs_single = list(filename = "best_coefs_single.pdf", width = 18, height = 12,
                                          caption = "Model coefficients (best fitting model)"),
             plt_best_coefs_single_cbn1 = list(filename = "best_coefs_single_cbn1.pdf",
-                                              caption = "asdf",
-                                              width = 14, height = 7.5),
+                                              width = 14, height = 7.5,
+                                              caption = "asdf"),
             plt_lag_dens = list(filename = "lag_dens.pdf", width = 18, height = 14,
                                 caption = "Distribution of lag choice after optimization"),
             plt_oneout_coefs = list(filename = "oneout_coefs.pdf", width = 18, height = 12,
@@ -2667,48 +2667,78 @@ gen_nbrs_pred <- function(top_coefs, cbn_dfs_rates_uscld, df_reg, print_examples
     if (as.character(match.call()[[1]]) %in% fstd){browser()}
     1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;
 
+
+    
+    ## TCTT: Top Coefs To Text
+    dt_tctt <- top_coefs[, .SD[which.max(log_likelihood)], .(cbn_name, vrbl_name_unlag)] %>%
+        .[is.na(vrbl_name_unlag) & vrbl_name == "(Intercept)", vrbl_name_unlag := "(Intercept)"] %>% 
+        .[, .(cbn_name, vrbl = vrbl_name_unlag, coef, coef_exp = exp(coef), se, pvlu = pvalues)] %>%
+        melt(id.vars = c("vrbl", "cbn_name"), variable.name = "msr")
+
     ## intercept numbers
-    intcpt <- top_coefs[vrbl_name_unlag == "cons" & cbn_name == "cbn_all", .SD[which.max(log_likelihood), coef]]
+    intcpt <- top_coefs[vrbl_name == "(Intercept)" & cbn_name == "cbn1", .SD[which.max(log_likelihood), coef]]
     intcpt_exp <- exp(intcpt)
 
     intcpt_info <- list(
         lnbr(intcpt, 2),
         lnbr(intcpt_exp, 3))
 
-    ## predicted impact of tax deductibility, just visually cause no time for proper prediction
-    txdctblt_cbn2 <- top_coefs[vrbl_name_unlag == "Ind.tax.incentives" & cbn_name == "cbn_no_cult_spending",
-              .SD[which.max(log_likelihood), coef]]
-    tmitr_cbn2 <- top_coefs[vrbl_name_unlag == "tmitr_approx_linear20step" & cbn_name == "cbn_no_cult_spending",
-                            .SD[which.max(log_likelihood), coef]]
+    
+
+    ## generate nbrs using new dt_tctt: macro names get generated from variable values (cbn/vrbl codes)
+
+    lnbrs_ti <- rbind(
+        dt_tctt[cbn_name == "cbn3" & vrbl == "Ind.tax.incentives" & msr == "coef"][, dgts := 2],
+        dt_tctt[cbn_name == "cbn3" & vrbl == "Ind.tax.incentives" & msr == "coef_exp"][, dgts := 1],
+        dt_tctt[cbn_name == "cbn2" & vrbl == "Ind.tax.incentives" & msr == "coef"][, dgts := 2],
+        dt_tctt[cbn_name == "cbn2" & vrbl == "tmitr_approx_linear20step" & msr == "coef"][, dgts := 2],
+        dt_tctt[cbn_name == "cbn2" & vrbl == "ti_tmitr_interact" & msr == "coef"][, dgts := 2],
+        dt_tctt[cbn_name == "cbn2" & vrbl == "ti_tmitr_interact" & msr == "coef_exp"][, dgts := 2]
+        ) %>%
+        .[, .(nbr_name = sprintf("%s_%s_%s", vrbl, cbn_name, msr), value, dgts)] %>% split(1:nrow(.)) %>%
+        map(~list(nbr_name = .x$nbr_name, nbr = .x$value, digits = .x$dgts)) %>% unname()
         
-    txdctblt_tmitr_interact_cbn2 <- top_coefs[vrbl_name_unlag == "ti_tmitr_interact" &
-                                         cbn_name == "cbn_no_cult_spending",
-                                         .SD[which.max(log_likelihood), coef]]
+        
+    
+    ## predicted impact of tax deductibility, just visually cause no time for proper prediction
+    ## txdctblt_cbn2 <- top_coefs[vrbl_name_unlag == "Ind.tax.incentives" & cbn_name == "cbn2",
+    ##           .SD[which.max(log_likelihood), coef]]
+    ## tmitr_cbn2 <- top_coefs[vrbl_name_unlag == "tmitr_approx_linear20step" & cbn_name == "cbn2",
+    ##                         .SD[which.max(log_likelihood), coef]]
+        
+    ## txdctblt_tmitr_interact_cbn2 <- top_coefs[vrbl_name_unlag == "ti_tmitr_interact" &
+    ##                                      cbn_name == "cbn2",
+    ##                                      .SD[which.max(log_likelihood), coef]]
 
-    txdctblt_tmitr_interact_cbn2_exp <- exp(txdctblt_tmitr_interact_cbn2)
+    ## txdctblt_tmitr_interact_cbn2_exp <- exp(txdctblt_tmitr_interact_cbn2)
 
-    txdctblt_cbn3 <- top_coefs[vrbl_name_unlag == "Ind.tax.incentives" &
-                               cbn_name == "cbn_no_cult_spending_and_mitr",
-                               .SD[which.max(log_likelihood), coef]]
-    txdctblt_cbn3_exp <- exp(txdctblt_cbn3)
+    ## txdctblt_cbn3 <- top_coefs[vrbl_name_unlag == "Ind.tax.incentives" &
+    ##                            cbn_name == "cbn_no_cult_spending_and_mitr",
+    ##                            .SD[which.max(log_likelihood), coef]]
+    ## txdctblt_cbn3_exp <- exp(txdctblt_cbn3)
 
     ## top_coefs[, .N, vrbl_name_unlag] %>% print(n=200)
     
-    tmitr_scale_cbn2 <- scale(cbn_dfs_rates_uscld$cbn_no_cult_spending$tmitr_approx_linear20step_lag0)
-    tmitr_1SD_cbn_no_cult_spending <- attr(tmitr_scale_cbn2, "scaled:scale")
+    tmitr_scale_cbn2 <- scale(cbn_dfs_rates_uscld$cbn2$tmitr_approx_linear20step_lag0)
+    tmitr_1SD_cbn2 <- attr(tmitr_scale_cbn2, "scaled:scale")
     
-    tmitr_neteffct_txdctblt1_cbn_no_cult_spending <- tmitr_cbn2 + txdctblt_tmitr_interact_cbn2
-    tmitr_neteffct_txdctblt1_cbn_no_cult_spending_exp <- exp(tmitr_neteffct_txdctblt1_cbn_no_cult_spending)
+    tmitr_neteffct_txdctblt1_cbn2 <- dt_tctt[cbn_name == "cbn2" &
+                                             vrbl == "tmitr_approx_linear20step" & msr == "coef", value] +
+        dt_tctt[cbn_name == "cbn2" & vrbl == "ti_tmitr_interact" & msr == "coef", value]
 
-    
-    dt_ti_pred <- expand.grid(tax_ddctblt = c(0,1),
-                              tmitr = seq(round(min(tmitr_scale_cbn2),2),
-                                          round(max(tmitr_scale_cbn2),2), 0.05)) %>% adt() %>%
-        .[, pred := txdctblt_cbn2 * tax_ddctblt + tmitr_cbn2 *tmitr +
-                txdctblt_tmitr_interact_cbn2 * tax_ddctblt * tmitr]
 
-    ggplot(dt_ti_pred, aes(x=tmitr, y=pred, color = factor(tax_ddctblt))) +
-        geom_line()
+    ## tmitr_neteffct_txdctblt1_cbn2 <- tmitr_cbn2 + txdctblt_tmitr_interact_cbn2
+    tmitr_neteffct_txdctblt1_cbn2_exp <- exp(tmitr_neteffct_txdctblt1_cbn2)
+
+    ## ## illustration plot: by now have better one
+    ## dt_ti_pred <- expand.grid(tax_ddctblt = c(0,1),
+    ##                           tmitr = seq(round(min(tmitr_scale_cbn2),2),
+    ##                                       round(max(tmitr_scale_cbn2),2), 0.05)) %>% adt() %>%
+    ##     .[, pred := txdctblt_cbn2 * tax_ddctblt + tmitr_cbn2 *tmitr +
+    ##             txdctblt_tmitr_interact_cbn2 * tax_ddctblt * tmitr]
+
+    ## ggplot(dt_ti_pred, aes(x=tmitr, y=pred, color = factor(tax_ddctblt))) +
+    ##     geom_line()
 
     ## some more comparison
     ## CHL <- txdctblt_cbn2 * 1 + tmitr_cbn2 * 0 + txdctblt_tmitr_interact_cbn2 * 1 * 0 # "Chile"
@@ -2736,12 +2766,12 @@ gen_nbrs_pred <- function(top_coefs, cbn_dfs_rates_uscld, df_reg, print_examples
         
 
     
-    dt_tmitr_exmpl <- adt(cbn_dfs_rates_uscld$cbn_no_cult_spending) %>%
+    dt_tmitr_exmpl <- adt(cbn_dfs_rates_uscld$cbn2) %>%
         .[year == 2020, .(iso3c, tmitr = tmitr_approx_linear20step_lag0, mrg = "mrg")] %>% 
         .[., on = "mrg", allow.cartesian = T] %>%
         ## .[iso3c > i.iso3c] %>%
         .[, diff := tmitr - i.tmitr] %>%
-        .[diff > tmitr_1SD_cbn_no_cult_spending * 0.95 & diff < tmitr_1SD_cbn_no_cult_spending*1.05]
+        .[diff > tmitr_1SD_cbn2 * 0.95 & diff < tmitr_1SD_cbn2*1.05]
         
     if (print_examples) print(dt_tmitr_exmpl, n = 200)
 
@@ -2752,32 +2782,37 @@ gen_nbrs_pred <- function(top_coefs, cbn_dfs_rates_uscld, df_reg, print_examples
     tmitr_iso3c1 <- dt_tmitr_exmpl_fltrd$tmitr
     tmitr_iso3c2 <- dt_tmitr_exmpl_fltrd$i.tmitr
 
+    
 
-    txinctvs <- list(
-        lnbr(txdctblt_cbn3, 2),
-        lnbr(txdctblt_cbn3_exp, 1),
-        lnbr(txdctblt_cbn2, 2),
-        lnbr(tmitr_cbn2,2),
-        lnbr(txdctblt_tmitr_interact_cbn2, 2),
-        lnbr(txdctblt_tmitr_interact_cbn2_exp, 2),
-        lnbr(tmitr_1SD_cbn_no_cult_spending, 1),
-        lnbr(tmitr_neteffct_txdctblt1_cbn_no_cult_spending,2),
-        lnbr(tmitr_neteffct_txdctblt1_cbn_no_cult_spending_exp,2),
+    txinctvs <- c(lnbrs_ti, list(
+        ## lnbr(txdctblt_cbn3, 2),
+        ## lnbr(txdctblt_cbn3_exp, 1),
+        ## lnbr(txdctblt_cbn2, 2),
+        ## lnbr(tmitr_cbn2,2),
+        ## lnbr(txdctblt_tmitr_interact_cbn2, 2),
+        ## lnbr(txdctblt_tmitr_interact_cbn2_exp, 2),
+        lnbr(tmitr_1SD_cbn2, 1),
+        lnbr(tmitr_neteffct_txdctblt1_cbn2,2),
+        lnbr(tmitr_neteffct_txdctblt1_cbn2_exp,2),
         lnbr(tmitr_iso3c1, 0),
-        lnbr(tmitr_iso3c2, 0))
+        lnbr(tmitr_iso3c2, 0)))
 
 
     ## predicted numbers for government spending 
 
     ## hist(cbn_dfs_rates$cbn_all$smorc_dollar_fxm_lag0)
 
-    smorc_lin <- top_coefs[vrbl_name_unlag == "smorc_dollar_fxm", .SD[which.max(log_likelihood), coef]]
+    smorc_lin <- dt_tctt[vrbl == "smorc_dollar_fxm" & msr == "coef", value]
+
+    ## smorc_lin <- top_coefs[vrbl_name_unlag == "smorc_dollar_fxm", .SD[which.max(log_likelihood), coef]]
     smorc_lin_flipped <- -smorc_lin
-    smorc_sqrd <- top_coefs[vrbl_name_unlag == "smorc_dollar_fxm_sqrd", .SD[which.max(log_likelihood), coef]]
+
+    smorc_sqrd <- dt_tctt[vrbl == "smorc_dollar_fxm_sqrd" & msr == "coef", value]
+    ## smorc_sqrd <- top_coefs[vrbl_name_unlag == "smorc_dollar_fxm_sqrd", .SD[which.max(log_likelihood), coef]]
     
     smorc_top_point_std <- smorc_lin_flipped/(2*smorc_sqrd)
 
-    smorc_scale <- scale(cbn_dfs_rates_uscld$cbn_all$smorc_dollar_fxm_lag0)
+    smorc_scale <- scale(cbn_dfs_rates_uscld$cbn1$smorc_dollar_fxm_lag0)
     
     smorc_top_point <- (smorc_top_point_std * attr(smorc_scale, "scaled:scale")) +
         attr(smorc_scale, "scaled:center")
@@ -2792,7 +2827,7 @@ gen_nbrs_pred <- function(top_coefs, cbn_dfs_rates_uscld, df_reg, print_examples
     
     ## get countries around smorc_top_point (0.2 around), also at least 1.4 of those
 
-    smorc_vlus_2020 <- filter(cbn_dfs_rates_uscld$cbn_all, year == 2020) %>% 
+    smorc_vlus_2020 <- filter(cbn_dfs_rates_uscld$cbn1, year == 2020) %>% 
         filter((smorc_dollar_fxm_lag0 < smorc_top_point * 1.2 & smorc_dollar_fxm_lag0 > smorc_top_point * 0.8) |
                smorc_dollar_fxm_lag0 > smorc_top_point * 1.4) %>%
         select(iso3c, smorc_dollar_fxm_lag0) %>% arrange(smorc_dollar_fxm_lag0) %>% adt() %>%
@@ -2803,13 +2838,8 @@ gen_nbrs_pred <- function(top_coefs, cbn_dfs_rates_uscld, df_reg, print_examples
     
     
     
-        
-
- ## %$%
- ##        setNames(smorc_dollar_fxm_lag0, paste0("smorc_2020_", iso3c))
-
     ## get statistics of how many CY are above/below smorc_top_point
-    smorc_top_point_stats <- adt(cbn_dfs_rates_uscld$cbn_all)[
+    smorc_top_point_stats <- adt(cbn_dfs_rates_uscld$cbn1)[
       , above_smorc_top_point := ifelse(smorc_dollar_fxm_lag0 > smorc_top_point, "above", "below")] %>%
         adt(df_reg)[, .(iso3c, year, nbr_opened)][., on = .(iso3c, year)] %>% 
         .[, .(CYs = .N*1.0, nbr_opened = sum(nbr_opened)), above_smorc_top_point] %>%
@@ -2840,17 +2870,17 @@ gen_nbrs_pred <- function(top_coefs, cbn_dfs_rates_uscld, df_reg, print_examples
     ## comparison for inequality variables
     ## cross-sectional 2020 change for shweal992j_p90p100_lag0
 
-    shweal_scale <- scale(cbn_dfs_rates_uscld$cbn_all$shweal992j_p90p100_lag0)
-    shweal_1SD_cbn_all <- attr(shweal_scale, "scaled:scale")
+    shweal_scale <- scale(cbn_dfs_rates_uscld$cbn1$shweal992j_p90p100_lag0)
+    shweal_1SD_cbn1 <- attr(shweal_scale, "scaled:scale")
 
     ## inspect which countries are interesting to compare
-    dt_shweal_cprn <- filter(cbn_dfs_rates_uscld$cbn_all, year == 2020) %>%
+    dt_shweal_cprn <- filter(cbn_dfs_rates_uscld$cbn1, year == 2020) %>%
         select(iso3c, shweal992j_p90p100_lag0) %>% adt() %>%
         .[, mrg := "a"] %>% .[., on = "mrg", allow.cartesian = T] %>% # self-join to get country-comparisons
         .[, .(iso3c_1 = iso3c, iso3c_2 = i.iso3c,
               shweal1 = shweal992j_p90p100_lag0, shweal2 = i.shweal992j_p90p100_lag0)] %>%
         .[, diff := shweal2 - shweal1] %>%
-        .[diff > shweal_1SD_cbn_all *0.97 & diff < shweal_1SD_cbn_all *1.03]
+        .[diff > shweal_1SD_cbn1 *0.97 & diff < shweal_1SD_cbn1 *1.03]
 
     if (print_examples) print(dt_shweal_cprn, n=200)
 
@@ -2867,7 +2897,6 @@ gen_nbrs_pred <- function(top_coefs, cbn_dfs_rates_uscld, df_reg, print_examples
     
     ## longitudinal comparison with self-join
     
-
     dt_shweal_cprn_lngtd <- get_wealth_ineq("p90p100", WID_VX) %>% adt() %>%
         .[, .(iso3c, year, shweal = shweal992j_p90p100*100)] %>% 
         ## adt(cbn_dfs_rates_uscld$cbn_all)[, .(iso3c, year, shweal = shweal992j_p90p100_lag0)] %>%
@@ -2877,11 +2906,10 @@ gen_nbrs_pred <- function(top_coefs, cbn_dfs_rates_uscld, df_reg, print_examples
         ## .[, max(diff)]
         ## .[iso3c == "USA" & year == 1991] %>% print(n=200)
         ## ggplot(aes(x=diff, y = ..density..)) + geom_density()
-        .[diff > shweal_1SD_cbn_all *0.97 & diff < shweal_1SD_cbn_all*1.03]
+        .[diff > shweal_1SD_cbn1 *0.97 & diff < shweal_1SD_cbn1*1.03]
 
     if (print_examples) print(dt_shweal_cprn_lngtd, n = 2000)
         
-
     ## select country and years
     shweal_iso_lngtd <- "USA"
     shweal_lngtd_year1 <- 1991
@@ -2896,40 +2924,40 @@ gen_nbrs_pred <- function(top_coefs, cbn_dfs_rates_uscld, df_reg, print_examples
     shweal_lngtd_vlu_year1 <- dt_shweal_cprn_lngtd_fltrd$shweal
     shweal_lngtd_vlu_year2 <- dt_shweal_cprn_lngtd_fltrd$i.shweal
 
-    shweal_cbn_all <- top_coefs[vrbl_name_unlag == "shweal992j_p90p100" & cbn_name == "cbn_all",
+    shweal_cbn1 <- top_coefs[vrbl_name_unlag == "shweal992j_p90p100" & cbn_name == "cbn1",
                                 .SD[which.max(log_likelihood), coef]]
-    shweal_cbn_all_exp <- exp(shweal_cbn_all)
+    shweal_cbn1_exp <- exp(shweal_cbn1)
 
     shweal_stats <- list(
-        lnbr(shweal_1SD_cbn_all, 1),
+        lnbr(shweal_1SD_cbn1, 1),
         lnbr(shweal_iso3c1, 1),
         lnbr(shweal_iso3c2, 1),
         lnbr(shweal_lngtd_vlu_year1,1),
         lnbr(shweal_lngtd_vlu_year2,1),
-        lnbr(shweal_cbn_all, 2),
-        lnbr(shweal_cbn_all_exp, 2))
+        lnbr(shweal_cbn1, 2),
+        lnbr(shweal_cbn1_exp, 2))
 
 
     ## income inequality 
-    sptinc_scale <- scale(cbn_dfs_rates_uscld$cbn_all$sptinc992j_p90p100_lag0)
-    sptinc_1SD_cbn_all <- attr(sptinc_scale, "scaled:scale")
+    sptinc_scale <- scale(cbn_dfs_rates_uscld$cbn1$sptinc992j_p90p100_lag0)
+    sptinc_1SD_cbn1 <- attr(sptinc_scale, "scaled:scale")
 
     ## cross-sectional 2020 change for sptinc992j_p90p100_lag0
-    dt_sptinc_cprn <- filter(cbn_dfs_rates_uscld$cbn_all, year == 2020) %>%
+    dt_sptinc_cprn <- filter(cbn_dfs_rates_uscld$cbn1, year == 2020) %>%
         select(iso3c, sptinc992j_p90p100_lag0) %>% adt() %>%
         .[, mrg := "a"] %>%
         .[., on = "mrg", allow.cartesian = T] %>%
         .[, .(iso3c_1 = iso3c, iso3c_2 = i.iso3c,
               sptinc1 = sptinc992j_p90p100_lag0, sptinc2 = i.sptinc992j_p90p100_lag0)] %>%
         .[, diff := sptinc2 - sptinc1] %>%
-        .[diff > sptinc_1SD_cbn_all*0.97 & diff < sptinc_1SD_cbn_all*1.03]
+        .[diff > sptinc_1SD_cbn1*0.97 & diff < sptinc_1SD_cbn1*1.03]
     ## print(n=200)
 
     if (print_examples) print(dt_sptinc_cprn, n = 2000)
 
-    sptinc_cbn_all <- top_coefs[vrbl_name_unlag == "sptinc992j_p90p100" & cbn_name == "cbn_all",
+    sptinc_cbn1 <- top_coefs[vrbl_name_unlag == "sptinc992j_p90p100" & cbn_name == "cbn1",
                                 .SD[which.max(log_likelihood), coef]]
-    sptinc_cbn_all_exp <- exp(sptinc_cbn_all)
+    sptinc_cbn1_exp <- exp(sptinc_cbn1)
 
 
     sptinc_cprn_iso3c1 <- "SWE"
@@ -2942,12 +2970,12 @@ gen_nbrs_pred <- function(top_coefs, cbn_dfs_rates_uscld, df_reg, print_examples
     sptinc_iso3c1 <- dt_sptinc_cprn_fltrd$sptinc1
     sptinc_iso3c2 <- dt_sptinc_cprn_fltrd$sptinc2
 
-    dt_sptinc_cprn_lngtd <- adt(cbn_dfs_rates_uscld$cbn_all)[, .(iso3c, year, sptinc = sptinc992j_p90p100_lag0)] %>%
+    dt_sptinc_cprn_lngtd <- adt(cbn_dfs_rates_uscld$cbn1)[, .(iso3c, year, sptinc = sptinc992j_p90p100_lag0)] %>%
         .[., on = "iso3c", allow.cartesian = T] %>%
         .[i.year > year] %>%
         .[, diff := i.sptinc - sptinc] %>%
         ## ggplot(aes(x=diff, y = ..density..)) + geom_density()
-        .[diff > sptinc_1SD_cbn_all *0.95 & diff < sptinc_1SD_cbn_all*1.05] 
+        .[diff > sptinc_1SD_cbn1 *0.95 & diff < sptinc_1SD_cbn1*1.05] 
         ## print(n=200) 
 
     sptinc_iso_lngtd <- "LTU"
@@ -2968,53 +2996,53 @@ gen_nbrs_pred <- function(top_coefs, cbn_dfs_rates_uscld, df_reg, print_examples
     ##     geom_line()
 
     sptinc_stats <- list(
-        lnbr(sptinc_1SD_cbn_all, 1),
+        lnbr(sptinc_1SD_cbn1, 1),
         lnbr(sptinc_iso3c1, 1),
         lnbr(sptinc_iso3c2, 1),
         lnbr(sptinc_lngtd_vlu_year1, 1),
         lnbr(sptinc_lngtd_vlu_year2, 1),
-        lnbr(sptinc_cbn_all,2),
-        lnbr(sptinc_cbn_all_exp,2))
+        lnbr(sptinc_cbn1,2),
+        lnbr(sptinc_cbn1_exp,2))
 
         
     ## density numbers
-    pm_density_cbn_all <- top_coefs[vrbl_name_unlag == "pm_density" & cbn_name == "cbn_all",
+    pm_density_cbn1 <- top_coefs[vrbl_name_unlag == "pm_density" & cbn_name == "cbn1",
                             .SD[which.max(log_likelihood), coef]]
-    pm_density_sqrd_cbn_all <- top_coefs[vrbl_name_unlag == "pm_density_sqrd" & cbn_name == "cbn_all",
+    pm_density_sqrd_cbn1 <- top_coefs[vrbl_name_unlag == "pm_density_sqrd" & cbn_name == "cbn1",
                                .SD[which.max(log_likelihood), coef]]
 
-    pm_density_glbl_cbn_all <- top_coefs[vrbl_name_unlag == "pm_density_global" & cbn_name == "cbn_all",
+    pm_density_glbl_cbn1 <- top_coefs[vrbl_name_unlag == "pm_density_global" & cbn_name == "cbn1",
                                .SD[which.max(log_likelihood), coef]]
-    pm_density_glbl_sqrd_cbn_all <- top_coefs[vrbl_name_unlag == "pm_density_global_sqrd" & cbn_name == "cbn_all",
+    pm_density_glbl_sqrd_cbn1 <- top_coefs[vrbl_name_unlag == "pm_density_global_sqrd" & cbn_name == "cbn1",
                                       .SD[which.max(log_likelihood), coef]]
     
-    dens_cry_top_point_std_cbn_all <- -pm_density_cbn_all/(2*pm_density_sqrd_cbn_all)
-    dens_glbl_top_point_std_cbn_all <- -pm_density_glbl_cbn_all/(2*pm_density_glbl_sqrd_cbn_all)
+    dens_cry_top_point_std_cbn1 <- -pm_density_cbn1/(2*pm_density_sqrd_cbn1)
+    dens_glbl_top_point_std_cbn1 <- -pm_density_glbl_cbn1/(2*pm_density_glbl_sqrd_cbn1)
     
     
-    dens_cry_scale <- scale(cbn_dfs_rates_uscld$cbn_all$pm_density_lag0)
-    dens_glbl_scale <- scale(cbn_dfs_rates_uscld$cbn_all$pm_density_global_lag0)
+    dens_cry_scale <- scale(cbn_dfs_rates_uscld$cbn1$pm_density_lag0)
+    dens_glbl_scale <- scale(cbn_dfs_rates_uscld$cbn1$pm_density_global_lag0)
 
-    dens_cry_top_point_cbn_all <- (dens_cry_top_point_std_cbn_all * attr(dens_cry_scale, "scaled:scale")) +
+    dens_cry_top_point_cbn1 <- (dens_cry_top_point_std_cbn1 * attr(dens_cry_scale, "scaled:scale")) +
         attr(dens_cry_scale, "scaled:center")
 
-    dens_glbl_top_point_cbn_all <- (dens_glbl_top_point_std_cbn_all * attr(dens_glbl_scale, "scaled:scale")) +
+    dens_glbl_top_point_cbn1 <- (dens_glbl_top_point_std_cbn1 * attr(dens_glbl_scale, "scaled:scale")) +
         attr(dens_glbl_scale, "scaled:center")
 
     dens_coef_stats <- list(
-        lnbr(pm_density_cbn_all, 2),
-        lnbr(pm_density_sqrd_cbn_all, 2),
-        lnbr(pm_density_glbl_cbn_all, 2),
-        lnbr(pm_density_glbl_sqrd_cbn_all, 2),
-        lnbr(dens_cry_top_point_std_cbn_all, 2),
-        lnbr(dens_glbl_top_point_std_cbn_all, 2),
-        lnbr(dens_cry_top_point_cbn_all, 2),
-        lnbr(dens_glbl_top_point_cbn_all, 2))
+        lnbr(pm_density_cbn1, 2),
+        lnbr(pm_density_sqrd_cbn1, 2),
+        lnbr(pm_density_glbl_cbn1, 2),
+        lnbr(pm_density_glbl_sqrd_cbn1, 2),
+        lnbr(dens_cry_top_point_std_cbn1, 2),
+        lnbr(dens_glbl_top_point_std_cbn1, 2),
+        lnbr(dens_cry_top_point_cbn1, 2),
+        lnbr(dens_glbl_top_point_cbn1, 2))
 
     
         
-    dens_cry_top_point_stats <- adt(cbn_dfs_rates_uscld$cbn_all)[
-      , above_dens_cry_top_point := ifelse(pm_density_lag0 > dens_cry_top_point_cbn_all, "above", "below")] %>% 
+    dens_cry_top_point_stats <- adt(cbn_dfs_rates_uscld$cbn1)[
+      , above_dens_cry_top_point := ifelse(pm_density_lag0 > dens_cry_top_point_cbn1, "above", "below")] %>% 
         adt(df_reg)[, .(iso3c, year, nbr_opened)][., on = .(iso3c, year)] %>% # merge nbr_opened
         .[, .(CYs = .N*1.0, nbr_opened = sum(nbr_opened)), above_dens_cry_top_point]  %>%
         melt(id.vars = "above_dens_cry_top_point", value.name = "cnt") %>% 
@@ -3026,8 +3054,9 @@ gen_nbrs_pred <- function(top_coefs, cbn_dfs_rates_uscld, df_reg, print_examples
         
     
 
-    dens_glbl_top_point_stats <- adt(cbn_dfs_rates_uscld$cbn_all)[
-      , above_dens_glbl_top_point := ifelse(pm_density_global_lag0 > dens_glbl_top_point_cbn_all, "above", "below")] %>%
+    dens_glbl_top_point_stats <- adt(cbn_dfs_rates_uscld$cbn1)[
+      , above_dens_glbl_top_point :=
+            ifelse(pm_density_global_lag0 > dens_glbl_top_point_cbn1, "above", "below")] %>%
         adt(df_reg)[, .(iso3c, year, nbr_opened)][., on = .(iso3c, year)] %>% 
         .[, .(CYs = .N*1.0, nbr_opened = sum(nbr_opened)), above_dens_glbl_top_point]  %>%
         melt(id.vars = "above_dens_glbl_top_point", value.name = "cnt") %>% 
@@ -3055,8 +3084,7 @@ gen_nbrs_pred <- function(top_coefs, cbn_dfs_rates_uscld, df_reg, print_examples
 
     gdp_stats <- c(gdp_stats1, gdp_stats2)
     
-        
-
+    
 
     
     ## numbers that can get formated comfily with lnbr/fmt_nbr_flex
@@ -3174,9 +3202,9 @@ gen_nbrs <- function(df_excl, df_open, cbn_dfs_rates, cbn_dfs_rates_uscld,  df_r
         
                             
     opng_rates_fmt <- c(
-        opng_rate_cbn1 = nicely_fmt_number(opng_rates_vlus$cbn_all,4),
-        opng_rate_cbn2 = nicely_fmt_number(opng_rates_vlus$cbn_no_cult_spending,4),
-        opng_rate_cbn3 = nicely_fmt_number(opng_rates_vlus$cbn_no_cult_spending_and_mitr,4)) %>% as.list()
+        opng_rate_cbn1 = nicely_fmt_number(opng_rates_vlus$cbn1,4),
+        opng_rate_cbn2 = nicely_fmt_number(opng_rates_vlus$cbn2,4),
+        opng_rate_cbn3 = nicely_fmt_number(opng_rates_vlus$cbn3,4)) %>% as.list()
         
     popnbrs_p1pm <- map(cbn_dfs_rates, ~adt(.x)[, 1/mean(nbr_opened/SP_POP_TOTLm_lag0_uscld)]) %>%
         nicely_fmt_number_v() %>% setNames(., paste0("nbr_pop_p_1pm_", names(.))) %>% as.list()
@@ -3196,16 +3224,16 @@ gen_nbrs <- function(df_excl, df_open, cbn_dfs_rates, cbn_dfs_rates_uscld,  df_r
         imap(~list(nbr_name = paste0("rate_opng_glbl_yearly_", .y), nbr = .x, digits = 5))
 
     opng_p1m_glbl_yearly <- map(rate_opng_glbl_yearly,
-                                ~list(nbr_name = paste0("opng_p1m_glbl_yearly_cbn_",
-                                                        str_split(.x$nbr_name,  "cbn_")[[1]][2]),
+                                ~list(nbr_name = paste0("opng_p1m_glbl_yearly_cbn",
+                                                        str_split(.x$nbr_name,  "cbn")[[1]][2]),
                                       nbr = 1/.x$nbr, digits = 0))
 
     
     ## model succesrate
-    l_cvrgnc <- df_reg_anls_cfgs_wide %>% adt() %>%
-        .[, .N, cvrgd] %$%
-        setNames(N, paste0("cvrgd", cvrgd)) %>% as.list()
     
+    l_cvrgnc <- list(cvrgd1 = df_reg_anls_cfgs_wide[cvrgd == 1, .N],
+                     cvrgd0 = df_reg_anls_cfgs_wide[cvrgd == 0, .N])
+
     l_cvrgnc$mdlcnt_ttl <- l_cvrgnc$cvrgd1 + l_cvrgnc$cvrgd0
     l_cvrgnc$cvrgnc_rate <- round((l_cvrgnc$cvrgd1 / l_cvrgnc$mdlcnt_ttl)*100,3)
 
@@ -3215,11 +3243,11 @@ gen_nbrs <- function(df_excl, df_open, cbn_dfs_rates, cbn_dfs_rates_uscld,  df_r
     
 
     ## should filter out only for min and max
-    dt_velp_tmitr_minmax <- cbn_dfs_rates$cbn_all %>% adt() %>% .[, .N, iso3c] %>% .[N >= 20, .(iso3c)] %>%
+    dt_velp_tmitr_minmax <- cbn_dfs_rates$cbn1 %>% adt() %>% .[, .N, iso3c] %>% .[N >= 20, .(iso3c)] %>%
         dt_velp_crycoefs[., on = "iso3c"] %>% # filter out countries with less than 20 CYs
-        .[vrbl == "tmitr_approx_linear20step" & cbn_name == "cbn_all"]
+        .[vrbl == "tmitr_approx_linear20step" & cbn_name == "cbn1"]
     
-    tmitr_scale <- scale(cbn_dfs_counts_uscld$cbn_all$tmitr_approx_linear20step_lag0) %>% attr("scaled:scale")
+    tmitr_scale <- scale(cbn_dfs_counts_uscld$cbn1$tmitr_approx_linear20step_lag0) %>% attr("scaled:scale")
 
     ## generate minmax nbrs
     l_velp_minmax <- dt_velp_tmitr_minmax %>%
@@ -3233,7 +3261,7 @@ gen_nbrs <- function(df_excl, df_open, cbn_dfs_rates, cbn_dfs_rates_uscld,  df_r
 
 
     ## get average and quantiles from entire slope dataset
-    dt_velp_tmitr_ctrl <- copy(dt_velp_crycoefs)[vrbl == "tmitr_approx_linear20step" & cbn_name == "cbn_all"]
+    dt_velp_tmitr_ctrl <- copy(dt_velp_crycoefs)[vrbl == "tmitr_approx_linear20step" & cbn_name == "cbn1"]
 
     l_velp_mean <- dt_velp_tmitr_ctrl[, .(mean = mean(year),
                       quantl25 = quantile(year, probs = c(0.25)),
@@ -3255,7 +3283,7 @@ gen_nbrs <- function(df_excl, df_open, cbn_dfs_rates, cbn_dfs_rates_uscld,  df_r
 
 
     ## generate the macros for the plot insertions
-    dt_pltcfgs <- gen_plt_cfgs() %>% rbindlist() %>%
+    dt_pltcfgs <- gen_plt_cfgs() %>% rbindlist(use.names = T) %>%
         .[, lbl := gsub(".pdf", "", filename)] %>%
         .[, pltname := paste0("plt_", lbl)] %>%
         .[pltname %in% pltnames] %>% # don't generate macro for unused plots
