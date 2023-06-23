@@ -6,10 +6,10 @@ library(ggbeeswarm)
 library(patchwork)
 library(ggridges)
 
-library(sf)
-library(stars)
+## library(sf)
+## library(stars)
 
-
+library(scales, include.only = "trans_format")
 
 
 
@@ -2375,6 +2375,7 @@ gentbl_regrslts <- function(top_coefs, gof_df_cbn, df_best_mdls, wcptbl) {
     
     ## coef table: coefficient of best-fitting variable-combination
     top_coefs_prepd <- top_coefs %>% copy() %>%
+        .[is.na(vrbl_name_unlag) & vrbl_name == "(Intercept)", vrbl_name_unlag := "(Intercept)"] %>% 
         .[, .SD[which.max(log_likelihood)], by = .(vrbl_name_unlag, cbn_name)] %>%
         copy(vvs$hyp_mep_dt)[., on = .(vrbl = vrbl_name_unlag)] %>%
         .[vrbl %!in% c("ln_s", "ln_r")] %>% 
