@@ -291,7 +291,7 @@ While multiple hypotheses for the spread of this new form have been raised, syst
 #
 In particular, the rise of private museums has been hypothesized to be associated to tax incentives, reductions in government spending, increasing inequality and increasing elite wealth. 
 #
-Combining various socio-economic and art field data sources, I conduct quantitative tests of these hypotheses with datasets of {{{nbr_cy_cbn_all}}}, {{{nbr_cy_cbn_no_cult_spending}}} and {{{nbr_cy_cbn_no_cult_spending_and_mitr}}} country years using random effects negative binomial regression models.
+Combining various socio-economic and art field data sources, I conduct quantitative tests of these hypotheses with datasets of {{{nbr_cy_cbn1}}}, {{{nbr_cy_cbn2}}} and {{{nbr_cy_cbn3}}} country years using random effects negative binomial regression models.
 #
 While I find support for a positive effect of tax incentives, government spending is associated non-monotonically (reverse U-shaped) with private museum founding (not, as hypothesized, negatively). 
 #
@@ -857,7 +857,7 @@ Despite substantial efforts to collect complete data for the relevant variables,
 #
 As excluding a large number of country-years limits the generalizability of findings, I construct multiple datasets that differ regarding variable and country-year coverage.
 # 
-In particular, I construct one dataset with all variables ({{{nbr_cy_cbn_all}}} country years, {{{nbr_crys_cbn_all}}} countries; referred to as "DS all IVs"), one with all variables except cultural spending ({{{nbr_cy_cbn_no_cult_spending}}} country years, {{{nbr_crys_cbn_no_cult_spending}}} countries; "DS --CuSp"), and one with all variables except cultural spending and top marginal income tax rates ({{{nbr_cy_cbn_no_cult_spending_and_mitr}}} country years, {{{nbr_crys_cbn_no_cult_spending_and_mitr}}} countries; "DS --CuSp/TMITR").
+In particular, I construct one dataset with all variables ({{{nbr_cy_cbn1}}} country years, {{{nbr_crys_cbn1}}} countries; referred to as "DS all IVs"), one with all variables except cultural spending ({{{nbr_cy_cbn2}}} country years, {{{nbr_crys_cbn2}}} countries; "DS --CuSp"), and one with all variables except cultural spending and top marginal income tax rates ({{{nbr_cy_cbn3}}} country years, {{{nbr_crys_cbn3}}} countries; "DS --CuSp/TMITR").
 #
 Most country-years are situated between 2000 and 2020, with coverage generally increasing over time; the datasets therefore effectively cover the period in which the majority of private museum founding has taken place.
 #
@@ -913,7 +913,7 @@ While the random starting values and random order of variables help to explore t
 :ID:       d2d676fc-e644-4815-a06d-906a30c823f0
 :END:
 
-Each regression model is specified as a negative binomial model (which is robust to potential overdispersion of the dependent variable) run using the xtnbreg command of Stata 14 [[parencite:&Stata_2015_xtnbreg]]. 
+Each regression model is specified as a negative binomial model (which is robust to potential overdispersion of the dependent variable) run using the glmmTMB command [[parencite:&Brooks_etal_2017_glmmTMB]] of R 4.3.0.
 #
 Random country intercepts are added to account for clustering of observations in countries.
 #
