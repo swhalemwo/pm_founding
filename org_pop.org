@@ -1029,17 +1029,19 @@ However, while collectors apparently were ultimately disincentivized by growing 
 
 ***** Art field indicators :ignhead:
 
-The coefficients of the art field indicators, the number of museums of modern and contemporary art and of the number of collectors in the Artnews top collector ranking, are relatively small and insignificant in all datasets.
+Similary, the coefficients of the art field indicators (the number of museums of modern and contemporary art and of the number of collectors in the Artnews top collector ranking) are relatively small and insignificant in all datasets.
 
 
 **** Tax Incentives (H1)
 
+*add section about intercepts*
+*rewrite with focus on cbn1*
 The results for tax incentives largely support H1: 
 #
-Tax deductibility of donations is found to be positive and significantly related to private museum founding in "DS --CuSp/TMITR", indicating a private museum founding rate $e$^{{{{txdctblt_cbn3}}}} = {{{txdctblt_cbn3_exp}}} times higher in countries where charitable deductions are tax deductible than in countries where these donations are not tax deductible.
+Tax deductibility of donations is found to be positive and marginally significantly (p = {{{Ind_tax_incentives_cbn3_pvlu}}}) related to private museum founding in "DS --CuSp/TMITR", indicating a private museum founding rate $e$^{{{{Ind_tax_incentives_cbn2_coef}}}} = {{{Ind_tax_incentives_cbn3_coef_exp}}} times higher in countries where charitable deductions are tax deductible than in countries where these donations are not tax deductible.
 #
 In "DS --CuSp" the interaction between top marginal income rate and tax deductibility of donations is positive and significant, which indicates that higher top marginal income tax rate have a larger effect when charitable donations are tax deductible:
-#
+# 
 A 1 SD increase of the top marginal income tax rate ({{{tmitr_1SD_cbn_no_cult_spending}}} percentage points, corresponding approximately to the difference between the Netherlands ({{{tmitr_iso3c1}}}%) and Chile ({{{tmitr_iso3c2}}}%) in 2020) is associated with a difference in founding rate that is $e$^{{{{txdctblt_tmitr_interact_cbn2}}}} = {{{txdctblt_tmitr_interact_cbn2_exp}}} times larger in countries with tax deductibility of donations than in countries without.
 # 
 Given that the effect of an additional 1 SD top marginal income tax rate for countries without tax deductibility of donations is {{{tmitr_cbn2}}}, a 1 SD increase in top marginal income tax rate in countries with tax deductibility of donations corresponds to an increase in log-founding by {{{tmitr_cbn2}}} + {{{txdctblt_tmitr_interact_cbn2}}} = {{{tmitr_neteffct_txdctblt1_cbn_no_cult_spending}}}, or an increase in founding rate by a factor of $e$^{{{{tmitr_neteffct_txdctblt1_cbn_no_cult_spending}}}} = {{{tmitr_neteffct_txdctblt1_cbn_no_cult_spending_exp}}}. 
@@ -1049,6 +1051,36 @@ Given that the effect of an additional 1 SD top marginal income tax rate for cou
 In "DS all IVs", the interaction is still positive, but no longer significant, possibly because "DS all IVs" is primarily composed of countries in which charitable donations are tax deductible (table {{{rtbl_descs}}}) and hence shows little variation on this variable. 
 #
 Despite significant effects not being present in every dataset, the data overall indicates substantial support for an association between tax incentives and private museum founding, supporting H1. 
+
+
+
+{{{ynkplt_pred_taxinc}}}
+
+# new version
+The results for tax incentives largely support H1:
+#
+In "DS all IVs" (as well as DS -CuSp), the interaction between Tax deductibility of donations is positive and significant, which indicates that increases in top marginal income tax rates have a larger positive effect if charitable donations are tax deductible than if they are not.
+#
+Figure {{{rplt_pred_taxinc}}} visualizes how the impact of top marginal income tax rates depends on the presence of tax deductibility of donations.
+#
+In particular at higher top marginal income tax rates, countries with tax deductibility of donations see more private museum foundings than countries where charitable donations are not tax deductible.
+#
+The fact that in the former countries collectors can receive substantial tax benefits appears to indeed incentivize potential founders to establish their museums. 
+
+
+However, it is worth noting that at lower top marginal income tax rates countries without tax deductibility of charitable donations see more private museum foundings.
+#
+This is unexpected as at these low tax rates tax deductibility of donations would be expected to play a negligible role as the tax incentives are so limited that one would expect there to be little difference between countries with tax deductibility of donations and without. 
+#
+Whether this finding is due to ommitted variable bias or a more non-linear relationship between tax rates and museum foundings remains the work for future research.
+#
+
+Finally, in "DS --CuSp/TMITR" the coefficient of tax deductibility of donations is positive and marginally significant (p = {{{Ind_tax_incentives_cbn3_pvlu}}}), which gives further support to a positive association between tax incentives and private museum founding.
+#
+
+
+
+
 
 
 **** Government Cultural Spending (H2)

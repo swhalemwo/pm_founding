@@ -1599,6 +1599,82 @@ gen_plt_best_coefs_single_cbn1 <- function(top_coefs) {
 
 ## gen_plt_best_coefs_single_cbn1(reg_res_objs$top_coefs)
 
+gendt_pred_taxinc <- function(top_coefs, cbnx) {
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
+    
+    #' generate the tax incentives prediction data (different lines for taxdeductibility of donations) for a cbn
+
+    mdl_idx <- top_coefs[vrbl_name_unlag == "Ind.tax.incentives" & cbn_name == cbnx,
+                         .SD[which.max(log_likelihood), mdl_id]]
+    
+    regspecx <- get_reg_spec_from_id(mdl_idx, fldr_info)
+
+    tmitr_vrbl <- keep(regspecx$mdl_vars, ~grepl("tmitr_approx_linear20step_lag[0-5]", .x))
+    interact_vrbl <- keep(regspecx$mdl_vars, ~grepl("ti_tmitr_interact_lag", .x))
+
+
+    tmitr_scale_cbnx <- scale(chuck(cbn_dfs_rates_uscld, cbnx, tmitr_vrbl))
+    
+
+    dfx <- chuck(cbn_df_dict, "rates", cbnx)
+    iv_vars <- keep(setdiff(regspecx$mdl_vars, vvs$base_vars), ~!grepl("^SP\\.POP\\.TOTLm", .x))
+
+    ## generate formula
+    fx <- gen_r_f("rates", iv_vars)
+    
+    fx <- sprintf("nbr_opened ~ Ind.tax.incentives*bs(%s, degree = 3) + %s + %s", 
+            tmitr_vrbl,
+            paste0(keep(iv_vars, ~.x %!in% c("Ind.tax.incentives", tmitr_vrbl, interact_vrbl)), collapse = " + "),
+            "(1 | iso3c) + offset(log(SP_POP_TOTLm_lag0_uscld))") %>% as.formula()
+
+    
+    ## generate model
+    rx <- glmmTMB(fx, dfx, family = nbinom1)
+
+    ## set up prediction dataframe
+    dt_ti_pred <- expand.grid(Ind.tax.incentives = c(0,1),
+                              tmitr_vrbl = seq(round(min(tmitr_scale_cbnx),2),
+                                               round(max(tmitr_scale_cbnx),2), 0.05)) %>% adt() %>%
+        .[, interact_vrbl := Ind.tax.incentives * tmitr_vrbl] %>%
+        setnames(old = c("tmitr_vrbl", "interact_vrbl"), new = c(tmitr_vrbl, interact_vrbl)) %>%
+        ## add other variables at the mean
+        .[, (setdiff(iv_vars, c(tmitr_vrbl, interact_vrbl, "Ind.tax.incentives"))) := 0] %>%
+        .[, `:=`(iso3c = "asdf", SP_POP_TOTLm_lag0_uscld = 10)]
+
+    ## convert back to actual scale
+    dt_ti_pred[, c("pred", "se") :=  map(predict(rx, dt_ti_pred, se.fit = T), ~.x)] %>% 
+        .[, (tmitr_vrbl) := attr(tmitr_scale_cbnx, "scaled:center") +
+                attr(tmitr_scale_cbnx, "scaled:scale")*get(tmitr_vrbl)]
+
+    ## dt_ti_pred[, .(xx)] %>% summary()
+    
+
+    dtx <- dt_ti_pred %>% copy() %>% .[, `:=`(min = pred - 1.96 * se, max = pred + 1.96 * se)] %>%
+        .[, .(vrbl = "taxinc", pred, min, max, cbn_name = cbnx, iv = get(tmitr_vrbl), 
+              linegrp = fifelse(Ind.tax.incentives == 0, "not deductible", "deductible"))]
+
+    return(dtx)
+
+    
+
+}
+
+## xx <- rbind(
+##     gendt_pred_taxinc(reg_res_objs$top_coefs, "cbn1"),
+##     gendt_pred_taxinc(reg_res_objs$top_coefs, "cbn2"))
+
+
+## xx %>% 
+##     ggplot(aes(x=iv, y=pred, color = factor(linegrp))) +
+##         geom_ribbon(mapping = aes(ymin = min, ymax = max, fill = linegrp),
+##                     alpha = 0.1, show.legend = F,
+##                     linetype = 2) + 
+##         geom_line(linewidth = 1.5, show.legend = F) +
+##         ## coord_cartesian(ylim = c(-2, 2)) +
+##     scale_y_continuous(labels = trans_format("exp", \(x) format(x, scientific = F, digits = 1))) +
+##     facet_wrap(~ cbn_name)
+
+
 gen_plt_pred_taxinc <- function(top_coefs) {
     if (as.character(match.call()[[1]]) %in% fstd){browser()}
     1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;
@@ -1637,43 +1713,53 @@ gen_plt_pred_taxinc <- function(top_coefs) {
         ## add other variables at the mean
         .[, (setdiff(iv_vars, c(tmitr_vrbl, interact_vrbl, "Ind.tax.incentives"))) := 0] %>%
         .[, `:=`(iso3c = "asdf", SP_POP_TOTLm_lag0_uscld = 100)]
-
     ## convert back to actual scale
     dt_ti_pred[, c("pred", "se") :=  map(predict(rx, dt_ti_pred, se.fit = T), ~.x)] %>% 
         .[, (tmitr_vrbl) := attr(tmitr_scale_cbn1, "scaled:center") +
                 attr(tmitr_scale_cbn1, "scaled:scale")*get(tmitr_vrbl)]
-
     ## dt_ti_pred[, .(xx)] %>% summary()
-    
-
     dt_ti_pred %>% copy() %>% .[, `:=`(min = pred - 1.96 * se, max = pred + 1.96 * se)] %>% 
-        ggplot(aes(x=get(tmitr_vrbl), y=pred, color = factor(Ind.tax.incentives))) +
-        geom_ribbon(mapping = aes(ymin = min, ymax = max, fill = factor(Ind.tax.incentives)),
-                    alpha = 0.1, show.legend = F,
-                    linetype = 2) + 
-        geom_line(linewidth = 1.5, show.legend = F) +
-        coord_cartesian(ylim = c(-2, 2)) +
+        ggplot(aes(x=get(tmitr_vrbl), y=pred,
+                   color = factor(Ind.tax.incentives),
+                   linetype = factor(Ind.tax.incentives))) +
+        geom_ribbon(mapping = aes(ymin = min, ymax = max,
+                                        # group = factor(Ind.tax.incentives)
+                                  fill = factor(Ind.tax.incentives),
+                                  ## linetype = factor(Ind.tax.incentives)
+                                  ),
+                    alpha = 0.15, show.legend = F
+                    ## linetype = 2,
+                    ## color = "grey40"
+                    ) + 
+        geom_line(linewidth = 1, show.legend = F) +
+        coord_cartesian(ylim = c(-3, 3)) +
         scale_y_continuous(labels = trans_format("exp", \(x) format(x, scientific = F, digits = 2))) + 
             ## breaks = trans_breaks("exp", \(x) log(x))) + 
         ## coord_cartesian(ylim = c(0, 6)) +
         labs(y="Number of Foundings", x= "Top Marginal Income Tax Rate (%)") +
-        geom_text(head(copy(dt_ti_pred)[get(tmitr_vrbl) > 55],2)[
+        geom_text(head(copy(dt_ti_pred)[get(tmitr_vrbl) > 60],2)[
           , lbl := fifelse(Ind.tax.incentives == 0,
                            paste0("donations not tax deductible"),
                            paste0("donations tax deductible"))][
-            Ind.tax.incentives == 1, pred := pred + 0.2][
+            Ind.tax.incentives == 1, pred := pred + 1.2][
             Ind.tax.incentives == 0, pred := pred - 0.2],
             hjust = 1,
             mapping = aes(label = lbl),
             show.legend = F,
             size = pt2mm(stylecfg$lbl_fntsz) + 1) +
         theme_bw() + 
-        theme_orgpop() 
-        
-                                                         
+        theme_orgpop() +
+        scale_linetype_manual(values = c(5,1)) +
+        scale_color_manual(values = tol2qualitative) + 
+        scale_fill_manual(values = tol2qualitative)
+    
+                                                                 
 }
 
-## gen_plt_pred_taxinc(reg_res_objs$top_coefs)
+## (reg_res$plts$plt_pred_taxinc + reg_res$plts$plt_pred_taxinc) /
+##     (reg_res$plts$plt_pred_smorc + plot_spacer())
+
+gen_plt_pred_taxinc(reg_res_objs$top_coefs)
 
 gen_plt_pred_smorc <- function(top_coefs) {
     if (as.character(match.call()[[1]]) %in% fstd){browser()}
@@ -2277,7 +2363,8 @@ gen_plt_cfgs <- function() {
             plt_cntrfctl = list(filename = "cntrfctl.pdf", width = 19, height = 11,
                                 caption = "Counterfactual simulations"),
             plt_pred_taxinc = list(filename = "pred_taxinc.pdf", width = 14, height = 7.5,
-                                   caption = "asdf"),
+                                   caption = paste0("Tax Incentives and Private Museum Founding: Adjusted ",
+                                                    "Predictions at the Means (DS all IVs; population 100 mil.)")),
             plt_pred_smorc = list(filename = "pred_smorc.pdf", width = 14, height = 7.5,
                                   caption = "smorc smorc"),
             plt_pred_ptinc = list(filename = "pred_ptinc.pdf", width = 14, height = 7.5,
@@ -3509,8 +3596,8 @@ reg_res <- list()
 reg_res$plts <- gen_reg_res_plts(reg_res_objs, vvs, NBR_MDLS, only_priority_plts = T, stylecfg)
 
 ## nreg_res$plts$plt_best_coefs_single_cbn1 <- gen_plt_best_coefs_single_cbn1(reg_res_objs$top_coefs)
-reg_res$plts$plt_cntrfctl <- gen_plt_cntrfctl(reg_res_objs$dt_cntrfctl_cons, reg_res_objs$dt_cntrfctl_wse)
-render_reg_res("plt_pred_hnwi", reg_res, batch_version = "v88")
+reg_res$plts$plt_pred_taxinc <- gen_plt_pred_taxinc(reg_res_objs$top_coefs)
+render_reg_res("plt_pred_taxinc", reg_res, batch_version = "v91")
 
 
 gen_plt_best_coefs_single
@@ -3542,6 +3629,7 @@ iwalk(res_tbls, ~do.call("render_xtbl", c(.x, gen_tblcfgs(TABLE_DIR)[[.y]])))
 ## ** predicting
 
 ## gen_nbrs_pred(reg_res_objs$top_coefs, cbn_dfs_rates_uscld, df_reg, print_examples = F)
+
 
 dt_nbrs <- gen_nbrs(df_excl, df_open, cbn_dfs_rates, cbn_dfs_rates_uscld,
                     reg_anls_base$df_reg_anls_cfgs_wide, df_reg,
