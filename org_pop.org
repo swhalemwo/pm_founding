@@ -8,7 +8,7 @@
 #+OPTIONS: h:5
 
 #+BEGIN_SRC R :session calc :exports none :results values drawer
-dt_nbrs <- fread("/home/johannes/Dropbox/phd/papers/org_pop/tables/tbl_nbrs_v75.csv")
+dt_nbrs <- fread("/home/johannes/Dropbox/phd/papers/org_pop/tables/tbl_nbrs_v91.csv")
 
 dt_nbrs[, .(macro_str = sprintf("#+MACRO: %s %s", nbr_name, nbr_fmt)), grp] %>%
   .[, .(grp_str = paste(macro_str, collapse = "\n")), grp] %>%
