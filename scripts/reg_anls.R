@@ -2818,6 +2818,7 @@ gen_nbrs_pred <- function(top_coefs, cbn_dfs_rates_uscld, df_reg, print_examples
     lnbrs_ti <- rbind(
         dt_tctt[cbn_name == "cbn3" & vrbl == "Ind.tax.incentives" & msr == "coef"][, dgts := 2],
         dt_tctt[cbn_name == "cbn3" & vrbl == "Ind.tax.incentives" & msr == "coef_exp"][, dgts := 1],
+        dt_tctt[cbn_name == "cbn3" & vrbl == "Ind.tax.incentives" & msr == "pvlu"][, dgts := 2],
         dt_tctt[cbn_name == "cbn2" & vrbl == "Ind.tax.incentives" & msr == "coef"][, dgts := 2],
         dt_tctt[cbn_name == "cbn2" & vrbl == "tmitr_approx_linear20step" & msr == "coef"][, dgts := 2],
         dt_tctt[cbn_name == "cbn2" & vrbl == "ti_tmitr_interact" & msr == "coef"][, dgts := 2],
@@ -3263,6 +3264,8 @@ gen_nbrs <- function(df_excl, df_open, cbn_dfs_rates, cbn_dfs_rates_uscld,  df_r
                      batch_version, print_examples = F, pltnames) {
     if (as.character(match.call()[[1]]) %in% fstd){browser()}
     1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;
+
+    source(paste0(SCRIPT_DIR, "startup_org_pop.R")) ## startup: libraries, global vars
     
     dt_excl <- df_excl %>% adt() %>% .[, .(ID, museum_status, year_opened_int, year_closed, countrycode)]
     ## number of museums in database as a whole 
@@ -3466,7 +3469,8 @@ gen_nbrs <- function(df_excl, df_open, cbn_dfs_rates, cbn_dfs_rates_uscld,  df_r
 
     dt_nbrs_pred <- gen_nbrs_pred(reg_res_objs$top_coefs, cbn_dfs_rates_uscld, df_reg, print_examples)
 
-    dt_res <- rbind(dt_nbrs_desc, dt_nbrs_pred, dt_cfgs_lbls)
+    dt_res <- rbind(dt_nbrs_desc, dt_nbrs_pred, dt_cfgs_lbls) %>%
+        .[, nbr_name := gsub("\\.", "_", nbr_name)]
 
     if (dt_res[, .N, nbr_name][, max(N)] != 1) {stop("nbr_name not not unique")}
 
