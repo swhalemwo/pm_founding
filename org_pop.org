@@ -180,94 +180,111 @@ dt_nbrs[, .(macro_str = sprintf("#+MACRO: %s %s", nbr_name, nbr_fmt)), grp] %>%
 
 
 # smorc_top_point_stats
-#+MACRO: smorctop_below_CYs_cnt 819
-#+MACRO: smorctop_above_CYs_cnt 431
+#+MACRO: smorctop_below_CYs_cnt 818
+#+MACRO: smorctop_above_CYs_cnt 427
 #+MACRO: smorctop_below_nbr_opened_cnt 212
-#+MACRO: smorctop_above_nbr_opened_cnt 144
-#+MACRO: smorctop_below_CYs_prop 65.5
-#+MACRO: smorctop_above_CYs_prop 34.5
-#+MACRO: smorctop_below_nbr_opened_prop 59.6
-#+MACRO: smorctop_above_nbr_opened_prop 40.4
+#+MACRO: smorctop_above_nbr_opened_cnt 143
+#+MACRO: smorctop_below_CYs_prop 65.7
+#+MACRO: smorctop_above_CYs_prop 34.3
+#+MACRO: smorctop_below_nbr_opened_prop 59.7
+#+MACRO: smorctop_above_nbr_opened_prop 40.3
 
 
 # shweal_stats
-#+MACRO: shweal_1SD_cbn_all 7.6
+#+MACRO: shweal_1SD_cbn1 7.5
 #+MACRO: shweal_iso3c1 50.2
 #+MACRO: shweal_iso3c2 57.9
 #+MACRO: shweal_lngtd_vlu_year1 64.1
 #+MACRO: shweal_lngtd_vlu_year2 71.7
-#+MACRO: shweal_cbn_all 0.33
-#+MACRO: shweal_cbn_all_exp 1.39
+#+MACRO: shweal_cbn1 0.33
+#+MACRO: shweal_cbn1_exp 1.40
 #+MACRO: shweal_lngtd_year1 1991
 #+MACRO: shweal_lngtd_year2 2011
 
 
 # sptinc_stats
-#+MACRO: sptinc_1SD_cbn_all 8.9
+#+MACRO: sptinc_1SD_cbn1 8.9
 #+MACRO: sptinc_iso3c1 30.8
 #+MACRO: sptinc_iso3c2 39.7
 #+MACRO: sptinc_lngtd_vlu_year1 32.5
 #+MACRO: sptinc_lngtd_vlu_year2 41.1
-#+MACRO: sptinc_cbn_all -0.45
-#+MACRO: sptinc_cbn_all_exp 0.64
+#+MACRO: sptinc_cbn1 -0.47
+#+MACRO: sptinc_cbn1_exp 0.63
 #+MACRO: sptinc_lngtd_year1 2000
 #+MACRO: sptinc_lngtd_year2 2014
 
 
 # dens_coef_stats
-#+MACRO: pm_density_cbn_all 1.20
-#+MACRO: pm_density_sqrd_cbn_all -0.29
-#+MACRO: pm_density_glbl_cbn_all -0.38
-#+MACRO: pm_density_glbl_sqrd_cbn_all -0.28
-#+MACRO: dens_cry_top_point_std_cbn_all 2.05
-#+MACRO: dens_glbl_top_point_std_cbn_all -0.69
-#+MACRO: dens_cry_top_point_cbn_all 0.74
-#+MACRO: dens_glbl_top_point_cbn_all 221.05
+#+MACRO: pm_density_cbn1 1.21
+#+MACRO: pm_density_sqrd_cbn1 -0.30
+#+MACRO: pm_density_glbl_cbn1 -0.44
+#+MACRO: pm_density_glbl_sqrd_cbn1 -0.29
+#+MACRO: dens_cry_top_point_std_cbn1 2.03
+#+MACRO: dens_glbl_top_point_std_cbn1 -0.74
+#+MACRO: dens_cry_top_point_cbn1 0.74
+#+MACRO: dens_glbl_top_point_cbn1 214.59
 
 
 # dens_cry_top_point_stats
-#+MACRO: dens_cry_top_below_CYs_cnt 1 156
-#+MACRO: dens_cry_top_above_CYs_cnt 94
-#+MACRO: dens_cry_top_below_nbr_opened_cnt 316
+#+MACRO: dens_cry_top_below_CYs_cnt 1 150
+#+MACRO: dens_cry_top_above_CYs_cnt 95
+#+MACRO: dens_cry_top_below_nbr_opened_cnt 315
 #+MACRO: dens_cry_top_above_nbr_opened_cnt 40
-#+MACRO: dens_cry_top_below_CYs_prop 92.5
-#+MACRO: dens_cry_top_above_CYs_prop 7.5
-#+MACRO: dens_cry_top_below_nbr_opened_prop 88.8
-#+MACRO: dens_cry_top_above_nbr_opened_prop 11.2
+#+MACRO: dens_cry_top_below_CYs_prop 92.4
+#+MACRO: dens_cry_top_above_CYs_prop 7.6
+#+MACRO: dens_cry_top_below_nbr_opened_prop 88.7
+#+MACRO: dens_cry_top_above_nbr_opened_prop 11.3
 
 
 # dens_glbl_top_point_stats
-#+MACRO: dens_glbl_top_above_CYs_cnt 844
-#+MACRO: dens_glbl_top_below_CYs_cnt 406
-#+MACRO: dens_glbl_top_above_nbr_opened_cnt 241
-#+MACRO: dens_glbl_top_below_nbr_opened_cnt 115
-#+MACRO: dens_glbl_top_above_CYs_prop 67.5
-#+MACRO: dens_glbl_top_below_CYs_prop 32.5
-#+MACRO: dens_glbl_top_above_nbr_opened_prop 67.7
-#+MACRO: dens_glbl_top_below_nbr_opened_prop 32.3
+#+MACRO: dens_glbl_top_above_CYs_cnt 894
+#+MACRO: dens_glbl_top_below_CYs_cnt 351
+#+MACRO: dens_glbl_top_above_nbr_opened_cnt 261
+#+MACRO: dens_glbl_top_below_nbr_opened_cnt 94
+#+MACRO: dens_glbl_top_above_CYs_prop 71.8
+#+MACRO: dens_glbl_top_below_CYs_prop 28.2
+#+MACRO: dens_glbl_top_above_nbr_opened_prop 73.5
+#+MACRO: dens_glbl_top_below_nbr_opened_prop 26.5
 
 
 # gdp_stats
-#+MACRO: gdp_coef_cbn_no_cult_spending_and_mitr 0.88
-#+MACRO: gdp_coef_cbn_no_cult_spending 0.79
-#+MACRO: gdp_coef_cbn_all 0.39
-#+MACRO: gdp_1SD_cbn_all 24.87
-#+MACRO: gdp_1SD_cbn_no_cult_spending 21.33
-#+MACRO: gdp_1SD_cbn_no_cult_spending_and_mitr 19.74
+#+MACRO: gdp_coef_cbn2 0.76
+#+MACRO: gdp_coef_cbn1 0.42
+#+MACRO: gdp_coef_cbn3 0.84
+#+MACRO: gdp_1SD_cbn1 24.90
+#+MACRO: gdp_1SD_cbn2 21.10
+#+MACRO: gdp_1SD_cbn3 19.37
+
+
+# hnwi_stats
+#+MACRO: hnwi_nbr_5M_cbn2_coef -0.21
+#+MACRO: hnwi_nbr_5M_cbn2_pvlu 0.054
+#+MACRO: hnwi_nbr_5M_cbn3_coef -0.18
+#+MACRO: hnwi_nbr_5M_cbn3_pvlu 0.069
 
 
 # pltcfgs
-#+MACRO: ynkplt_cbn_log_likelihoods (eval (concat "#+label: fig:cbn_log_likelihoods\n" "#+caption: model log likelihood distribution per dataset\n" "#+attr_latex: :width 6cm\n" "[[file:figures/plt_v75_cbn_log_likelihoods.pdf]]"))
-#+MACRO: ynkplt_cvrgnc (eval (concat "#+label: fig:cvrgnc\n" "#+caption: Model improvement\n" "#+attr_latex: :width 5cm\n" "[[file:figures/plt_v75_cvrgnc.pdf]]"))
-#+MACRO: ynkplt_coef_violin (eval (concat "#+label: fig:coef_violin\n" "#+caption: Distribution of coefficient point estimates\n" "#+attr_latex: :width 9cm\n" "[[file:figures/plt_v75_coef_violin.pdf]]"))
-#+MACRO: ynkplt_best_coefs_cloud (eval (concat "#+label: fig:best_coefs_cloud\n" "#+caption: Coefficient point estimate and 95% CI\n" "#+attr_latex: :width 9cm\n" "[[file:figures/plt_v75_best_coefs_cloud.pdf]]"))
-#+MACRO: ynkplt_best_coefs_single (eval (concat "#+label: fig:best_coefs_single\n" "#+caption: Model coefficients (best fitting model)\n" "#+attr_latex: :width 9cm\n" "[[file:figures/plt_v75_best_coefs_single.pdf]]"))
-#+MACRO: ynkplt_lag_dens (eval (concat "#+label: fig:lag_dens\n" "#+caption: Distribution of lag choice after optimization\n" "#+attr_latex: :width 9cm\n" "[[file:figures/plt_v75_lag_dens.pdf]]"))
-#+MACRO: ynkplt_oneout_coefs (eval (concat "#+label: fig:oneout_coefs\n" "#+caption: Model coefficients (best fitting model; colored by significance of model improvement)\n" "#+attr_latex: :width 9cm\n" "[[file:figures/plt_v75_oneout_coefs.pdf]]"))
-#+MACRO: ynkplt_oneout_llrt_lldiff (eval (concat "#+label: fig:oneout_llrt_lldiff\n" "#+caption: Model improvement given variable inclusion\n" "#+attr_latex: :width 9cm\n" "[[file:figures/plt_v75_oneout_llrt_lldiff.pdf]]"))
-#+MACRO: ynkplt_oneout_llrt_z (eval (concat "#+label: fig:oneout_llrt_z\n" "#+caption: Probability of significant model improvement (z-scores) given variable inclusion\n" "#+attr_latex: :width 9cm\n" "[[file:figures/plt_v75_oneout_llrt_z.pdf]]"))
-#+MACRO: ynkplt_vrbl_cycnt (eval (concat "#+label: fig:vrbl_cycnt\n" "#+caption: Number of countries with per year per variable\n" "#+attr_latex: :width 7cm\n" "[[file:figures/plt_v75_vrbl_cycnt.pdf]]"))
-#+MACRO: ynkplt_cbn_cycnt (eval (concat "#+label: fig:cbn_cycnt\n" "#+caption: Number of countries per year per variable combination\n" "#+attr_latex: :width 7cm\n" "[[file:figures/plt_v75_cbn_cycnt.pdf]]"))
+#+MACRO: ynkplt_cbn_log_likelihoods (eval (concat "#+label: fig:cbn_log_likelihoods\n" "#+caption: model log likelihood distribution per dataset\n" "#+attr_latex: :width 16cm\n" "[[file:figures/plt_v91_cbn_log_likelihoods.pdf]]"))
+#+MACRO: ynkplt_cvrgnc (eval (concat "#+label: fig:cvrgnc\n" "#+caption: Model improvement\n" "#+attr_latex: :width 12cm\n" "[[file:figures/plt_v91_cvrgnc.pdf]]"))
+#+MACRO: ynkplt_coef_violin (eval (concat "#+label: fig:coef_violin\n" "#+caption: Distribution of coefficient point estimates (Gaussian kernel density estimate; bandwidth = 0.04)\n" "#+attr_latex: :width 18cm\n" "[[file:figures/plt_v91_coef_violin.pdf]]"))
+#+MACRO: ynkplt_best_coefs_cloud (eval (concat "#+label: fig:best_coefs_cloud\n" "#+caption: Coefficient point estimate and 95% CI\n" "#+attr_latex: :width 18cm\n" "[[file:figures/plt_v91_best_coefs_cloud.pdf]]"))
+#+MACRO: ynkplt_best_coefs_single (eval (concat "#+label: fig:best_coefs_single\n" "#+caption: Model coefficients (best fitting model)\n" "#+attr_latex: :width 18cm\n" "[[file:figures/plt_v91_best_coefs_single.pdf]]"))
+#+MACRO: ynkplt_best_coefs_single_cbn1 (eval (concat "#+label: fig:best_coefs_single_cbn1\n" "#+caption: asdf\n" "#+attr_latex: :width 14cm\n" "[[file:figures/plt_v91_best_coefs_single_cbn1.pdf]]"))
+#+MACRO: ynkplt_lag_dens (eval (concat "#+label: fig:lag_dens\n" "#+caption: Distribution of lag choice after optimization\n" "#+attr_latex: :width 18cm\n" "[[file:figures/plt_v91_lag_dens.pdf]]"))
+#+MACRO: ynkplt_oneout_coefs (eval (concat "#+label: fig:oneout_coefs\n" "#+caption: Model coefficients (best fitting model; colored by significance of model improvement)\n" "#+attr_latex: :width 18cm\n" "[[file:figures/plt_v91_oneout_coefs.pdf]]"))
+#+MACRO: ynkplt_oneout_llrt_lldiff (eval (concat "#+label: fig:oneout_llrt_lldiff\n" "#+caption: Model improvement given variable inclusion (Gaussian kernel density estimate; bandwidth = 0.4)\n" "#+attr_latex: :width 18cm\n" "[[file:figures/plt_v91_oneout_llrt_lldiff.pdf]]"))
+#+MACRO: ynkplt_oneout_llrt_z (eval (concat "#+label: fig:oneout_llrt_z\n" "#+caption: Distribution of Z-score of log-likelihood ratio test p-value (Gaussian kernel density estimate; bandwidth = 0.1)\n" "#+attr_latex: :width 18cm\n" "[[file:figures/plt_v91_oneout_llrt_z.pdf]]"))
+#+MACRO: ynkplt_vrbl_cycnt (eval (concat "#+label: fig:vrbl_cycnt\n" "#+caption: Number of countries with per year per variable\n" "#+attr_latex: :width 18cm\n" "[[file:figures/plt_v91_vrbl_cycnt.pdf]]"))
+#+MACRO: ynkplt_cbn_cycnt (eval (concat "#+label: fig:cbn_cycnt\n" "#+caption: Number of countries per year per variable combination\n" "#+attr_latex: :width 18cm\n" "[[file:figures/plt_v91_cbn_cycnt.pdf]]"))
+#+MACRO: ynkplt_vif (eval (concat "#+label: fig:vif\n" "#+caption: Distribution of VIF estimates (Gaussian kernel density estimate; bandwidth = 0.1)\n" "#+attr_latex: :width 18cm\n" "[[file:figures/plt_v91_vif.pdf]]"))
+#+MACRO: ynkplt_velp (eval (concat "#+label: fig:velp\n" "#+caption: Results of regressing longitudinal variables on year\n" "#+attr_latex: :width 24cm\n" "[[file:figures/plt_v91_velp.pdf]]"))
+#+MACRO: ynkplt_cntrfctl (eval (concat "#+label: fig:cntrfctl\n" "#+caption: Counterfactual simulations\n" "#+attr_latex: :width 19cm\n" "[[file:figures/plt_v91_cntrfctl.pdf]]"))
+#+MACRO: ynkplt_pred_taxinc (eval (concat "#+label: fig:pred_taxinc\n" "#+caption: Tax Incentives and Private Museum Founding: Adjusted Predictions at the Means (DS all IVs; population 100 mil.; 95% CI)\n" "#+attr_latex: :width 14cm\n" "[[file:figures/plt_v91_pred_taxinc.pdf]]"))
+#+MACRO: ynkplt_pred_smorc (eval (concat "#+label: fig:pred_smorc\n" "#+caption: Goverment Cultural Spending and Private Museum Founding: Adjusted Predictions at the Means (population 100 mil.; 95% CI)\n" "#+attr_latex: :width 14cm\n" "[[file:figures/plt_v91_pred_smorc.pdf]]"))
+#+MACRO: ynkplt_pred_ptinc (eval (concat "#+label: fig:pred_ptinc\n" "#+caption: ptinc\n" "#+attr_latex: :width 14cm\n" "[[file:figures/plt_v91_pred_ptinc.pdf]]"))
+#+MACRO: ynkplt_pred_hweal (eval (concat "#+label: fig:pred_hweal\n" "#+caption: hweal\n" "#+attr_latex: :width 14cm\n" "[[file:figures/plt_v91_pred_hweal.pdf]]"))
+#+MACRO: ynkplt_pred_hnwi (eval (concat "#+label: fig:pred_hnwi\n" "#+caption: hweal\n" "#+attr_latex: :width 18cm\n" "[[file:figures/plt_v91_pred_hnwi.pdf]]"))
+#+MACRO: ynkplt_oucoefchng (eval (concat "#+label: fig:oucoefchng\n" "#+caption: Coefficient changes given addition of other variables\n" "#+attr_latex: :width 24cm\n" "[[file:figures/plt_v91_oucoefchng.pdf]]"))
 
 
 # figlbls
@@ -281,12 +298,26 @@ dt_nbrs[, .(macro_str = sprintf("#+MACRO: %s %s", nbr_name, nbr_fmt)), grp] %>%
 #+MACRO: rplt_coef_violin \ref{fig:coef_violin}
 #+MACRO: rplt_best_coefs_cloud \ref{fig:best_coefs_cloud}
 #+MACRO: rplt_best_coefs_single \ref{fig:best_coefs_single}
+#+MACRO: rplt_best_coefs_single_cbn1 \ref{fig:best_coefs_single_cbn1}
 #+MACRO: rplt_lag_dens \ref{fig:lag_dens}
 #+MACRO: rplt_oneout_coefs \ref{fig:oneout_coefs}
 #+MACRO: rplt_oneout_llrt_lldiff \ref{fig:oneout_llrt_lldiff}
 #+MACRO: rplt_oneout_llrt_z \ref{fig:oneout_llrt_z}
 #+MACRO: rplt_vrbl_cycnt \ref{fig:vrbl_cycnt}
 #+MACRO: rplt_cbn_cycnt \ref{fig:cbn_cycnt}
+#+MACRO: rplt_vif \ref{fig:vif}
+#+MACRO: rplt_velp \ref{fig:velp}
+#+MACRO: rplt_cntrfctl \ref{fig:cntrfctl}
+#+MACRO: rplt_pred_taxinc \ref{fig:pred_taxinc}
+#+MACRO: rplt_pred_smorc \ref{fig:pred_smorc}
+#+MACRO: rplt_pred_ptinc \ref{fig:pred_ptinc}
+#+MACRO: rplt_pred_hweal \ref{fig:pred_hweal}
+#+MACRO: rplt_pred_hnwi \ref{fig:pred_hnwi}
+#+MACRO: rplt_oucoefchng \ref{fig:oucoefchng}
+#+MACRO: rplt_oucoefchng_tile \ref{fig:oucoefchng_tile}
+#+MACRO: rplt_oucoefchng_cbn1 \ref{fig:oucoefchng_cbn1}
+#+MACRO: rplt_oucoefchng_cbn2 \ref{fig:oucoefchng_cbn2}
+#+MACRO: rplt_oucoefchng_cbn3 \ref{fig:oucoefchng_cbn3}
 
 
 # tbllbls
@@ -1035,7 +1066,7 @@ However, while prospective founders apparently might ultimately be disincentiviz
 
 # While the general pattern thus follows the density-dependence literature, the particular values of the coefficients indicate additional complexities.
 # #
-# Whereas in "DS all IVs" the maximum of the private museum country density curve is reached at a value of {{{dens_cry_top_point_std_cbn_all}}}, correponding to a density of {{{dens_cry_top_point_cbn_all}}} private museums per million inhabitants, which constitutes a value higher than observed in {{{dens_cry_top_below_CYs_prop}}}% of country years, the maxium of the global density curve is already reached at a value of {{{dens_glbl_top_point_std_cbn_all}}}, corresponding to the global private museum count of {{{dens_glbl_top_point_cbn_all}}}, which is a value only higher than {{{dens_glbl_top_below_CYs_prop}}}% of country years.
+# Whereas in "DS all IVs" the maximum of the private museum country density curve is reached at a value of {{{dens_cry_top_point_std_cbn1}}}, correponding to a density of {{{dens_cry_top_point_cbn1}}} private museums per million inhabitants, which constitutes a value higher than observed in {{{dens_cry_top_below_CYs_prop}}}% of country years, the maxium of the global density curve is already reached at a value of {{{dens_glbl_top_point_std_cbn1}}}, corresponding to the global private museum count of {{{dens_glbl_top_point_cbn1}}}, which is a value only higher than {{{dens_glbl_top_below_CYs_prop}}}% of country years (and corresponds to the value reached in year XXXX).
 # #
 # In other words, the country-level capacity appears to be higher than the global carrying capacity, as on the country-level increasing private museum densities are associated with higher chances of private museum foundings for a substantially larger section of the data than on the global level.
 # # this is 92% made up
@@ -1127,9 +1158,9 @@ The association between inequality variables and private museum founding is mixe
 #
 While income inequality is significantly associated with lower founding, wealth inequality variables are positively and significantly associated with the establishment of new private museums. 
 #
-Thus, a 1 SD increase of the income share of the top 10% ({{{sptinc_1SD_cbn_all}}}% in 2020 in "DS all IVs", which corresponds approximately to the difference between Sweden ({{{sptinc_iso3c1}}}%) and Canada ({{{sptinc_iso3c2}}}%), or the within-country change in Lithuania from {{{sptinc_lngtd_year1}}} ({{{sptinc_lngtd_vlu_year1}}}%) to {{{sptinc_lngtd_year2}}} ({{{sptinc_lngtd_vlu_year2}}}%)) is associated with a decrease in private museum founding rate by a factor of $e$^{{{{sptinc_cbn_all}}}} = {{{sptinc_cbn_all_exp}}}. 
+A 1 SD increase of the income share of the top 10% ({{{sptinc_1SD_cbn1}}}% in 2020 in "DS all IVs", which corresponds approximately to the difference between Sweden ({{{sptinc_iso3c1}}}%) and Canada ({{{sptinc_iso3c2}}}%), or the within-country change in Lithuania from {{{sptinc_lngtd_year1}}} ({{{sptinc_lngtd_vlu_year1}}}%) to {{{sptinc_lngtd_year2}}} ({{{sptinc_lngtd_vlu_year2}}}%)) is associated with a decrease in private museum founding rate by a factor of $e$^{{{{sptinc_cbn1}}}} = {{{sptinc_cbn1_exp}}}. 
 # 
-Conversely, a 1 SD increase of the wealth share of the top 10% ({{{shweal_1SD_cbn_all}}}%; a difference in size similar to that between Denmark ({{{shweal_iso3c1}}}%) and the Czech Republic ({{{shweal_iso3c2}}}%) in 2020 in "DS all IVs", or to the longitudinal change in the United States from {{{shweal_lngtd_year1}}} ({{{shweal_lngtd_vlu_year1}}}%) to {{{shweal_lngtd_year2}}} ({{{shweal_lngtd_vlu_year2}}}%)) is associated with an increase in private museum founding rate by a factor of $e$^{{{{shweal_cbn_all}}}} = {{{shweal_cbn_all_exp}}}.
+Conversely, a 1 SD increase of the wealth share of the top 10% ({{{shweal_1SD_cbn1}}}%; a difference in size similar to that between Denmark ({{{shweal_iso3c1}}}%) and the Czech Republic ({{{shweal_iso3c2}}}%) in 2020 in "DS all IVs", or to the longitudinal change in the United States from {{{shweal_lngtd_year1}}} ({{{shweal_lngtd_vlu_year1}}}%) to {{{shweal_lngtd_year2}}} ({{{shweal_lngtd_vlu_year2}}}%)) is associated with an increase in private museum founding rate by a factor of $e$^{{{{shweal_cbn1}}}} = {{{shweal_cbn1_exp}}}.
 #
 There is thus substantial evidence for H3 in regards of wealth inequality, but also strong empirical evidence against a positive association between income inequality and private museum founding. 
 
@@ -1146,9 +1177,15 @@ Either one or both of these patterns possibly lead to the gini coefficients in "
 
 **** HNWI (H4)
 
-Increases in the number of HNWI do not seem to be substantially associated with private museum founding as after controlling for other variables, the HNWI coefficients are firstly comparatively small relative to those of other indicators, secondly not statistically significant and thirdly occasionally even negative. 
+Increases in the number of HNWI do not seem to be substantially associated with private museum founding as after controlling for other variables, the HNWI coefficients are firstly comparatively small relative to those of other indicators, secondly not statistically significant and thirdly occasionally negative, in particular in DS -CuSp and DS -CuSP/TMITR).
 #
-Consequently, there is little evidence that HNWI rates are substantially associated with private museum founding in either direction, thus rejecting H4. 
+In these two datasets, the coefficient of the HNWI population with a wealth larger than 5 million USD in particular is substantially negative and marginally significant ({{{hnwi_nbr_5M_cbn2_coef}}} (p = {{{hnwi_nbr_5M_cbn2_pvlu}}}) and {{{hnwi_nbr_5M_cbn3_coef}}} (p = {{{hnwi_nbr_5M_cbn3_pvlu}}}) for DS -CuSp and DS -CuSP/TMITR, respectively).
+#
+Consequently, there is little evidence that HNWI rates are substantially positively associated with private museum founding, thus rejecting H4.
+#
+
+
+
 
 # Overall, cbn_no_cult_spending and cbn_no_cult_spending_and_mitr are more similar in coefficient results than either is to cbn_all. 
 # #
