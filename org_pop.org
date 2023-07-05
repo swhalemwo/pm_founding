@@ -916,7 +916,8 @@ Most country-years are situated between 2000 and 2020, with coverage generally i
 
 
 #+latex: \begin{landscape}
-#+latex: \input{./tables/tbl:descs.tex}
+# #+latex: \input{./tables/tbl:descs_v91.tex}
+#+INCLUDE: "./tables/tbl:descs_v91.tex" export latex
 #+latex: \end{landscape}
 
 # #+latex: \begin{adjustbox}{angle=90}

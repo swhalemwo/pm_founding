@@ -2449,25 +2449,29 @@ c.screenreg <- function(trl) {
 ## }
     
 
-gen_tblcfg <- function(label, TABLE_DIR, caption) {
+gen_tblcfg <- function(label, TABLE_DIR, caption, batch_version) {
     list(label = label,
-         file = paste0(TABLE_DIR, label, ".tex"),
+         file = paste0(TABLE_DIR, label, "_", batch_version, ".tex"),
          caption = caption)
 }
     
 
-gen_tblcfgs <- function(TABLE_DIR) {
+gen_tblcfgs <- function(TABLE_DIR, batch_version) {
 
     ## trstylcfg <- list(dcolumn = T, single.row = T, leading.zero = F)
 
     list(
-        tbl_regrslts_wcptblF = gen_tblcfg(label = "tbl:regrslts_wcptblF", TABLE_DIR = TABLE_DIR,
+        tbl_regrslts_wcptblF = gen_tblcfg(label = "tbl:regrslts_wcptblF",
+                                          TABLE_DIR = TABLE_DIR, batch_version = batch_version,
                                           caption = "Negative binomial models of private museum founding rate"),
-        tbl_regrslts_wcptblT = gen_tblcfg(label = "tbl:regrslts_wcptblT", TABLE_DIR = TABLE_DIR,
+        tbl_regrslts_wcptblT = gen_tblcfg(label = "tbl:regrslts_wcptblT",
+                                          TABLE_DIR = TABLE_DIR, batch_version = batch_version,
                                           caption = "Negative binomial models of private museum founding rate"),
-        tbl_descs = gen_tblcfg(label = "tbl:descs", TABLE_DIR = TABLE_DIR,
+        tbl_descs = gen_tblcfg(label = "tbl:descs",
+                               TABLE_DIR = TABLE_DIR, batch_version = batch_version,
                                caption = "Summary Statistics"),
-        tbl_cbn_cpsgn = gen_tblcfg(label = "tbl:cbn_cpsgn", TABLE_DIR = TABLE_DIR,
+        tbl_cbn_cpsgn = gen_tblcfg(label = "tbl:cbn_cpsgn",
+                                   TABLE_DIR = TABLE_DIR, batch_version = batch_version,
                                    caption = "Dataset composition by region")        
     )
 }
@@ -3654,8 +3658,8 @@ reg_res <- list()
 reg_res$plts <- gen_reg_res_plts(reg_res_objs, vvs, NBR_MDLS, only_priority_plts = T, stylecfg)
 
 ## nreg_res$plts$plt_best_coefs_single_cbn1 <- gen_plt_best_coefs_single_cbn1(reg_res_objs$top_coefs)
-reg_res$plts$plt_pred_smorc <- gen_plt_pred_smorc(reg_res_objs$top_coefs)
-render_reg_res("plt_pred_smorc", reg_res, batch_version = "v91")
+reg_res$plts$plt_pred_taxinc <- gen_plt_pred_taxinc(reg_res_objs$top_coefs)
+render_reg_res("plt_pred_taxinc", reg_res, batch_version = "v91")
 
 
 gen_plt_best_coefs_single
@@ -3682,7 +3686,7 @@ pvxtbl(res_tbls$tbl_regrslts_wcptblF, landscape = T)
 pvxtbl(res_tbls$tbl_descs, landscape = T)
 pvxtbl(res_tbls$tbl_cbn_cpsgn, landscape = T)
 
-iwalk(res_tbls, ~do.call("render_xtbl", c(.x, gen_tblcfgs(TABLE_DIR)[[.y]])))
+iwalk(res_tbls, ~do.call("render_xtbl", c(.x, gen_tblcfgs(TABLE_DIR, batch_version)[[.y]])))
 
 ## ** predicting
 

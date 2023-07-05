@@ -1,4 +1,4 @@
-% Created 2023-07-05 wo 14:12
+% Created 2023-07-05 wo 15:58
 % Intended LaTeX compiler: pdflatex
 \documentclass[11pt]{article}
 
@@ -505,7 +505,42 @@ As excluding a large number of country-years limits the generalizability of find
 In particular, I construct one dataset with all variables (1245 country years, 85 countries; referred to as "DS all IVs"), one with all variables except cultural spending (2514 country years, 150 countries; "DS --CuSp"), and one with all variables except cultural spending and top marginal income tax rates (3330 country years, 161 countries; "DS --CuSp/TMITR").
 Most country-years are situated between 2000 and 2020, with coverage generally increasing over time; the datasets therefore effectively cover the period in which the majority of private museum founding has taken place.
 \begin{landscape}
-\input{./tables/tbl:descs.tex}
+% latex table generated in R 4.3.0 by xtable 1.8-4 package
+% Wed Jul  5 15:56:59 2023
+\begin{table}[ht]
+\centering
+\begin{tabular}{p{7cm}llllllllllll}
+  \hline 
+  & \multicolumn{4}{c}{DS all IVs (n=1245)} & \multicolumn{4}{c}{DS --CuSp (n=2514)} & \multicolumn{4}{c}{DS --CuSp/TMITR (n=3330)} \\ 
+\cmidrule(r){2-5}\cmidrule(r){6-9}\cmidrule(r){10-13}  
+ Variable & Mean & SD & Min. & Max. & Mean & SD & Min. & Max. & Mean & SD & Min. & Max. \\ 
+  \hline
+Private Museum openings & 0.011 & 0.054 & 0 & 0.881 & 0.006 & 0.039 & 0 & 0.881 & 0.005 & 0.034 & 0 & 0.881 \\ 
+  Tax deductibility of donations & 0.906 & 0.292 & 0 & 1 & 0.774 & 0.419 & 0 & 1 & 0.682 & 0.466 & 0 & 1 \\ 
+  Top Marginal Income Tax Rate (\%) & 35.2 & 14.0 & 0 & 63.5 & 32.2 & 13.5 & 0 & 65 & -- & -- & -- & -- \\ 
+  Gvt cultural spending (millions) & 344 & 312 & 0.292 & 2 021 & -- & -- & -- & -- & -- & -- & -- & -- \\ 
+  Income share of top 10\% (*100) & 40.4 & 8.88 & 26.5 & 69.6 & 45.5 & 9.58 & 26.5 & 70.8 & 45.9 & 9.14 & 26.5 & 71.6 \\ 
+  Income share of top 1\% (*100) & 14.0 & 4.47 & 6.04 & 29.7 & 16.3 & 5.32 & 6.04 & 44.9 & 16.2 & 5.23 & 6.04 & 44.9 \\ 
+  Gini of pre-tax income (*100) & 51.5 & 8.62 & 35.9 & 78.1 & 56.4 & 9.05 & 35.9 & 78.1 & 56.9 & 8.55 & 35.9 & 78.1 \\ 
+  Wealth share of top 10\% (*100) & 60.6 & 7.54 & 42.0 & 90.9 & 63.2 & 7.87 & 42.0 & 90.9 & 63.3 & 7.69 & 42.0 & 90.9 \\ 
+  Wealth share of top 1\% (*100) & 27.2 & 7.77 & 12.1 & 58.2 & 30.0 & 8.24 & 12.1 & 58.2 & 30.0 & 8.07 & 12.1 & 58.2 \\ 
+  Gini of net wealth (*100) & 75.6 & 6.19 & 57.7 & 95 & 77.4 & 6.30 & 57.7 & 95 & 77.4 & 6.12 & 57.7 & 95 \\ 
+  HNWIs (net worth $\geq$ 1M) & 14 517 & 20 978 & 16.4 & 142 766 & 7 857 & 16 502 & 13.5 & 142 766 & 6 035 & 14 704 & 0 & 142 766 \\ 
+  HNWIs (net worth $\geq$ 5M) & 986 & 1 622 & 0 & 12 420 & 545 & 1 245 & 0 & 12 420 & 421 & 1 105 & 0 & 12 420 \\ 
+  HNWIs (net worth $\geq$ 30M) & 54.7 & 109 & 0 & 966 & 30.6 & 81.4 & 0 & 966 & 23.7 & 71.9 & 0 & 966 \\ 
+  HNWIs (net worth $\geq$ 200M) & 5.73 & 9.80 & 0 & 80.4 & 3.12 & 7.61 & 0 & 80.4 & 2.39 & 6.76 & 0 & 80.4 \\ 
+  GDP per cap. (thousands) & 26.4 & 24.9 & 0.453 & 135 & 16.2 & 21.1 & 0.277 & 135 & 13.1 & 19.4 & 0.247 & 135 \\ 
+  Population (millions) & 65.9 & 202 & 0.087 & 1 411 & 53.5 & 169 & 0.087 & 1 411 & 43.0 & 148 & 0.081 & 1 411 \\ 
+  modern/contemp. art museums (1990) & 0.730 & 1.01 & 0 & 5.21 & 0.413 & 0.817 & 0 & 5.21 & 0.324 & 0.734 & 0 & 5.21 \\ 
+  Collectors in Artnews top 200 collector list & 0.069 & 0.247 & 0 & 2.23 & 0.036 & 0.178 & 0 & 2.23 & 0.027 & 0.155 & 0 & 2.23 \\ 
+  PM density (country) & 0.170 & 0.279 & 0 & 1.76 & 0.091 & 0.214 & 0 & 1.76 & 0.069 & 0.190 & 0 & 1.76 \\ 
+  PM density (global) & 294 & 107 & 68 & 429 & 300 & 107 & 68 & 429 & 282 & 109 & 68 & 429 \\ 
+  Nbr. PM closings (cumulative, global) & 22.6 & 23.5 & 1 & 75 & 24.2 & 24.3 & 1 & 75 & 20.6 & 23.2 & 1 & 75 \\ 
+   \hline \multicolumn{13}{l}{\footnotesize{all country-level count variables are per million population; all monetary amounts are 2021 USD}}
+\end{tabular}
+\caption{Summary Statistics} 
+\label{tbl:descs}
+\end{table}
 \end{landscape}
 
 
@@ -560,50 +595,50 @@ Only 211 country-years see show at least one private museum founding in "DS all 
 
 \subsubsection*{Regression results}
 
-% latex table generated in R 4.2.3 by xtable 1.8-4 package
-% Fri May  5 12:09:40 2023
+% latex table generated in R 4.3.0 by xtable 1.8-4 package
+% Wed Jul  5 15:56:59 2023
 \begin{table}[ht]
 \centering
 \begin{tabular}{p{0.5mm}p{6cm}D{)}{)}{8)3} D{)}{)}{8)3} D{)}{)}{8)3} }
   \hline 
   &   & \multicolumn{1}{c}{DS all IVs} & \multicolumn{1}{c}{DS --CuSp} & \multicolumn{1}{c}{DS --CuSp/TMITR} \\ 
   \hline
- & Intercept & -2.50 \; (0.74)^{***} & -3.17 \; (0.95)^{***} & -3.48 \; (0.88)^{***} \\ 
+ & Intercept & -4.49 \; (0.60)^{***} & -6.61 \; (0.52)^{***} & -6.98 \; (0.45)^{***} \\ 
    \multicolumn{5}{l}{\textbf{H1: Tax incentives}} \\ 
- & Tax deductibility of donations & .19 \; (0.55) & .48 \; (0.47) & .72 \; (0.36)^{*} \\ 
-   & Marginal Income Tax Rate  & -.41 \; (0.27) & -.38 \; (0.30) &  \\ 
-   & Marginal Income Tax Rate *
-Tax deductibility of donations & .54 \; (0.29) & .77 \; (0.34)^{*} &  \\ 
+ & Tax deductibility of donations & .15 \; (0.58) & .56 \; (0.52) & .72 \; (0.44) \\ 
+   & Top Marginal Income Tax Rate & -.62 \; (0.31)^{*} & -.47 \; (0.37) &  \\ 
+   & Tax deductibility *
+Top Marg. Inc. TR & .66 \; (0.33)^{*} & .84 \; (0.40)^{*} &  \\ 
    \multicolumn{5}{l}{\textbf{H2: Cultural spending}} \\ 
- & Gvt cultural spending  & .37 \; (0.15)^{*} &  &  \\ 
-   & Gvt cultural spending (squared) & -.62 \; (0.15)^{***} &  &  \\ 
+ & Gvt cultural spending & .38 \; (0.15)^{**} &  &  \\ 
+   & Gvt cultural spending (squared) & -.63 \; (0.15)^{***} &  &  \\ 
    \multicolumn{5}{l}{\textbf{H3: Income inequality}} \\ 
- & Income share of top 10\% & -.45 \; (0.18)^{*} & -.79 \; (0.21)^{***} & -.76 \; (0.20)^{***} \\ 
-   & Income share of top 1\% & -.53 \; (0.14)^{***} & -.69 \; (0.19)^{***} & -.73 \; (0.18)^{***} \\ 
-   & Gini of pre-tax income & -.22 \; (0.17) & -.56 \; (0.19)^{**} & -.50 \; (0.18)^{**} \\ 
+ & Income share of top 10\% & -.47 \; (0.19)^{*} & -.84 \; (0.22)^{***} & -.82 \; (0.21)^{***} \\ 
+   & Income share of top 1\% & -.57 \; (0.13)^{***} & -.69 \; (0.20)^{***} & -.72 \; (0.19)^{***} \\ 
+   & Gini of pre-tax income & -.21 \; (0.18) & -.55 \; (0.20)^{**} & -.59 \; (0.20)^{**} \\ 
    \multicolumn{5}{l}{\textbf{H3: Wealth inequality}} \\ 
- & Wealth share of top 10\% & .33 \; (0.10)^{**} & .59 \; (0.14)^{***} & .52 \; (0.13)^{***} \\ 
-   & Wealth share of top 1\% & .42 \; (0.12)^{***} & .70 \; (0.17)^{***} & .67 \; (0.15)^{***} \\ 
-   & Gini of net wealth & .14 \; (0.11) & .38 \; (0.12)^{**} & .35 \; (0.11)^{**} \\ 
+ & Wealth share of top 10\% & .33 \; (0.10)^{**} & .54 \; (0.15)^{***} & .53 \; (0.15)^{***} \\ 
+   & Wealth share of top 1\% & .42 \; (0.12)^{***} & .69 \; (0.18)^{***} & .69 \; (0.17)^{***} \\ 
+   & Gini of net wealth & .13 \; (0.11) & .34 \; (0.13)^{**} & .33 \; (0.12)^{**} \\ 
    \multicolumn{5}{l}{\textbf{H4: (U/V)HNWIs}} \\ 
- & HNWIs (net worth $\geq$ 1M) & .06 \; (0.13) & -.14 \; (0.14) & .05 \; (0.12) \\ 
-   & HNWIs (net worth $\geq$ 5M) & .17 \; (0.11) & -.22 \; (0.11) & -.16 \; (0.10) \\ 
-   & HNWIs (net worth $\geq$ 30M) & .02 \; (0.10) & .05 \; (0.09) & .03 \; (0.08) \\ 
-   & HNWIs (net worth $\geq$ 200M) & -.11 \; (0.10) & -.13 \; (0.09) & -.07 \; (0.07) \\ 
+ & HNWIs (net worth $\geq$ 1M) & .06 \; (0.12) & -.07 \; (0.13) & -.05 \; (0.12) \\ 
+   & HNWIs (net worth $\geq$ 5M) & .15 \; (0.11) & -.21 \; (0.11) & -.18 \; (0.10) \\ 
+   & HNWIs (net worth $\geq$ 30M) & .04 \; (0.10) & -.06 \; (0.09) & -.04 \; (0.08) \\ 
+   & HNWIs (net worth $\geq$ 200M) & -.10 \; (0.10) & -.13 \; (0.09) & -.08 \; (0.07) \\ 
    \multicolumn{5}{l}{\textbf{Controls}} \\ 
- & GDP per cap.  & .39 \; (0.18)^{*} & .79 \; (0.21)^{***} & .88 \; (0.18)^{***} \\ 
-   & modern/contemp. art museums (1990) & .10 \; (0.18) & .06 \; (0.28) & .24 \; (0.24) \\ 
-   & modern/contemp. art museums (1990, squared) & -.05 \; (0.05) & -.04 \; (0.06) & -.05 \; (0.04) \\ 
-   & Collectors in Artnews top 200 collector list & .10 \; (0.07) & .10 \; (0.08) & .07 \; (0.07) \\ 
-   & PM density (country) & 1.20 \; (0.17)^{***} & .97 \; (0.21)^{***} & .90 \; (0.21)^{***} \\ 
-   & PM density squared (country) & -.29 \; (0.08)^{***} & -.21 \; (0.05)^{***} & -.17 \; (0.04)^{***} \\ 
-   & PM density (global) & -.38 \; (0.22) & -.13 \; (0.16) & -.08 \; (0.13) \\ 
-   & PM density squared (global) & -.28 \; (0.15) & -.29 \; (0.11)^{*} & -.28 \; (0.12)^{*} \\ 
-   & Nbr. PM closings (cumulative, global) & .10 \; (0.21) & -.11 \; (0.15) & -.08 \; (0.14) \\ 
+ & GDP per cap. & .42 \; (0.18)^{*} & .76 \; (0.20)^{***} & .84 \; (0.18)^{***} \\ 
+   & modern/contemp. art museums (1990) & .09 \; (0.18) & .18 \; (0.32) & .22 \; (0.31) \\ 
+   & modern/contemp. art museums (1990, squared) & -.05 \; (0.05) & -.05 \; (0.06) & -.05 \; (0.05) \\ 
+   & Collectors in Artnews top 200 collector list & .09 \; (0.07) & .15 \; (0.09) & .11 \; (0.08) \\ 
+   & PM density (country) & 1.21 \; (0.17)^{***} & .77 \; (0.24)^{**} & .66 \; (0.23)^{**} \\ 
+   & PM density squared (country) & -.30 \; (0.08)^{***} & -.19 \; (0.05)^{***} & -.15 \; (0.04)^{***} \\ 
+   & PM density (global) & -.44 \; (0.22)^{*} & -.04 \; (0.16) & -.00 \; (0.14) \\ 
+   & PM density squared (global) & -.29 \; (0.15)^{*} & -.29 \; (0.12)^{*} & -.26 \; (0.12)^{*} \\ 
+   & Nbr. PM closings (cumulative, global) & .15 \; (0.21) & -.12 \; (0.15) & -.09 \; (0.14) \\ 
    \hline
- & N & 1250 & 2562 & 3393 \\ 
-   & No. countries & 86 & 153 & 164 \\ 
-   & Log likelihood & -561.00 & -711.49 & -730.07 \\ 
+ & N & 1245 & 2514 & 3330 \\ 
+   & No. countries & 85 & 150 & 161 \\ 
+   & Log likelihood & -557.50 & -697.47 & -716.32 \\ 
    \hline 
  \multicolumn{4}{l}{\footnotesize{standard errors in parantheses.\textsuperscript{***}p \textless 0.001;\textsuperscript{**}p \textless 0.01;\textsuperscript{*}p \textless 0.05.}}
 \end{tabular}
