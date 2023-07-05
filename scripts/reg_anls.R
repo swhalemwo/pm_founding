@@ -1746,9 +1746,11 @@ gen_plt_pred_taxinc <- function(top_coefs) {
     ## convert back to actual scale
     dt_ti_pred[, c("pred", "se") :=  map(predict(rx, dt_ti_pred, se.fit = T), ~.x)] %>% 
         .[, (tmitr_vrbl) := attr(tmitr_scale_cbn1, "scaled:center") +
-                attr(tmitr_scale_cbn1, "scaled:scale")*get(tmitr_vrbl)]
+                attr(tmitr_scale_cbn1, "scaled:scale")*get(tmitr_vrbl)] %>%
+        .[, `:=`(min = pred - 1.96 * se, max = pred + 1.96 * se)]
+    
     ## dt_ti_pred[, .(xx)] %>% summary()
-    dt_ti_pred %>% copy() %>% .[, `:=`(min = pred - 1.96 * se, max = pred + 1.96 * se)] %>% 
+    dt_ti_pred %>% 
         ggplot(aes(x=get(tmitr_vrbl), y=pred,
                    color = factor(Ind.tax.incentives),
                    linetype = factor(Ind.tax.incentives))) +
@@ -1763,10 +1765,12 @@ gen_plt_pred_taxinc <- function(top_coefs) {
                     ) + 
         geom_line(linewidth = 1, show.legend = F) +
         coord_cartesian(ylim = c(-3, 3)) +
-        scale_y_continuous(labels = trans_format("exp", \(x) format(x, scientific = F, digits = 2))) + 
+        scale_y_continuous(
+            breaks = seq(dt_ti_pred[, floor(min(min))], dt_ti_pred[, ceiling(max(max))]), 
+            labels = trans_format("exp", \(x) format(x, scientific = F, digits = 2))) + 
             ## breaks = trans_breaks("exp", \(x) log(x))) + 
         ## coord_cartesian(ylim = c(0, 6)) +
-        labs(y="Number of Foundings", x= "Top Marginal Income Tax Rate (%)") +
+        labs(y="predicted number of foundings", x= "Top Marginal Income Tax Rate (%)") +
         geom_text(head(copy(dt_ti_pred)[get(tmitr_vrbl) > 60],2)[
           , lbl := fifelse(Ind.tax.incentives == 0,
                            paste0("donations not tax deductible"),
@@ -1789,7 +1793,7 @@ gen_plt_pred_taxinc <- function(top_coefs) {
 ## (reg_res$plts$plt_pred_taxinc + reg_res$plts$plt_pred_taxinc) /
 ##     (reg_res$plts$plt_pred_smorc + plot_spacer())
 
-gen_plt_pred_taxinc(reg_res_objs$top_coefs)
+## gen_plt_pred_taxinc(reg_res_objs$top_coefs)
 
 gen_plt_pred_smorc <- function(top_coefs) {
     if (as.character(match.call()[[1]]) %in% fstd){browser()}
@@ -1822,20 +1826,24 @@ gen_plt_pred_smorc <- function(top_coefs) {
 
     dt_smorc_pred[, c("pred", "se") :=  map(predict(rx, dt_smorc_pred, se.fit = T), ~.x)] %>% 
         .[, (smorc_vrbl) := attr(smorc_scale, "scaled:center") +
-                attr(smorc_scale, "scaled:scale")*get(smorc_vrbl)]
+                attr(smorc_scale, "scaled:scale")*get(smorc_vrbl)] %>%
+        .[, `:=`(min = pred - 1.96 * se, max = pred + 1.96 * se)] 
 
     dt_smorc_pred %>% copy() %>%
-        .[, `:=`(min = pred - 1.96 * se, max = pred + 1.96 * se)] %>% 
         ggplot(aes(x=get(smorc_vrbl), y=pred)) +
         geom_ribbon(mapping = aes(ymin = min, ymax = max),
                     linetype = "dashed",
                     color = "black",
                     alpha = 0.15, show.legend = F) +
-        geom_line(linewidth = 1.5) +
-        labs(y="Number of foundings", x= "Gvt Cultural Spending (2021 USD)") +
-        scale_y_continuous(labels = trans_format("exp", \(x) format(x, scientific = F, nsmall = 0, digits = 1))) + 
+        geom_line(linewidth = 1) +
+        labs(y="predicted number of foundings", x= "Gvt Cultural Spending (2021 USD)") +
+        ## scale_y_continuous(
+        scale_y_continuous(
+            breaks = seq(dt_smorc_pred[, floor(min(min))], dt_smorc_pred[, ceiling(max(max))]),
+            labels = trans_format("exp", \(x) format2(x, scientific = F, nsmall = 0, digits = 1))) + 
         theme_bw() +
-        theme_orgpop()
+        theme_orgpop() +
+        theme(plot.margin = unit(c(2,6,2,2), "points")) # adjust for x axis tick labels
     
 
 }
@@ -2394,9 +2402,12 @@ gen_plt_cfgs <- function() {
                                 caption = "Counterfactual simulations"),
             plt_pred_taxinc = list(filename = "pred_taxinc.pdf", width = 14, height = 7.5,
                                    caption = paste0("Tax Incentives and Private Museum Founding: Adjusted ",
-                                                    "Predictions at the Means (DS all IVs; population 100 mil.)")),
+                                                    "Predictions at the Means (DS all IVs; population 100 mil.; ",
+                                                    "95% CI)")),
             plt_pred_smorc = list(filename = "pred_smorc.pdf", width = 14, height = 7.5,
-                                  caption = "smorc smorc"),
+                                  caption = paste0("Goverment Cultural Spending and Private Museum Founding: ",
+                                                   "Adjusted Predictions at the Means (population 100 mil.; ",
+                                                   "95% CI)")),
             plt_pred_ptinc = list(filename = "pred_ptinc.pdf", width = 14, height = 7.5,
                                   caption = "ptinc"),
             plt_pred_hweal = list(filename = "pred_hweal.pdf", width = 14, height = 7.5,
@@ -3626,8 +3637,8 @@ reg_res <- list()
 reg_res$plts <- gen_reg_res_plts(reg_res_objs, vvs, NBR_MDLS, only_priority_plts = T, stylecfg)
 
 ## nreg_res$plts$plt_best_coefs_single_cbn1 <- gen_plt_best_coefs_single_cbn1(reg_res_objs$top_coefs)
-reg_res$plts$plt_pred_taxinc <- gen_plt_pred_taxinc(reg_res_objs$top_coefs)
-render_reg_res("plt_pred_taxinc", reg_res, batch_version = "v91")
+reg_res$plts$plt_pred_smorc <- gen_plt_pred_smorc(reg_res_objs$top_coefs)
+render_reg_res("plt_pred_smorc", reg_res, batch_version = "v91")
 
 
 gen_plt_best_coefs_single
