@@ -988,7 +988,7 @@ Firstly, it can be seen that the smaller datasets, especially "DS all IVs", wher
 The main variable of interest, private museum founding (and consequently private museum densities), is more prevalent in "DS all IVs" as well: 
 #
 For example, while in "DS all IVs" on average each year one private museum is founded per {{{nbr_pop_p_1pm_cbn1}}} million inhabitants (1/{{{opng_rate_cbn1}}}), this rate is substantially lower in "DS --CuSP" and "DS --CuSp/TMITR" with one private museum founding per {{{nbr_pop_p_1pm_cbn2}}} and {{{nbr_pop_p_1pm_cbn3}}} million inhabitants, respectively.
-# [fn::These rates refer to country-year averages which weigh all units evenly regardless of population size. The dataset-year private museum founding rates are lower at on average one private museum founding per {{{opng_p1m_glbl_yearly_cbn_all}}}, {{{opng_p1m_glbl_yearly_cbn_no_cult_spending}}}, {{{opng_p1m_glbl_yearly_cbn_no_cult_spending_and_mitr}}} million inhabitants in "DS all IVs", "DS --CuSP", and "DS -CuSp/TMITR", respectively, indicating that private museum founding takes place disproportionally in country-years with below average population size.]
+# [fn::These rates refer to country-year averages which weigh all units evenly regardless of population size. The dataset-year private museum founding rates are lower at on average one private museum founding per {{{opng_p1m_glbl_yearly_cbn1}}}, {{{opng_p1m_glbl_yearly_cbn2}}}, {{{opng_p1m_glbl_yearly_cbn3}}} million inhabitants in "DS all IVs", "DS --CuSP", and "DS -CuSp/TMITR", respectively, indicating that private museum founding takes place disproportionally in country-years with below average population size.]
 #
 Secondly, several variables show substantial skew (indicated by high standard deviations compared to the mean), such as cultural spending, GDP and HNWI, art museum and collector rates, as well as the dependent variable of private museum openings: 
 #
@@ -1086,22 +1086,23 @@ Similary, the coefficients of the art field indicators (the number of museums of
 **** Tax Incentives (H1)
 
 *add section about intercepts*
-*rewrite with focus on cbn1*
-The results for tax incentives largely support H1: 
-#
-Tax deductibility of donations is found to be positive and marginally significantly (p = {{{Ind_tax_incentives_cbn3_pvlu}}}) related to private museum founding in "DS --CuSp/TMITR", indicating a private museum founding rate $e$^{{{{Ind_tax_incentives_cbn2_coef}}}} = {{{Ind_tax_incentives_cbn3_coef_exp}}} times higher in countries where charitable deductions are tax deductible than in countries where these donations are not tax deductible.
-#
-In "DS --CuSp" the interaction between top marginal income rate and tax deductibility of donations is positive and significant, which indicates that higher top marginal income tax rate have a larger effect when charitable donations are tax deductible:
-# 
-A 1 SD increase of the top marginal income tax rate ({{{tmitr_1SD_cbn_no_cult_spending}}} percentage points, corresponding approximately to the difference between the Netherlands ({{{tmitr_iso3c1}}}%) and Chile ({{{tmitr_iso3c2}}}%) in 2020) is associated with a difference in founding rate that is $e$^{{{{txdctblt_tmitr_interact_cbn2}}}} = {{{txdctblt_tmitr_interact_cbn2_exp}}} times larger in countries with tax deductibility of donations than in countries without.
-# 
-Given that the effect of an additional 1 SD top marginal income tax rate for countries without tax deductibility of donations is {{{tmitr_cbn2}}}, a 1 SD increase in top marginal income tax rate in countries with tax deductibility of donations corresponds to an increase in log-founding by {{{tmitr_cbn2}}} + {{{txdctblt_tmitr_interact_cbn2}}} = {{{tmitr_neteffct_txdctblt1_cbn_no_cult_spending}}}, or an increase in founding rate by a factor of $e$^{{{{tmitr_neteffct_txdctblt1_cbn_no_cult_spending}}}} = {{{tmitr_neteffct_txdctblt1_cbn_no_cult_spending_exp}}}. 
-# 
-# increases the effect of tax deductibility of donations by a factor of .
-#
-In "DS all IVs", the interaction is still positive, but no longer significant, possibly because "DS all IVs" is primarily composed of countries in which charitable donations are tax deductible (table {{{rtbl_descs}}}) and hence shows little variation on this variable. 
-#
-Despite significant effects not being present in every dataset, the data overall indicates substantial support for an association between tax incentives and private museum founding, supporting H1. 
+
+# *rewrite with focus on cbn1*
+# The results for tax incentives largely support H1: 
+# #
+# Tax deductibility of donations is found to be positive and marginally significantly (p = {{{Ind_tax_incentives_cbn3_pvlu}}}) related to private museum founding in "DS --CuSp/TMITR", indicating a private museum founding rate $e$^{{{{Ind_tax_incentives_cbn2_coef}}}} = {{{Ind_tax_incentives_cbn3_coef_exp}}} times higher in countries where charitable deductions are tax deductible than in countries where these donations are not tax deductible.
+# #
+# In "DS --CuSp" the interaction between top marginal income rate and tax deductibility of donations is positive and significant, which indicates that higher top marginal income tax rate have a larger effect when charitable donations are tax deductible:
+# # 
+# A 1 SD increase of the top marginal income tax rate ({{{tmitr_1SD_cbn_no_cult_spending}}} percentage points, corresponding approximately to the difference between the Netherlands ({{{tmitr_iso3c1}}}%) and Chile ({{{tmitr_iso3c2}}}%) in 2020) is associated with a difference in founding rate that is $e$^{{{{txdctblt_tmitr_interact_cbn2}}}} = {{{txdctblt_tmitr_interact_cbn2_exp}}} times larger in countries with tax deductibility of donations than in countries without.
+# # 
+# Given that the effect of an additional 1 SD top marginal income tax rate for countries without tax deductibility of donations is {{{tmitr_cbn2}}}, a 1 SD increase in top marginal income tax rate in countries with tax deductibility of donations corresponds to an increase in log-founding by {{{tmitr_cbn2}}} + {{{txdctblt_tmitr_interact_cbn2}}} = {{{tmitr_neteffct_txdctblt1_cbn_no_cult_spending}}}, or an increase in founding rate by a factor of $e$^{{{{tmitr_neteffct_txdctblt1_cbn_no_cult_spending}}}} = {{{tmitr_neteffct_txdctblt1_cbn_no_cult_spending_exp}}}. 
+# # 
+# # increases the effect of tax deductibility of donations by a factor of .
+# #
+# In "DS all IVs", the interaction is still positive, but no longer significant, possibly because "DS all IVs" is primarily composed of countries in which charitable donations are tax deductible (table {{{rtbl_descs}}}) and hence shows little variation on this variable. 
+# #
+# Despite significant effects not being present in every dataset, the data overall indicates substantial support for an association between tax incentives and private museum founding, supporting H1. 
 
 
 
@@ -1110,7 +1111,7 @@ Despite significant effects not being present in every dataset, the data overall
 # new version
 The results for tax incentives largely support H1:
 #
-In "DS all IVs" (as well as DS -CuSp), the interaction between Tax deductibility of donations is positive and significant, which indicates that increases in top marginal income tax rates have a larger positive effect in countries where charitable donations are tax deductible than in countries where they are not.
+In "DS all IVs" (as well as DS -CuSp), the interaction between tax deductibility of donations and top marginal income tax rates is positive and significant, which indicates that increases in top marginal income tax rates have a larger positive effect in countries where charitable donations are tax deductible than in countries where they are not.
 #
 Figure {{{rplt_pred_taxinc}}} visualizes how the impact of top marginal income tax rates depends on the presence of tax deductibility of donations.
 #
