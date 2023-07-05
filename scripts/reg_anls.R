@@ -3214,8 +3214,20 @@ gen_nbrs_pred <- function(top_coefs, cbn_dfs_rates_uscld, df_reg, print_examples
     gdp_stats <- c(gdp_stats1, gdp_stats2)
     
     
-
+    ## hnwi stats
     
+    ## look at pvalues
+    ## dt_tctt[grepl("hnwi_nbr", vrbl ) & msr == "pvlu"][order(value)]
+
+    lnbrs_hnwi <- rbind(
+        dt_tctt[cbn_name == "cbn2" & vrbl == "hnwi_nbr_5M" & msr == "coef"][, dgts := 2],
+        dt_tctt[cbn_name == "cbn2" & vrbl == "hnwi_nbr_5M" & msr == "pvlu"][, dgts := 3],
+        dt_tctt[cbn_name == "cbn3" & vrbl == "hnwi_nbr_5M" & msr == "coef"][, dgts := 2],
+        dt_tctt[cbn_name == "cbn3" & vrbl == "hnwi_nbr_5M" & msr == "pvlu"][, dgts := 3]) %>%
+        .[, .(nbr_name = sprintf("%s_%s_%s", vrbl, cbn_name, msr), value, dgts)] %>% split(1:nrow(.)) %>%
+        map(~list(nbr_name = .x$nbr_name, nbr = .x$value, digits = .x$dgts)) %>% unname()
+
+        
     ## numbers that can get formated comfily with lnbr/fmt_nbr_flex
     l_res <- list(
         intcpt_info = intcpt_info,
@@ -3228,7 +3240,8 @@ gen_nbrs_pred <- function(top_coefs, cbn_dfs_rates_uscld, df_reg, print_examples
         dens_coef_stats = dens_coef_stats,
         dens_cry_top_point_stats = dens_cry_top_point_stats,
         dens_glbl_top_point_stats = dens_glbl_top_point_stats,
-        gdp_stats = gdp_stats)
+        gdp_stats = gdp_stats,
+        hnwi_stats = lnbrs_hnwi)
     
     dt_nbrs_pred_prep <- imap_dfr(l_res, ~rbindlist(.x)[, grp := .y]) %>%
         .[, nbr_fmt := fmt_nbr_flex(nbr, digits)] %>%
