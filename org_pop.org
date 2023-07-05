@@ -36,108 +36,126 @@ dt_nbrs[, .(macro_str = sprintf("#+MACRO: %s %s", nbr_name, nbr_fmt)), grp] %>%
 
 
 # cbn_info
-#+MACRO: nbr_cy_cbn_all 1250
-#+MACRO: nbr_cy_cbn_no_cult_spending 2562
-#+MACRO: nbr_cy_cbn_no_cult_spending_and_mitr 3393
-#+MACRO: nbr_crys_cbn_all 86
-#+MACRO: nbr_crys_cbn_no_cult_spending 153
-#+MACRO: nbr_crys_cbn_no_cult_spending_and_mitr 164
-#+MACRO: nbr_opngs_cbn_all 356
-#+MACRO: nbr_opngs_cbn_no_cult_spending 405
-#+MACRO: nbr_opngs_cbn_no_cult_spending_and_mitr 407
-#+MACRO: prop_opngs_cvrd_cbn_all 0.651
-#+MACRO: prop_opngs_cvrd_cbn_no_cult_spending 0.740
-#+MACRO: prop_opngs_cvrd_cbn_no_cult_spending_and_mitr 0.744
+#+MACRO: nbr_cy_cbn1 1245
+#+MACRO: nbr_cy_cbn2 2514
+#+MACRO: nbr_cy_cbn3 3330
+#+MACRO: nbr_crys_cbn1 85
+#+MACRO: nbr_crys_cbn2 150
+#+MACRO: nbr_crys_cbn3 161
+#+MACRO: nbr_opngs_cbn1 355
+#+MACRO: nbr_opngs_cbn2 402
+#+MACRO: nbr_opngs_cbn3 404
+#+MACRO: prop_opngs_cvrd_cbn1 0.649
+#+MACRO: prop_opngs_cvrd_cbn2 0.735
+#+MACRO: prop_opngs_cvrd_cbn3 0.739
 
 
 # opng_rates_fmt
 #+MACRO: opng_rate_cbn1 0.0112
-#+MACRO: opng_rate_cbn2 0.0061
-#+MACRO: opng_rate_cbn3 0.0047
+#+MACRO: opng_rate_cbn2 0.0060
+#+MACRO: opng_rate_cbn3 0.0046
 
 
 # opng_prop_vlus
-#+MACRO: nbr_zero_cbn_all 1 038
-#+MACRO: nbr_nzero_cbn_all 212
-#+MACRO: prop_nzero_cbn_all 17.0
-#+MACRO: nbr_zero_cbn_no_cult_spending 2 307
-#+MACRO: nbr_nzero_cbn_no_cult_spending 255
-#+MACRO: prop_nzero_cbn_no_cult_spending 10.0
-#+MACRO: nbr_zero_cbn_no_cult_spending_and_mitr 3 136
-#+MACRO: nbr_nzero_cbn_no_cult_spending_and_mitr 257
-#+MACRO: prop_nzero_cbn_no_cult_spending_and_mitr 7.6
-#+MACRO: nbr_zero_cbn_controls 5 931
-#+MACRO: nbr_nzero_cbn_controls 301
-#+MACRO: prop_nzero_cbn_controls 4.8
+#+MACRO: nbr_zero_cbn1 1 034
+#+MACRO: nbr_nzero_cbn1 211
+#+MACRO: prop_nzero_cbn1 16.9
+#+MACRO: nbr_zero_cbn2 2 262
+#+MACRO: nbr_nzero_cbn2 252
+#+MACRO: prop_nzero_cbn2 10.0
+#+MACRO: nbr_zero_cbn3 3 076
+#+MACRO: nbr_nzero_cbn3 254
+#+MACRO: prop_nzero_cbn3 7.6
+#+MACRO: nbr_zero_cbn_controls 5 841
+#+MACRO: nbr_nzero_cbn_controls 298
+#+MACRO: prop_nzero_cbn_controls 4.9
 
 
 # popnbrs_p1pm
-#+MACRO: nbr_pop_p_1pm_cbn_all 89.2
-#+MACRO: nbr_pop_p_1pm_cbn_no_cult_spending 165
-#+MACRO: nbr_pop_p_1pm_cbn_no_cult_spending_and_mitr 215
-#+MACRO: nbr_pop_p_1pm_cbn_controls 85.0
+#+MACRO: nbr_pop_p_1pm_cbn1 89.6
+#+MACRO: nbr_pop_p_1pm_cbn2 166
+#+MACRO: nbr_pop_p_1pm_cbn3 216
+#+MACRO: nbr_pop_p_1pm_cbn_controls 84.2
 
 
 # cvrgnc
-#+MACRO: cvrgd1 79 339
-#+MACRO: cvrgd0 1 166
-#+MACRO: mdlcnt_ttl 80 505
-#+MACRO: cvrgnc_rate 98.6
-#+MACRO: nbr_runs_p_cbn_spec 149
+#+MACRO: cvrgd1 137 734
+#+MACRO: cvrgd0 0
+#+MACRO: mdlcnt_ttl 137 734
+#+MACRO: cvrgnc_rate 100
+#+MACRO: nbr_runs_p_cbn_spec 320
+
+
+# velp_minmax
+#+MACRO: velp_cryname_min Hungary
+#+MACRO: velp_cryname_max Portugal
+#+MACRO: velp_year_scld_min -0.117
+#+MACRO: velp_year_scld_max 0.063
+#+MACRO: velp_year_pct_min 1.6
+#+MACRO: velp_year_pct_max 0.9
 
 
 # rate_opng_glbl
-#+MACRO: rate_opng_glbl_cbn_all 0.00434
-#+MACRO: rate_opng_glbl_cbn_no_cult_spending 0.00300
-#+MACRO: rate_opng_glbl_cbn_no_cult_spending_and_mitr 0.00283
+#+MACRO: rate_opng_glbl_cbn1 0.00433
+#+MACRO: rate_opng_glbl_cbn2 0.00299
+#+MACRO: rate_opng_glbl_cbn3 0.00282
 #+MACRO: rate_opng_glbl_cbn_controls 0.00231
 
 
 # rate_opng_glbl_yearly
-#+MACRO: rate_opng_glbl_yearly_cbn_all 0.00407
-#+MACRO: rate_opng_glbl_yearly_cbn_no_cult_spending 0.00289
-#+MACRO: rate_opng_glbl_yearly_cbn_no_cult_spending_and_mitr 0.00275
+#+MACRO: rate_opng_glbl_yearly_cbn1 0.00406
+#+MACRO: rate_opng_glbl_yearly_cbn2 0.00289
+#+MACRO: rate_opng_glbl_yearly_cbn3 0.00274
 #+MACRO: rate_opng_glbl_yearly_cbn_controls 0.00223
 
 
 # opng_p1m_glbl_yearly
-#+MACRO: opng_p1m_glbl_yearly_cbn_all 246
-#+MACRO: opng_p1m_glbl_yearly_cbn_no_cult_spending 346
-#+MACRO: opng_p1m_glbl_yearly_cbn_no_cult_spending_and_mitr 364
+#+MACRO: opng_p1m_glbl_yearly_cbn1 246
+#+MACRO: opng_p1m_glbl_yearly_cbn2 346
+#+MACRO: opng_p1m_glbl_yearly_cbn3 365
 #+MACRO: opng_p1m_glbl_yearly_cbn_controls 449
 
 
+# velp_mean
+#+MACRO: velp_mean_uscld -0.010
+#+MACRO: velp_quantl25_uscld -0.025
+#+MACRO: velp_quantl75_uscld 0.007
+#+MACRO: velp_mean_scld 0.13
+#+MACRO: velp_quantl25_scld 0.34
+#+MACRO: velp_quantl75_scld 0.10
+
+
 # intcpt_info
-#+MACRO: intcpt -2.50
-#+MACRO: intcpt_exp 0.082
+#+MACRO: intcpt -4.49
+#+MACRO: intcpt_exp 0.011
 
 
 # txinctvs
-#+MACRO: txdctblt_cbn3 0.72
-#+MACRO: txdctblt_cbn3_exp 2.1
-#+MACRO: txdctblt_cbn2 0.48
-#+MACRO: tmitr_cbn2 -0.38
-#+MACRO: txdctblt_tmitr_interact_cbn2 0.77
-#+MACRO: txdctblt_tmitr_interact_cbn2_exp 2.17
-#+MACRO: tmitr_1SD_cbn_no_cult_spending 14.1
-#+MACRO: tmitr_neteffct_txdctblt1_cbn_no_cult_spending 0.39
-#+MACRO: tmitr_neteffct_txdctblt1_cbn_no_cult_spending_exp 1.48
+#+MACRO: Ind_tax_incentives_cbn3_coef 0.72
+#+MACRO: Ind_tax_incentives_cbn3_coef_exp 2.1
+#+MACRO: Ind_tax_incentives_cbn3_pvlu 0.10
+#+MACRO: Ind_tax_incentives_cbn2_coef 0.56
+#+MACRO: tmitr_approx_linear20step_cbn2_coef -0.47
+#+MACRO: ti_tmitr_interact_cbn2_coef 0.84
+#+MACRO: ti_tmitr_interact_cbn2_coef_exp 2.33
+#+MACRO: tmitr_1SD_cbn2 13.5
+#+MACRO: tmitr_neteffct_txdctblt1_cbn2 0.38
+#+MACRO: tmitr_neteffct_txdctblt1_cbn2_exp 1.46
 #+MACRO: tmitr_iso3c1 50
 #+MACRO: tmitr_iso3c2 36
 
 
 # smorc_stats
-#+MACRO: smorc_lin 0.37
-#+MACRO: smorc_lin_flipped -0.37
-#+MACRO: smorc_sqrd -0.62
+#+MACRO: smorc_lin 0.38
+#+MACRO: smorc_lin_flipped -0.38
+#+MACRO: smorc_sqrd -0.63
 #+MACRO: smorc_top_point_std 0.30
-#+MACRO: smorc_top_point 438
+#+MACRO: smorc_top_point 439
 
 
 # smorc_vlus_2020
 #+MACRO: smorc_2020_ITA 362
 #+MACRO: smorc_2020_SVK 415
-#+MACRO: smorc_2020_ARE 440
 #+MACRO: smorc_2020_NZL 463
 #+MACRO: smorc_2020_POL 466
 #+MACRO: smorc_2020_LVA 467
@@ -938,12 +956,12 @@ Firstly, it can be seen that the smaller datasets, especially "DS all IVs", wher
 #
 The main variable of interest, private museum founding (and consequently private museum densities), is more prevalent in "DS all IVs" as well: 
 #
-For example, while in "DS all IVs" on average each country-year one private museum is founded per {{{nbr_pop_p_1pm_cbn_all}}} million inhabitants (1/{{{opng_rate_cbn1}}}), this rate is substantially lower in "DS --CuSP" and "DS --CuSp/TMITR" with 1 private museum founding per {{{nbr_pop_p_1pm_cbn_no_cult_spending}}} and {{{nbr_pop_p_1pm_cbn_no_cult_spending_and_mitr}}} million inhabitants, respectively.
+For example, while in "DS all IVs" on average each year one private museum is founded per {{{nbr_pop_p_1pm_cbn1}}} million inhabitants (1/{{{opng_rate_cbn1}}}), this rate is substantially lower in "DS --CuSP" and "DS --CuSp/TMITR" with one private museum founding per {{{nbr_pop_p_1pm_cbn2}}} and {{{nbr_pop_p_1pm_cbn3}}} million inhabitants, respectively.
 # [fn::These rates refer to country-year averages which weigh all units evenly regardless of population size. The dataset-year private museum founding rates are lower at on average one private museum founding per {{{opng_p1m_glbl_yearly_cbn_all}}}, {{{opng_p1m_glbl_yearly_cbn_no_cult_spending}}}, {{{opng_p1m_glbl_yearly_cbn_no_cult_spending_and_mitr}}} million inhabitants in "DS all IVs", "DS --CuSP", and "DS -CuSp/TMITR", respectively, indicating that private museum founding takes place disproportionally in country-years with below average population size.]
 #
 Secondly, several variables show substantial skew (indicated by high standard deviations compared to the mean), such as cultural spending, GDP and HNWI, art museum and collector rates, as well as the dependent variable of private museum openings: 
 #
-Only {{{nbr_nzero_cbn_all}}} country-years see show at least one private museum founding in "DS all IVs" ({{{prop_nzero_cbn_all}}}%), while the other datasets see even lower proportions ({{{prop_nzero_cbn_no_cult_spending}}}% for "DS --CuSP" and {{{prop_nzero_cbn_no_cult_spending_and_mitr}}}% for "DS --CuSP/TMTIR", respectively).
+Only {{{nbr_nzero_cbn1}}} country-years see show at least one private museum founding in "DS all IVs" ({{{prop_nzero_cbn1}}}%), while the other datasets see even lower proportions ({{{prop_nzero_cbn2}}}% for "DS --CuSP" and {{{prop_nzero_cbn3}}}% for "DS --CuSP/TMTIR", respectively).
 
 
 
@@ -996,22 +1014,24 @@ Coefficients can be interpreted as logged multipliers of a country's founding ra
 
 The coefficient of GDP per capita is positive and significant in all datasets. 
 #
-It is furthermore substantially larger in "DS --CuSp" ({{{gdp_coef_cbn_no_cult_spending}}}) and "DS --CuSP/TMITR" ({{{gdp_coef_cbn_no_cult_spending_and_mitr}}}) than in "DS all IVs" ({{{gdp_coef_cbn_all}}}), which is substantial especially when considering that in datasets with more country years GDP per capita has a smaller standard deviation ({{{gdp_1SD_cbn_no_cult_spending}}}, {{{gdp_1SD_cbn_no_cult_spending_and_mitr}}} and {{{gdp_1SD_cbn_all}}} in "DS -CuSp", "DS -CuSp/TMTIR and "DS all IVs", respectively).
+It is furthermore substantially larger in "DS --CuSp" ({{{gdp_coef_cbn2}}}) and "DS --CuSP/TMITR" ({{{gdp_coef_cbn3}}}) than in "DS all IVs" ({{{gdp_coef_cbn1}}}).
+#
+# *which is substantial especially when considering that in datasets with more country years GDP per capita has a smaller standard deviation ({{{gdp_1SD_cbn2}}}, {{{gdp_1SD_cbn3}}} and {{{gdp_1SD_cbn1}}} in "DS -CuSp", "DS -CuSp/TMTIR and "DS all IVs", respectively).*
+# not clear if this makes sense, maybe just cut -> just focus on smorc mediation/DS composition
 # 
-This between-dataset variation in coefficient size possibly indicates moderation of GDP through cultural spending; however further research would be required to more clearly determine the mechanism at play. 
-
+This between-dataset variation in coefficient size could indicate mediation of GDP through cultural spending *(cf Appendix and {{{rplt_oucoefchng}}})*; however further investigation would be required to more clearly determine the mechanism at play. 
+# could link to {{{rplt_oucoefchng}}}, supports mediation
 
 
 ***** density dependence :ignhead:
 
-In all datasets,  measures of density (legitimacy) and density squared (competition) correspond to the density-dependence hypothesis, namely an inverted U-shaped relationship between density and private museum founding.
+In all datasets, measures of density (legitimacy) and density squared (competition) correspond to the density-dependence paradigm, i.e. an inverted U-shaped relationship between density and private museum founding (indicated by the significant negative coefficient of the squared density measure on both country and global level for all datasets). 
 #
-The pattern of a negative coefficient of the squared density measure (which is significant everywhere except for the global coefficient in "DS all IVs"; where however it is marginally significant), is present for the density measures on the level of both the country and the world.
-# 
-Thus following the density dependence paradigm, potential founders are motivated by their peers' decision to establish a private museum up to the point where private museum numbers increased to the extent that additional founding did not appear advantageous to them anymore. 
+# The pattern of a negative coefficient of the squared density measure (which is significant everywhere except for the global coefficient in "DS all IVs"; where however it is marginally significant), is present for the density measures on the level of both the country and the world.
 #
-However, while collectors apparently were ultimately disincentivized by growing private museum numbers, they were not influenced by the number of museum closures, as the coefficient of the cumulative number of museum closures is not significant and varies in sign between datasets.
-
+Private museum founding thus is compatible with the density dependence paradigm, according to which potential founders are motivated by their peers' decision to establish a private museum up to the point where private museum numbers increased to the extent that additional founding does not appear advantageous anymore. 
+#
+However, while prospective founders apparently might ultimately be disincentivized by growing private museum numbers, there is no evidence for a demotivating effect of  museum closures, as the coefficient of the cumulative number of museum closures is not significant and varies in sign between datasets.
 
 # While the general pattern thus follows the density-dependence literature, the particular values of the coefficients indicate additional complexities.
 # #
@@ -1059,38 +1079,36 @@ Despite significant effects not being present in every dataset, the data overall
 # new version
 The results for tax incentives largely support H1:
 #
-In "DS all IVs" (as well as DS -CuSp), the interaction between Tax deductibility of donations is positive and significant, which indicates that increases in top marginal income tax rates have a larger positive effect if charitable donations are tax deductible than if they are not.
+In "DS all IVs" (as well as DS -CuSp), the interaction between Tax deductibility of donations is positive and significant, which indicates that increases in top marginal income tax rates have a larger positive effect in countries where charitable donations are tax deductible than in countries where they are not.
 #
 Figure {{{rplt_pred_taxinc}}} visualizes how the impact of top marginal income tax rates depends on the presence of tax deductibility of donations.
 #
-In particular at higher top marginal income tax rates, countries with tax deductibility of donations see more private museum foundings than countries where charitable donations are not tax deductible.
+In particular at higher top marginal income tax rates countries with tax deductibility of donations see more private museum foundings than countries where charitable donations are not tax deductible.
 #
-The fact that in the former countries collectors can receive substantial tax benefits appears to indeed incentivize potential founders to establish their museums. 
+The fact that in the former countries collectors can receive substantial tax benefits appears to indeed incentivize potential founders to establish their museums.
+#
+A positive role of tax incentives is further supported by the positive and marginally significant (p = {{{Ind_tax_incentives_cbn3_pvlu}}}) coefficient of tax deductibility of donations in "DS --CuSp/TMITR", indicating that countries with tax deductibility of donations see $e$^{{{{Ind_tax_incentives_cbn3_coef}}}} = {{{Ind_tax_incentives_cbn3_coef_exp}}} times more private museum founding than countries without. 
 
 
-However, it is worth noting that at lower top marginal income tax rates countries without tax deductibility of charitable donations see more private museum foundings.
+
+However, it is worth noting that in "DS all IVs" and "DS --CuSp" at lower top marginal income tax rates countries without tax deductibility of charitable donations see more private museum foundings (figure {{{rplt_pred_taxinc}}}).
 #
 This is unexpected as at these low tax rates tax deductibility of donations would be expected to play a negligible role as the tax incentives are so limited that one would expect there to be little difference between countries with tax deductibility of donations and without. 
 #
 Whether this finding is due to ommitted variable bias or a more non-linear relationship between tax rates and museum foundings remains the work for future research.
 #
-
-Finally, in "DS --CuSp/TMITR" the coefficient of tax deductibility of donations is positive and marginally significant (p = {{{Ind_tax_incentives_cbn3_pvlu}}}), which gives further support to a positive association between tax incentives and private museum founding.
-#
-
-
-
+Despite such minor unexpected results, the combined findings point to tax incentives playing a substantive facilitative role in private museum founding. 
 
 
 
 **** Government Cultural Spending (H2)
-
+{{{ynkplt_pred_smorc}}}
 
 Government cultural spending is found to have a significant inverse-U shaped association with private museum founding.
 #
-While at lower values the association is positive, the effect decreases at higher levels and eventually turns negative.
+While at lower values the association is positive, the effect decreases at higher levels and eventually turns negative (figure {{{rplt_pred_smorc}}}).
 #
-In particular, up to a value of {{{smorc_lin_flipped}}}/(2*{{{smorc_sqrd}}}) = {{{smorc_top_point_std}}} (corresponding to cultural spending of {{{smorc_top_point}}} USD per capita, approximately the 2020 government cultural spending of Slovakia ({{{smorc_2020_SVK}}} USD), the United Arab Emirates ({{{smorc_2020_ARE}}} USD) or New Zealand ({{{smorc_2020_NZL}}} USD)) an increase in government spending corresponds to a higher predicted likelihood of private museum founding. 
+In particular, up to a value of {{{smorc_lin_flipped}}}/(2*{{{smorc_sqrd}}}) = {{{smorc_top_point_std}}} (corresponding to cultural spending of {{{smorc_top_point}}} USD per capita, approximately the 2020 government cultural spending of Slovakia ({{{smorc_2020_SVK}}} USD) or New Zealand ({{{smorc_2020_NZL}}} USD)) an increase in government spending corresponds to a higher predicted likelihood of private museum founding. 
 #
 This range of a positive association between government spending and private museum founding consists of {{{smorctop_below_CYs_cnt}}} ({{{smorctop_below_CYs_prop}}}%) of the country-years belonging to "DS all IVs"; it also contains {{{smorctop_below_nbr_opened_prop}}}% of covered private museum foundings.
 #
