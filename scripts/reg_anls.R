@@ -1704,6 +1704,36 @@ gen_plt_pred_taxinc <- function(top_coefs) {
     ## generate model
     rx <- glmmTMB(fx, dfx, family = nbinom1)
 
+
+    ## AME testing, but seems not necessary
+    ## library(margins)
+    ## marginal_effects(rx, type = "link",
+    ##                  variables = c("Ind.tax.incentives", "tmitr_approx_linear20step_lag1")) %>%
+    ##     adt() %>% .[, map(.SD, mean)]
+        
+
+    ## dt_noti <- adt(dfx)[, Ind.tax.incentives := 0][
+    ##   , (interact_vrbl) := get(tmitr_vrbl) * Ind.tax.incentives] %>%
+    ##     .[, pred := predict(rx, .)]
+
+    ## dt_allti <- adt(dfx)[, Ind.tax.incentives := 1][
+    ##   , (interact_vrbl) := get(tmitr_vrbl) * Ind.tax.incentives] %>%
+    ##     .[, pred := predict(rx, .)]
+
+    ## ## manual AME calculation, based on stata notes: 
+    ## list(adt(dfx)[, .(iso3c, year, Ind.tax.incentives)],
+    ##      dt_noti[, .(pred_noti = pred)], dt_allti[, .(pred_allti = pred)]) %>%
+    ##     Reduce(cbind, .) %>%
+    ##     .[, diff := pred_allti - pred_noti] %>% # %$% hist(diff)
+    ##     ## .[, mean(diff)] # actual AME calculation
+    ##     .[, map(.SD, mean), .SDcols = c("pred_allti", "pred_noti")]
+
+    ## is same as what marginal_effects produces.. super small tho?: 0.15... 
+    ## "Takes the average of the predictions for women and men*/" probably means hypothetical men/women
+
+
+
+
     ## set up prediction dataframe
     dt_ti_pred <- expand.grid(Ind.tax.incentives = c(0,1),
                               tmitr_vrbl = seq(round(min(tmitr_scale_cbn1),2),
