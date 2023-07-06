@@ -1002,7 +1002,9 @@ Only {{{nbr_nzero_cbn1}}} country-years see show at least one private museum fou
 
 Table {{{rtbl_regrslts_wcptblF}}} displays the regression results. 
 #
-As the estimation procedure involves the calculation of multiple models from different variable sets, table {{{rtbl_regrslts_wcptblF}}} displays for each variable the coefficients of the best-fitting models; the log likelihoods similarly correspond to the best-fitting model (the coefficient variation resulting from different variable choice (e.g. the difference between the coefficients of cultural spending between a model with income inequality measured once via the Gini coefficient and once via 10% concentration) is generally not substantial, *see plot in appendix*). 
+As the estimation procedure involves the calculation of multiple models from different variable sets, table {{{rtbl_regrslts_wcptblF}}} displays for each variable and dataset the coefficient of the best-fitting model (coefficient variation resulting from different variable choice (e.g. the difference between the coefficients of cultural spending between a model with income inequality measured once via the Gini coefficient and once via 10% concentration) is generally not substantial, *see plot in appendix*). 
+# 
+The log likelihoods similarly correspond to the best-fitting model . 
 # 
 Coefficients can be interpreted as logged multipliers of a country's founding rate [[parencite:&Coxe_West_Aiken_2009_count]], therefore a coefficient of 0.25 corresponds to a $e$^{0.25} = 1.28 multiplier, i.e. a 28% increase in average predicted country founding rate given a 1 standard deviation change in the independent variable (the independent variables are standardized), while a coefficient of -0.25 corresponds to a $e$^{-0.25} = 0.78 multiplier.
 #
