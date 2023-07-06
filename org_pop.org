@@ -846,11 +846,11 @@ In order to measure both legitimating and competitive effects, I include a linea
 
 *** Data processing
 #
-A number of countries have been excluded for various reasons:
+A number of observations have been excluded for various reasons:
 #
 The exchange rates for Zimbabwe and Venezuela were deemed unrealistic (Venezuela is discussed by [[textcite:&Blanchet_2017_conversions]]); both countries were therefore excluded.
 #
-The HNWI indicators for the United Arab Emirates display a strong decline between 2000 and 2010 of which both the starting value and the strength of the decline are extremely high and hence likely caused by data issues; the country is therefore excluded. 
+The HNWI indicators for the United Arab Emirates, Saudi Arabia and Qatar display a strong decline between 2000 and 2010 of which both the starting value and the strength of the decline are extremely high (starting at several standard deviations above the mean and declining to average values) and hence likely caused by data issues; the countries are therefore excluded. 
 #
 Furthermore, a number of country-years have been removed for Yemen due to negative cultural spending.
 #
@@ -933,7 +933,7 @@ If multiple models fit equally well, a lag among these is selected at random.
 #
 This selection of variables in random order followed by lag choice is continued until no further improvement is achieved.
 #
-While the random starting values and random order of variables help to explore the lag space, models can still be stuck in local optima; I therefore run each model five times, each with a different set of random starting values. 
+While the random starting values and random order of variables help to explore the lag space, models can still be stuck in local optima; I therefore run each model four times, each with a different set of random starting values. 
 
 
 
@@ -950,9 +950,11 @@ Due to the presence of time-invariant variables (tax incentives and museum popul
 #
 I furthermore use population as an offset (which estimates founding rate per capita) to allow comparison between countries of different population sizes; all count predictors are therefore first transformed into per capita rates.
 #
-To facilitate convergence and interpretation, all variables except the binary variable of tax deductibility of charitable donations are also rescaled to a mean of 0 and a standard deviation of 1 (the interaction between tax deductibility of charitable donations and top marginal income tax rate and the squared terms of other variables are calculated after rescaling).
+To facilitate convergence and interpretation, all variables except the binary variable of tax deductibility of charitable donations are also rescaled to a mean of 0 and a standard deviation of 1. 
+# (the interaction between tax deductibility of charitable donations and top marginal income tax rate and the squared terms of other variables are calculated after rescaling).
 #
-{{{mdlcnt_ttl}}} models are run, of which {{{cvrgd1}}} ({{{cvrgnc_rate}}}%) converge successfully. 
+# {{{mdlcnt_ttl}}} models are run, of which {{{cvrgd1}}} ({{{cvrgnc_rate}}}%) converge successfully.
+In total {{{mdlcnt_ttl}}} models are run, all of which converge successfully. 
 #
 Given 36 variable combinations which are optimized five times with different starting values each per three datasets this results in an average of {{{nbr_runs_p_cbn_spec}}} regression models per variable combination.
 

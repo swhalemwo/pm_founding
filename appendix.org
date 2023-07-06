@@ -384,7 +384,6 @@ I estimate coefficients of the cultural spending variable as well as its squared
 
 
 
-
 ** Combination composition
 
 #+INCLUDE: "./tables/tbl:cbn_cpsgn.tex" export latex
