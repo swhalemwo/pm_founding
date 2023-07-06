@@ -1181,11 +1181,10 @@ Either one or both of these patterns possibly lead to the gini coefficients in "
 
 Increases in the number of HNWI do not seem to be substantially associated with private museum founding as after controlling for other variables, the HNWI coefficients are firstly comparatively small relative to those of other indicators, secondly not statistically significant and thirdly occasionally negative, in particular in DS -CuSp and DS -CuSP/TMITR).
 #
-In these two datasets, the coefficient of the HNWI population with a wealth larger than 5 million USD in particular is substantially negative and marginally significant ({{{hnwi_nbr_5M_cbn2_coef}}} (p = {{{hnwi_nbr_5M_cbn2_pvlu}}}) and {{{hnwi_nbr_5M_cbn3_coef}}} (p = {{{hnwi_nbr_5M_cbn3_pvlu}}}) for DS -CuSp and DS -CuSP/TMITR, respectively).
+In these two datasets, the coefficient of the HNWI population with a wealth larger than 5 million USD in particular is substantially negative ({{{hnwi_nbr_5M_cbn2_coef}}} and {{{hnwi_nbr_5M_cbn3_coef}}}) and marginally significant (p = {{{hnwi_nbr_5M_cbn2_pvlu}}} and p = {{{hnwi_nbr_5M_cbn3_pvlu}}} for DS -CuSp and DS -CuSP/TMITR, respectively).
 #
 Consequently, there is little evidence that HNWI rates are substantially positively associated with private museum founding, thus rejecting H4.
 #
-
 
 
 
