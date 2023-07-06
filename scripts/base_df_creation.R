@@ -109,12 +109,19 @@ gen_closing_year_imputed <- function(dfx) {
     if (as.character(match.call()[[1]]) %in% fstd){browser()}
     1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;
     
-    dt_pred_closing <- adt(dfx)[!is.na(year_opened_int) & !is.na(year_closed)]
+    dt_pred_closing <- adt(dfx)[!is.na(year_opened_int) & !is.na(year_closed)] %>%
+        .[, years_open := year_closed - year_opened_int]
+
+
     lm_pred <- lm(year_closed ~ year_opened_int, dt_pred_closing)
+
+    ## lm(years_open ~ year_opened_int, dt_pred_closing) %>% summary()
 
     df_imptd <- adt(dfx) %>%
         .[is.na(year_closed) & !is.na(year_opened_int) & museum_status != "private museum",
-          year_closed := as.integer(predict(lm_pred, .SD))] %>% atb()
+          `:=`(
+              imputed = T,
+              year_closed = as.integer(predict(lm_pred, .SD)))] %>% atb()
 
     if ((adt(df_imptd)[, max(year_closed, na.rm =T)] > 2022)) { stop("year_closed too big")}
 
@@ -128,7 +135,7 @@ gen_closing_year_imputed <- function(dfx) {
     ##     ggplot(aes(x=year_closed, y = N, fill = source)) +
     ##     geom_col(position = "dodge2")
 
-    return(df_imptd)
+    return(select(df_imptd, -imputed))
     
 }
 

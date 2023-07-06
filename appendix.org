@@ -359,7 +359,7 @@ Given this state of data coverage and the fact that five years of subsequent dat
 
 ** Data processing
 
-*** Cultural spending
+*** Cultural spending data source combination
 
 This combination of multiple data sources requires the harmonization of different reporting standards: 
 #
@@ -381,6 +381,26 @@ I estimate coefficients of the cultural spending variable as well as its squared
 
 # [fn::An alternative would be to use purchasing power parity exchange rates, which reflect local price levels (as [[textcite:&Blanchet_2017_conversions]] argues, 1 euro or 7 yuan allow the purchase of the same amount of oil on international markets, but different amounts of food in Beijing or Paris). As the art market is however substantially transnational [[parencite:&Velthuis_Curioni_2015_canvases]], and discussion of government spending heavily revolves around acquisition budgets (which are dedicated to the purchase of artworks that often are  international), I consider market exchange rates more appropriate.]
 
+*** Imputation
+
+Due to the exploratory approach of testing variables at lag lengths varying from one to five years, missing values can potentialily substantially limit the number of country years as a single missing value leads to the exclusion of the next five years.
+#
+To avoid such loss of data, missing values in the country year time series which are parts of gaps of up to three years are linearly imputed.
+#
+This primarily concerns government cultural spending (25 country years imputed), and to a lesser extent wealth inequality measures, HNWI measures and population size (7, 4 and 3 country years imputed, respectively).
+
+
+Furthermore, it was not possible to find the exact closing years for 25 private museums which were found to be no longer open.
+#
+These cases constitute a challenge for calcuating accurate density measures: 
+#
+Leaving out these museums entirely would lead to estimates too low, while treating these museums as remaining open would overestimate private museum density as they were found to be no longer open. 
+#
+Either method can substantially bias density estimates as in particular in countries with only a few private museums, a private museum more or less can have large impacts on per capita private museum rates.
+# 
+To be able to still use these cases in density estimates, closing year was imputed via linear regression based on the relationship between number of years opened and closing year of the museums for which both were available (n=53, R^2 = 0.68).
+#
+While imputed closing years are likely not always accurate, the resulting density estimates are likely more accurate than they would have been if closed museums had been excluded completely or treated as having remained open, especially given the high R^2 of imputation regression used for the traning data.
 
 
 

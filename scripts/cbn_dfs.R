@@ -329,8 +329,25 @@ impute_df_reg_vrbls <- function(df_reg) {
 
     ## generate the imputed data
     lin_imptd_data <- lapply(vrbls_to_impute, \(x)
-                             impute_variable_linearly(na.omit(select(df_reg, iso3c, year, all_of(x))), x) %>%
-                             select(-flag))
+                             impute_variable_linearly(na.omit(select(df_reg, iso3c, year, all_of(x))), x)  %>%
+                              select(-flag))
+
+    ## ## manual check how many got imputed
+    ## imap(lin_imptd_data, ~adt(.x)[, .(iso3c, year, vrbl = .y, flag, value = get(.y))]) %>% rbindlist() %>%
+    ##     .[!is.na(value)] %>% 
+    ##     .[, .N, .(vrbl, flag)] %>%
+    ##     .[order(-flag, -N)]  %>% print(n=200) %>% .[flag==T] %>% print(n=30)
+
+    ## ## filter only those which are actually imputed
+    ## lin_imptd_data$smorc_dollar_fxm %>% adt() %>% .[flag == T & !is.na(smorc_dollar_fxm)] %>% print(n=300)
+    
+    ## ## check NZL: looks like linear imputation, but panel_fill sounds like carry over?
+    ## ## actually use na.approx, think I just use panel_fill for flagging
+    ## lin_imptd_data$smorc_dollar_fxm %>% adt() %>% .[iso3c == "NZL"] %>%
+    ##     ggplot(aes(x = year, y=smorc_dollar_fxm)) + geom_line()
+
+    
+
 
     df_reg_imptd <- Reduce(\(x, y) merge(x, y, all = T), lin_imptd_data) %>% atb()
 
