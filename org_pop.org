@@ -1042,7 +1042,7 @@ Coefficients can be interpreted as logged multipliers of a country's founding ra
 
 **** Control Variables 
 
-***** GDP and population size :ignhead:
+***** GDP :ignhead:
 
 The coefficient of GDP per capita is positive and significant in all datasets. 
 #
@@ -1083,10 +1083,19 @@ However, while prospective founders apparently might ultimately be disincentiviz
 
 Similary, the coefficients of the art field indicators (the number of museums of modern and contemporary art and of the number of collectors in the Artnews top collector ranking) are relatively small and insignificant in all datasets.
 
+# ***** intercept :ignhead:
+# leave for now
+
+# The intercepts describe the predicted founding rate for a hypothetical country with values of zero on all predictors, which given the standardizing corresponds to the mean values on all variables except the tax deductibility of donations, where zero instead corresponds to no tax deductibility of donations.
+# #
+# The 
+
+
+
 
 **** Tax Incentives (H1)
 
-*add section about intercepts*
+
 
 # *rewrite with focus on cbn1*
 # The results for tax incentives largely support H1: 

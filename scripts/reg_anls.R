@@ -2815,7 +2815,16 @@ gen_nbrs_pred <- function(top_coefs, cbn_dfs_rates_uscld, df_reg, print_examples
         lnbr(intcpt, 2),
         lnbr(intcpt_exp, 3))
 
-    
+    ## dt_tctt[vrbl == "(Intercept)" & msr == "coef"][, dgts := 2]
+    ## dt_tctt[vrbl == "(Intercept)" & msr == "coef_exp"][, dgts := 5]
+
+
+    ## "coef_exp")] %>% copy() %>%
+    ##        .[, `:=`(vrbl = "cons")]]
+        
+
+
+
 
     ## generate nbrs using new dt_tctt: macro names get generated from variable values (cbn/vrbl codes)
 
