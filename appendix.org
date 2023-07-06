@@ -356,6 +356,35 @@ Given this state of data coverage and the fact that five years of subsequent dat
 
 # As a consequence of the data availability of longitudinal variables, for most countries the analysis covers the years 2000-2020.
 
+
+** Data processing
+
+*** Cultural spending
+
+This combination of multiple data sources requires the harmonization of different reporting standards: 
+#
+Whereas the the IMF and Eurostat report data exclusively as "Total government expenditure" (TLYCG), the UN uses "Final consumption expenditure" (P3CG); the OECD reports data in both formats ("Total government expenditure" is calculated from "Final consumption expenditure" as well as a number of other items, such as compensation of employees and subsidies). 
+#
+Moreoever, within each format minor variations exist between data sources, the data for a country-year is thus chosen in order of OECD followed by UN for P3CG, and OECD followed by IMF followed by Eurostat for TLYCG.
+# (for the UN data, sometimes data is also reported in multiple Series corresponding to different SNA methodologies (see [[textcite:&UN_2022_consumption]] footnote 2 for details); here SNA 2008 methodology is chosen if available, otherwise the mean of the other series is taken).
+
+
+As the overall goal is to create a complete picture of government expenditure, Total government expenditure is estimated from Final consumption expenditure for country-years where data is only available for the latter.
+# based on the years in which the series overlap
+For countries where TLYCG and P3CG series have some overlap and years exist with P3CG data but not TLYCG data, a country-specific scaler to convert P3CG to TLYCG is constructed from overlapping years, which is then used to impute TLYCG for the years in which only P3CG data is available.
+#
+For countries with only P3CG data, the average ratio of all country-years with both P3CG and TLYCG data is chosen to impute TLYCG (as on average P3CG is 58% of TLYCG, the average scaler is 1/0.58 = 1.72). 
+#
+Amounts are reported in current local currency units and converted to 2021 USD using price indices and purchasing power parity adjusted exchange rates from the World Inequality Database (WID,  [[citeyear:&WID_2021_WID]]).
+#
+I estimate coefficients of the cultural spending variable as well as its squared term to account for potential non-linearities similar to those present in the density dependence paradigm ([[cite:&Hannan_1992_dynamics]];  elaborated in section Control Variables); in particular, the crowding-out argument appears to indicate competition, while the crowding-in argument bears similarities to legitimation. 
+
+# [fn::An alternative would be to use purchasing power parity exchange rates, which reflect local price levels (as [[textcite:&Blanchet_2017_conversions]] argues, 1 euro or 7 yuan allow the purchase of the same amount of oil on international markets, but different amounts of food in Beijing or Paris). As the art market is however substantially transnational [[parencite:&Velthuis_Curioni_2015_canvases]], and discussion of government spending heavily revolves around acquisition budgets (which are dedicated to the purchase of artworks that often are  international), I consider market exchange rates more appropriate.]
+
+
+
+
+
 ** Combination composition
 
 #+INCLUDE: "./tables/tbl:cbn_cpsgn.tex" export latex
