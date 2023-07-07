@@ -1300,10 +1300,13 @@ Further disentangling these effects, improving measurement precision and elabora
 #+latex: \setcounter{page}{1}
 
 
-#+latex: \setcounter{table}{0}
-#+latex: \renewcommand{\thetable}{A\arabic{table}}
-#+latex: \setcounter{figure}{0}
-#+latex: \renewcommand{\thefigure}{A\arabic{figure}}
+# #+latex: \setcounter{table}{0}
+# #+latex: \renewcommand{\thetable}{A\arabic{table}}
+# #+latex: \setcounter{figure}{0}
+# #+latex: \renewcommand{\thefigure}{A\arabic{figure}}
+
+#+latex: \counterwithin{table}{subsection}
+#+latex: \counterwithin{figure}{subsection}
 #+latex: \renewcommand{\thesubsection}{\Alph{subsection}}
 
 
