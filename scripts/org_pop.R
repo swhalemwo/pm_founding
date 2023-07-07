@@ -62,6 +62,11 @@ source(paste0(SCRIPT_DIR, "regression.R"))
     
 ## ** check density numbers after v69
 
+cbn_dfs_rates_uscld$cbn1 %>% adt() %>% .[iso3c %in% c("NLD", "DEU", "BEL", "ITA", "USA")] %>%
+    ggplot(aes(x=year, y = smorc_dollar_fxm_lag0, color = iso3c)) + geom_line()
+
+## ggsave(filename = "~/Dropbox/phd/teaching/master_thesis/smorc_crys.pdf")
+
 cbn_dfs_rates$cbn_all %>%
     mutate(region = countrycode(iso3c, "iso3c", "un.region.name")) %>% 
     viz_lines(y="pm_density_lag0", duration = 1, facets = "region")
