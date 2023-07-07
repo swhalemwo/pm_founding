@@ -869,6 +869,7 @@ In order to measure both legitimating and competitive effects, I include a linea
 # For the construction of this indicator I exclude all museums that are also private museums.
 
 
+
 *** Data processing
 #
 A number of observations have been excluded for various reasons:
@@ -1016,11 +1017,6 @@ Only {{{nbr_nzero_cbn1}}} country-years see show at least one private museum fou
 
 
 *** Regression results
-# #+label: plt_v62_coef_krnls
-# #+caption: distribution of main coefficients
-# #+attr_latex: :width 16cm
-# [[file:figures/plt_v62_coef_krnls.pdf]]
-
 
 # #+label: plt_v62_coef_violin
 # #+caption: distribution of main coefficients
@@ -1039,9 +1035,9 @@ Only {{{nbr_nzero_cbn1}}} country-years see show at least one private museum fou
 
 Table {{{rtbl_regrslts_wcptblF}}} displays the regression results. 
 #
-As the estimation procedure involves the calculation of multiple models from different variable sets, table {{{rtbl_regrslts_wcptblF}}} displays for each variable and dataset the coefficient of the best-fitting model (coefficient variation resulting from different variable choice (e.g. the difference between the coefficients of cultural spending between a model with income inequality measured once via the Gini coefficient and once via 10% concentration) is generally not substantial, *see plot in appendix*). 
+As the estimation procedure involves the calculation of multiple models from different variable sets, table {{{rtbl_regrslts_wcptblF}}} displays for each variable and dataset the coefficient of the best-fitting model (coefficient variation due to different variable choice (e.g. the difference between the coefficients of cultural spending between a model with income inequality measured once via the Gini coefficient and once via 10% concentration) generally does not result in qualitatively different coefficients; see figure {{{rplt_coef_violin}}} in the appendix). 
 # 
-The log likelihoods similarly correspond to the best-fitting model . 
+The log likelihoods similarly correspond to the best-fitting model. 
 # 
 Coefficients can be interpreted as logged multipliers of a country's founding rate [[parencite:&Coxe_West_Aiken_2009_count]], therefore a coefficient of 0.25 corresponds to a $e$^{0.25} = 1.28 multiplier, i.e. a 28% increase in average predicted country founding rate given a 1 standard deviation change in the independent variable (the independent variables are standardized), while a coefficient of -0.25 corresponds to a $e$^{-0.25} = 0.78 multiplier.
 #
@@ -1071,7 +1067,7 @@ It is furthermore substantially larger in "DS --CuSp" ({{{gdp_coef_cbn2}}}) and 
 # *which is substantial especially when considering that in datasets with more country years GDP per capita has a smaller standard deviation ({{{gdp_1SD_cbn2}}}, {{{gdp_1SD_cbn3}}} and {{{gdp_1SD_cbn1}}} in "DS -CuSp", "DS -CuSp/TMTIR and "DS all IVs", respectively).*
 # not clear if this makes sense, maybe just cut -> just focus on smorc mediation/DS composition
 # 
-This between-dataset variation in coefficient size could indicate mediation of GDP through cultural spending *(cf Appendix and {{{rplt_oucoefchng}}})*; however further investigation would be required to more clearly determine the mechanism at play. 
+This between-dataset variation in coefficient size could indicate mediation of GDP through cultural spending (cf. Appendix \ref{app_mediation} and {{{rplt_oucoefchng}}}); however further investigation would be required to more clearly determine the mechanism at play. 
 # could link to {{{rplt_oucoefchng}}}, supports mediation
 
 
@@ -1083,7 +1079,7 @@ In all datasets, measures of density (legitimacy) and density squared (competiti
 #
 Private museum founding thus is compatible with the density dependence paradigm, according to which potential founders are motivated by their peers' decision to establish a private museum up to the point where private museum numbers increased to the extent that additional founding does not appear advantageous anymore. 
 #
-However, while prospective founders apparently might ultimately be disincentivized by growing private museum numbers, there is no evidence for a demotivating effect of  museum closures, as the coefficient of the cumulative number of museum closures is not significant and varies in sign between datasets.
+However, while prospective founders might ultimately be disincentivized by growing private museum numbers, there is no evidence for a demotivating effect of  museum closures, as the coefficient of the cumulative number of museum closures is not significant and varies in sign between datasets.
 
 # While the general pattern thus follows the density-dependence literature, the particular values of the coefficients indicate additional complexities.
 # #
@@ -1139,9 +1135,9 @@ Similary, the coefficients of the art field indicators (the number of museums of
 {{{ynkplt_pred_taxinc}}}
 
 # new version
-The results for tax incentives largely support H1:
+The results for tax incentives largely support the hypothesis of tax incentives as a factor contributing to private museum founding:
 #
-In "DS all IVs" (as well as DS -CuSp), the interaction between tax deductibility of donations and top marginal income tax rates is positive and significant, which indicates that increases in top marginal income tax rates have a larger positive effect in countries where charitable donations are tax deductible than in countries where they are not.
+In DS all IVs (as well as DS -CuSp), the interaction between tax deductibility of donations and top marginal income tax rates is positive and significant, which indicates that increases in top marginal income tax rates have a larger positive effect in countries where charitable donations are tax deductible than in countries where they are not.
 #
 Figure {{{rplt_pred_taxinc}}} visualizes how the impact of top marginal income tax rates depends on the presence of tax deductibility of donations.
 #
@@ -1149,13 +1145,13 @@ In particular at higher top marginal income tax rates countries with tax deducti
 #
 The fact that in the former countries collectors can receive substantial tax benefits appears to indeed incentivize potential founders to establish their museums.
 #
-A positive role of tax incentives is further supported by the positive and marginally significant (p = {{{Ind_tax_incentives_cbn3_pvlu}}}) coefficient of tax deductibility of donations in "DS --CuSp/TMITR", indicating that countries with tax deductibility of donations see $e$^{{{{Ind_tax_incentives_cbn3_coef}}}} = {{{Ind_tax_incentives_cbn3_coef_exp}}} times more private museum founding than countries without. 
+A positive role of tax incentives is further supported by the positive and marginally significant (p = {{{Ind_tax_incentives_cbn3_pvlu}}}) coefficient of tax deductibility of donations in DS --CuSp/TMITR, indicating that countries with tax deductibility of donations see $e$^{{{{Ind_tax_incentives_cbn3_coef}}}} = {{{Ind_tax_incentives_cbn3_coef_exp}}} times more private museum founding than countries without. 
 
 
 
-However, it is worth noting that in "DS all IVs" and "DS --CuSp" at lower top marginal income tax rates countries without tax deductibility of charitable donations see more private museum foundings (figure {{{rplt_pred_taxinc}}}).
+However, it is worth noting that in DS all IVs and DS --CuSp at lower top marginal income tax rates countries without tax deductibility of charitable donations see more private museum foundings (figure {{{rplt_pred_taxinc}}}).
 #
-This is unexpected as at these low tax rates tax deductibility of donations would be expected to play a negligible role as the tax incentives are so limited that one would expect there to be little difference between countries with tax deductibility of donations and without. 
+Under the assumption that founders are keen to reduce the net cost of their philanthropic activities, such results are unexpected as at these low tax rates tax deductibility of donations plays such a marginal role so that no substantial differences would be predicted between countries with and without tax deductibility of donations.  
 #
 Whether this finding is due to ommitted variable bias or a more non-linear relationship between tax rates and museum foundings remains the work for future research.
 #
@@ -1287,7 +1283,7 @@ This study thus substantially advances the understanding of a major art world de
 
 *** limitations :ignhead:
 #
-Despite the combination of multiple data sources and an innovative modeling strategy sensitive to variations in the time predictors take to act on the independent variable this study is limited by a number of factors. 
+Despite the combination of multiple data sources, an innovative modeling strategy sensitive to variations in the time predictors take to act on the dependent variable as well as robust measurement of several key concepts via different operationalizations this study is limited by a number of factors. 
 #
 As interest in the organizational form of private museums has risen only recently, data collection has been both retrospective (which might be less inclusive than continuous measurements based on for example industry directories) and primarily based on English-language media.
 #
@@ -1295,7 +1291,7 @@ Furthermore, multiple predictors are exhibiting substantial limitations in measu
 #
 Additionally, substantial gaps in data coverage of cultural spending and top marginal income tax rates have so far necessitated the use of multiple datasets.
 # 
-While this approach was of substantial value, as it allowed to investigate variables with varying coverage (and thus enabled findings of the impact of both tax incentives and cultural spending which would have been unmeasurable with a single dataset), better coverage of some variables would nevertheless provide even further insights.
+While this approach was of substantial value, as it allowed to investigate variables with varying coverage and  allowed to include many countries which had not received much attention by the private museum literature, better coverage of some variables would nevertheless provide even further insights.
 #
 Finally, further relationships between variables (such as mediation or moderation) as well as nonlinear relationships to private museum foundings beyond those considered might be present which, if not taken into account, might bias coefficient estimates.
 #
@@ -1445,9 +1441,6 @@ While imputed closing years are likely not always accurate, the resulting densit
 
 ** Coefficient Distribution
 
-# #+label: fig:coef_violin
-# #+caption: Coefficient point estimate distribution (variation based on different variable choices)
-# [[file:figures/plt_v75_coef_violin.pdf]]
 
 {{{ynkplt_coef_violin}}}
 
@@ -1505,6 +1498,10 @@ There are however a few exceptions, such as tax deductibility of donations in "D
 
 
 ** Mediation: unsure if to use at all 
+:PROPERTIES:
+:ID:       887311dc-92a8-4b21-9f0e-0b0a6eeb38d5
+:CUSTOM_ID: app_mediation
+:END:
 
 #+latex: \begin{landscape}
 
