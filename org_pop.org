@@ -722,17 +722,17 @@ The single digit code 8 is rather broad, and the more detailed  double digit SNA
 #
 However, data coverage is substantially worse for SNA Code 82, and as there appears to be substantial correlation between Codes 8 and 82 for countries that provide data on both levels, I consider it acceptable to use the broader single-digit Code 8.
 #
-As even with the broader single-digit Code 8, cultural spending constitutes the indicators with the least coverage (figure *X*), I furthermore combine as many data sources as possible (the exact combination procedure is described in Appendix *X*).
+Even with the broader single-digit Code 8, cultural spending constitutes the indicators with the smallest coverage; I therefore combine as multiple data sources (the exact combination procedure is described in Appendix \ref{app_data_coverage}, also see figure {{{rplt_vrbl_cycnt}}}).
 
 
 **** Inequality
-The WID also provides Gini coefficients for wealth and pre-tax income[fn::While data on post-tax income is also included, its coverage is very limited].
+The WID provides Gini coefficients for wealth and pre-tax income[fn::While data on post-tax income is also available in the WID, its coverage is very limited].
 #
-The top 1% and 10% wealth and income shares are used as alternative measures of inequality, as these measures are commonly used in in WID publications.
+The top 1% and 10% wealth and income shares are used as alternative measures of inequality (the actual process of operationalizing concepts with different measures is described in section Variable selection).
 
 
 **** High Net Worth Individuals
-I also use the WID to calculate HNWIs indicators, i.e. the population above a certain wealth threshold in a given year. 
+I use the WID to calculate HNWIs indicators, i.e. the population above a certain wealth threshold in a given year. 
 #
 The WID contains for each country-year measures of wealth at various quantile thresholds, e.g. the value for the 90th percentile describes the amount of wealth of the least wealthy member of the top 10%.
 #
@@ -755,7 +755,7 @@ The so-obtained proportion of HNWIs is converted into a count using World Bank p
 #
 GDP is included to account for potentially imperfect measurement of government spending and other art field indicators (discussed below). 
 #
-Furthermore, given the stratified character of art consumption [[parencite:&Bourdieu_1984_distinction]] within countries, controlling for GDP also includes a demand dimension as more developed countries potentially host larger population shares interested in (post-material) art consumption.
+Furthermore, given the stratified character of art consumption [[parencite:&Bourdieu_1984_distinction]] within countries, controlling for GDP also includes a demand dimension as more developed countries potentially host larger population shares interested in post-material art consumption.
 #
 Population size is included as an offset (cf. section Regression specification). 
 
@@ -840,7 +840,7 @@ However, existing museums may also compete with private museums for audiences, a
 
 I thus use the Museums of the World database [[parencite:&deGruyter_2021_MOW]] to describe a country's art museum population. 
 #
-As it seems that the database has not been maintained in recent years (due to a strong decline in museum foundings being covered) I use it only to construct time-invariant indicators of the number of non-private modern and contemporary art museums having opened until 1990.
+As preliminary analyses indicated that the database has not been maintained in recent years (due to a strong decline in museum foundings being covered) I use it only to construct time-invariant indicators of the number of non-private modern and contemporary art museums having opened until 1990.
 #
 In order to measure both legitimating and competitive effects, I include a linear and squared terms as in the private museum density measures.
 #
@@ -861,7 +861,7 @@ For a number of years the wealth gini coefficient of South Africa was larger tha
 #
 Finally, Iceland, the Bahamas, Monaco and Liechtenstein have been excluded as these countries' small population results in an extremely high rate of Artnews top 200 collectors per capita (and in the case of Iceland, also an extremely high rate of modern/contemporary art museums in 1990).
 #
-I argue that since the number of Artnews collectors is a discrete count variable, it is less suitable to provide an accurate measures in countries with small populations; the inability of this variable to  accurately measure the intended concept thus justifies the exclusion of these countries on methodological grounds.
+Since the number of Artnews collectors is a discrete count variable it is unable to provide accurate measures in countries with very small populations which justifies the exclusion of these countries on methodological grounds.
 
 
 
@@ -890,7 +890,7 @@ As excluding a large number of country-years limits the generalizability of find
 # 
 In particular, I construct one dataset with all variables ({{{nbr_cy_cbn1}}} country years, {{{nbr_crys_cbn1}}} countries; referred to as "DS all IVs"), one with all variables except cultural spending ({{{nbr_cy_cbn2}}} country years, {{{nbr_crys_cbn2}}} countries; "DS --CuSp"), and one with all variables except cultural spending and top marginal income tax rates ({{{nbr_cy_cbn3}}} country years, {{{nbr_crys_cbn3}}} countries; "DS --CuSp/TMITR").
 #
-Most country-years are situated between 2000 and 2020, with coverage generally increasing over time; the datasets therefore effectively cover the period in which the majority of private museum founding has taken place.
+Most country-years are situated between 2000 and 2020 with coverage generally increasing over time (figure {{{rplt_cbn_cycnt}}}); the datasets therefore effectively cover the period in which the majority of private museum founding has taken place.
 #
 # While this approach does not solve completely either omitted variable bias (as variables with limited coverage can not be included in the datasets with more country-years) nor data missing not-at-random (still possibly present in the datasets with fewer country-years), it uses the data most effectively by including as many variables and country-years in at least one analysis, leading to a more complete picture adequate for an exploratory approach. 
 # #
@@ -907,6 +907,10 @@ Most country-years are situated between 2000 and 2020, with coverage generally i
 # #+latex: \end{adjustbox}
 
 *** Variable selection
+:PROPERTIES:
+:ID:       569b33ac-c609-4fd0-be65-98b9617a891a
+:CUSTOM_ID: vrbl_slctn
+:END:
 While theoretical relations involving the number of HNWIs and inequality have been proposed, concrete operationalizations have been missing.
 #
 For the number of HNWIs, I randomly choose a threshold of 1, 5, 30, 200 million USD, while inequality is first differentiated into wealth and income inequality, for which in turn one of Gini, 10% share and 1% share is chosen randomly.
@@ -936,7 +940,7 @@ If multiple models fit equally well, a lag among these is selected at random.
 #
 This selection of variables in random order followed by lag choice is continued until no further improvement is achieved.
 #
-While the random starting values and random order of variables help to explore the lag space, models can still be stuck in local optima; I therefore run each model four times, each with a different set of random starting values. 
+While the random starting values and random order of variables help to explore the lag space, models can still be stuck in local optima; I therefore run each model four times, each with a different set of random starting values (see figure {{{rplt_lag_dens}}}). 
 
 
 
@@ -945,13 +949,21 @@ While the random starting values and random order of variables help to explore t
 :ID:       d2d676fc-e644-4815-a06d-906a30c823f0
 :END:
 
-Each regression model is specified as a negative binomial model (which is robust to potential overdispersion of the dependent variable) run using the glmmTMB command [[parencite:&Brooks_etal_2017_glmmTMB]] of R 4.3.0.
+Each regression model is specified as a negative binomial model (which is robust to potential overdispersion of the dependent variable) run using the glmmTMB command [[parencite:&Brooks_etal_2017_glmmTMB]] of R 4.3.0. 
 #
 Random country intercepts are added to account for clustering of observations in countries.
 #
-Due to the presence of time-invariant variables (tax incentives and museum population) pure fixed effects models (which would capture only within-country variation) are not feasible, coefficients therefore describe both within-country and between-country variation.
+# Due to the presence of time-invariant variables (tax incentives and museum population) fixed effects models (which would capture only within-country variation) are not feasible, coefficients therefore describe both within-country and between-country variation.
 #
-I furthermore use population as an offset (which estimates founding rate per capita) to allow comparison between countries of different population sizes; all count predictors are therefore first transformed into per capita rates.
+I furthermore use population as an offset (which estimates founding rate per capita) to allow comparison between countries of different population sizes; all count predictors are therefore first transformed into per capita rates
+# 
+This results in the following model specification:
+
+\begin{equation*}
+y_{it} = \beta_i + \beta X + 1 \times ln(pop_{it}) + \epsilon_{it}
+\end{equation*}
+
+with $y_{it}$ as number of private museum foundings in country $i$ for year $t$, $\beta_i$ as country-intercept, $\beta$ as coefficient vector of predictor matrix $X$, $1 \times ln(pop_{it})$ as the population offset, and $e_{it}$ as error component.
 #
 To facilitate convergence and interpretation, all variables except the binary variable of tax deductibility of charitable donations are also rescaled to a mean of 0 and a standard deviation of 1. 
 # (the interaction between tax deductibility of charitable donations and top marginal income tax rate and the squared terms of other variables are calculated after rescaling).
@@ -1297,6 +1309,10 @@ Further disentangling these effects, improving measurement precision and elabora
 
 
 ** Data Coverage
+:PROPERTIES:
+:ID:       9092cd69-4ad9-49b7-98c0-38c878fc93d7
+:CUSTOM_ID: app_data_coverage
+:END:
 # #+label: fig:openings
 # #+caption: Private Museum openings (absolute and population-rate) of 12 countries with highest counts. 
 # [[file:figures/foundings_country_cnt_and_rate.pdf]]
