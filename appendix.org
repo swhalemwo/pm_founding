@@ -475,26 +475,25 @@ For each variable in each of these models a reduced model is constructed by remo
 # fuck actually doesn't really make sense to compare a full model with smorc_linear and squared to one iwth only linear
 # also my improvement of smorc is weird: same for both smorc linear and smorc squared
 #
-If a variable had a squared term or interaction, it was removed together with the main term.
+If a variable has a squared term or interaction, it is removed together with the main term.
 #
-Furthermore additional reduced models were constructed, namely one without the four density variables (country and global density linear and squared), as well as one without the density variables and closings.
+Furthermore additional reduced models is constructed, namely one without the four density variables (country and global density linear and squared), as well as one without the density variables and closings.
 #
 Given that the datasets differ in their number of variables, a different number of reduced models is calculated per dataset, in particular *684* for "DS all IVs", *612* for "DS --CuSp", and *540* for "DS --CuSp/TMITR". 
 # 
-The lags of the reduced models were not optimized due to computational limitations. 
+The lags of the reduced models are not optimized due to computational limitations. 
 
 
 
 Figure {{{rplt_oneout_llrt_lldiff}}} shows the distribution of differences in log-likelihood between the full and reduced models per variable and dataset.
 #
-Furthermore, a likelihood ratio test ($LR = 2[LL_{reduced} - LL_{full}]$) was conducted to compare each reduced to its corresponding full model.
+Furthermore, a likelihood ratio test ($LR = 2[LL_{reduced} - LL_{full}]$) is conducted to compare each reduced to its corresponding full model.
 #
 The likelihood ratio statistic follows a Chi-square distribution; its corresponding p-value was converted to a z-score to facilitate interpretation.
 #
 The distribution of z-scores per variable and dataset is shown in figure {{{rplt_oneout_llrt_z}}}.
-
-
-Both analysis correspond in large parts to the results of the main regression analysis *table X* insofar as variables with significant coefficient correspond to significant and/or substantial model improvements.
+# 
+Both analysis correspond in large parts to the results of the main regression analysis  insofar as variables with significant coefficient correspond to significant and/or substantial model improvements.
 #
 There are however a few exceptions, such as tax deductibility of donations in "DS -CuSp/TMITR", GDP per capita in "DS all IVs" as well as some  wealth inequality variables in "DS all IVs" in which a significant coefficient does not always correspond to a significant model improvement. 
 
