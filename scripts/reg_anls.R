@@ -258,43 +258,64 @@ gen_plt_oucoefchng <- function(dt_oucoefchng) {
                                         minpt = min(dt_oucoefchng$mean_diff),
                                         maxpt = max(dt_oucoefchng$mean_diff))
     
-    ## default plot: point, uses color and size
-    dt_oucoefchng %>%
-        ggplot(aes(y=vrbl, x = ou_set_title, size = abs(mean_diff),
-                   fill = mean_diff,
-                   ## color = mean_diff,
-                   group = cbn_name,
-                   shape = cbn_name
-                   )) +
-        geom_point(
-            # show.legend = F,
-            ## shape = 21,
-            stroke = 0.2,
-            ## position = position_dodgev(height = 1)
-            position = position_dodge(width = 0.85)
-        ) +
-        ## scale_color_gradient2(low = "blue", high = "red", na.value = "white", mid = "grey75") +
-        ## scale_color_gradient2(low = tol9BuRd[1], high = tol9BuRd[9], na.value = "white", mid = "grey82") +
-        scale_fill_gradientn(colors = names(colvec_stretched), values = colvec_stretched) +
+    ## write aesthetics as object to re-use
+    mapx <- aes(y=vrbl, x = ou_set_title, size = abs(mean_diff),
+               fill = mean_diff,
+               group = cbn_name,
+               shape = cbn_name,
+               stroke = 0.2)
+
+    ## positioning of different combination dots (based on trig identities), scaling for comfy adjusting
+    sclr <- 1.4
+    r <- 0.2 * sclr
+    dx <- 0.1 * sclr
+    dy <- 0.17 * sclr
+
+    
+    ggplot() +
+        geom_point(dt_oucoefchng[cbn_name == "cbn1"],
+                   mapping = mapx,
+                   position = position_nudge(x=-dx, y=dy)) +
+        geom_point(dt_oucoefchng[cbn_name == "cbn2"],
+                   mapping = mapx,
+                   position = position_nudge(x= -dx, y= -dy)) +
+        geom_point(dt_oucoefchng[cbn_name == "cbn3"],
+                   mapping = mapx,
+                   position = position_nudge(x=r, y=0)) + 
+        ## default plot: point, uses color and size
+    ## dt_oucoefchng %>%
+    ##     ggplot(aes(y=vrbl, x = ou_set_title, size = abs(mean_diff),
+    ##                fill = mean_diff,
+    ##                ## color = mean_diff,
+    ##                group = cbn_name,
+    ##                shape = cbn_name
+    ##                )) +
+    ##     geom_point(
+    ##         stroke = 0.2,
+    ##         ## position = position_dodgev(height = 1)
+    ##         position = position_dodge(width = 0.85)
+    ##     ) +
+            scale_fill_gradientn(colors = names(colvec_stretched), values = colvec_stretched) +
         scale_color_gradientn(colors = names(colvec_stretched), values = colvec_stretched) + 
         ## theme_orgpop() + 
         theme(axis.text.x = element_text(angle = 25, hjust = 1),
-              axis.text = element_text(size =6),
+              axis.text = element_text(size =7),
               strip.text = element_text(size = 6, margin = margin(2,2,2,2, "points")),
               ## panel.grid = element_line(color = "grey80", linetype = "dotted")
               ## panel.background = element_rect(fill = "grey80")
               legend.position = "bottom",
               legend.margin = margin(0,0,0,0),
-              axis.title = element_text(size =6),
+              axis.title = element_text(size =9),
               legend.box.margin = unit(c(0,0,0,0), "points")
               ) +
         ## scale_shape_manual(values = c(21,22,23), labels = vvs$cbn_lbls) +
-        scale_shape_manual(values = c(21,22, 21), labels = vvs$cbn_lbls) +
+        scale_shape_manual(values = c(21,22, 23), labels = vvs$cbn_lbls) +
                 facet_grid(hyp_nonou ~ hyp_ou, scales = "free", space = "free") +
         labs(y = "variable (with coefficient)", x = "variable/group of variables added") +
-        scale_size_continuous(range = c(0.5,3.5)) +  # guide = guide_legend(title = "asdf")) +
+        scale_size_continuous(range = c(0.5,4)) +  # guide = guide_legend(title = "asdf")) +
         guides(shape = guide_legend(direction = "horizontal", nrow = 1,
-                                    title = "Dataset (horizontal dataset order in plot follows legend order)",
+                                    ## title = "Dataset (horizontal dataset order in plot follows legend order)",
+                                    title = "Dataset",
                                     title.position = "top",
                                     override.aes = list(size = 4),
                                     order = 1, byrow = T,
@@ -358,7 +379,9 @@ gen_plt_oucoefchng <- function(dt_oucoefchng) {
 
 }
 
-## gen_plt_oucoefchng(reg_anls_base$ou_objs, reg_res_objs$df_anls_base)
+## gen_plt_oucoefchng(reg_res_objs$dt_oucoefchng)
+
+
 
 gen_plt_cntrfctl <- function(dt_cntrfctl_cons, dt_cntrfctl_wse) {
     if (as.character(match.call()[[1]]) %in% fstd){browser()}
@@ -2414,7 +2437,7 @@ gen_plt_cfgs <- function() {
                                   caption = "hweal"),
             plt_pred_hnwi = list(filename = "pred_hnwi.pdf", width = 18, height = 7.5,
                             caption = "hweal"),
-            plt_oucoefchng = list(filename = "oucoefchng.pdf", width = 24, height = 12,
+            plt_oucoefchng = list(filename = "oucoefchng.pdf", width = 24, height = 17,
                                   caption = "Coefficient changes given addition of other variables"),
             plt_oucoefchng_tile = list(filename = "oucoefchng_tile.pdf", width = 24, height = 12,
                                   caption = "Coefficient changes given addition of other variables"),
@@ -3667,8 +3690,8 @@ reg_res <- list()
 reg_res$plts <- gen_reg_res_plts(reg_res_objs, vvs, NBR_MDLS, only_priority_plts = T, stylecfg)
 
 ## nreg_res$plts$plt_best_coefs_single_cbn1 <- gen_plt_best_coefs_single_cbn1(reg_res_objs$top_coefs)
-reg_res$plts$plt_pred_taxinc <- gen_plt_pred_taxinc(reg_res_objs$top_coefs)
-render_reg_res("plt_pred_taxinc", reg_res, batch_version = "v91")
+reg_res$plts$plt_oucoefchng <- gen_plt_oucoefchng(reg_res_objs$dt_oucoefchng)
+render_reg_res("plt_oucoefchng", reg_res, batch_version = "v91")
 
 
 gen_plt_best_coefs_single
