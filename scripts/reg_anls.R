@@ -3489,7 +3489,7 @@ gen_nbrs <- function(df_excl, df_open, cbn_dfs_rates, cbn_dfs_rates_uscld,  df_r
         .[, core := gsub(".pdf", "", filename)] %>% 
         .[, .(nbr_fmt = sprintf("\\ref{fig:%s}", core), nbr_name=  paste0("rplt_", core), grp = "figlbls")] 
         
-    dt_tbllbls <- gen_tblcfgs(TABLE_DIR) %>% rbindlist(idcol = "name") %>%
+    dt_tbllbls <- gen_tblcfgs(TABLE_DIR, batch_version) %>% rbindlist(idcol = "name") %>%
         .[, .(nbr_fmt = sprintf("\\ref{%s}", label), nbr_name = paste0("r", name), grp = "tbllbls")]
 
     dt_cfgs_lbls <- reduce(list(dt_pltcfgs, dt_pltlbls, dt_tbllbls), rbind)
