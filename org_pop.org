@@ -330,7 +330,7 @@ dt_nbrs[, .(macro_str = sprintf("#+MACRO: %s %s", nbr_name, nbr_fmt)), grp] %>%
 
 
 
-* Structural determinants of private museum founding
+* Structural predictors of private museum founding
 :PROPERTIES:
 :NUMBERS: no
 :END:
@@ -691,7 +691,9 @@ However, no such databases exist of the art collector population, in particular 
 # 
 Therefore the more aggregate unit of country-years is used as the unit of analysis (with countries defined according to the ISO 3166 standard). 
 #
-Data sources are summarized in Table \ref{tbl:data_srcs} and described below. 
+Data sources are summarized in Table \ref{tbl:data_srcs} and described below.
+#
+Finally, a number of additional data processing steps are described in appendix \ref{app_data_processing}.
 
 
 *** Dependent Variable: Number of private museum foundings per country-year
@@ -1412,6 +1414,10 @@ with the shares of the former increasing with dataset size in country-years (*li
 
 
 ** Data processing
+:PROPERTIES:
+:ID:       eef6b3c3-fe92-46fb-a308-00aabeb70d7a
+:CUSTOM_ID: app_data_processing
+:END:
 
 *** Cultural spending data source combination
 
@@ -1497,7 +1503,7 @@ If a variable has a squared term or interaction, it is removed together with the
 #
 Furthermore additional reduced models is constructed, namely one without the four density variables (country and global density linear and squared), as well as one without the density variables and closings.
 #
-Given that the datasets differ in their number of variables, a different number of reduced models is calculated per dataset, in particular *684* for "DS all IVs", *612* for "DS --CuSp", and *540* for "DS --CuSp/TMITR". 
+Given that the datasets differ in their number of variables, a different number of reduced models is calculated per dataset, in particular 684 for "DS all IVs", 612 for "DS --CuSp", and 540 for "DS --CuSp/TMITR". 
 # 
 The lags of the reduced models are not optimized due to computational limitations. 
 
@@ -1517,7 +1523,7 @@ There are however a few exceptions, such as tax deductibility of donations in "D
 
 
 
-** Mediation: unsure if to use at all 
+** Influence of variable inclusion on regression coefficients
 :PROPERTIES:
 :ID:       887311dc-92a8-4b21-9f0e-0b0a6eeb38d5
 :CUSTOM_ID: app_mediation
@@ -1555,17 +1561,19 @@ The coefficient of GDP decreases as other variables are added, which indicates t
 #
 This in particular concerns the effects of density, tax incentives and cultural spending, and to a lesser extent the effect of inequalities (for "DS --CuSp" and "DS --CuSp/TMITR") and some HNWI measures (for "DS all IVs").
 #
-Conversly, adding GDP to a model in which it was not included before reduces the coefficients of HNWIs, museums of modern/contemporary art and country-level density for "DS --CuSp" and "DS --CuSp/TMITR". 
+Conversly, adding GDP to a model in which it was not included before reduces the coefficients of HNWIs and museums of modern/contemporary art.
+
+
+Finally, there are a number of substantial coefficient changes given inclusion which do not offer an easy explanation, such as decreases of the coefficient of modern and contemporary art museums when including income inequality measures, increases of the linear density term when adding wealth inequality variables, increases of income inequality coefficients when adding density measures, as well as changes to the intercept in both directions when adding different variables. 
 #
-
-does it need to be mediation? could be any kind of covariance? 
-
+Exploring the various cases of potential mediation (or other forms of variable relations) is beyond the scope of the paper, but constitutes a promising start for future research.
 
 
 
 
 
-** lag choice
+
+** Lag Choice
 :PROPERTIES:
 :ID:       68b9f836-26ed-4340-899f-4d6c31192cd5
 :END:
@@ -1580,7 +1588,7 @@ Figure {{{rplt_lag_dens}}} shows the distribution of the lag of the coefficient 
 #
 As often time lags different from one year are chosen (which would likely constitute the default if they were not varied), it can be seen that allowing the lag to vary substantially increases model fit. 
 #
-It furthermore seem to be the case that the HNWI coefficients (which are not significant) vary the most in regards to their lag choice (which is plausible since a non-substantial overall effect could imply that the particular lag does not matter much). 
+It furthermore seems to be the case that the HNWI coefficients (which are not significant) vary the most in regards to their lag choice (which is plausible since a non-substantial overall effect could imply that the particular lag does not matter much). 
 # , which is plausible insofar as a flat 
 
 
@@ -1603,6 +1611,10 @@ While VIFs can be substantial when including squared variables and interactions,
 
 
 ** Longitudinal development
+:PROPERTIES:
+:ID:       0bbb364a-078f-4f4c-a409-4a18564eba99
+:CUSTOM_ID: app_velp
+:END:
 
 #+latex: \begin{landscape}
 
@@ -1610,11 +1622,11 @@ While VIFs can be substantial when including squared variables and interactions,
 
 #+latex: \end{landscape}
 
-Next to these overall statistics, the within-country changes were analyzed to characterize the development of the longitudinal variables over the observation period.
+The within-country changes were analyzed to characterize the development of the longitudinal variables over the observation period.
 #
-In particular, for each variable a separate regression model was run which regresses the variable in question at lag 0 against year while allowing slopes and intercepts to vary by country (year was 0 in 1995, the beginning of the observation period).
+In particular, for each variable a separate regression model was run which regresses the variable in question at lag 0 against year while allowing slopes and intercepts to vary by country (year is set to 0 in 1995, the beginning of the observation period).
 #
-*can only cover linear country trends, especially since changes are usually reported as percentage change*
+# *can only cover linear country trends, especially since changes are usually reported as percentage change*
 #
 Results are presented in figure {{{rplt_velp}}}.
 #
