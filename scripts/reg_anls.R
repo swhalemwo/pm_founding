@@ -457,9 +457,12 @@ gen_plt_cntrfctl <- function(dt_cntrfctl_cons, dt_cntrfctl_wse) {
         geom_vline(mapping = aes(xintercept = 0), linetype = "dashed") +
         labs(# x="deviations from PM openings under counterfactual of variable y staying at 2000 level ",
             x = "difference in PM foundings between observed and variable stability at 2000 level",
-             y = "variable y") +
-        theme_bw() +
-        theme_orgpop() 
+             y = element_blank()) +
+        theme_bw() + 
+        theme_orgpop() +
+        theme(plot.margin = unit(c(2,4,2,2), "points"),
+              axis.title.x = element_text(hjust = 1))
+        
         
         
         
@@ -2430,7 +2433,7 @@ gen_plt_cfgs <- function() {
                                             "(Gaussian kernel density estimate; bandwidth = 0.1)")),
             plt_velp = list(filename = "velp.pdf", width = 24, height = 16,
                             caption = "Results of regressing longitudinal variables on year"),
-            plt_cntrfctl = list(filename = "cntrfctl.pdf", width = 19, height = 11,
+            plt_cntrfctl = list(filename = "cntrfctl.pdf", width = 18, height = 11,
                                 caption = "Counterfactual simulations"),
             plt_pred_taxinc = list(filename = "pred_taxinc.pdf", width = 14, height = 7.5,
                                    caption = paste0("Tax Incentives and Private Museum Founding: Adjusted ",
