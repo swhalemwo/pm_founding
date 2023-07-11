@@ -1524,9 +1524,9 @@ The likelihood ratio statistic follows a Chi-square distribution; its correspond
 #
 The distribution of z-scores per variable and dataset is shown in figure {{{rplt_oneout_llrt_z}}}.
 # 
-Both analysis correspond in large parts to the results of the main regression analysis  insofar as variables with significant coefficient correspond to significant and/or substantial model improvements.
+Both analysis correspond in large parts to the results of the main regression analysis insofar as variables with significant coefficient correspond to significant and/or substantial model improvements.
 #
-There are however a few exceptions, such as tax deductibility of donations in "DS -CuSp/TMITR", GDP per capita in "DS all IVs" as well as some  wealth inequality variables in "DS all IVs" in which a significant coefficient does not always correspond to a significant model improvement. 
+There are however a few exceptions, such as tax deductibility of donations in "DS -CuSp/TMITR", GDP per capita in "DS all IVs" as well as some inequality variables in "DS all IVs" in which a significant coefficient does not always correspond to a significant model improvement. 
 
 
 
@@ -1548,7 +1548,7 @@ The variables (or variable sets of all density variables and all density variabl
 # 
 Each point shows the average difference between the coefficient of the full and the restricted model and can be understood as the effect that adding variable v_x to the model has on the coefficient of variable v_y.
 #
-For example, if GDP has a coefficient of 0.3 in the full model and one of 0.1 in the restricted model (e.g. one without cultural spending), the difference is 0.3 - 0.1 = 0.2; thus adding cultural spending to the model results in an increase of the GDP coefficient by 0.2. 
+For example, if GDP has a coefficient of 0.5 in the full model and one of 0.7 in a restricted model (e.g. one without cultural spending), the difference is 0.5 - 0.7 = -0.2; thus adding cultural spending to the model results in an decrease of the GDP coefficient by 0.2. 
 #
 Positive coefficient changes (i.e. a larger coefficients in the full model than in the restricted model) are colored as red, negative coefficient changes as blue; points are furthermore scaled by the absolute coefficient size to compare both positive and negative changes. 
 
