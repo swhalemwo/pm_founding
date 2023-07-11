@@ -25,6 +25,8 @@ dt_nbrs[, .(macro_str = sprintf("#+MACRO: %s %s", nbr_name, nbr_fmt)), grp] %>%
 #+MACRO: nbr_clsd_wld 101
 #+MACRO: nbr_cry_wal1pm_all 64
 #+MACRO: nbr_pm_openatm 446
+#+MACRO: nbr_opnd_snc2k 420
+#+MACRO: perc_opnd_snc2k 76.8%
 
 
 # nbr_pm_regsub
@@ -48,6 +50,9 @@ dt_nbrs[, .(macro_str = sprintf("#+MACRO: %s %s", nbr_name, nbr_fmt)), grp] %>%
 #+MACRO: prop_opngs_cvrd_cbn1 0.649
 #+MACRO: prop_opngs_cvrd_cbn2 0.735
 #+MACRO: prop_opngs_cvrd_cbn3 0.739
+#+MACRO: perc_opngs_cvrd_cbn1 64.9%
+#+MACRO: perc_opngs_cvrd_cbn2 73.5%
+#+MACRO: perc_opngs_cvrd_cbn3 73.9%
 
 
 # opng_rates_fmt
@@ -270,7 +275,7 @@ dt_nbrs[, .(macro_str = sprintf("#+MACRO: %s %s", nbr_name, nbr_fmt)), grp] %>%
 #+MACRO: ynkplt_best_coefs_cloud (eval (concat "#+label: fig:best_coefs_cloud\n" "#+caption: Coefficient point estimate and 95% CI\n" "#+attr_latex: :width 18cm\n" "[[file:figures/plt_v91_best_coefs_cloud.pdf]]"))
 #+MACRO: ynkplt_best_coefs_single (eval (concat "#+label: fig:best_coefs_single\n" "#+caption: Model coefficients (best fitting model)\n" "#+attr_latex: :width 18cm\n" "[[file:figures/plt_v91_best_coefs_single.pdf]]"))
 #+MACRO: ynkplt_best_coefs_single_cbn1 (eval (concat "#+label: fig:best_coefs_single_cbn1\n" "#+caption: asdf\n" "#+attr_latex: :width 14cm\n" "[[file:figures/plt_v91_best_coefs_single_cbn1.pdf]]"))
-#+MACRO: ynkplt_lag_dens (eval (concat "#+label: fig:lag_dens\n" "#+caption: Distribution of lag choice after optimization\n" "#+attr_latex: :width 18cm\n" "[[file:figures/plt_v91_lag_dens.pdf]]"))
+#+MACRO: ynkplt_lag_dens (eval (concat "#+label: fig:lag_dens\n" "#+caption: Lag choice distribution\n" "#+attr_latex: :width 18cm\n" "[[file:figures/plt_v91_lag_dens.pdf]]"))
 #+MACRO: ynkplt_oneout_coefs (eval (concat "#+label: fig:oneout_coefs\n" "#+caption: Model coefficients (best fitting model; colored by significance of model improvement)\n" "#+attr_latex: :width 18cm\n" "[[file:figures/plt_v91_oneout_coefs.pdf]]"))
 #+MACRO: ynkplt_oneout_llrt_lldiff (eval (concat "#+label: fig:oneout_llrt_lldiff\n" "#+caption: Model improvement given variable inclusion (Gaussian kernel density estimate; bandwidth = 0.4)\n" "#+attr_latex: :width 18cm\n" "[[file:figures/plt_v91_oneout_llrt_lldiff.pdf]]"))
 #+MACRO: ynkplt_oneout_llrt_z (eval (concat "#+label: fig:oneout_llrt_z\n" "#+caption: Distribution of Z-score of log-likelihood ratio test p-value (Gaussian kernel density estimate; bandwidth = 0.1)\n" "#+attr_latex: :width 18cm\n" "[[file:figures/plt_v91_oneout_llrt_z.pdf]]"))
@@ -706,11 +711,13 @@ After recording the names and deleting duplicates, it was investigated using pub
 #
 Following this, additional information about each museum was collected by student assistants, the most relevant for this research being country and opening year.
 #
-Currently, the database includes {{{nbr_muem_in_pmdb}}} museums (of which {{{nbr_pm_openatm}}} are currently open, the remainder having closed or transformed to the extent that they no longer constitute a private museum), located in {{{nbr_cry_wal1pm_all}}} countries, with the majority being located in Western Europe ({{{regsub_cnt_Western_Europe}}}), East Asia ({{{regsub_cnt_Eastern_Asia}}}) and North America ({{{regsub_cnt_Northern_America}}}).
+Currently, the database includes {{{nbr_muem_in_pmdb}}} museums (of which {{{nbr_pm_openatm}}} are currently open, the remainder having closed or transformed to the extent that they no longer constitute a private museum), which are located in {{{nbr_cry_wal1pm_all}}} countries, with the majority being located in Western Europe ({{{regsub_cnt_Western_Europe}}}), East Asia ({{{regsub_cnt_Eastern_Asia}}}) and North America ({{{regsub_cnt_Northern_America}}}).
+#
+The majority of them ({{{nbr_opnd_snc2k}}}, or {{{perc_opnd_snc2k}}}) have been founded after 2000.
 #
 Information on country and opening year is used to construct a count indicator of the number of private museums opened in each country-year, the typical operationalization for studying organizational founding [[parencite:&Bogaert_etal_2014_ecological]]. 
 #
-This study has a global scope and  includes a large number of countries without private museums to avoid sampling on the dependent variable. 
+This study has a global scope and includes a large number of countries without private museums to avoid sampling on the dependent variable. 
 # 
 However both the time period and number of countries that can be investigated are limited by the coverage of the independent variables. 
 
@@ -720,7 +727,7 @@ However both the time period and number of countries that can be investigated ar
 #
 For this study, I focus on top marginal income tax rates, i.e. the amount of tax to be paid on income in the uppermost tax bracket, and tax deductibility of donations.
 #
-Higher top marginal income tax rates (in combination with tax deductibility of charitable donations) decrease the net cost of a donation (as higher rates increase the amount of taxes returned; cf. cite:&Hemels_2017_incentives for a more detailed discussion), and are thus expected to increase the incentive for founders to donate their collection (or parts of it) to their private museum and receive a tax deduction in return. 
+Higher top marginal income tax rates (in combination with tax deductibility of charitable donations) generally decrease the net cost of a donation (as higher rates increase the amount of taxes returned; cf. cite:&Hemels_2017_incentives for a more detailed discussion), and are thus expected to increase the incentive for founders to donate their collection (or parts of it) to their private museum and receive a tax deduction in return. 
 
 
 Top marginal income tax rate data is taken from the Index of Economic Freedom of the World parencite:&Fraser_2022_economic_freedom, of which it constitutes a sub-item.
@@ -915,7 +922,7 @@ As excluding a large number of country-years limits the generalizability of find
 # 
 In particular, I construct one dataset with all variables ({{{nbr_cy_cbn1}}} country years, {{{nbr_crys_cbn1}}} countries; referred to as "DS all IVs"), one with all variables except cultural spending ({{{nbr_cy_cbn2}}} country years, {{{nbr_crys_cbn2}}} countries; "DS --CuSp"), and one with all variables except cultural spending and top marginal income tax rates ({{{nbr_cy_cbn3}}} country years, {{{nbr_crys_cbn3}}} countries; "DS --CuSp/TMITR").
 #
-Most country-years are situated between 2000 and 2020 with coverage generally increasing over time (figure {{{rplt_cbn_cycnt}}}); the datasets therefore effectively cover the period in which the majority of private museum founding has taken place.
+Most country-years are situated between 2000 and 2020 with coverage generally increasing over time (figure {{{rplt_cbn_cycnt}}}); the datasets therefore effectively cover the period in which the majority of private museum founding has taken place (they cover {{{perc_opngs_cvrd_cbn1}}}, {{{perc_opngs_cvrd_cbn2}}} and {{{perc_opngs_cvrd_cbn3}}} of foundings, respectively). 
 #
 # While this approach does not solve completely either omitted variable bias (as variables with limited coverage can not be included in the datasets with more country-years) nor data missing not-at-random (still possibly present in the datasets with fewer country-years), it uses the data most effectively by including as many variables and country-years in at least one analysis, leading to a more complete picture adequate for an exploratory approach. 
 # #

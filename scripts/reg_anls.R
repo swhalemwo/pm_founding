@@ -2408,7 +2408,7 @@ gen_plt_cfgs <- function() {
                                               width = 14, height = 7.5,
                                               caption = "asdf"),
             plt_lag_dens = list(filename = "lag_dens.pdf", width = 18, height = 14,
-                                caption = "Distribution of lag choice after optimization"),
+                                caption = "Lag choice distribution"),
             plt_oneout_coefs = list(filename = "oneout_coefs.pdf", width = 18, height = 12,
                                     caption = paste0("Model coefficients (best fitting model; ",
                                                      "colored by significance of model improvement)")),
@@ -3337,11 +3337,16 @@ gen_nbrs <- function(df_excl, df_open, cbn_dfs_rates, cbn_dfs_rates_uscld,  df_r
     ## number of those countries that have at least 1 pm, based on all PMs in database
     nbr_cry_wal1pm_all <- dt_excl[, uniqueN(na.omit(countrycode))]
 
+    nbr_opnd_snc2k <- dt_excl[year_opened_int >= 2000, .N]
+    perc_opnd_snc2k <- sprintf("%s%%", (round(nbr_opnd_snc2k/nbr_muem_in_pmdb,3))*100)
+
     pmdb_stats <- list(nbr_muem_in_pmdb = nbr_muem_in_pmdb,
                        nbr_opnd_wld = nbr_opnd_wld,
                        nbr_clsd_wld = nbr_clsd_wld,
                        nbr_cry_wal1pm_all = nbr_cry_wal1pm_all,
-                       nbr_pm_openatm = nbr_pm_openatm)
+                       nbr_pm_openatm = nbr_pm_openatm,
+                       nbr_opnd_snc2k = nbr_opnd_snc2k,
+                       perc_opnd_snc2k = perc_opnd_snc2k)
 
 
     ## number of those countries that have at least 1 pm, based on PMs with complete information
@@ -3364,10 +3369,12 @@ gen_nbrs <- function(df_excl, df_open, cbn_dfs_rates, cbn_dfs_rates_uscld,  df_r
                nbr_opngs = sum(.x$nbr_opened),
                prop_opngs_cvrd = fmt_nbr_flex(round(sum(.x$nbr_opened, na.rm = T)/nbr_muem_in_pmdb,3), digits = 3)
                )) %>%
-        rbindlist(idcol = T) %>% melt(id.vars = ".id") %>%
+        rbindlist(idcol = T) %>%
+        .[, perc_opngs_cvrd := sprintf("%s%%", as.numeric(prop_opngs_cvrd)*100)] %>% 
+        melt(id.vars = ".id") %>%
         .[, vrbl := paste0(variable, "_", .id)] %$%
         setNames(value, vrbl)
-
+        
     ## look at within/between iso3c/dataset variation in year coverage, is both within/between
     ## imap_dfr(cbn_dfs_rates[1:3], ~adt(.x)[, .(N = .N, cbn = .y), iso3c]) %>%
     ##     .[, .(meanN = mean(N)), cbn]
