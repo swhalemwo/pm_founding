@@ -577,6 +577,7 @@ gen_plt_velp <- function(dt_velp_crycoefs, dt_velp_scalars) {
         .[, vrbl := factor(vrbl, levels = rev(names(vvs$vrbl_lbls)))]
 
     
+
     dt_velp_scalars_vis <- dt_velp_scalars %>%
         .[vrbl %!in% c("nbr_closed_cum_global", "pm_density_global")] %>%
         vvs$hyp_mep_dt[., on = "vrbl"] %>% 

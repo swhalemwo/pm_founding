@@ -1648,15 +1648,33 @@ Furthermore, the correlation between slope and intercept is included:
 A positive correlation indicates that countries with higher constants (i.e. predicted value in 1995) achieve higher growth over the observation period than countries with lower constants (thereby "extending their lead"), whereas negative correlations indicate that countries with lower constants experience higher growth (thereby "catching up").
 
 
-main findings:
-- to the extent to which histograms of same variable are different between combinations, countries are not missing at random -> less biased estimates
-- TI decrease
-- smorc increase
-- inequalities show much variation, depending on dataset
-- hwni increase, but very unequally, many 0s
-  not artifact of construction: many 0 slopes also for low thresholds where there are almost no zeroes
+# main findings:
+# - to the extent to which histograms of same variable are different between combinations, countries are not missing at random -> less biased estimates
+# - TI decrease
+# - smorc increase
+# - inequalities show much variation, depending on dataset
+# - hwni increase, but very unequally, many 0s
+#   not artifact of construction: many 0 slopes also for low thresholds where there are almost no zeroes
   
-  
+A number of findings can be gleaned from this analysis.
+#
+First, country slopes can diverge substantially from the overall mean development on all variables, which should serve as a reminder to be cautious of treating global developments as homogenous between countries. 
+#
+This also further supports the methodological choice of using country-year as the unit of analysis instead of treating private museums as a homogenous global development; which could be further refined in the future by integrating random slopes into the main regression analysis.
+#
+Secondly it can be seen that top marginal income tax rates have on average been declining, while cultural spending as actually increased in most countries, which questions the characterization of neoliberal government expenditure reduction [[parencite:&Walker_2019_collector;&Boloten_Hacking_2021_foreword]] but only to some degree as these characterizations focus primarily on countries with higher cultural spending, where due to the negative correlation between intercept and slope cultural spending has indeed decreased.
+#
+Thus the value of using a large number of countries rather than case studies which allows to characterize wider developments becomes especially clear.
+#
+Third, inequality measures as well show a wide range of developments.
+#
+While some average non-zero slopes are found (such as a an overall reduction of income inequality in DS -CuSp/TMITR and and increase in wealth inequality in DS all IVs), the variation even in these cases is still considerable. 
+#
+Fourth, HNWI indicators develop almost never negatively, although most countries see comparatively little growth (this is not a measurement artifact of assigning zero when no quantile is above the HNWI threshold in question as it occurs also at the lowest of 1M, where most country-years have non-zero values).
+#
+Furthermore average increases appear to be driven by a comparatively small number of countries with relatively large increases. 
+#
+Finally, GPD and private museum density see similar patterns of almost no decline with growth being concentrated in a handful of countries, while art collector rates are highly centered around zero, indicating stability (at zero art collectors) for most countries. 
 
 
 
