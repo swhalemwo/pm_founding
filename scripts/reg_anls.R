@@ -435,24 +435,32 @@ gen_plt_cntrfctl <- function(dt_cntrfctl_cons, dt_cntrfctl_wse) {
         
 
     ## ## violin of difference between total opened observed and predicted
-    dt_cntrfctl_cons %>% copy() %>% .[, vrbl := gsub("_lag[1-5]", "", vrbl)] %>%
+    dt_cntrfctl_vis <- dt_cntrfctl_cons %>% copy() %>% .[, vrbl := gsub("_lag[1-5]", "", vrbl)] %>%
         .[, diff := nbr_opened - pred] %>% # effect of not staying constant since 2000
         .[dt_id %in% c("2k4")] %>% 
         .[, .(diff = mean(diff)), .(vrbl, cbn_name, dt_id)] %>% 
         vvs$hyp_mep_dt[., on = "vrbl"] %>%
         .[, vrbl := factor(vrbl, levels = rev(names(vvs$vrbl_lbls)))] %>%
-        ggplot(aes(x=diff, y = vrbl, color = dt_id, fill = dt_id)) +
+        .[, hjust := fifelse(diff < -19 | (diff > 0 & diff < 15) , -0.1, 1.1)] # number placement on bars
+
+    dt_cntrfctl_vis %>%
+        ggplot(aes(x=diff, y = vrbl, group = dt_id)) + # color = dt_id, fill = dt_id)) +
         ## geom_point(color = "black") +
-        geom_col(show.legend = F) + 
+        geom_col(show.legend = F, fill = "grey80") +
+        geom_text(aes(label = as.integer(diff), hjust = hjust),
+                  size = pt2mm(stylecfg$lbl_fntsz)) + 
         ## geom_violin() + # bw = 5) + 
         facet_grid(hyp ~ cbn_name, scales = "free", space = "free", switch = "y",
                    labeller = as_labeller(c(vvs$krnl_lbls, vvs$cbn_lbls, vvs$vrbl_lbls))) +
         scale_y_discrete(labels = map_chr(addline_format(vvs$vrbl_lbls),
                                           ~paste(strwrap(.x, 35), collapse = "\n"))) + 
         geom_vline(mapping = aes(xintercept = 0), linetype = "dashed") +
-        labs(x="additional PM foundings due to variable change since 2000") +
+        labs(# x="deviations from PM openings under counterfactual of variable y staying at 2000 level ",
+            x = "difference in PM foundings between observed and variable stability at 2000 level",
+             y = "variable y") +
         theme_bw() +
-        theme_orgpop()
+        theme_orgpop() 
+        
         
         
 
@@ -3690,8 +3698,8 @@ reg_res <- list()
 reg_res$plts <- gen_reg_res_plts(reg_res_objs, vvs, NBR_MDLS, only_priority_plts = T, stylecfg)
 
 ## nreg_res$plts$plt_best_coefs_single_cbn1 <- gen_plt_best_coefs_single_cbn1(reg_res_objs$top_coefs)
-reg_res$plts$plt_oucoefchng <- gen_plt_oucoefchng(reg_res_objs$dt_oucoefchng)
-render_reg_res("plt_oucoefchng", reg_res, batch_version = "v91")
+reg_res$plts$plt_cntrfctl <- gen_plt_cntrfctl(reg_res_objs$dt_cntrfctl_cons, reg_res_objs$dt_cntrfctl_wse)
+render_reg_res("plt_cntrfctl", reg_res, batch_version = "v91")
 
 
 gen_plt_best_coefs_single
