@@ -52,6 +52,9 @@ clctrs_luise %>% select(collector_name_artnews) %>%
 
 ## *** bvd api
 library(RPostgres)
+library(collapse)
+
+dGQ <- dbGetQuery
 
 wrds <- dbConnect(Postgres(),
                   host='wrds-pgdata.wharton.upenn.edu',
@@ -66,16 +69,83 @@ FROM bvd.ob_dmc_current_only_l limit 100"
 
 testdata <- dbGetQuery(wrds, testquery) %>% atb()
 
-dbGetQuery(wrds, "describe bvd.ob_dmc_current_only_l")
+## describe table
 
+
+dbGetQuery(wrds, "describe bvd.ob_dmc_current_only_l")
 dbGetQuery(wrds, "select distinct libname from dictionary.libnames")
+
+dbGetQuery(wrds, "
+select table_name, column_name, data_type from information_schema.columns
+where table_name = 'ob_dmc_current_only_l'") %>% adt
+## bvd isn't part of name
+
+## see what other columns are in information_schema.columns
+dt_bvdinfo <- dbGetQuery(wrds, "
+select * from information_schema.columns where table_name = 'ob_dmc_current_only_l'") %>% adt
+
+str(dt_bvdinfo)
+dt_bvdinfo[, .N, table_catalog]
+
+## relevant columns:
+## table_catalog
+## table_schema
+dt_bvdinfo[, .N, table_schema]
+
+
+dt_bvdinfo[table_schema == "bvd"] %>% str
+
+## test some other db
+dGQ(wrds, "
+select * from information_schema.columns where table_schema = 'crsp'") %>% adt
+
+## foreign keys
+dGQ(wrds, "
+select * from pg_constraint limit 10")
+
+dGQ(wrds, "select count(*) as cnt from pg_constraint")
+## huh only 481 foreign keys?
+
+
+
+## there's a pg_constraint table 
+
+## doesn't work (doesn't show anything)
+## https://soft-builder.com/how-to-list-all-foreign-keys-in-postgresql-database/
+dGQ(wrds,
+    "SELECT conrelid::regclass AS table_name, 
+       conname AS foreign_key, 
+       pg_get_constraintdef(oid) 
+FROM   pg_constraint 
+WHERE  contype = 'f' 
+AND    connamespace = 'public'::regnamespace   
+ORDER  BY conrelid::regclass::text, contype DESC;")
+    
+
+dGQ(wrds, " SELECT conrelid::regclass AS table_name, conname AS foreign_key, pg_get_constraintdef(oid) FROM pg_constraint WHERE contype = 'f' and conrelid::regclass::text = 'bvd.ob_dmc_current_only_l' AND connamespace = 'public'::regnamespace ORDER BY conrelid::regclass::text, contype DESC; ")
+
+
+
+
+## get BvD tables
+dt_bvdinfo2 <- dGQ(wrds, "
+select * from information_schema.columns where table_schema = 'bvd'") %>% adt
+
+dt_bvdinfo2[, .(funique(table_name))]
+
+
+
 
 
 ## dbGetQuery(wrds, "list tables")
 ## dbGetQuery(wrds, "show tables;")
 
 ## this works 
-dbGetQuery(wrds, "SELECT table_name FROM information_schema.tables")
+dt_table_info <- dbGetQuery(wrds, "SELECT table_name FROM information_schema.tables") %>% adt
+
+## but where are the BvD tables?
+dt_table_info[table_name == "bvd.ob_dmc_current_only_l"] # no result
+dt_table_info[grep("ob_dmc_current_only_l", table_name)] # "bvd." is not part of table name? 
 
 
 
@@ -90,6 +160,13 @@ dbGetQuery(wrds, "select distinct bvdid from bvd.ob_dmc_current_only_l limit 10"
 dbGetQuery(wrds, "select * from bvd.ob_industry_classifications_l limit 10")
 
 
+## ** bvd.ob_dmc_current_only_l exploration
+dGQ(wrds, "select count(*) as cnt from bvd.ob_dmc_current_only_l") # 12m
+dGQ(wrds, "select count(*) as cnt from bvd.ob_dmc_previous_l") # 13m
+
+dt_pinault <- dGQ(wrds, "select * from bvd.ob_dmc_current_only_l where last_name = 'Pinault'") %>% adt
+
+dt_pinault[grep("francois", first_name, ignore.case = T), .(bvdid, first_name, middle_name, last_name)] %>% unique
 
 ## * scrap
 ## *** manual 
