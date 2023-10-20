@@ -750,57 +750,7 @@ reg6_lbls <- list(
     OC = "Oceania")
 
 
-rcd_iso3c_reg6 <- function(iso3cs) {
-    #' custom recoding to PMDB region scheme of 6 continents (NA, LA, EU, AF, AS, OC)
-    if (as.character(match.call()[[1]]) %in% fstd){browser()}
-    1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;
 
-    regs_unreg <- countrycode(iso3cs, "iso3c", "un.region.name", custom_match = c("TWN"= "Asia"))
-    regs_unregsub <- countrycode(iso3cs ,"iso3c", "un.regionsub.name", custom_match = c("TWN"= "Asia"))
-
-    ## split americas into north and south
-    locs_americas <- which(regs_unregsub %in% c("Latin America and the Caribbean", "Northern America"))
-    regs_unreg[locs_americas] <- regs_unregsub[locs_americas]
-
-    ## custom recoding to PMDB region names 
-
-    reg6_lbls <<- list(
-        EU = "Europe",
-        AS = "Asia",
-        AF = "Africa",
-        NALUL = "North America",
-        LA = "Latin America",
-        OC = "Oceania")
-
-
-    reg_cbn_rcd_list <- list(
-        Europe = "EU",
-        Asia = "AS",
-        Africa = "AF",
-        "Northern America" = "NALUL", # avoid collision with NA
-        "Latin America and the Caribbean" = "LA",
-        "Oceania" = "OC")
-
-    rcd_iso3c_reg6_sub <- function(reg, reg_cbn_rcd_list) {
-        #' individual handling of reg6 coding: return NA reg not matched
-        if (reg %in% names(reg_cbn_rcd_list)) {
-            reg_cbn_rcd_list[[reg]]
-        } else {
-            NA
-        }
-    }
-
-    ## dtx <- data.table(
-    ## map_chr(regs_unreg, ~reg_cbn_rcd_list[[.x]], .default = NA)
-
-    map_chr(regs_unreg, ~rcd_iso3c_reg6_sub(.x, reg_cbn_rcd_list))
-
-    ## mget("Asiajj", reg_cbn_rcd_listw)
-    ## get("Asia", envir = reg_cbn_rcd_list)
-
-    
-    ## unname(unlist(sapply(regs_unreg, \(x) reg_cbn_rcd_list[[x]])))
-}
 
 pt2mm <- function(ptx) {
     #' convert points (font size) to mm (used by geom_text)
