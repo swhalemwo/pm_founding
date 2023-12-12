@@ -3695,7 +3695,7 @@ stop("functions done")
 stylecfg <- list(lbl_fntsz = 9)
 
 NBR_MDLS <- 1
-batch_version <- "v92"
+batch_version <- "v93"
 ## fldr_info <- fldr_info_optmz
 fldr_info <- setup_regression_folders_and_files(batch_version)
 reg_anls_base <- read_reg_anls_files(fldr_info)

@@ -693,6 +693,8 @@ reg_settings_optmz <- list(
 )
 
 
+## ** v93: check whether results are substantially different if there is no lag
+
 
 
 
