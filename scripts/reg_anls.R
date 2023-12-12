@@ -3695,7 +3695,7 @@ stop("functions done")
 stylecfg <- list(lbl_fntsz = 9)
 
 NBR_MDLS <- 1
-batch_version <- "v91"
+batch_version <- "v92"
 ## fldr_info <- fldr_info_optmz
 fldr_info <- setup_regression_folders_and_files(batch_version)
 reg_anls_base <- read_reg_anls_files(fldr_info)
@@ -3719,7 +3719,11 @@ gen_plt_best_coefs_single
 ## render_reg_res("plt_oucoefchng_tile", reg_res, batch_version = "v75")
 
 plt_inspector(reg_res$plts)
-## reg_res$plts$plt_oneout_llrt_z
+
+## plot inspection if there are few models (like in test runs) to draw proper violins, which then crashes ggplot
+reg_res$plts[names(reg_res$plts) %!in% c("plt_coef_violin", "plt_oneout_llrt_z",
+                                         "plt_oneout_llrt_lldiff", "plt_vif")] %>% plt_inspector
+
 
 ## regenerate and render all plots
 reg_res$plts <- gen_reg_res_plts(reg_res_objs, vvs, NBR_MDLS, only_priority_plts = T, stylecfg)
