@@ -1,0 +1,233 @@
+nbr_name,nbr_fmt,grp
+nbr_muem_in_pmdb,547,pmdb_stats
+nbr_opnd_wld,516,pmdb_stats
+nbr_clsd_wld,101,pmdb_stats
+nbr_cry_wal1pm_all,64,pmdb_stats
+nbr_pm_openatm,446,pmdb_stats
+nbr_opnd_snc2k,420,pmdb_stats
+perc_opnd_snc2k,76.8%,pmdb_stats
+regsub_cnt_Western_Europe,136,nbr_pm_regsub
+regsub_cnt_Eastern_Asia,97,nbr_pm_regsub
+regsub_cnt_Northern_America,77,nbr_pm_regsub
+regsub_cnt_Southern_Europe,71,nbr_pm_regsub
+regsub_cnt_Northern_Europe,27,nbr_pm_regsub
+nbr_cy_cbn1,1245,cbn_info
+nbr_cy_cbn2,2514,cbn_info
+nbr_cy_cbn3,3330,cbn_info
+nbr_crys_cbn1,85,cbn_info
+nbr_crys_cbn2,150,cbn_info
+nbr_crys_cbn3,161,cbn_info
+nbr_opngs_cbn1,355,cbn_info
+nbr_opngs_cbn2,402,cbn_info
+nbr_opngs_cbn3,404,cbn_info
+prop_opngs_cvrd_cbn1,0.649,cbn_info
+prop_opngs_cvrd_cbn2,0.735,cbn_info
+prop_opngs_cvrd_cbn3,0.739,cbn_info
+perc_opngs_cvrd_cbn1,64.9%,cbn_info
+perc_opngs_cvrd_cbn2,73.5%,cbn_info
+perc_opngs_cvrd_cbn3,73.9%,cbn_info
+opng_rate_cbn1,0.0112,opng_rates_fmt
+opng_rate_cbn2,0.0060,opng_rates_fmt
+opng_rate_cbn3,0.0046,opng_rates_fmt
+nbr_zero_cbn1,1 034,opng_prop_vlus
+nbr_nzero_cbn1,211,opng_prop_vlus
+prop_nzero_cbn1,16.9,opng_prop_vlus
+nbr_zero_cbn2,2 262,opng_prop_vlus
+nbr_nzero_cbn2,252,opng_prop_vlus
+prop_nzero_cbn2,10.0,opng_prop_vlus
+nbr_zero_cbn3,3 076,opng_prop_vlus
+nbr_nzero_cbn3,254,opng_prop_vlus
+prop_nzero_cbn3,7.6,opng_prop_vlus
+nbr_zero_cbn_controls,5 841,opng_prop_vlus
+nbr_nzero_cbn_controls,298,opng_prop_vlus
+prop_nzero_cbn_controls,4.9,opng_prop_vlus
+nbr_pop_p_1pm_cbn1,89.6,popnbrs_p1pm
+nbr_pop_p_1pm_cbn2,166,popnbrs_p1pm
+nbr_pop_p_1pm_cbn3,216,popnbrs_p1pm
+nbr_pop_p_1pm_cbn_controls,84.2,popnbrs_p1pm
+cvrgd1,137 734,cvrgnc
+cvrgd0,0,cvrgnc
+mdlcnt_ttl,137 734,cvrgnc
+cvrgnc_rate,100,cvrgnc
+nbr_runs_p_cbn_spec,320,cvrgnc
+velp_cryname_min,Hungary,velp_minmax
+velp_cryname_max,Portugal,velp_minmax
+velp_year_scld_min,-0.117,velp_minmax
+velp_year_scld_max,0.063,velp_minmax
+velp_year_pct_min,1.6,velp_minmax
+velp_year_pct_max,0.9,velp_minmax
+rate_opng_glbl_cbn1,0.00433,rate_opng_glbl
+rate_opng_glbl_cbn2,0.00299,rate_opng_glbl
+rate_opng_glbl_cbn3,0.00282,rate_opng_glbl
+rate_opng_glbl_cbn_controls,0.00231,rate_opng_glbl
+rate_opng_glbl_yearly_cbn1,0.00406,rate_opng_glbl_yearly
+rate_opng_glbl_yearly_cbn2,0.00289,rate_opng_glbl_yearly
+rate_opng_glbl_yearly_cbn3,0.00274,rate_opng_glbl_yearly
+rate_opng_glbl_yearly_cbn_controls,0.00223,rate_opng_glbl_yearly
+opng_p1m_glbl_yearly_cbn1,246,opng_p1m_glbl_yearly
+opng_p1m_glbl_yearly_cbn2,346,opng_p1m_glbl_yearly
+opng_p1m_glbl_yearly_cbn3,365,opng_p1m_glbl_yearly
+opng_p1m_glbl_yearly_cbn_controls,449,opng_p1m_glbl_yearly
+velp_mean_uscld,-0.010,velp_mean
+velp_quantl25_uscld,-0.025,velp_mean
+velp_quantl75_uscld,0.007,velp_mean
+velp_mean_scld,0.13,velp_mean
+velp_quantl25_scld,0.34,velp_mean
+velp_quantl75_scld,0.10,velp_mean
+intcpt,-4.49,intcpt_info
+intcpt_exp,0.011,intcpt_info
+Ind_tax_incentives_cbn3_coef,0.72,txinctvs
+Ind_tax_incentives_cbn3_coef_exp,2.1,txinctvs
+Ind_tax_incentives_cbn3_pvlu,0.10,txinctvs
+Ind_tax_incentives_cbn2_coef,0.56,txinctvs
+tmitr_approx_linear20step_cbn2_coef,-0.47,txinctvs
+ti_tmitr_interact_cbn2_coef,0.84,txinctvs
+ti_tmitr_interact_cbn2_coef_exp,2.33,txinctvs
+tmitr_1SD_cbn2,13.5,txinctvs
+tmitr_neteffct_txdctblt1_cbn2,0.38,txinctvs
+tmitr_neteffct_txdctblt1_cbn2_exp,1.46,txinctvs
+tmitr_iso3c1,50,txinctvs
+tmitr_iso3c2,36,txinctvs
+smorc_lin,0.38,smorc_stats
+smorc_lin_flipped,-0.38,smorc_stats
+smorc_sqrd,-0.63,smorc_stats
+smorc_top_point_std,0.30,smorc_stats
+smorc_top_point,439,smorc_stats
+smorc_2020_ITA,362,smorc_vlus_2020
+smorc_2020_SVK,415,smorc_vlus_2020
+smorc_2020_NZL,463,smorc_vlus_2020
+smorc_2020_POL,466,smorc_vlus_2020
+smorc_2020_LVA,467,smorc_vlus_2020
+smorc_2020_AUS,499,smorc_vlus_2020
+smorc_2020_ESP,501,smorc_vlus_2020
+smorc_2020_CAN,513,smorc_vlus_2020
+smorc_2020_HRV,521,smorc_vlus_2020
+smorc_2020_CZE,634,smorc_vlus_2020
+smorc_2020_DEU,660,smorc_vlus_2020
+smorc_2020_FRA,680,smorc_vlus_2020
+smorc_2020_BEL,688,smorc_vlus_2020
+smorc_2020_AUT,694,smorc_vlus_2020
+smorc_2020_NLD,782,smorc_vlus_2020
+smorc_2020_FIN,799,smorc_vlus_2020
+smorc_2020_CHE,806,smorc_vlus_2020
+smorc_2020_EST,819,smorc_vlus_2020
+smorc_2020_SWE,859,smorc_vlus_2020
+smorc_2020_DNK,1 058,smorc_vlus_2020
+smorc_2020_HUN,1 410,smorc_vlus_2020
+smorc_2020_NOR,1 544,smorc_vlus_2020
+smorc_2020_LUX,1 559,smorc_vlus_2020
+smorctop_below_CYs_cnt,818,smorc_top_point_stats
+smorctop_above_CYs_cnt,427,smorc_top_point_stats
+smorctop_below_nbr_opened_cnt,212,smorc_top_point_stats
+smorctop_above_nbr_opened_cnt,143,smorc_top_point_stats
+smorctop_below_CYs_prop,65.7,smorc_top_point_stats
+smorctop_above_CYs_prop,34.3,smorc_top_point_stats
+smorctop_below_nbr_opened_prop,59.7,smorc_top_point_stats
+smorctop_above_nbr_opened_prop,40.3,smorc_top_point_stats
+shweal_1SD_cbn1,7.5,shweal_stats
+shweal_iso3c1,50.2,shweal_stats
+shweal_iso3c2,57.9,shweal_stats
+shweal_lngtd_vlu_year1,64.1,shweal_stats
+shweal_lngtd_vlu_year2,71.7,shweal_stats
+shweal_cbn1,0.33,shweal_stats
+shweal_cbn1_exp,1.40,shweal_stats
+sptinc_1SD_cbn1,8.9,sptinc_stats
+sptinc_iso3c1,30.8,sptinc_stats
+sptinc_iso3c2,39.7,sptinc_stats
+sptinc_lngtd_vlu_year1,32.5,sptinc_stats
+sptinc_lngtd_vlu_year2,41.1,sptinc_stats
+sptinc_cbn1,-0.47,sptinc_stats
+sptinc_cbn1_exp,0.63,sptinc_stats
+pm_density_cbn1,1.21,dens_coef_stats
+pm_density_sqrd_cbn1,-0.30,dens_coef_stats
+pm_density_glbl_cbn1,-0.44,dens_coef_stats
+pm_density_glbl_sqrd_cbn1,-0.29,dens_coef_stats
+dens_cry_top_point_std_cbn1,2.03,dens_coef_stats
+dens_glbl_top_point_std_cbn1,-0.74,dens_coef_stats
+dens_cry_top_point_cbn1,0.74,dens_coef_stats
+dens_glbl_top_point_cbn1,214.59,dens_coef_stats
+dens_cry_top_below_CYs_cnt,1 150,dens_cry_top_point_stats
+dens_cry_top_above_CYs_cnt,95,dens_cry_top_point_stats
+dens_cry_top_below_nbr_opened_cnt,315,dens_cry_top_point_stats
+dens_cry_top_above_nbr_opened_cnt,40,dens_cry_top_point_stats
+dens_cry_top_below_CYs_prop,92.4,dens_cry_top_point_stats
+dens_cry_top_above_CYs_prop,7.6,dens_cry_top_point_stats
+dens_cry_top_below_nbr_opened_prop,88.7,dens_cry_top_point_stats
+dens_cry_top_above_nbr_opened_prop,11.3,dens_cry_top_point_stats
+dens_glbl_top_above_CYs_cnt,894,dens_glbl_top_point_stats
+dens_glbl_top_below_CYs_cnt,351,dens_glbl_top_point_stats
+dens_glbl_top_above_nbr_opened_cnt,261,dens_glbl_top_point_stats
+dens_glbl_top_below_nbr_opened_cnt,94,dens_glbl_top_point_stats
+dens_glbl_top_above_CYs_prop,71.8,dens_glbl_top_point_stats
+dens_glbl_top_below_CYs_prop,28.2,dens_glbl_top_point_stats
+dens_glbl_top_above_nbr_opened_prop,73.5,dens_glbl_top_point_stats
+dens_glbl_top_below_nbr_opened_prop,26.5,dens_glbl_top_point_stats
+gdp_coef_cbn2,0.76,gdp_stats
+gdp_coef_cbn1,0.42,gdp_stats
+gdp_coef_cbn3,0.84,gdp_stats
+gdp_1SD_cbn1,24.90,gdp_stats
+gdp_1SD_cbn2,21.10,gdp_stats
+gdp_1SD_cbn3,19.37,gdp_stats
+hnwi_nbr_5M_cbn2_coef,-0.21,hnwi_stats
+hnwi_nbr_5M_cbn2_pvlu,0.054,hnwi_stats
+hnwi_nbr_5M_cbn3_coef,-0.18,hnwi_stats
+hnwi_nbr_5M_cbn3_pvlu,0.069,hnwi_stats
+shweal_lngtd_year1,1991,shweal_stats
+shweal_lngtd_year2,2011,shweal_stats
+sptinc_lngtd_year1,2000,sptinc_stats
+sptinc_lngtd_year2,2014,sptinc_stats
+ynkplt_cbn_log_likelihoods,(eval (concat "#+label: fig:cbn_log_likelihoods\n" "#+caption: model log likelihood distribution per dataset\n" "#+attr_latex: :width 16cm\n" "[[file:figures/plt_v91_cbn_log_likelihoods.pdf]]")),pltcfgs
+ynkplt_cvrgnc,(eval (concat "#+label: fig:cvrgnc\n" "#+caption: Model improvement\n" "#+attr_latex: :width 12cm\n" "[[file:figures/plt_v91_cvrgnc.pdf]]")),pltcfgs
+ynkplt_coef_violin,(eval (concat "#+label: fig:coef_violin\n" "#+caption: Distribution of coefficient point estimates (Gaussian kernel density estimate; bandwidth = 0.04)\n" "#+attr_latex: :width 18cm\n" "[[file:figures/plt_v91_coef_violin.pdf]]")),pltcfgs
+ynkplt_best_coefs_cloud,(eval (concat "#+label: fig:best_coefs_cloud\n" "#+caption: Coefficient point estimate and 95% CI\n" "#+attr_latex: :width 18cm\n" "[[file:figures/plt_v91_best_coefs_cloud.pdf]]")),pltcfgs
+ynkplt_best_coefs_single,(eval (concat "#+label: fig:best_coefs_single\n" "#+caption: Model coefficients (best fitting model)\n" "#+attr_latex: :width 18cm\n" "[[file:figures/plt_v91_best_coefs_single.pdf]]")),pltcfgs
+ynkplt_best_coefs_single_cbn1,(eval (concat "#+label: fig:best_coefs_single_cbn1\n" "#+caption: asdf\n" "#+attr_latex: :width 14cm\n" "[[file:figures/plt_v91_best_coefs_single_cbn1.pdf]]")),pltcfgs
+ynkplt_lag_dens,(eval (concat "#+label: fig:lag_dens\n" "#+caption: Lag choice distribution\n" "#+attr_latex: :width 18cm\n" "[[file:figures/plt_v91_lag_dens.pdf]]")),pltcfgs
+ynkplt_oneout_coefs,(eval (concat "#+label: fig:oneout_coefs\n" "#+caption: Model coefficients (best fitting model; colored by significance of model improvement)\n" "#+attr_latex: :width 18cm\n" "[[file:figures/plt_v91_oneout_coefs.pdf]]")),pltcfgs
+ynkplt_oneout_llrt_lldiff,(eval (concat "#+label: fig:oneout_llrt_lldiff\n" "#+caption: Model improvement given variable inclusion (Gaussian kernel density estimate; bandwidth = 0.4)\n" "#+attr_latex: :width 18cm\n" "[[file:figures/plt_v91_oneout_llrt_lldiff.pdf]]")),pltcfgs
+ynkplt_oneout_llrt_z,(eval (concat "#+label: fig:oneout_llrt_z\n" "#+caption: Distribution of Z-score of log-likelihood ratio test p-value (Gaussian kernel density estimate; bandwidth = 0.1)\n" "#+attr_latex: :width 18cm\n" "[[file:figures/plt_v91_oneout_llrt_z.pdf]]")),pltcfgs
+ynkplt_vrbl_cycnt,(eval (concat "#+label: fig:vrbl_cycnt\n" "#+caption: Number of countries with per year per variable\n" "#+attr_latex: :width 18cm\n" "[[file:figures/plt_v91_vrbl_cycnt.pdf]]")),pltcfgs
+ynkplt_cbn_cycnt,(eval (concat "#+label: fig:cbn_cycnt\n" "#+caption: Number of countries per year per variable combination\n" "#+attr_latex: :width 18cm\n" "[[file:figures/plt_v91_cbn_cycnt.pdf]]")),pltcfgs
+ynkplt_vif,(eval (concat "#+label: fig:vif\n" "#+caption: Distribution of VIF estimates (Gaussian kernel density estimate; bandwidth = 0.1)\n" "#+attr_latex: :width 18cm\n" "[[file:figures/plt_v91_vif.pdf]]")),pltcfgs
+ynkplt_velp,(eval (concat "#+label: fig:velp\n" "#+caption: Results of regressing longitudinal variables on year\n" "#+attr_latex: :width 24cm\n" "[[file:figures/plt_v91_velp.pdf]]")),pltcfgs
+ynkplt_cntrfctl,(eval (concat "#+label: fig:cntrfctl\n" "#+caption: Counterfactual simulations\n" "#+attr_latex: :width 18cm\n" "[[file:figures/plt_v91_cntrfctl.pdf]]")),pltcfgs
+ynkplt_pred_taxinc,(eval (concat "#+label: fig:pred_taxinc\n" "#+caption: Tax Incentives and Private Museum Founding: Adjusted Predictions at the Means (DS all IVs; population 100 mil.; 95% CI)\n" "#+attr_latex: :width 14cm\n" "[[file:figures/plt_v91_pred_taxinc.pdf]]")),pltcfgs
+ynkplt_pred_smorc,(eval (concat "#+label: fig:pred_smorc\n" "#+caption: Goverment Cultural Spending and Private Museum Founding: Adjusted Predictions at the Means (population 100 mil.; 95% CI)\n" "#+attr_latex: :width 14cm\n" "[[file:figures/plt_v91_pred_smorc.pdf]]")),pltcfgs
+ynkplt_pred_ptinc,(eval (concat "#+label: fig:pred_ptinc\n" "#+caption: ptinc\n" "#+attr_latex: :width 14cm\n" "[[file:figures/plt_v91_pred_ptinc.pdf]]")),pltcfgs
+ynkplt_pred_hweal,(eval (concat "#+label: fig:pred_hweal\n" "#+caption: hweal\n" "#+attr_latex: :width 14cm\n" "[[file:figures/plt_v91_pred_hweal.pdf]]")),pltcfgs
+ynkplt_pred_hnwi,(eval (concat "#+label: fig:pred_hnwi\n" "#+caption: hweal\n" "#+attr_latex: :width 18cm\n" "[[file:figures/plt_v91_pred_hnwi.pdf]]")),pltcfgs
+ynkplt_oucoefchng,(eval (concat "#+label: fig:oucoefchng\n" "#+caption: Coefficient changes given addition of other variables\n" "#+attr_latex: :width 24cm\n" "[[file:figures/plt_v91_oucoefchng.pdf]]")),pltcfgs
+rplt_cbn_log_likelihoods,\ref{fig:cbn_log_likelihoods},figlbls
+rplt_reg_res_within,\ref{fig:reg_res_within},figlbls
+rplt_reg_res_all,\ref{fig:reg_res_all},figlbls
+rplt_best_models_wlag,\ref{fig:best_models_wlag},figlbls
+rplt_best_models_condensed,\ref{fig:best_models_condensed},figlbls
+rplt_lag_cprn,\ref{fig:lag_cprn},figlbls
+rplt_cvrgnc,\ref{fig:cvrgnc},figlbls
+rplt_coef_violin,\ref{fig:coef_violin},figlbls
+rplt_best_coefs_cloud,\ref{fig:best_coefs_cloud},figlbls
+rplt_best_coefs_single,\ref{fig:best_coefs_single},figlbls
+rplt_best_coefs_single_cbn1,\ref{fig:best_coefs_single_cbn1},figlbls
+rplt_lag_dens,\ref{fig:lag_dens},figlbls
+rplt_oneout_coefs,\ref{fig:oneout_coefs},figlbls
+rplt_oneout_llrt_lldiff,\ref{fig:oneout_llrt_lldiff},figlbls
+rplt_oneout_llrt_z,\ref{fig:oneout_llrt_z},figlbls
+rplt_vrbl_cycnt,\ref{fig:vrbl_cycnt},figlbls
+rplt_cbn_cycnt,\ref{fig:cbn_cycnt},figlbls
+rplt_vif,\ref{fig:vif},figlbls
+rplt_velp,\ref{fig:velp},figlbls
+rplt_cntrfctl,\ref{fig:cntrfctl},figlbls
+rplt_pred_taxinc,\ref{fig:pred_taxinc},figlbls
+rplt_pred_smorc,\ref{fig:pred_smorc},figlbls
+rplt_pred_ptinc,\ref{fig:pred_ptinc},figlbls
+rplt_pred_hweal,\ref{fig:pred_hweal},figlbls
+rplt_pred_hnwi,\ref{fig:pred_hnwi},figlbls
+rplt_oucoefchng,\ref{fig:oucoefchng},figlbls
+rplt_oucoefchng_tile,\ref{fig:oucoefchng_tile},figlbls
+rplt_oucoefchng_cbn1,\ref{fig:oucoefchng_cbn1},figlbls
+rplt_oucoefchng_cbn2,\ref{fig:oucoefchng_cbn2},figlbls
+rplt_oucoefchng_cbn3,\ref{fig:oucoefchng_cbn3},figlbls
+rtbl_regrslts_wcptblF,\ref{tbl:regrslts_wcptblF},tbllbls
+rtbl_regrslts_wcptblT,\ref{tbl:regrslts_wcptblT},tbllbls
+rtbl_descs,\ref{tbl:descs},tbllbls
+rtbl_cbn_cpsgn,\ref{tbl:cbn_cpsgn},tbllbls
