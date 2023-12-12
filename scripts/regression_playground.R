@@ -1,3 +1,61 @@
+## ** try Rfast, which is super useless
+library(Rfast, include.only = c("score.negbinregs", "expregs"))
+    detach("package:Rfast", unload = T)
+
+    x <- score.negbinregs(dfx$nbr_opened, select(dfx, Ind.tax.incentives, cnt_contemp_1990) %>% as.matrix)
+    str(x)
+
+    jj <- expregs(dfx$nbr_opened, as.matrix(select(dfx, Ind.tax.incentives, cnt_contemp_1990)), di = rep(1, nrow(dfx)))
+
+
+## ** max.iter-based optimization
+
+
+## draft some example dataset to post on SO/GH, but seems unnecessary
+nx <- 1e3
+    dtx <- data.table(y = rbinom(nx, 5, 0.1),
+                      x1 = rnorm(nx),
+                      x2 = rgamma(nx, shape = 2),
+                      grp = sample(letters, size = nx, replace = T))
+
+    glmmTMB(y ~ x1 + x2 + (1 | grp), dtx, family = nbinom1, verbose = T)
+
+
+    glmmTMB(cyl ~ mpg + drat, mtcars, verbose = T,  family = nbinom1)
+
+## ** try fixest; but can only estimate fixed effects (
+
+
+## xx <- fenegbin(nbr_opened ~ Ind.tax.incentives + cnt_contemp_1990 + cnt_contemp_1990_sqrd + 
+##                    hnwi_nbr_5M_lag5 + gptinc992j_lag5 + ghweal992j_lag4 + tmitr_approx_linear20step_lag5 + 
+##                    ti_tmitr_interact_lag5 + NY.GDP.PCAP.CDk_lag4 + clctr_cnt_cpaer_lag1 + 
+##                    pm_density_lag2 + pm_density_sqrd_lag2 + pm_density_global_lag3 + 
+##                    pm_density_global_sqrd_lag3 + nbr_closed_cum_global_lag2 + 
+##                    offset(log(SP_POP_TOTLm_lag0_uscld)) | iso3c,
+##          panel.id = c("iso3c", "year"),
+##          ## data = adt(dfx)[, nbr_opened_sum := sum(nbr_opened)]
+##          data = adt(dfx) #[, `:=`(nbr_opened_sum = sum(nbr_opened)), iso3c][nbr_opened_sum > 0]
+##          )
+
+
+## femlm(nbr_opened ~ gptinc992j_lag5 + hnwi_nbr_5M_lag5 | iso3c, # cnt_contemp_1990, # cnt_contemp_1990_sqrd,
+##           # hnwi_nbr_5M_lag5 +
+##           # gptinc992j_lag5 +
+##           # ghweal992j_lag4 +
+##           # tmitr_approx_linear20step_lag5 + 
+##                    ## ti_tmitr_interact_lag5 + NY.GDP.PCAP.CDk_lag4 + clctr_cnt_cpaer_lag1 + 
+##                    ## pm_density_lag2 + pm_density_sqrd_lag2 + pm_density_global_lag3 + 
+##                    ## pm_density_global_sqrd_lag3 + nbr_closed_cum_global_lag2 + 
+##           ## panel.id = c("iso3c", "year"),
+##       family = "poisson",
+##       fixef.iter = 10000000,
+##       ## verbose = 1,
+##       data = dfx) 
+## no kind of fixest model will work because
+## 1. it removes countries with all 0s
+## 2. time invariant variables can't be included (colinear with country dummies)
+
+
 ## ** new version 
 
 f <- nbr_opened ~ sum_core + cnt_contemp_1995 +  gptinc992j_lag4 + shweal992j_p90p100_lag4 + tmitr_approx_linear_2020step_lag2 + ti_tmitr_interact_lag2 + smorc_dollar_fxm_lag4 + NY.GDP.PCAP.CDk_lag1 + SP.POP.TOTLm_lag2 + clctr_cnt_cpaer_lag2 + (1|iso3c)
