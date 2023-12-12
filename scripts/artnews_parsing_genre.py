@@ -8,7 +8,8 @@ from itertools import product
 
 ARTNEWS_DIR = "/home/johannes/Dropbox/phd/papers/org_pop/data/artnews/selenium2/"
 
-OUTPUT_DIR = "/home/johannes/Dropbox/phd/papers/org_pop/data/artnews/"
+# OUTPUT_DIR = "/home/johannes/Dropbox/phd/papers/org_pop/data/artnews/"
+OUTPUT_DIR = "/home/johannes/Dropbox/phd/pmdata/data_sources/artnews/"
 
 
 #main-wrapper > main > div.lrv-a-wrapper.lrv-a-grid.lrv-a-cols4\@tablet.lrv-u-padding-t-2.js-ProfileFilter > div > ul > li:nth-child(1)
@@ -47,6 +48,8 @@ def extract_cltr_info(nbr, ranking_soup):
     # collection_focus = re.findall('u-background-color-red:before a-icon-float-left">(.*?)</p>', str(prfl), re.S)
     # industry = re.findall('lrv-u-font-family-primary lrv-u-display-block">(.*?)</p>', str(prfl))
     data_dict = {k:extract_info(prfl, v) for k,v in regex_dict.items()}
+
+    data_dict['clctr_name'] = data_dict['clctr_name'].replace(u'\xa0', u' ')
 
     return(data_dict)
 
@@ -104,23 +107,23 @@ def proc_year(year, genre):
     
     return(ranking_pd)
 
+if __name__ == "__main__":
 
     
-areas = ["asian-art", "old-masters", "impressionism-and-post-impressionism", "postwar-art", "modern-art", "contemporary-art"]
+    areas = ["asian-art", "old-masters", "impressionism-and-post-impressionism", "postwar-art", "modern-art", "contemporary-art"]
 
 
-# x = proc_year(1990, "modern-art")
+    ## x = proc_year(1990, "modern-art")
+
+    keys = ['year', 'genre']
+    cbns = [dict(zip(keys, combo)) for combo in product(list(range(1990, 2022)), areas)]
 
 
-keys = ['year', 'genre']
-cbns = [dict(zip(keys, combo)) for combo in product(list(range(1990, 2022)), areas)]
+    dfs_ranking = [proc_year(i['year'], i['genre']) for i in cbns]
 
+    df_rankcing_cbd = pd.concat(dfs_ranking)
+    df_rankcing_cbd.to_csv(OUTPUT_DIR + "ranking_genre.csv")
 
-dfs_ranking = [proc_year(i['year'], i['genre']) for i in cbns]
-
-df_rankcing_cbd = pd.concat(dfs_ranking)
-df_rankcing_cbd.to_csv(OUTPUT_DIR + "ranking_genre.csv")
-    
 
 # for i in range(200):
 #     print(extract_cltr_info(i))

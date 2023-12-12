@@ -4,10 +4,13 @@ import os
 import csv
 import re
 import pandas as pd
+import pdb
 
 ARTNEWS_DIR = "/home/johannes/Dropbox/phd/papers/org_pop/data/artnews/selenium/"
 
-OUTPUT_DIR = "/home/johannes/Dropbox/phd/papers/org_pop/data/artnews/"
+# OUTPUT_DIR = "/home/johannes/Dropbox/phd/papers/org_pop/data/artnews/"
+OUTPUT_DIR = "/home/johannes/Dropbox/phd/pmdata/data_sources/artnews/"
+
 
 
 #main-wrapper > main > div.lrv-a-wrapper.lrv-a-grid.lrv-a-cols4\@tablet.lrv-u-padding-t-2.js-ProfileFilter > div > ul > li:nth-child(1)
@@ -22,22 +25,24 @@ def get_year_ranking(year):
 
 
 def extract_cltr_info(nbr, ranking_soup):
+
+    # pdb.set_trace()
     
     prfl_xpath = '#main-wrapper > main > div.lrv-a-wrapper.lrv-a-grid.lrv-a-cols4\@tablet.lrv-u-padding-t-2.js-ProfileFilter > div > ul > li:nth-child({nbr})'.format(nbr=nbr)
-    
+
 
     prfl = ranking_soup.select(selector = prfl_xpath)
     # prfl_text = prfl[0].contents[1]
 
     # 'u-color-red lrv-u-padding-tb-050">'
 
-
+    
     # clctr_name = re.findall('<img alt="(.*?)"', str(prfl))
     regex_dict = {
-    'clctr_name' :"\t\t\t\t\t(.*?)\t\t\n\t",
-    'location' :'u-color-red lrv-u-padding-tb-050">(.*?)</p>',
-    'collection_focus' : 'u-background-color-red:before a-icon-float-left">(.*?)</p>',
-    'industry' : 'lrv-u-font-family-primary lrv-u-display-block">(.*?)</p>'}
+        'clctr_name' :"\t\t\t\t\t(.*?)\t\t\n\t",
+        'location' :'u-color-red lrv-u-padding-tb-050">(.*?)</p>',
+        'collection_focus' : 'u-background-color-red:before a-icon-float-left">(.*?)</p>',
+        'industry' : 'lrv-u-font-family-primary lrv-u-display-block">(.*?)</p>'}
 
     
     # clctr_name = re.findall("\t\t\t\t\t(.*?)\t\t\n\t", str(prfl))
@@ -45,6 +50,11 @@ def extract_cltr_info(nbr, ranking_soup):
     # collection_focus = re.findall('u-background-color-red:before a-icon-float-left">(.*?)</p>', str(prfl), re.S)
     # industry = re.findall('lrv-u-font-family-primary lrv-u-display-block">(.*?)</p>', str(prfl))
     data_dict = {k:extract_info(prfl, v) for k,v in regex_dict.items()}
+
+    # pdb.set_trace()
+
+    ## replace non-breaking spaces
+    data_dict['clctr_name'] = data_dict['clctr_name'].replace(u'\xa0', u' ')
 
     return(data_dict)
 
@@ -102,12 +112,22 @@ def proc_year(year):
 # year = 1990
     
 
-# for i in range(1990, 2022):
-    
-dfs_ranking = [proc_year(i) for i in range(1990, 2022)]
 
-df_rankcing_cbd = pd.concat(dfs_ranking)
-df_rankcing_cbd.to_csv(OUTPUT_DIR + "ranking.csv")
+# for i in range(1990, 2022):
+if __name__ == "__main__":
+
+    ## get all the data, combine it
+    dfs_ranking = [proc_year(i) for i in range(1990, 2022)]
+    df_ranking_cbd = pd.concat(dfs_ranking)
+
+    ## generate ID for collector
+    names = df_ranking_cbd['clctr_name'].unique().tolist()
+    ids = ["ACE" + str(i) for i in range(1, len(names)+1)]
+    maps = {k:v for k,v in zip(names, ids)}
+    df_ranking_cbd['id'] = df_ranking_cbd['clctr_name'].map(maps)
+
+    
+    df_ranking_cbd.to_csv(OUTPUT_DIR + "an_ranking_time.csv")
     
 
 # for i in range(200):
