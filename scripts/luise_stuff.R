@@ -164,9 +164,23 @@ dbGetQuery(wrds, "select * from bvd.ob_industry_classifications_l limit 10")
 dGQ(wrds, "select count(*) as cnt from bvd.ob_dmc_current_only_l") # 12m
 dGQ(wrds, "select count(*) as cnt from bvd.ob_dmc_previous_l") # 13m
 
-dt_pinault <- dGQ(wrds, "select * from bvd.ob_dmc_current_only_l where last_name = 'Pinault'") %>% adt
+dt_pinault <- dGQ(wrds, "select * from bvd.ob_dmc_current_only_l where last_name = 'Pinault' and first_name = 'Francois'") %>% adt
 
-dt_pinault[grep("francois", first_name, ignore.case = T), .(bvdid, first_name, middle_name, last_name)] %>% unique
+dt_pinault[grep("francois", first_name, ignore.case = T), .N, .(bvdid, first_name, middle_name, last_name)]
+
+dt_pinault[grep("francois", first_name, ignore.case = T), .N, .(first_name, middle_name, last_name)]
+
+dt_pinault[grep("francois", first_name, ignore.case = T),
+           .(bvdid, ctryiso, first_name, middle_name, last_name, appointment_date)] %>% print(n=200)
+
+dt_pinault[grep("francois", first_name, ignore.case = T),
+           .(bvdid, date_of_birth, first_name, middle_name, last_name, appointment_date)] %>% print(n=200)
+
+dt_pinault[, .N, .(cpycontacts_header_iddirector, full_name)]
+
+dt_pinault %>% head %>% adf
+
+
 
 ## * scrap
 ## *** manual 
