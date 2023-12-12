@@ -1724,7 +1724,7 @@ gen_plt_pred_taxinc <- function(top_coefs) {
     regspecx <- get_reg_spec_from_id(mdl_idx, fldr_info)
 
     tmitr_vrbl <- keep(regspecx$mdl_vars, ~grepl("tmitr_approx_linear20step_lag[0-5]", .x))
-    interact_vrbl <- keep(regspecx$mdl_vars, ~grepl("ti_tmitr_interact_lag1", .x))
+    interact_vrbl <- keep(regspecx$mdl_vars, ~grepl("ti_tmitr_interact_lag[0-5]", .x))
 
 
     tmitr_scale_cbn1 <- scale(chuck(cbn_dfs_rates_uscld$cbn1, tmitr_vrbl))
@@ -3710,7 +3710,7 @@ reg_res$plts <- gen_reg_res_plts(reg_res_objs, vvs, NBR_MDLS, only_priority_plts
 
 ## nreg_res$plts$plt_best_coefs_single_cbn1 <- gen_plt_best_coefs_single_cbn1(reg_res_objs$top_coefs)
 reg_res$plts$plt_cntrfctl <- gen_plt_cntrfctl(reg_res_objs$dt_cntrfctl_cons, reg_res_objs$dt_cntrfctl_wse)
-render_reg_res("plt_cntrfctl", reg_res, batch_version = "v91")
+## render_reg_res("plt_cntrfctl", reg_res, batch_version = batch_version)
 
 
 gen_plt_best_coefs_single
