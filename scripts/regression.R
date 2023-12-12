@@ -2265,7 +2265,7 @@ one_out_setup_and_run <- function(batch_version, gof_df_cbn) {
     ## modify original regspecs to make them work with one-out
         
     regspecs_ou <- mclapply(reg_specs_orig, \(x) gen_regspecs_ou(x, vvs), mc.cores = 4) %>% flatten()
-    len(regspecs_ou)
+    print(paste0("number of regspecs_ou: ", len(regspecs_ou)))
 
     ## map_chr(regspecs_ou, ~chuck(.x, "cfg", "cbn_name")) %>% table()
 
@@ -2627,6 +2627,7 @@ pred_given_const_vrbl <- function(vrblx, rx, dfx, iv_vars) {
     #' predict openings in dfx from model rx holding vrblx constant
 
     ## check squares: if squared version of variable is in iv_vars, add that squared version to vrblx
+    ## t1 <- Sys.time()
     vrblx <- gen_vrblx_vec(vrblx, iv_vars)
     
     ## set vrblx to their first year value 
@@ -2716,14 +2717,26 @@ pred_given_const_vrbl <- function(vrblx, rx, dfx, iv_vars) {
     ## do.call("pred_collector", pred_args[[3]])
 
     ## predict(rx, se.fit = T)
+    
+
 
     ## for 2k4, predict with standard errors
-    dtx_consvrbl_2k4[, c("pred_log", "se") := map(predict(rx, .SD, se.fit = T), ~.x)] %>%
+    ## dtx_consvrbl_2k4[, c("pred_log", "se") := map(predict(rx, .SD, se.fit = ), ~.x)] %>%
+    ##     .[, pred := exp(pred_log)]
+
+    ## dtx with standard errors
+    ## dtx_wse <- dtx_consvrbl_2k4[, .(iso3c, year, pred = pred_log, se, vrbl = vrblx[1])]
+
+    ## hacky version to disable SE in counterfactual generation without having to change underlying code:
+    ## just return same code, just no SEs
+    dtx_consvrbl_2k4[, c("pred_log") := predict(rx, .SD, se.fit = F)] %>%
         .[, pred := exp(pred_log)]
     
-    ## dtx with standard errors
-    dtx_wse <- dtx_consvrbl_2k4[, .(iso3c, year, pred = pred_log, se, vrbl = vrblx[1])]
-
+    dtx_wse <- dtx_consvrbl_2k4[, .(iso3c, year, pred = pred_log, vrbl = vrblx[1])]
+    
+    ## t2 <- Sys.time()
+    ## t2-t1
+    
     pred_args <- list(
         list(dtxx = dtx_consvrbl, rx = rx, dt_id = "all"),
         list(dtxx = dtx_consvrbl_2k, rx = rx, dt_id = "2k"),
@@ -2944,8 +2957,11 @@ gen_cntrfctl <- function(gof_df_cbn, fldr_info) {
     mdl_id_dt <- gen_mdl_id_dt(gof_df_cbn)
 
     idx <- mdl_id_dt$mdl_id[5]
-    gen_preds_given_mdfd_vrbls(idx, fldr_info)
-        
+    t1 <- Sys.time()
+    jj <- gen_preds_given_mdfd_vrbls(idx, fldr_info)
+    t2 <- Sys.time()
+    t2-t1
+    
     l_cntrfctl_res <- mclapply(mdl_id_dt$mdl_id, \(x) gen_preds_given_mdfd_vrbls(x, fldr_info), mc.cores = 5)
 
     dt_cntrfctl_cons <- map(l_cntrfctl_res, ~chuck(.x, "dt_predres_cons")) %>% rbindlist()
@@ -3164,14 +3180,14 @@ postestimation <- function(fldr_info) {
     if (as.character(match.call()[[1]]) %in% fstd){browser()}
 
     
-
+    print("reading files")
     reg_res_files <- read_reg_res_files(fldr_info)    
     
     gof_df_cbn <- reg_res_files$gof_df_cbn
     df_reg_anls_cfgs_wide <- reg_res_files$df_reg_anls_cfgs_wide
     
     ## gen_plt_cvrgnc(gof_df_cbn)
-
+    print("generating counterfactual")
 
     ## compare_r_stata(gof_df_cbn)
     
@@ -3180,18 +3196,20 @@ postestimation <- function(fldr_info) {
 
     ## gen_cryexmpls(top_coefs)
 
+    print("generating development info")
     ## generate data for yearly developments
     gen_res_velps(cbn_dfs_rates, fldr_info)
   
     
 
-
+    print("gen VIFs")
     
     ## generate top coefs, use it for VIF data
     df_anls_base <- add_coef_sig(reg_res_files$coef_df, reg_res_files$df_reg_anls_cfgs_wide)
     top_coefs <- gen_top_coefs(df_anls_base, gof_df_cbn)
     gen_VIF_allres(top_coefs, fldr_info)
 
+    print("generate one-out tests")
 
     one_out_setup_and_run(fldr_info$batch_version, gof_df_cbn)
     ## test_dharma()
@@ -3276,9 +3294,13 @@ if (basename(db_str) %!in% list.files(fldr_info_optmz$BATCH_DIR)) {
 }
 
 pbmclapply(reg_spec_mdls_optmz, \(x) optmz_reg_spec(x, fldr_info_optmz, reg_settings_optmz),
-         mc.cores = 5, mc.preschedule = F)
+           mc.cores = 5, mc.preschedule = F)
+
+print("models have been run, now combining files")
 
 cbn_splitted_files("_cfgs.csv[0-9]", fldr_info_optmz)
+
+print("files have been combined, now run postestimation")
 
 ## run the one-out analysis
 
@@ -3294,7 +3316,7 @@ postestimation(fldr_info_optmz)
 ## mclapply(reg_spec_mdls_optmz, \(x) run_vrbl_mdl_vars(x, vvs, fldr_info_optmz), mc.cores = 6)
 
 ## this stop should never be commented out 
-stop("models are DONE")
+stop("regression is DONE")
 
 
 
