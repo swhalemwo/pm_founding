@@ -1,5 +1,5 @@
 args <- commandArgs(trailingOnly = T)
-options(width = 110)
+options(width = 115)
 
 ## * source other files
 PROJECT_DIR <- "/home/johannes/Dropbox/phd/papers/org_pop/"

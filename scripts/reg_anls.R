@@ -3401,9 +3401,9 @@ gen_nbrs <- function(df_excl, df_open, cbn_dfs_rates, cbn_dfs_rates_uscld,  df_r
         
                             
     opng_rates_fmt <- c(
-        opng_rate_cbn1 = nicely_fmt_number(opng_rates_vlus$cbn1,4),
-        opng_rate_cbn2 = nicely_fmt_number(opng_rates_vlus$cbn2,4),
-        opng_rate_cbn3 = nicely_fmt_number(opng_rates_vlus$cbn3,4)) %>% as.list()
+        opng_rate_cbn1 = nicely_fmt_number_v(opng_rates_vlus$cbn1,4),
+        opng_rate_cbn2 = nicely_fmt_number_v(opng_rates_vlus$cbn2,4),
+        opng_rate_cbn3 = nicely_fmt_number_v(opng_rates_vlus$cbn3,4)) %>% as.list()
         
     popnbrs_p1pm <- map(cbn_dfs_rates, ~adt(.x)[, 1/mean(nbr_opened/SP_POP_TOTLm_lag0_uscld)]) %>%
         nicely_fmt_number_v() %>% setNames(., paste0("nbr_pop_p_1pm_", names(.))) %>% as.list()
@@ -3514,7 +3514,7 @@ gen_nbrs <- function(df_excl, df_open, cbn_dfs_rates, cbn_dfs_rates_uscld,  df_r
         opng_rates_fmt = opng_rates_fmt,
         opng_prop_vlus = opng_prop_vlus,
         popnbrs_p1pm = popnbrs_p1pm,
-        cvrgnc = lapply(l_cvrgnc, nicely_fmt_number),
+        cvrgnc = lapply(l_cvrgnc, nicely_fmt_number_v),
         velp_minmax = l_velp_minmax))
 
     dt_nbrs_desc_prep <- imap_dfr(res_desc, ~data.table(nbr_name = names(.x),

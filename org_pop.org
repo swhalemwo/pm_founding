@@ -975,6 +975,7 @@ I furthermore use population as an offset (which estimates founding rate per cap
 # 
 This results in the following model specification:
 
+# FIXME LUL
 \begin{equation*}
 y_{it} = \beta_i + \beta X + 1 \times ln(pop_{it}) + \epsilon_{it}
 \end{equation*}
@@ -1395,13 +1396,13 @@ Given this state of data coverage and the fact that five years of subsequent dat
 :CUSTOM_ID: app_cbncpsgn
 :END:
 
-#+INCLUDE: "./tables/tbl:cbn_cpsgn.tex" export latex
+#+INCLUDE: "./tables/tbl:cbn_cpsgn_v91.tex" export latex
 
 
 Table {{{rtbl_cbn_cpsgn}}} shows the coverage of datasets by region. 
 #
 Relative between-dataset differences are particularly strong for Africa, Latin America and Europe.
-#
+# FIXME: numbers that are not org-macros
 While Europe with more than half of the country-years is "DS all IVs" constitutes the largest region (indicating that European countries report relatively detailed statistics on government spending), its share declines to 27.9% and 23% in "DS -CuSp" and "DS -CuSp/TMITR", respectively.
 #
 Conversely, Africa and Latin America claim larger shares in the larger datasets, with the former becoming the region contributing the largest nubmer of country years (1088 or 32.1%) in "DS -CuSp/TMITR".

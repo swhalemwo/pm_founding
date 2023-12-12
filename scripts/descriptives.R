@@ -331,7 +331,7 @@ gentbl_sum_stats_rates <- function(df_regx, dfs_cbnsx, vvs) {
     ## also need some ugly filtering in by to apply nicely_fmt_number row-wise: 
     sumry_sprt_mlt <- melt(sumry_sprt, id.vars = c("cbn_name", "variable"), variable.name = "stat") %>%
         .[!is.na(value)] %>% .[, rnbr := .I] %>%
-        .[, value2 := nicely_fmt_number(value), by = rnbr]
+        .[, value2 := nicely_fmt_number_v(value), by = rnbr]
  
     ## cast and reorder (matching with vvs)
     wide_tbl_sprt <- sumry_sprt_mlt %>%
