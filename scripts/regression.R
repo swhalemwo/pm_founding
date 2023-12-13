@@ -1820,18 +1820,6 @@ optmz_vrbl_lag <- function(reg_spec, vrblx, loop_nbr, fldr_info, reg_settings, v
                                     cstrn_vrbl_lags() %>%  # constrain lags here already
                                     list(lngtd_vrbls = .))
     
-    ## ## ## old way with vary_batch_reg_spec : takes around 2 secs of reproducing everything with mclapply
-    ## ## ## reconstruct the full reg_spec again
-    ## reg_settings2 <- reg_settings
-    ## reg_settings2$cbns_to_include <- reg_spec$cfg$cbn_name
-    ## reg_settings2$technique_strs <- reg_spec$cfg$technique_str
-    ## reg_settings2$difficulty_switches <- reg_spec$cfg$difficulty
-    ## reg_settings2$regcmds <- reg_spec$cfg$regcmd
-           
-    ## reg_specs_full_again <- vary_batch_reg_spec(reg_specs_vrblx_varied, reg_settings2, vvs)
-    ## ## names(reg_specs_full_again[[1]])
-    ## map(reg_specs_full_again, ~.x$base_lag_spec)
-
     stuff_to_keep <- c("cfg", "base_vars", "mdl_vars") # "ctrl_vars", "mdl_vars")
 
 
@@ -1843,10 +1831,6 @@ optmz_vrbl_lag <- function(reg_spec, vrblx, loop_nbr, fldr_info, reg_settings, v
                `pluck<-`(x, "cfg", "lag_spec", value = paste0(gen_lag_id(x, vvs)$value, collapse = ""))) %>%
         lapply(., \(x) ## modify mdl_vars
                `pluck<-`(x, "mdl_vars",
-                         ## get values of unchanged variables
-                         ## value = c(x$mdl_vars[gsub("_lag[0-5]", "", x$mdl_vars) != vrblx],
-                         ##           ## modify vrblx
-                         ##           paste0(vrblx, "_lag", adt(x$lngtd_vrbls)[vrbl == vrblx, lag]))
                          ## keep cross-sectional variables
                          value = c(keep(x$mdl_vars, ~!grepl("_lag[1-5]", .x)),
                                    ## generate lagged variables based on (constrained) lngtd_vrbls
@@ -1857,17 +1841,12 @@ optmz_vrbl_lag <- function(reg_spec, vrblx, loop_nbr, fldr_info, reg_settings, v
     
     
     ## modify base_lag_spec back: effectively add loop_nbr and vrblx
-    ## reg_specs_full_again2 <- lapply(reg_specs_full_again, \(x)
-    ##                                 modfy_optmz_cfg(x, cfg_orig, x$cfg$base_lag_spec, loop_nbr, vrblx))
-    
     reg_specs_full_again2 <- map(reg_specs_full_again,
                                  ~`pluck<-`(.x, "cfg", value = c(.x$cfg, 
                                                                  list(loop_nbr = loop_nbr,
                                                                       vrblx = vrblx))))
 
     ## add ids: use gen_spec_id_info directly to save mclapply spinup
-    ## reg_specs_w_ids <- idfy_reg_specs(reg_specs_full_again2, vvs)
-    
     reg_specs_w_ids <- map(reg_specs_full_again2, ~gen_spec_id_info(.x, vvs))
     ## reg_specs_w_ids[[3]]
     
@@ -1912,13 +1891,11 @@ optmz_vrbl_lag <- function(reg_spec, vrblx, loop_nbr, fldr_info, reg_settings, v
 
     print(sprintf("%s lags are already there", dt_presence[missing_before == F, .N]))
 
-    
-    ## run_vrbl_mdl_vars(reg_specs_full_again2[[1]], vvs, fldr_info, return_objs = "log_likelihood")
-    ## names(reg_specs_full_again2) <- as.character(seq(1,5))
-
+    ## actually run the models
     ## t1 = Sys.time()
     lag_lls <- sapply(reg_specs_w_ids[dt_presence[, is.na(ll)]], \(x)
                       run_vrbl_mdl_vars(x, vvs, fldr_info, return_objs = "log_likelihood",
+                                        glmmtmb_control = glmmtmb_control,
                                         wtf = reg_settings$wtf))
     ## t2 = Sys.time()
     ## print(sprintf("time on running models: %s", t2-t1))
@@ -1935,15 +1912,18 @@ optmz_vrbl_lag <- function(reg_spec, vrblx, loop_nbr, fldr_info, reg_settings, v
     } else {
         best_lag <- which.max(dt_presence$ll)
     }
-     
-    ## write LL back to file    
-    dbAppendTable(db_mdlcache, "mdl_cache", dt_presence[missing_before == T, .(cbn_name, lag_spec, ll)])
+    
+    if (reg_settings$wtf) {
+ 
+        ## write LL back to file    
+        dbAppendTable(db_mdlcache, "mdl_cache", dt_presence[missing_before == T, .(cbn_name, lag_spec, ll)])
 
-    ## write log of all the mdls that are run (either directly or indirectly)
-    dbAppendTable(db_mdlcache, "mdl_log", dt_presence[, .(mdl_id, cbn_name, lag_spec, loop_nbr, vrbl_optmzd)])
+        ## write log of all the mdls that are run (either directly or indirectly)
+        dbAppendTable(db_mdlcache, "mdl_log", dt_presence[, .(mdl_id, cbn_name, lag_spec, loop_nbr, vrbl_optmzd)])
 
-    ## TEST: only write some back
-    ## dbAppendTable(db_mdlcache, "mdl_cache", dt_presence[c(2,4), .(cbn_name, lag_spec, ll)])
+        ## TEST: only write some back
+        ## dbAppendTable(db_mdlcache, "mdl_cache", dt_presence[c(2,4), .(cbn_name, lag_spec, ll)])
+    }
 
     ## keep track of how many models were run 
     reg_spec$nbr_mdls_run <- dt_presence[, sum(missing_before == T)]
@@ -1955,16 +1935,10 @@ optmz_vrbl_lag <- function(reg_spec, vrblx, loop_nbr, fldr_info, reg_settings, v
 
     
     ## adjust the lag of ti_tmitr interaction to tmitr
-    ## reg_spec$lngtd_vrbls[which(reg_spec$lngtd_vrbls == "ti_tmitr_interact"),]$lag <-
-    ##     reg_spec$lngtd_vrbls[reg_spec$lngtd_vrbls$vrbl == "tmitr_approx_linear20step", ]$lag
-        
     reg_spec$lngtd_vrbls <- cstrn_vrbl_lags(reg_spec$lngtd_vrbls)
-
-        
 
     return(reg_spec)
     
-
 }
 
 
