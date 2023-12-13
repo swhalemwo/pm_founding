@@ -886,7 +886,7 @@ run_glmmtmb <- function(dfx, dvfmt, r_vars, verbose) {
     ## parse the R res 
     ## x <- adt(coef(rx_glmmtmb)$cond$iso3c)
 
-    ret_obj <- extract_glmmtmb(rx_glmmtmb)
+    ret_obj <- extract_glmmtmb(rx_glmmtmb, F, F)
 }
 
 
