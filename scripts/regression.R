@@ -839,9 +839,11 @@ run_glmmtmb <- function(dfx, dvfmt, r_vars, verbose) {
 }
 
 
-extract_glmmtmb <- function(rx_glmmtmb) {
+extract_glmmtmb <- function(rx_glmmtmb, map_active) {
     #' extract information from result of glmmTMB object
     #' functionality was previously in run_glmmtmb, but now need multiple glmmTMB funcs for optimization
+    #' map_active : is some parameters are fixed, disregard presence of NAs as indicator of convergence failure
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
 
     rx_smry <- summary(rx_glmmtmb)
     rx_coefs_prep <- rx_smry %>% coef() %>% .[["cond"]]
@@ -851,10 +853,18 @@ extract_glmmtmb <- function(rx_glmmtmb) {
     rx_coefs <- data.frame(vrbl_name = rownames(rx_coefs_prep), coef = rx_coefs_prep2$Estimate,
                        se = rx_coefs_prep2$`Std. Error`, pvalues = rx_coefs_prep2$`Pr(>|z|)`)
 
-
     rx_gof <- get_r_gof(rx_glmmtmb, rx_smry)
 
-    if (any(is.na(rx_gof$gof_value)) | any(is.na(rx_coefs))) {
+    
+    ## conditions to test whether model converged depends on whether map_active == T:
+    ## if (map_active), then SEs in rx_coef are not indicator of convergence failure
+    if (map_active) {
+        cvrgnc_failure <- any(is.na(rx_gof$value))
+    } else if (!map_active) {
+        cvrgnc_failure <- any(is.na(rx_gof$gof_value)) | any(is.na(rx_coefs))
+    }
+
+    if (cvrgnc_failure) {
         ## model did not converge properly
 
         ret_obj <- list(converged = F, log_likelihood = NA)
