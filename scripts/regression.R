@@ -1800,19 +1800,15 @@ modfy_optmz_cfg <- function(reg_spec, cfg_orig, base_lag_spec_orig, loop_nbr, vr
 }
 
 
-optmz_vrbl_lag <- function(reg_spec, vrblx, loop_nbr, fldr_info, reg_settings, verbose = F) {
+optmz_vrbl_lag <- function(reg_spec, vrblx, loop_nbr, fldr_info, reg_settings,
+                           glmmtmb_control, verbose = F) {
     if (as.character(match.call()[[1]]) %in% fstd){browser()}
     #' optimize the lag of one variable 
     
 
     if (verbose) { print(paste0("vrblx: ", vrblx))}
     
-    
-    ##  generate models, need exception for ti_tmitr_interact
-    ## base_lag_spec_orig <- chuck(reg_spec, "base_lag_spec")
-    ## cfg_orig <- chuck(reg_spec, "cfg")
-    
-
+        
     ## only pick the lngtd_vrbls, and vary vrblx
     reg_specs_vrblx_varied <- lapply(reg_settings$lags, \(x)
                                     reg_spec$lngtd_vrbls %>% 
@@ -3309,8 +3305,8 @@ vrbl_thld_choices_optmz <- slice_sample(vrbl_thld_choices, n=36)
 reg_settings_optmz <- list(
     nbr_specs_per_thld = 1,
     dvfmts = c("rates"), # should also be counts, but multiple dvfmts not yet supported by reg_anls
-    batch_version = "v93",
-    lags = 1,
+    batch_version = "v94",
+    lags = 1:5,
     vary_vrbl_lag = F,
     technique_strs = c("nr"),
     difficulty_switches = T,
@@ -3387,10 +3383,59 @@ run_vrbl_mdl_vars(x, vvs, fldr_info_optmz, verbose = T, wtf = F)
 ## ** test different optimization settings for speed
 
 ## set up 
-expand.grid(max.iter = seq(5, 75,10), max.eval = seq(5, 75, 10), profile = c(T,F)) %>% adt
+dt_conds <- expand.grid(max.iter = seq(10, 70, 10), max.eval = seq(10, 70, 10), profile = c(T,F)) %>% adt
+
+
+l_regspecs_test <- sample(reg_spec_mdls_optmz, 5)
+
+l_mdls_wid <- setNames(l_regspecs_test, map(l_regspecs_test, ~chuck(.x, "mdl_id")))
+
+measure_optmz_all <- function(c_regspec_id, vrbl) {
+    ## optimize once with default
+    measure_optmz_base
+    ## optimize once with all the configurations
+}
+
+measure_optmz_base <- function(c_regspec_id, vrblx) {
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
+    #' base way of getting the optimal lag
+    #' needed as measure of correctness
+    
+    ## get the reg_spec from the ID
+    c_regspec <- chuck(l_mdls_wid, c_regspec_id)
+
+    ## optimize lag
+    t1 <- Sys.time()
+    x_opt <- optmz_vrbl_lag(c_regspec, vrblx = vrblx, loop_nbr =1, fldr_info = fldr_info_optmz,
+                            reg_settings = reg_settings_garage, verbose = T)
+    t2 <- Sys.time()
+
+    ## return results
+    list(
+        vrbl = vrblx,
+        time = t2-t1,
+        lag_optmz = adt(x_opt$lngtd_vrbls)[vrbl == vrblx, lag])
+}
+        
+measure_optmz_base(names(l_mdls_wid)[3], "ghweal992j")  # "shweal992j_p90p100")
+## kind works
+
+## TODO: this function
+measure_optmz_modfd <- function(c_regspec_id, vrblx) {
+    ## have to generate the appropriate glmmtmb_control here
+    ## might be necessary to run model once completely to get good starting values
+    ## might make sense to make that own function tho, to easy collect things together? see tomorrow
+    
+
+}
+
+
+
+## *** testing that optimization arguments can be passed on
+
 x$cfg$regcmd <- "glmmTMB_wctrl"
 
-glmmtmb_control1 <- glmmTMBControl(optCtrl = list(iter.max = 10), profile = F)
+glmmtmb_control1 <- glmmTMBControl(optCtrl = list(iter.max = 100), profile = F)
 
 ## glmmtmb_control1$start_vlus_beta <- adt(resx$res_parsed$coef_df)[, setNames(coef, vrbl_name)]
 ## glmmtmb_control1$start_vlus_theta <- start_vlus_theta
