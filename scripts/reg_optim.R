@@ -65,11 +65,14 @@ gl_dtc_regopt <- function(l_mdls_wid, c_itermax, c_evalmax, c_profile,
     l_mdls_wid_sample <- sample(l_mdls_wid, nbr_regspecs)
     ## l_mdls_wid <- setNames(l_regspecs_test, map(l_regspecs_test, ~chuck(.x, "mdl_id")))
 
-    ## generate dt of which variables to optimize for which models by extracting lngtd_vrbls
+    ## generate dt of which variables to optimize for which models by extracting variables of model
     ## skip interactions/squares, don't need starting lag here
-    dt_mdlvrbls_base <- imap(l_mdls_wid_sample, ~adt(.x$lngtd_vrbls)[, regspec_id := .y]) %>% rbindlist %>%
-        .[!grepl("interact|sqrd", vrbl)] %>% .[, lag := NULL] %>%
-        .[sample(1:.N, size = nbr_mdl_topt)] # select only some parameters at random
+    dt_mdlvrbls_base <- imap(l_mdls_wid_sample,
+                             ~data.table(vrbl = .x$mdl_vars, regspec_id = .y)) %>% rbindlist %>%
+                        .[grepl("_lag[1-5]", vrbl)] %>% # yeet those that don't have lags
+                        .[!grepl("interact|sqrd", vrbl)] %>% # yeet interactions/squared
+                        .[, vrbl := gsub("_lag[1-5]", "", vrbl)] %>%  # yeet lags
+                        .[sample(1:.N, size = nbr_mdl_topt)] # select only some parameters at random
 
     ## construct dt of conditions for modified optimization
     ## run dt_mdlvrbls_base
