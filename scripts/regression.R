@@ -1836,22 +1836,16 @@ modfy_optmz_cfg <- function(reg_spec, cfg_orig, base_lag_spec_orig, loop_nbr, vr
     return(reg_spec)
 }
 
-
-optmz_vrbl_lag <- function(reg_spec, vrblx, loop_nbr, fldr_info, reg_settings,
-                           glmmtmb_control, verbose = F) {
-    if (as.character(match.call()[[1]]) %in% fstd){browser()}
-    #' optimize the lag of one variable 
+gl_regspecs_wid <- function(reg_spec, reg_settings, vrblx, loop_nbr) {
+    #' generate the lagspecs corresponding to the lags: constrain variables, update lag_specs/mdl_vars/ IDs
     
-
-    if (verbose) { print(paste0("vrblx: ", vrblx))}
     
-        
     ## only pick the lngtd_vrbls, and vary vrblx
     reg_specs_vrblx_varied <- lapply(reg_settings$lags, \(x)
-                                    reg_spec$lngtd_vrbls %>% 
-                                    mutate(lag = ifelse(vrbl==vrblx, x, lag)) %>%
-                                    cstrn_vrbl_lags() %>%  # constrain lags here already
-                                    list(lngtd_vrbls = .))
+                                     reg_spec$lngtd_vrbls %>% 
+                                     mutate(lag = ifelse(vrbl==vrblx, x, lag)) %>%
+                                     cstrn_vrbl_lags() %>%  # constrain lags here already
+                                     list(lngtd_vrbls = .))
     
     stuff_to_keep <- c("cfg", "base_vars", "mdl_vars") # "ctrl_vars", "mdl_vars")
 
@@ -1879,15 +1873,21 @@ optmz_vrbl_lag <- function(reg_spec, vrblx, loop_nbr, fldr_info, reg_settings,
                                                                  list(loop_nbr = loop_nbr,
                                                                       vrblx = vrblx))))
 
+    
     ## add ids: use gen_spec_id_info directly to save mclapply spinup
     reg_specs_w_ids <- map(reg_specs_full_again2, ~gen_spec_id_info(.x, vvs))
     ## reg_specs_w_ids[[3]]
-    
-    ## identical(reg_specs_w_ids, reg_specs_w_ids2) ## comparison with old version -> noice
+    return(reg_specs_w_ids)
 
-    
-    db_mdlcache <- dbConnect(RSQLite::SQLite(), paste0(fldr_info$BATCH_DIR, "mdl_cache.sqlite"))
-    dbExecute(conn = db_mdlcache, "PRAGMA foreign_keys=ON")
+    ## identical(reg_specs_w_ids, reg_specs_w_ids2) ## comparison with old version -> noice
+}
+
+
+gd_presence <- function(reg_specs_w_ids, db_mdlcache, vrblx) {
+    #' see which models have already been run
+    #' @param reg_specs_w_ids list of regspecs with IDs, lngtd_vrbls adjusted etc
+    #' @param db_mdlcache sqlite-db with where run models are saved to
+    #' @param vrblx the variable being optimized
 
     cbn_lagspecs <- map(reg_specs_w_ids, ~list(cbn_name = chuck(.x, "cfg", "cbn_name"),
                                                lag_spec = chuck(.x, "cfg", "lag_spec"),
@@ -1908,9 +1908,6 @@ optmz_vrbl_lag <- function(reg_spec, vrblx, loop_nbr, fldr_info, reg_settings,
         l_lagquery_res,
         ~c(list(ll = ifelse(nrow(.x$dt_lagquery_res) == 0, NA, .x$dt_lagquery_res[, ll])), .x))
 
-    if (reg_settings$wtf) {
-        map(reg_specs_w_ids, ~saveRDS(.x, file = paste0(fldr_info$REG_SPEC_DIR, .x$mdl_id)))
-    }
 
     ## saveRDS(reg_spec, file = paste0(fldr_info$REG_SPEC_DIR, file_id))}
 
@@ -1922,32 +1919,14 @@ optmz_vrbl_lag <- function(reg_spec, vrblx, loop_nbr, fldr_info, reg_settings,
         .[, ll := as.numeric(ll)] %>% ## need to ensure that LLs are numeric (otherwise boolean) 
         .[, vrbl_optmzd := vrblx]
 
-    print(sprintf("%s lags are already there", dt_presence[missing_before == F, .N]))
+    return(dt_presence)
+}
 
-    ## actually run the models
-    ## t1 = Sys.time()
-    lag_lls <- sapply(reg_specs_w_ids[dt_presence[, is.na(ll)]], \(x)
-                      run_vrbl_mdl_vars(x, vvs, fldr_info, return_objs = "log_likelihood",
-                                        glmmtmb_control = glmmtmb_control,
-                                        wtf = reg_settings$wtf))
-    ## t2 = Sys.time()
-    ## print(sprintf("time on running models: %s", t2-t1))
-    
+w_lagoptim <- function(reg_settings, dt_presence, db_mdlcache) {
+    ## write model results to db cache for later easy access
 
-    ## assign back
-    dt_presence[missing_before == T, ll := unlist(lag_lls)]
-        
-    ## pick best lag
-    if (dt_presence[, all(is.na(ll))]) {
-        best_lag <- sample(reg_settings$lags, 1)
-        print("all lags of current model result in non-convergence, pick lag at random")
-
-    } else {
-        best_lag <- which.max(dt_presence$ll)
-    }
-    
     if (reg_settings$wtf) {
- 
+        
         ## write LL back to file    
         dbAppendTable(db_mdlcache, "mdl_cache", dt_presence[missing_before == T, .(cbn_name, lag_spec, ll)])
 
@@ -1957,6 +1936,11 @@ optmz_vrbl_lag <- function(reg_spec, vrblx, loop_nbr, fldr_info, reg_settings,
         ## TEST: only write some back
         ## dbAppendTable(db_mdlcache, "mdl_cache", dt_presence[c(2,4), .(cbn_name, lag_spec, ll)])
     }
+}
+
+m_regspec_after_lagoptim <- function(reg_spec, vrblx, dt_presence, best_lag) {
+    ## modify regspec after lags of a variable have been optimized
+
 
     ## keep track of how many models were run 
     reg_spec$nbr_mdls_run <- dt_presence[, sum(missing_before == T)]
@@ -1971,6 +1955,62 @@ optmz_vrbl_lag <- function(reg_spec, vrblx, loop_nbr, fldr_info, reg_settings,
     reg_spec$lngtd_vrbls <- cstrn_vrbl_lags(reg_spec$lngtd_vrbls)
 
     return(reg_spec)
+}
+
+
+optmz_vrbl_lag <- function(reg_spec, vrblx, loop_nbr, fldr_info, reg_settings,
+                           glmmtmb_control, return_obj = "reg_spec_optimd",                           
+                           verbose = F) {
+    #' optimize the lag of one variable (ususally lag varies from 1 to 5)
+    #' @param reg_spec regression specification objects
+    #' @vrblx variable to optimize
+    #' @fldr_info, @reg_settings technical aspects
+    #' @glmmtmb_control additional arguments to pass to glmmtmb_wctrl when reg_spec$cfg$regcmd == "glmmTMB_wctrl"
+    #' @return_obj which object to return: by default return the modified reg_spec, but also possible to return
+    #' the dt_presence to investigate lag optimization
+        
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
+    #' optimize the lag of one variable 
+
+    if (verbose) { print(paste0("vrblx: ", vrblx))}
+
+    ## prepare regspecs of lags: adjust constrained variables, add IDs etc
+    reg_specs_w_ids <- gl_regspecs_wid(reg_spec, reg_settings, vrblx, loop_nbr) 
+    
+    if (reg_settings$wtf) {map(reg_specs_w_ids, ~saveRDS(.x, file = paste0(fldr_info$REG_SPEC_DIR, .x$mdl_id)))}
+
+    ## see which models are already there
+    db_mdlcache <- dbConnect(RSQLite::SQLite(), paste0(fldr_info$BATCH_DIR, "mdl_cache.sqlite"))
+    dbExecute(conn = db_mdlcache, "PRAGMA foreign_keys=ON")
+    dt_presence <- gd_presence(reg_specs_w_ids, db_mdlcache, vrblx)
+
+    print(sprintf("%s lags are already there", dt_presence[missing_before == F, .N]))
+
+    ## actually run the models
+    dt_res <- lapply(reg_specs_w_ids[dt_presence[, is.na(ll)]], \(x)
+                      run_vrbl_mdl_vars(x, vvs, fldr_info, return_objs = c("log_likelihood", "converged"),
+                                        glmmtmb_control = glmmtmb_control,
+                                        wtf = reg_settings$wtf)) %>% rbindlist
+
+    ## assign results to dt_presence
+    dt_presence[missing_before == T, ll := dt_res$log_likelihood]
+    
+    
+    ## pick best lag
+    if (dt_presence[, all(is.na(ll))]) {
+        best_lag <- sample(reg_settings$lags, 1)
+        print("all lags of current model result in non-convergence, pick lag at random")
+    } else {
+        best_lag <- which.max(dt_presence$ll)
+    }
+    
+    ## save results
+    w_lagoptim(reg_settings, dt_presence, db_mdlcache) 
+
+    reg_spec_optimd <- m_regspec_after_lagoptim(reg_spec, vrblx, dt_presence, best_lag)
+
+    return(get(return_obj))
+    ## return(reg_spec_optimd)
     
 }
 
@@ -1985,7 +2025,7 @@ optmz_reg_spec_once <- function(reg_spec, loop_nbr, vrbls_to_vary, fldr_info, re
     #' one round of optimization
     #' need for loop, because nbr_skipped_in_row has to be reassinged
     
-    
+    ## just assign some random variable to v for debugging
     v <- sample(vrbls_to_vary)[1]
 
 
@@ -3315,6 +3355,7 @@ if (is.null(args[[1]])) {
 }
 
 ## generate all data for lags of 0-5 to ensure compatibility across lag choices
+c_dirs <- gc_dirs(dir_proj = "/home/johannes/Dropbox/phd/papers/org_pop/")
 
 vvs <- gen_vrbl_vectors()
 vrbl_cbns <- gen_cbns(vvs$all_rel_vars, vvs$base_vars)
@@ -3337,13 +3378,13 @@ vrbl_thld_choices <- gen_vrbl_thld_choices(vvs$hnwi_vars, vvs$inc_ineq_vars, vvs
 ##                                   inc_ineq_var == "sptinc992j_p99p100", weal_ineq_var == "shweal992j_p99p100")
 
 
-vrbl_thld_choices_optmz <- slice_sample(vrbl_thld_choices, n=36)
+vrbl_thld_choices_optmz <- slice_sample(vrbl_thld_choices, n=3)
 
 reg_settings_optmz <- list(
-    nbr_specs_per_thld = 1,
+    nbr_specs_per_thld = 2,
     dvfmts = c("rates"), # should also be counts, but multiple dvfmts not yet supported by reg_anls
-    batch_version = "v94",
-    lags = 1:5,
+    batch_version = "v95",
+    lags = 1:3,
     vary_vrbl_lag = F,
     technique_strs = c("nr"),
     difficulty_switches = T,
