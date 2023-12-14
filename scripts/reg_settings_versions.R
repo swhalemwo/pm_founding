@@ -693,7 +693,7 @@ reg_settings_optmz <- list(
 )
 
 
-## ** v93: check whether results are substantially different if there is no lag
+## ** v93: check whether results are substantially different if there is no lag: yup they are
 vrbl_thld_choices_optmz <- slice_sample(vrbl_thld_choices, n=36)
 
 reg_settings_optmz <- list(
