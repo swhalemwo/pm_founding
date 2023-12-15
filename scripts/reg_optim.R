@@ -488,50 +488,52 @@ c_regopt4 <- list(
 l_regopt4 <- run_regopt(c_regopt4, sizex = 200)
 
 
-## l_dtc_regopt$base[1, measure_optmz_base(regspec_id, vrbl)]
-## l_dtc_regopt$modfd[1, measure_optmz_modfd(regspec_id, vrbl, iter_max, eval_max, profile)]
+## first exploration with fixbeta/fixb
+c_regopt5 <- list(
+    l_mdls_wid = quote(l_mdls_wid),
+    c_itermax = seq(1, 30, 5),
+    c_evalmax = seq(1, 30, 5),
+    c_profile = c(T, F),
+    c_fixbeta = c(T,F),
+    c_fixb    = c(T,F),
+    nbr_regspecs = 108,
+    nbr_mdl_topt = 20)
 
-## l_dtc_regopt2$dt_res_cbnd %>%
-## l_regopt$dt_res_cbnd %>%
-l_regopt4$dt_res_cbnd %>% 
-    ggplot(aes(x=iter_max, y=eval_max, shape = profile,
-                   size = prop_cvrgd, color = correct_lag)) +
-    facet_grid(~profile) + 
-    geom_jitter()
-## seems as with profile=T, even at iter/eval_max = 10, 10 I get correct lag estimation 
-
-l_regopt4$dt_res_cbnd[profile == T, .(mean_time = mean(time)), .(iter_max, eval_max)] %>%
-    ggplot(aes(x=iter_max, y=eval_max, fill = as.numeric(mean_time))) +
-    geom_tile()
-
-l_dtc_regopt$dt_base_res
-
-## *** testing that optimization arguments can be passed on
-
-x$cfg$regcmd <- "glmmTMB_wctrl"
-
-glmmtmb_control1 <- glmmTMBControl(optCtrl = list(iter.max = 100), profile = F)
-
-## glmmtmb_control1$start_vlus_beta <- adt(resx$res_parsed$coef_df)[, setNames(coef, vrbl_name)]
-## glmmtmb_control1$start_vlus_theta <- start_vlus_theta
-## glmmtmb_control1$start_vlus_b <- start_vlus_b
-
-## try only estimating one variable
-vrbl_toopt <- "shweal992j_p90p100_lag3"
+l_regopt5 <- run_regopt(c_regopt5, sizex = 200)
 
 
-glmmtmb_control1$mainfunc_params <- list(
-    start = list(
-        beta = adt(resx2$res_parsed$coef_df)[, setNames(coef, vrbl_name)],
-        b = start_vlus_b),
-    map = list(
-        beta = adt(resx2$res_parsed$coef_df)[, factor(ifelse(vrbl_name == vrbl_toopt, 1, NA))],
-        b = factor(c(1, rep(NA, 149))))
-        ## b = factor(rep(NA, 150)))
-)
 
-t1 <- Sys.time()
-resx <- run_vrbl_mdl_vars(x, vvs, fldr_info_optmz, verbose = F, wtf = F, glmmtmb_control = glmmtmb_control1,
-                  return_objs = "res_parsed")
-t2 <- Sys.time()
-t2-t1
+## try to get asynchromous stuff working, but doesn't work
+c_regopt7 <- list(
+    l_mdls_wid = quote(l_mdls_wid),
+    c_itermax = seq(10, 20, 10),
+    c_evalmax = seq(10, 20, 10),
+    c_profile = c(T),
+    c_fixbeta = c(T,F),
+    c_fixb    = c(T,F),
+    nbr_regspecs = 108,
+    nbr_mdl_topt = 10)
+
+l_regopt7 <- run_regopt(c_regopt7, sizex = 40)
+
+l_regopt7_proc <- r_bg(run_regopt, args = list(c_regopt = c_regopt7, sizex= 40),
+                       error = "error")
+l_regopt7_proc$get_result()
+
+library(promises)
+?promises
+# Create a vector of inputs
+inputs <- 1:10
+
+
+## callR: recommended by chatgpt
+kapparino <- r_bg(your_function, args= list(x=5))
+r_bg_get(kapparino)
+
+kapparino$get_result()
+your_function(5)
+
+10
+
+
+
