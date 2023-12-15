@@ -295,6 +295,155 @@ stop("optim funcs done")
 
 l_mdls_wid <- setNames(reg_spec_mdls_optmz, map(reg_spec_mdls_optmz, ~chuck(.x, "mdl_id")))
 
+
+
+## narrow down even further itermax  for profile = T
+c_regopt6 <- list(
+    l_mdls_wid = quote(l_mdls_wid),
+    c_itermax = seq(1, 30, 2),
+    c_evalmax = seq(1, 30, 2),
+    c_profile = c(T, F),
+    c_fixbeta = c(T,F),
+    c_fixb    = c(T,F),
+    nbr_regspecs = 108,
+    nbr_mdl_topt = 400)
+
+l_regopt6 <- run_regopt(c_regopt6, sizex = 2000)
+
+## narrow down even further itermax  for profile = T
+c_regopt8 <- list(
+    l_mdls_wid = quote(l_mdls_wid),
+    c_itermax = 100,
+    c_evalmax = 100,
+    c_profile = c(T, F),
+    c_fixbeta = c(T,F),
+    c_fixb    = c(T,F),
+    c_eigvalcheck = c(T,F),
+    c_rankcheck = c("skip", "warning"),
+    c_convcheck = c("skip", "warning"),
+    nbr_regspecs = 108,
+    nbr_mdl_topt = 100)
+
+l_regopt8 <- run_regopt(c_regopt8, sizex = 400)
+
+
+
+
+
+l_regopt6$dt_base_res
+l_regopt6$dt_modfd_sample_res$profile
+
+l_regopt6$dt_res_cbnd2 <- l_regopt6$dt_base_res[, .(vrbl, regspec_id, time_base = time,
+                         lag_optmz_base = lag_optmz)][l_regopt6$dt_modfd_sample_res,
+                                                      on = .(vrbl, regspec_id)] %>%
+    .[, correct_lag := lag_optmz_base == lag_optmz] %>%
+    .[is.na(correct_lag), correct_lag := F]
+
+
+    
+l_regopt6$dt_res_cbnd[, .N, profile]
+
+
+## l_dtc_regopt$base[1, measure_optmz_base(regspec_id, vrbl)]
+## l_dtc_regopt$modfd[1, measure_optmz_modfd(regspec_id, vrbl, iter_max, eval_max, profile)]
+
+## l_dtc_regopt2$dt_res_cbnd %>%
+## l_regopt$dt_res_cbnd %>%
+l_regopt6$dt_res_cbnd2 %>% .[time < 15] %>% 
+    ggplot(aes(x=iter_max, y=eval_max, shape = correct_lag,
+               ## color = as.numeric(time)
+               color = correct_lag
+               )) +
+    facet_grid(fixbeta + fixb ~profile) + 
+    geom_jitter(width = 1, height = 1, size = 4)
+## seems as with profile=T, even at iter/eval_max = 10, 10 I get correct lag estimation 
+
+l_regopt6$dt_res_cbnd2[, .(time_modfd =mean(time), time_base = mean(time_base))]
+l_regopt6$dt_base_res[, mean(time)]
+
+## tile of time
+l_regopt6$dt_res_cbnd2[, .(time_modfd =mean(time)), .(profile, fixbeta, fixb, iter_max, eval_max)] %>%
+    ggplot(aes(x=iter_max, y=eval_max, fill = as.numeric(time_modfd)))  +
+    facet_grid(fixbeta + fixb ~profile) +
+    geom_tile()
+
+
+
+l_regopt4$dt_res_cbnd[profile == T, .(mean_time = mean(time)), .(iter_max, eval_max)] %>%
+    ggplot(aes(x=iter_max, y=eval_max, fill = as.numeric(mean_time))) +
+    geom_tile()
+
+## most basic regression
+glm(correct_lag ~ profile + iter_max + eval_max + fixb + fixbeta,
+    ## l_regopt6$dt_res_cbnd2,
+    l_regopt6$dt_res_cbnd2[!is.na(lag_optmz)],
+    family = "binomial") %>% summary
+## profile T, eval_max, fixbetaT, increases
+## that fixbeta increases accuracy is super weird: it's a restriction, so it would be ok if it wouldn't make it worse
+## probably controlling for some collider here. or something else weird
+## disappears when yeeting all those that didn't converge.. probably this happens rarely in fixbetaT conditions.. 
+## then fixb decreases fit, kinda expected, but 
+
+## time: 
+lm(as.numeric(time) ~ profile + iter_max + eval_max + fixb + fixbeta, l_regopt6$dt_res_cbnd2) %>% summary
+## fixbetaT decreases it.. 
+
+## all kinds of interactions, but basically become uninterpretable, especially three-ways
+glm(correct_lag ~ profile * fixb * fixbeta + iter_max * eval_max, l_regopt6$dt_res_cbnd2,
+    family = "binomial") %>% summary
+
+l_regopt6$dt_res_cbnd2[profile == T & fixbeta == T & fixb == F,
+                       .(mean_accuracy = mean(correct_lag), mean_time_savings = mean(time_base - time))]
+
+## summary
+l_regopt8$dt_res_cbnd[, .(
+              mean_accuracy = mean(correct_lag), mean_time_savings = mean(time_base - time), .N),
+              .(profile, fixbeta, fixb, eigval_check, rank_check, conv_check)] %>% print(n=30)
+
+
+
+
+
+
+
+
+
+
+
+
+
+## *** testing that optimization arguments can be passed on
+
+x$cfg$regcmd <- "glmmTMB_wctrl"
+
+glmmtmb_control1 <- glmmTMBControl(optCtrl = list(iter.max = 100), profile = F)
+
+## glmmtmb_control1$start_vlus_beta <- adt(resx$res_parsed$coef_df)[, setNames(coef, vrbl_name)]
+## glmmtmb_control1$start_vlus_theta <- start_vlus_theta
+## glmmtmb_control1$start_vlus_b <- start_vlus_b
+
+## try only estimating one variable
+vrbl_toopt <- "shweal992j_p90p100_lag3"
+
+
+glmmtmb_control1$mainfunc_params <- list(
+    start = list(
+        beta = adt(resx2$res_parsed$coef_df)[, setNames(coef, vrbl_name)],
+        b = start_vlus_b),
+    map = list(
+        beta = adt(resx2$res_parsed$coef_df)[, factor(ifelse(vrbl_name == vrbl_toopt, 1, NA))],
+        b = factor(c(1, rep(NA, 149))))
+        ## b = factor(rep(NA, 150)))
+)
+
+t1 <- Sys.time()
+resx <- run_vrbl_mdl_vars(x, vvs, fldr_info_optmz, verbose = F, wtf = F, glmmtmb_control = glmmtmb_control1,
+                  return_objs = "res_parsed")
+t2 <- Sys.time()
+t2-t1
+
+
+## *** old l_regopt results
 c_regopt1 <- list(
     l_mdls_wid = quote(l_mdls_wid),
     c_itermax = seq(10, 40, 10),
