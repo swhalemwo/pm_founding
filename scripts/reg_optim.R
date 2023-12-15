@@ -113,10 +113,16 @@ measure_optmz_modfd <- function(c_regspec_id, vrblx, max_iter, max_eval, profile
     t1 <- Sys.time()
     
     glmmtmb_control <- glmmTMBControl(optCtrl = list(iter.max = max_iter, eval.max = max_eval),
-                                      profile = profile)
+                                      profile = profile, rank_check = rank_check, conv_check = conv_check,
+                                      eigval_check = eigval_check)
+
+    ## run full model once to get values to fix, if necessary
+    glmmtmb_control2 <- m_glmmtmb_control(c_regspec, glmmtmb_control, vrblx, fixbeta, fixb)
+
     
+    ## FIXME: there's some weird coercion going on: LL is a dt in run_vrbl_mdl_vars? 
     x_opt <- optmz_vrbl_lag(c_regspec, vrblx = vrblx, loop_nbr = 1, fldr_info = fldr_info_optmz,
-                            reg_settings = reg_settings_garage, glmmtmb_control = glmmtmb_control,
+                            reg_settings = reg_settings_garage, glmmtmb_control = glmmtmb_control2,
                             return_obj = "dt_presence",
                             verbose = T)
     
@@ -125,16 +131,18 @@ measure_optmz_modfd <- function(c_regspec_id, vrblx, max_iter, max_eval, profile
 
     ## not sure this is sufficient yet, but need stuff that doesn't converge.. 
     
-    list(
+    l_res <- list(
         ## vrbl = vrblx,
         time = t2-t1,
         lag_optmz = x_opt[, which.max(ll)],
         prop_cvrgd = x_opt[, sum(!is.na(ll))/.N])
 
+    return(l_res)
     
 }
 
-gl_dtc_regopt <- function(l_mdls_wid, c_itermax, c_evalmax, c_profile,
+gl_dtc_regopt <- function(l_mdls_wid, c_itermax, c_evalmax, c_profile, c_fixbeta, c_fixb,
+                          c_eigvalcheck, c_rankcheck, c_convcheck,
                           nbr_regspecs, nbr_mdl_topt) {
     if (as.character(match.call()[[1]]) %in% fstd){browser()}
     #' generate the regression optimization dataframes: dtc: data.table, serving as configuration
@@ -164,6 +172,7 @@ gl_dtc_regopt <- function(l_mdls_wid, c_itermax, c_evalmax, c_profile,
                         .[grepl("_lag[1-5]", vrbl)] %>% # yeet those that don't have lags
                         .[!grepl("interact|sqrd", vrbl)] %>% # yeet interactions/squared
                         .[, vrbl := gsub("_lag[1-5]", "", vrbl)] %>%  # yeet lags
+                        .[vrbl != "SP.POP.TOTLm"] %>% # population not allowed
                         .[sample(1:.N, size = nbr_mdl_topt)] # select only some parameters at random
 
     ## construct dt of conditions for modified optimization
@@ -202,20 +211,26 @@ gd_measure_optmz_base_res <- function(dt_base) {
 
 
 gd_measure_optmz_modfd_res <- function(dt_modfd, sizex) {
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
     #' run measure_optmz_modfd along a bunch of configs in parallel
 
     dt_modfd_sample <- dt_modfd[sample(x = 1:.N, size = sizex)]
     
     ## select and rename columns as needed for measure_optmz_modfd
     l_regopt_modfd <- dt_modfd_sample[, .(c_regspec_id = regspec_id, vrblx = vrbl,
-                                          max_iter = iter_max, max_eval = eval_max, profile)] %>%
+                                          max_iter = iter_max, max_eval = eval_max, profile,
+                                          fixbeta, fixb, rank_check, eigval_check, conv_check )] %>%
         split(1:sizex) %>% map(as.list)
 
-    ## do.call("measure_optmz_modfd", l_regopt_modfd[[1]])
+    do.call("measure_optmz_modfd", l_regopt_modfd[[1]])
 
     ## actually run 
-    dt_modfd_sample_res <- mclapply(l_regopt_modfd, \(x) do.call("measure_optmz_modfd", x),
-                                    mc.preschedule = F, mc.cores = 5) %>% rbindlist
+    l_modfd_sample_res <- mclapply(l_regopt_modfd, \(x) do.call("measure_optmz_modfd", x),
+                                      mc.preschedule = F, mc.cores = 5)
+
+    dt_modfd_sample_res <- rbindlist(l_modfd_sample_res)
+    
+    
     ## combine
     dt_modfd_sample_res <- cbind(dt_modfd_sample, dt_modfd_sample_res)
 
@@ -230,7 +245,9 @@ run_regopt <- function(c_regopt, sizex) {
     print("generate the settings to test")
     l_dtc_regopt <- do.call("gl_dtc_regopt", c_regopt)
 
-    print("calculate the base/real lags")
+    ## expand.grid(c_regopt[substring(names(c_regopt), 1, 2) == "c_"] ) %>% adt
+
+    print("----------calculate the base/real lags------------")
     ## ## generating results for base
     ## l_dtc_regopt$dt_base_res <- l_dtc_regopt$dt_base %>% copy() %>% .[, nbr := 1:.N] %>%
     ##     .[, c("time", "lag_optmz") := measure_optmz_base(regspec_id, vrbl), nbr]
@@ -238,16 +255,25 @@ run_regopt <- function(c_regopt, sizex) {
 
 
     ## generate results for modfd
-    print("calculate the modified lags")
+    
+    print("----------calculate the modified lags-------")
+
     dt_modfd_sample_res <- gd_measure_optmz_modfd_res(
         l_dtc_regopt$dt_modfd, sizex = sizex)
 
     print("combine results")
     ## combine base results with modified results to infer correct lag
-    dt_res_cbnd <- dt_modfd_sample_res[dt_base_res[, .(vrbl, regspec_id, time_base = time,
-                                                       lag_optmz_base = lag_optmz)],
-                                                 on = .(vrbl, regspec_id)] %>%
-        .[, correct_lag := lag_optmz_base == lag_optmz]
+    ## dt_res_cbnd <- dt_modfd_sample_res[dt_base_res[, .(vrbl, regspec_id, time_base = time,
+    ##                                                    lag_optmz_base = lag_optmz)],
+    ##                                              on = .(vrbl, regspec_id)] %>%
+    ##     .[, correct_lag := lag_optmz_base == lag_optmz]
+
+    dt_res_cbnd <- dt_base_res[, .(vrbl, regspec_id, time_base = time,
+                                   lag_optmz_base = lag_optmz)][
+        dt_modfd_sample_res, on = .(vrbl, regspec_id)] %>%
+        .[, correct_lag := lag_optmz_base == lag_optmz] %>%
+        .[is.na(correct_lag), correct_lag := F] # didn't converge properly %>% you fail
+
 
     ## combine all the objects  together to return comfily
     l_dtc_regopt2 <- c(l_dtc_regopt,
