@@ -38,8 +38,69 @@ measure_optmz_base <- function(c_regspec_id, vrblx) {
 ## measure_optmz_base(names(l_mdls_wid)[3], "ghweal992j")  # "shweal992j_p90p100")
 ## kinda works
 
-## TODO: this function
-measure_optmz_modfd <- function(c_regspec_id, vrblx, max_iter, max_eval, profile) {
+
+m_glmmtmb_control <- function(c_regspec, glmmtmb_control, vrblx, fixbeta, fixb) {
+    #' expand the glmmtmb_control object based on fixbeta/fixb
+    #' set starting values, constrain all values but the  beta of vrblx
+
+    ## first run reg if needed
+    if (fixbeta|fixb) {
+        ## stitch together functionality to run model
+        iv_vars <- c_regspec$mdl_vars[c_regspec$mdl_vars %!in% vvs$base_vars] %>%
+            keep(~!grepl("^SP\\.POP\\.TOTLm", .x))
+        
+        dfx <- chuck(cbn_df_dict, c_regspec$cfg$dvfmt, c_regspec$cfg$cbn_name) %>%
+            select(all_of(c(vvs$base_vars, "iso3c_num", "nbr_opened",iv_vars, "SP_POP_TOTLm_lag0_uscld")))
+
+        fx <- gen_r_f(c_regspec$cfg$dvfmt, iv_vars)
+
+        rx_glmmTMB_base <- glmmTMB(fx, dfx, family = nbinom1)
+
+        ## generate some some summary objects
+        map_b <- rx_glmmTMB_base$fit$parfull[names(rx_glmmTMB_base$fit$parfull) == "b"]
+        dt_sumry <- summary(rx_glmmTMB_base) %>% coef %>% chuck("cond") %>% adt(keep.rownames = "vrbl")
+
+
+        ## add element to attach fixed elements to
+        glmmtmb_control$mainfunc_params <- list(
+            start = list(),
+            map= list())
+    }
+    
+    ## adjust  glmmtmb_control$mainfunc_params corresponding to fixbeta/fixb
+    
+    if (fixbeta) {
+        ## actually important that variables are passed in correct order, otherwise map/start will be super wrong
+        ## seems to be the case tho... 
+
+        glmmtmb_control$mainfunc_params$start <- c(
+            glmmtmb_control$mainfunc_params$start,
+            list(beta = dt_sumry[, setNames(Estimate, vrbl)]))
+
+        glmmtmb_control$mainfunc_params$map <- c(
+            glmmtmb_control$mainfunc_params$map,
+            list(beta = dt_sumry[, factor(ifelse(gsub("_lag[1-5]", "", vrbl) == vrblx, 1, NA))]))
+        
+    }
+    
+    if (fixb) {
+
+        glmmtmb_control$mainfunc_params$start <- c(
+            glmmtmb_control$mainfunc_params$start,
+            list(b = map_b))
+
+        glmmtmb_control$mainfunc_params$map <- c(
+            glmmtmb_control$mainfunc_params$map,
+            list(b = factor(rep(NA,  len(map_b)))))
+
+    }
+
+    return(glmmtmb_control)
+
+}
+
+measure_optmz_modfd <- function(c_regspec_id, vrblx, max_iter, max_eval, profile, fixbeta, fixb,
+                                rank_check, conv_check, eigval_check) {
     if (as.character(match.call()[[1]]) %in% fstd){browser()}
     1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;
     ## have to generate the appropriate glmmtmb_control here
@@ -87,8 +148,10 @@ gl_dtc_regopt <- function(l_mdls_wid, c_itermax, c_evalmax, c_profile,
     #' @nbr_mdl_topt how many parameters to test for optimization 
     
     
-    ## dt_conds <- expand.grid(iter_max = seq(10, 40, 10), eval_max = seq(10, 40, 10), profile = c(T,F)) %>% adt
-    dt_conds <- expand.grid(iter_max = c_itermax, eval_max = c_evalmax, profile = c_profile) %>% adt
+    dt_conds <- expand.grid(iter_max = c_itermax, eval_max = c_evalmax, profile = c_profile,
+                            fixbeta = c_fixbeta, fixb = c_fixb, eigval_check = c_eigvalcheck,
+                            rank_check = c_rankcheck, conv_check = c_convcheck,
+                            stringsAsFactors = F) %>% adt
 
     ## choose some regspecs
     l_mdls_wid_sample <- sample(l_mdls_wid, nbr_regspecs)
