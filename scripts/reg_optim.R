@@ -272,8 +272,9 @@ run_regopt <- function(c_regopt, sizex) {
                                    lag_optmz_base = lag_optmz)][
         dt_modfd_sample_res, on = .(vrbl, regspec_id)] %>%
         .[, correct_lag := lag_optmz_base == lag_optmz] %>%
-        .[is.na(correct_lag), correct_lag := F] # didn't converge properly %>% you fail
-
+        .[is.na(correct_lag), correct_lag := F] %>% # didn't converge properly -> you fail
+        .[, `:=`(time_base = as.numeric(time_base), time = as.numeric(time))] %>% 
+        .[, `:=`(time_saved = time_base - time, speedup = time/time_base)]
 
     ## combine all the objects  together to return comfily
     l_dtc_regopt2 <- c(l_dtc_regopt,
@@ -289,6 +290,84 @@ run_regopt <- function(c_regopt, sizex) {
 
 stop("optim funcs done")
 
+
+gd_regopt_eval <- function(l_regopt, c_regopt) {
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
+    1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;
+    #' evaluate the optimization results
+    #' so far this function is manually entered via the debugger to inspect results interactively FIXME
+
+
+    ## need to convert columns from regopt_name to dt_res_cbnd name to genreate condition_colums
+    dt_cfg_renamer <- list(
+        list(name_regopt = "c_profile", name_res = "profile"),
+        list(name_regopt = "c_fixbeta", name_res = "fixbeta"),
+        list(name_regopt = "c_fixb", name_res = "fixb"),
+        list(name_regopt = "c_eigvalcheck", name_res = "eigval_check"),
+        list(name_regopt = "c_rankcheck", name_res = "rank_check"),
+        list(name_regopt = "c_convcheck", name_res = "conv_check")) %>% rbindlist
+
+    ## generate vector of conditions for grouping/regression
+    c_opts_tokeep <- c_regopt[names(c_regopt) %in% dt_cfg_renamer$name_regopt] %>% keep(~len(.x) > 1)
+    l_condcols <- dt_cfg_renamer[name_regopt %in% names(c_opts_tokeep), name_res]
+    
+    ## l_regopt$dt_res_cbnd[, `:=`(time_base = as.numeric(time_base), time = as.numeric(time))]
+    ## l_regopt$dt_res_cbnd[, time_saved := time_base - time]
+    ## l_regopt$dt_res_cbnd[, speedup := time/time_base] # ratio of base  time to overall time
+    
+    ## generate a histogram
+    hist(l_regopt$dt_res_cbnd$time_saved)
+
+    ## generate crosstab, i.e. aggregate by treatment combinations
+    dt_acc_crosstab <- l_regopt$dt_res_cbnd[, .(accuracy = mean(correct_lag),
+                                                time_base = mean(time_base), time = mean(time),
+                                                savings = mean(time_base - time),
+                                                speedup = mean(speedup),
+                                                .N),
+                                            by = l_condcols]
+
+    ## look add most promising combinations
+    ## just time savings
+    dt_acc_crosstab %>% .[accuracy > 0.95] %>% .[order(-savings)] 
+
+    ## time savings and accuracy
+    ggplot(dt_acc_crosstab, aes(x=speedup, y=accuracy))+ geom_point() 
+    
+    dt_acc_crosstab[accuracy > 0.95 & speedup < 0.6]
+
+    ## look at why rank_check, conv_check and eigval_check don't matter
+    ## no idea how to pass vector to dt[i] component
+    ## dt_acc_crosstab[order(get(l_condcols))]
+    ## fsort(dt_acc_crosstab, l_condcols)
+    ## dt_acc_crosstab[order(profile, fixbeta, fixb, eigval_check, rank_check, conv_check)]
+
+    ## look at sparseX, doesn't seem to matter
+    ## t1 <- Sys.time()
+    ## glmmTMB(cyl ~ mpg + disp, rbind(mtcars, mtcars, mtcars, mtcars, mtcars), sparseX = T)
+    ## t2 <- Sys.time()
+    ## t2-t1
+
+    ## look at no optimization condition: should be same as base
+    l_regopt$dt_res_cbnd[profile == F & fixbeta == F & fixb == F & eigval_check == F & rank_check == "warning"
+                         & conv_check == "warning", .(time_base, time, time_saved, speedup)]
+
+    fx_acc <- paste0("correct_lag ~ ", paste0(l_condcols, collapse = " + ")) %>% as.formula
+    fx_time <- paste0("time_saved ~ ", paste0(l_condcols, collapse = " + ")) %>% as.formula
+    fx_speedup <- paste0("speedup ~ ", paste0(l_condcols, collapse = " + ")) %>% as.formula
+
+    rx_acc <- glm(fx_acc, l_regopt$dt_res_cbnd, family = "binomial")
+    rx_time <- lm(fx_time, l_regopt$dt_res_cbnd)
+    fx_speedup <- lm(fx_speedup, l_regopt$dt_res_cbnd)
+
+    screenreg2(list(rx_acc, rx_time, fx_speedup))
+
+    
+
+    ## generate accuracy regression
+    ## generate time regression 
+
+
+}
 
 ## * main
 ## set up conditions
@@ -326,7 +405,40 @@ c_regopt8 <- list(
 
 l_regopt8 <- run_regopt(c_regopt8, sizex = 400)
 
+## narrow down even further itermax  for profile = T
+c_regopt9 <- list(
+    l_mdls_wid = quote(l_mdls_wid),
+    c_itermax = 100,
+    c_evalmax = 100,
+    c_profile = c(T, F),
+    c_fixbeta = c(T,F),
+    c_fixb    = c(T,F),
+    c_eigvalcheck = c(T,F),
+    c_rankcheck = c("skip", "warning"),
+    c_convcheck = c("skip", "warning"),
+    nbr_regspecs = 108,
+    nbr_mdl_topt = 100)
 
+l_regopt9 <- run_regopt(c_regopt9, sizex = 700)
+
+## narrow down even further itermax  for profile = T
+c_regopt10 <- list(
+    l_mdls_wid = quote(l_mdls_wid),
+    c_itermax = 100,
+    c_evalmax = 100,
+    c_profile = c(T, F),
+    c_fixbeta = c(T,F),
+    c_fixb    = c(T,F),
+    c_eigvalcheck = c(T,F),
+    c_rankcheck = c("skip", "warning"),
+    c_convcheck = c("skip", "warning"),
+    nbr_regspecs = 108,
+    nbr_mdl_topt = 108)
+
+l_regopt10 <- run_regopt(c_regopt10, sizex = 1400)
+
+
+gd_regopt_eval(l_regopt10, c_regopt10)
 
 
 
