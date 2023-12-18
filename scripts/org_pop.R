@@ -5,6 +5,8 @@ options(width = 115)
 PROJECT_DIR <- "/home/johannes/Dropbox/phd/papers/org_pop/"
 SCRIPT_DIR <- paste0(PROJECT_DIR, "scripts/")
 
+PMDATA_LOCS <- gc_pmdata_locs()
+
 PMDB_FILE <- "Private museum database2.xlsx"
 PMDB_FILE <- "Private museum database3.xlsx"
 PMDB_FILE <- "Private museum database4.xlsx"

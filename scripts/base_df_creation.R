@@ -225,6 +225,88 @@ aggregate_openings <- function(df_excl, yeet_early_closed = F, impute_closing_ye
 
 ## need some df_wb for the complete country-year structure
 
+gd_dens_neib <- function(df_wb, df_open) {
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
+    1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;
+    
+    ## join df_wb and df_open to get density and population
+    dt_denspop <- adt(df_open)[, .(iso3c, year, nbr_opened, nbr_closed)][adt(df_wb), on = .(iso3c, year)] %>%
+        .[, `:=`(nbr_opened = replace_NA(nbr_opened), nbr_closed = replace_NA(nbr_closed))] %>% 
+        .[, pm_dens := cumsum(nbr_opened) - cumsum(nbr_closed), iso3c] %>%
+        .[, .(iso3c, year, pm_dens, pop = SP.POP.TOTL)]
+
+    ## dt_denspop[iso3c == "ITA"] %>% print(n=50)
+    
+
+    ## dt_boundaries <- fread("/home/johannes/Dropbox/phd/papers/org_pop/data/boundaries/geodatasource_land_boundaries.csv")
+
+    dt_crybndrs <- gd_crybndrs()
+
+    ## set which conditions countries fall in: have land neighbors or not
+    dt_bndry_cases <- dt_crybndrs[dt_denspop[, .(iso3c = unique(iso3c))], on = "iso3c"] %>%
+        .[, bndrycase := fifelse(all(is.na(iso3c_border)), "island", "land_neighbors"), iso3c]
+
+    ## prepare subregions
+    dt_subreg <- dt_denspop[, .(iso3c = unique(iso3c))] %>%
+        .[, subregion := countrycode(iso3c, "iso3c", "un.regionsub.name")]
+
+    ## get sub-region members for Island countries
+    dt_island_subreg_members <- dt_subreg %>%
+        .[., on = "subregion", allow.cartesian = T] %>% # self-join on subregion
+        .[dt_bndry_cases[bndrycase == "island"], on = "iso3c"] %>% # filter down to islands
+        .[, .(iso3c, iso3c_border = i.iso3c, bndrycase)] %>% # renaming
+        .[iso3c != iso3c_border] # filter out self-joins
+    
+    ## check that not only islands are in sub-region set
+    if (funique(dt_bndry_cases[, .(iso3c, bndrycase)]) %>%
+        .[dt_island_subreg_members[, .(iso3cxx = iso3c, iso3c_border)] , on = .(iso3c = iso3c_border)] %>%
+        .[, all(bndrycase == "island")]) {stop("boundary cases not handled")}
+
+    ## get single dt with country boundaries of land neighbors, and for island those in region
+    dt_crybndrs_all <- rbind(dt_bndry_cases[bndrycase == "land_neighbors", .(iso3c, iso3c_border, bndrycase)],
+                             dt_island_subreg_members)
+        
+    ## dt_crybndrs_all[, .N, .(iso3c, bndrycase)] %>% .[, .(mean_N = mean(N)), .(bndrycase)]
+    ## islands have more neighbors, whatever
+
+    ## dt_denspop[dt_crybndrs, on = "iso3c", allow.cartesian = T][, .(iso3c, year, SP.POP.TOTL, iso3c_border)]
+
+    ## can i get the neighboring populatiosn with a single join?
+    ## nope not really well with different grouping mechanisms
+    ## just assume no changing boundaries -> join subregion countries to islands
+
+    ## first expand to entity-neighbor-years, then join population info to the country-neighbors-year entries
+    dt_neighinfo <- dt_crybndrs_all[dt_denspop[, .(iso3c, year)], on = "iso3c", allow.cartesian = T] %>% 
+        join(dt_denspop[, .(iso3c, year, pop_border = pop, pm_dens_border = pm_dens)],
+             on = c("iso3c_border" = "iso3c", "year")) %>%
+        .[, pm_dens_border := replace_NA(pm_dens_border, 0)]
+
+    if (any(is.na(dt_neighinfo))) {warning("fix NAs you lazy bone")}
+
+    dt_neighinfo[iso3c == "ABW" & year == 1990] %>% print(n=300)
+
+    
+    dt_neighdens <- dt_neighinfo %>% na.omit %>% 
+        .[, .(neigh_popm = sum(pop_border)/1e6, neigh_pmdens = sum(pm_dens_border)), .(iso3c, year)] %>%
+        .[, neigh_pmdens_prop := neigh_pmdens/neigh_popm]
+
+    dt_neighdens %>% copy() %>% .[, reg6 := rcd_iso3c_reg6(iso3c)] %>% head(200) %>% 
+        viz_lines(y="neigh_pmdens_prop", facets = "reg6")
+    
+        ## .[, bndrycase := fifelse(all(is.na(iso3c_border)), "island", "land_neighbors"), iso3c] %>%
+        ## .[iso3c_border == "CHN" & year == 2010] %>% 
+        .[, .(neigh_pop = sum(SP.POP.TOTL)), .(iso3c = iso3c_border, year, bndrycase)]
+        ## .[iso3c == "CHN"] %>%
+        ## viz_lines(y="neigh_pop")
+        
+        
+        
+
+
+}
+
+gd_dens_neib(df_wb, df_open)
+
 
 create_anls_df <- function(df_wb, df_open) {
     if (as.character(match.call()[[1]]) %in% fstd){browser()}
