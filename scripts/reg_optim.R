@@ -287,10 +287,6 @@ run_regopt <- function(c_regopt, sizex) {
     return(l_dtc_regopt2)
 }
 
-
-stop("optim funcs done")
-
-
 gd_regopt_eval <- function(l_regopt, c_regopt) {
     if (as.character(match.call()[[1]]) %in% fstd){browser()}
     1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;
@@ -369,6 +365,12 @@ gd_regopt_eval <- function(l_regopt, c_regopt) {
 
 }
 
+
+
+stop("optim funcs done")
+
+
+
 ## * main
 ## set up conditions
 
@@ -437,8 +439,25 @@ c_regopt10 <- list(
 
 l_regopt10 <- run_regopt(c_regopt10, sizex = 1400)
 
-
 gd_regopt_eval(l_regopt10, c_regopt10)
+
+## narrow down even further itermax  for profile = T
+c_regopt11 <- list(
+    l_mdls_wid = quote(l_mdls_wid),
+    c_itermax = 100,
+    c_evalmax = 100,
+    c_profile = c(T),
+    c_fixbeta = c(T,F),
+    c_fixb    = c(T,F),
+    c_eigvalcheck = c(T),
+    c_rankcheck = c("warning"),
+    c_convcheck = c("warning"),
+    nbr_regspecs = 5,
+    nbr_mdl_topt = 20)
+
+l_regopt11 <- run_regopt(c_regopt11, sizex = 40)
+
+gd_regopt_eval(l_regopt11, c_regopt11)
 
 
 
