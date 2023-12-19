@@ -5,7 +5,7 @@ options(width = 115)
 PROJECT_DIR <- "/home/johannes/Dropbox/phd/papers/org_pop/"
 SCRIPT_DIR <- paste0(PROJECT_DIR, "scripts/")
 
-PMDATA_LOCS <- gc_pmdata_locs()
+
 
 PMDB_FILE <- "Private museum database2.xlsx"
 PMDB_FILE <- "Private museum database3.xlsx"
@@ -41,6 +41,7 @@ source(paste0(SCRIPT_DIR, "hdi.R"))
 source(paste0(SCRIPT_DIR, "gen_rates.R"))
 
 
+PMDATA_LOCS <- gc_pmdata_locs()
 
 df_excl <- create_excel_df(PMDB_FILE, only_pms = F)
 ## df_excl <- create_excel_df(PMDB_FILE, only_pms = T)

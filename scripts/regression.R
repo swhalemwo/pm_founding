@@ -1398,6 +1398,7 @@ gen_vrbl_vectors <- function() {
     weal_ineq_vars <- c("shweal992j_p90p100", "shweal992j_p99p100", "ghweal992j")
     ## density_vars <- c("nbr_opened_cum", "nbr_opened_cum_sqrd")
     density_vars <- c("pm_density", "pm_density_sqrd", # "nbr_closed_cum",
+                      "pmdens_neigh", "pmdens_neigh_sqrd",
                       "pm_density_global", "pm_density_global_sqrd", "nbr_closed_cum_global")
 
 
@@ -1449,6 +1450,8 @@ gen_vrbl_vectors <- function() {
                    "pm_density" = "PM density (country)",
                    "pm_density_sqrd" = "PM density squared (country)", 
                    "nbr_closed_cum" = "# PM closings (cumulative, country)",
+                   "pmdens_neigh" = "PM density neighbors",
+                   "pmdens_neigh_sqrd" = "PM density squared (neighbors)",
                    "pm_density_global" =  "PM density (global)",
                    "pm_density_global_sqrd" = "PM density squared (global)", 
                    "nbr_closed_cum_global" = "# PM closings (cumulative, global)",
@@ -1497,7 +1500,10 @@ gen_vrbl_vectors <- function() {
                    ## "nbr_opened_cum" = "Nbr. cumulative openings per 1M pop. (legitimacy)",
                    ## "nbr_opened_cum_sqrd" = "Nbr. cumulative openings per per 1M pop. squared (competition)",
                    "pm_density" = "PM density (country)",
-                   "pm_density_sqrd" = "PM density squared (country)", 
+                   ## "pm_density_sqrd" = "PM density squared (country)",
+                   "pm_density_sqrd" = "PM density^2 (country)",
+                   "pmdens_neigh" = "PM density (neighbors)",
+                   "pmdens_neigh_sqrd" = "PM density squared (neighbors)",
                    ## "nbr_closed_cum" = "Nbr. PM closings per cap. (cumulative, country)",
                    "pm_density_global" =  "PM density (global)",
                    "pm_density_global_sqrd" = "PM density squared (global)", 
@@ -1572,6 +1578,8 @@ gen_vrbl_vectors <- function() {
         c("clctr_cnt_cpaer"           = "zcontrols"),
         c("pm_density"                = "zcontrols"),
         c("pm_density_sqrd"           = "zcontrols"),
+        c("pmdens_neigh"              = "zcontrols"),
+        c("pmdens_neigh_sqrd"         = "zcontrols"),
         c("pm_density_global"         = "zcontrols"),
         c("pm_density_global_sqrd"    = "zcontrols"),
         c("nbr_closed_cum_global"     = "zcontrols"),
@@ -1588,6 +1596,7 @@ gen_vrbl_vectors <- function() {
         list(cstrnd = "ti_tmitr_interact", dtrmnr = "tmitr_approx_linear20step"),
         list(cstrnd = "smorc_dollar_fxm_sqrd", dtrmnr = "smorc_dollar_fxm"),
         list(cstrnd = "pm_density_sqrd", dtrmnr = "pm_density"),
+        list(cstrnd = "pmdens_neigh_sqrd", dtrmnr = "pmdens_neigh"),
         list(cstrnd = "pm_density_global_sqrd", dtrmnr = "pm_density_global")) %>% rbindlist()
 
 
@@ -3400,12 +3409,12 @@ vrbl_thld_choices <- gen_vrbl_thld_choices(vvs$hnwi_vars, vvs$inc_ineq_vars, vvs
 ##                                   inc_ineq_var == "sptinc992j_p99p100", weal_ineq_var == "shweal992j_p99p100")
 
 
-vrbl_thld_choices_optmz <- slice_sample(vrbl_thld_choices, n=36)
+vrbl_thld_choices_optmz <- slice_sample(vrbl_thld_choices, n=2)
 
 reg_settings_optmz <- list(
     nbr_specs_per_thld = 1,
     dvfmts = c("rates"), # should also be counts, but multiple dvfmts not yet supported by reg_anls
-    batch_version = "v94",
+    batch_version = "v96",
     lags = 1:5,
     vary_vrbl_lag = F,
     technique_strs = c("nr"),

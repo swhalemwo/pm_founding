@@ -296,7 +296,8 @@ gd_dens_neib <- function(df_wb, df_open) {
     ## calculate in neighboring countries population, density, density per capita
     dt_neighdens <- dt_neighinfo %>% na.omit %>% 
         .[, .(neigh_popm = sum(pop_border)/1e6, neigh_pmdens = sum(pm_dens_border)), .(iso3c, year)] %>%
-        .[, pmdens_neigh := neigh_pmdens/neigh_popm] # name in style with other variables
+        .[, pmdens_neigh := neigh_pmdens/neigh_popm] %>% # name in style with other variables
+        .[, pmdens_neigh_sqrd := pmdens_neigh^2]
 
     ## dt_neighdens %>% copy() %>% .[, reg6 := rcd_iso3c_reg6(iso3c)] %>% na.omit %>% atb %>% 
     ##     viz_lines(y="neigh_pmdens_prop", facets = "reg6", max_lines = 8)
@@ -356,7 +357,7 @@ create_anls_df <- function(df_wb, df_open) {
         atb() 
         ## .[, lapply(.SD, \(x) sum(is.na(x)))] %>% melt()
  
-    dt_dens_neib <- gd_dens_neib(df_wb, df_open)[, .(iso3c, year, pmdens_neigh)]
+    dt_dens_neib <- gd_dens_neib(df_wb, df_open)[, .(iso3c, year, pmdens_neigh, pmdens_neigh_sqrd)]
 
     df_anls4 <- join(df_anls3, dt_dens_neib, on = c("iso3c", "year"), how = "left")
     
