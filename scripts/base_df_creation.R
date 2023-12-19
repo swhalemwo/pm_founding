@@ -228,6 +228,10 @@ aggregate_openings <- function(df_excl, yeet_early_closed = F, impute_closing_ye
 gd_dens_neib <- function(df_wb, df_open) {
     if (as.character(match.call()[[1]]) %in% fstd){browser()}
     1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;
+
+    #' generate data.table of pmdensity in neighboring countries, per capita
+    #' neighboring countries are: for countries with land neighbors: their land connections
+    #' for island countries: the countries in the same UN subregion
     
     ## join df_wb and df_open to get density and population
     dt_denspop <- adt(df_open)[, .(iso3c, year, nbr_opened, nbr_closed)][adt(df_wb), on = .(iso3c, year)] %>%
@@ -283,21 +287,19 @@ gd_dens_neib <- function(df_wb, df_open) {
 
     if (any(is.na(dt_neighinfo))) {warning("fix NAs you lazy bone")}
 
-    dt_neighinfo[iso3c == "ABW" & year == 1990] %>% print(n=300)
+    ## dt_neighinfo[iso3c == "ABW" & year == 1990] %>% print(n=300)
 
-    
+    ## calculate in neighboring countries population, density, density per capita
     dt_neighdens <- dt_neighinfo %>% na.omit %>% 
         .[, .(neigh_popm = sum(pop_border)/1e6, neigh_pmdens = sum(pm_dens_border)), .(iso3c, year)] %>%
-        .[, neigh_pmdens_prop := neigh_pmdens/neigh_popm]
+        .[, pmdens_neigh := neigh_pmdens/neigh_popm] # name in style with other variables
 
-    dt_neighdens %>% copy() %>% .[, reg6 := rcd_iso3c_reg6(iso3c)] %>% head(200) %>% 
-        viz_lines(y="neigh_pmdens_prop", facets = "reg6")
-    
-        ## .[, bndrycase := fifelse(all(is.na(iso3c_border)), "island", "land_neighbors"), iso3c] %>%
-        ## .[iso3c_border == "CHN" & year == 2010] %>% 
-        .[, .(neigh_pop = sum(SP.POP.TOTL)), .(iso3c = iso3c_border, year, bndrycase)]
-        ## .[iso3c == "CHN"] %>%
-        ## viz_lines(y="neigh_pop")
+    ## dt_neighdens %>% copy() %>% .[, reg6 := rcd_iso3c_reg6(iso3c)] %>% na.omit %>% atb %>% 
+    ##     viz_lines(y="neigh_pmdens_prop", facets = "reg6", max_lines = 8)
+
+    ## adt(df_wb)[!dt_neighdens, on = .(iso3c, year)] %>% print(n=300)
+
+    return(dt_neighdens)
         
         
         
@@ -305,7 +307,7 @@ gd_dens_neib <- function(df_wb, df_open) {
 
 }
 
-gd_dens_neib(df_wb, df_open)
+## gd_dens_neib(df_wb, df_open) %>% .[iso3c == "CHE"] %>% print(n=200)
 
 
 create_anls_df <- function(df_wb, df_open) {
@@ -350,6 +352,11 @@ create_anls_df <- function(df_wb, df_open) {
         atb() 
         ## .[, lapply(.SD, \(x) sum(is.na(x)))] %>% melt()
  
+    dt_dens_neib <- gd_dens_neib(df_wb, df_open)[, .(iso3c, year, pmdens_neigh)]
+
+    df_anls4 <- join(df_anls3, dt_dens_neib, on = c("iso3c", "year"), how = "left")
+    
+
 
     ## df_anls2 <- df_anls %>% mutate(
     ##                 region = countrycode(iso3c, "iso3c", "un.region.name"),
@@ -448,8 +455,12 @@ create_anls_df <- function(df_wb, df_open) {
     ## df_anls$wv <- 0
     ## df_anls$nbr_opened_cum <- ave(df_anls$nbr_opened, df_anls$iso3c, FUN = cumsum)
 
-    return(df_anls3)
+    return(df_anls4)
 }
+
+## create_anls_df(df_wb, df_open)
+
+
 
 
 ## df_excl <- create_excel_df(PMDB_FILE)
