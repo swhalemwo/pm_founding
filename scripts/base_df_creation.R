@@ -280,12 +280,16 @@ gd_dens_neib <- function(df_wb, df_open) {
     ## just assume no changing boundaries -> join subregion countries to islands
 
     ## first expand to entity-neighbor-years, then join population info to the country-neighbors-year entries
+    ## generates NA because the country-neighbors pairs are generated for the entire period,
+    # but population data for some countries is available only later
     dt_neighinfo <- dt_crybndrs_all[dt_denspop[, .(iso3c, year)], on = "iso3c", allow.cartesian = T] %>% 
         join(dt_denspop[, .(iso3c, year, pop_border = pop, pm_dens_border = pm_dens)],
              on = c("iso3c_border" = "iso3c", "year")) %>%
         .[, pm_dens_border := replace_NA(pm_dens_border, 0)]
 
-    if (any(is.na(dt_neighinfo))) {warning("fix NAs you lazy bone")}
+    ## dt_neighinfo[is.na(pop_border)]
+
+    if (any(is.na(dt_neighinfo))) {warning("fix NAs you lazy bone, won't do it tho, na.omit is fine here")}
 
     ## dt_neighinfo[iso3c == "ABW" & year == 1990] %>% print(n=300)
 
