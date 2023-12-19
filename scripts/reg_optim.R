@@ -214,13 +214,15 @@ gd_measure_optmz_modfd_res <- function(dt_modfd, sizex) {
     if (as.character(match.call()[[1]]) %in% fstd){browser()}
     #' run measure_optmz_modfd along a bunch of configs in parallel
 
-    dt_modfd_sample <- dt_modfd[sample(x = 1:.N, size = sizex)]
+    sizex2 <- min(fnrow(dt_modfd), sizex)
+
+    dt_modfd_sample <- dt_modfd[sample(x = 1:.N, size = sizex2)]
     
     ## select and rename columns as needed for measure_optmz_modfd
     l_regopt_modfd <- dt_modfd_sample[, .(c_regspec_id = regspec_id, vrblx = vrbl,
                                           max_iter = iter_max, max_eval = eval_max, profile,
                                           fixbeta, fixb, rank_check, eigval_check, conv_check )] %>%
-        split(1:sizex) %>% map(as.list)
+        split(1:sizex2) %>% map(as.list)
 
     do.call("measure_optmz_modfd", l_regopt_modfd[[1]])
 
@@ -324,7 +326,8 @@ gd_regopt_eval <- function(l_regopt, c_regopt) {
 
     ## look add most promising combinations
     ## just time savings
-    dt_acc_crosstab %>% .[accuracy > 0.95] %>% .[order(-savings)] 
+    dt_acc_crosstab %>% .[accuracy > 0.95] %>%
+        .[order(-savings)] 
 
     ## time savings and accuracy
     ggplot(dt_acc_crosstab, aes(x=speedup, y=accuracy))+ geom_point() 
@@ -446,16 +449,16 @@ c_regopt11 <- list(
     l_mdls_wid = quote(l_mdls_wid),
     c_itermax = 100,
     c_evalmax = 100,
-    c_profile = c(T),
+    c_profile = c(T,F),
     c_fixbeta = c(T,F),
     c_fixb    = c(T,F),
-    c_eigvalcheck = c(T),
+    c_eigvalcheck = c(F),
     c_rankcheck = c("warning"),
     c_convcheck = c("warning"),
-    nbr_regspecs = 5,
-    nbr_mdl_topt = 20)
+    nbr_regspecs = 108,
+    nbr_mdl_topt = 500)
 
-l_regopt11 <- run_regopt(c_regopt11, sizex = 40)
+l_regopt11 <- run_regopt(c_regopt11, sizex = 5000)
 
 gd_regopt_eval(l_regopt11, c_regopt11)
 
