@@ -175,7 +175,11 @@ get_WB_data <- function(indx, refresh_all=FALSE) {
         ## need to this out: how to get the variables which shouldn't be changed; think i got it now
     }
 
-    df_wb_new <- as_tibble(merge(df_wb_local[,c("iso3c", "country", "year", unchanged_vars)], df_wb_api))
+    df_wb_new <- merge(df_wb_local[,c("iso3c", "country", "year", unchanged_vars)], df_wb_api) %>% adt %>% 
+        .[!is.na(countrycode(iso3c, "iso3c", "country.name"))] %>%
+        atb() # filter out countries that don't conform to iso3c standard (for now CHI)
+
+    
 
     ## inspect coverage 
     ## colSums(is.na(select(df_wb_new, NY.GDP.PCAP.CD, NY.GDP.MKTP.CN)))
