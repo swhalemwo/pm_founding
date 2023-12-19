@@ -89,6 +89,8 @@ get_wid_gdp <- function(wid_vx) {
 CPR_GDP_SOURCES <- F
 
 cvrt_ny.gdp.pcap.cd <- function(df_wb_new) {
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
+    
     #' wrapper for conversion of GDP into constant USD
 
     ## join with cur_df to convert to 2021-constant USD
@@ -111,7 +113,9 @@ cvrt_ny.gdp.pcap.cd <- function(df_wb_new) {
     wid_gdp_cvrtd <- get_wid_gdp(WID_VX)
     
     ## convert gdp of WB and WID if necessary; atm doesn't seem like big difference
-    if (CPR_GDP_SOURCES) {cpr_gdp_sources(gdp_cvrtd, wid_gdp_cvrtd)}
+    if (CPR_GDP_SOURCES) {
+        cpr_gdp_sources(gdp_cvrtd, wid_gdp_cvrtd)
+    }
 
     df_wb_new2 <- inner_join(df_wb_new, select(wid_gdp_cvrtd, iso3c, year, USD_constant))
 
@@ -119,6 +123,8 @@ cvrt_ny.gdp.pcap.cd <- function(df_wb_new) {
         select(-NY.GDP.PCAP.CD) %>%
         select(everything(), NY.GDP.PCAP.CD = USD_constant) %>%
         filter(iso3c != "VEN")
+
+    ## df_wb_new3 %>% adt %>% .[iso3c == "HTI"] %>% viz_lines(y="NY.GDP.PCAP.CD", duration = 1)
 
     return(df_wb_new3)
 }
