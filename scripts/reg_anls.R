@@ -2552,7 +2552,8 @@ gentbl_regrslts <- function(top_coefs, gof_df_cbn, df_best_mdls, wcptbl) {
     ## set up gof label dts
     dt_gof_lbls <- list(
         list(gof_name = "N"              , gof_lbl = "N"              , decimal = 0),
-        list(gof_name = "N_g"            , gof_lbl = "No. countries"  , decimal = 0),
+        list(gof_name = "N_g_iso3c"      , gof_lbl = "No. countries"  , decimal = 0),
+        list(gof_name = "N_g_year"      ,  gof_lbl = "No. years"      , decimal = 0),
         list(gof_name = "log_likelihood" , gof_lbl = "Log likelihood" , decimal = 2)) %>%
         rbindlist() %>% 
         .[, gof_lbl := factor(gof_lbl, levels = gof_lbl)] 
@@ -2563,7 +2564,7 @@ gentbl_regrslts <- function(top_coefs, gof_df_cbn, df_best_mdls, wcptbl) {
     dt_gofs_prepd <- adt(gof_df_cbn)[gof_names == "log_likelihood"] %>%
         .[, .SD[which.max(gof_value), .(mdl_id)], cbn_name] %>%
         .[adt(gof_df_cbn), on = "mdl_id", nomatch = NULL] %>%
-        .[gof_names %in% c("N", "N_g", "log_likelihood"), .(cbn_name, gof_names, gof_value)] %>% 
+        .[gof_names %in% c("N", "N_g_iso3c", "N_g_year", "log_likelihood"), .(cbn_name, gof_names, gof_value)] %>% 
         dt_gof_lbls[., on = .(gof_name = gof_names)] %>% # label gof
         .[order(gof_lbl)] %>% 
         .[, .(mdl_name = cbn_name, gof_name = gof_lbl, gof_value, decimal)]

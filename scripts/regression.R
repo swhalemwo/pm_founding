@@ -759,9 +759,11 @@ get_r_gof <- function(rx_glmmtmb, rx_smry){
     ## some additional gof
     disp_sigma <- glmmTMB::sigma(rx_glmmtmb)
     N_g <- rx_smry$ngrps$cond
+    N_g_names <- paste0("N_g_", names(N_g))
+    
     intcpt_var <- rx_smry$varcor$cond$iso3c[1,1]
 
-    algns_gof <- data.frame(gof_names = c("disp_sigma", "N_g", "intcpt_var"),
+    algns_gof <- data.frame(gof_names = c("disp_sigma", N_g_names, "intcpt_var"),
                             gof_value = c(disp_sigma,    N_g,   intcpt_var))
 
     r_gof_cbn <- Reduce(\(x,y) rbind(x,y), list(r_gof_prep2, r_gof_prep_aictab2, algns_gof, r_gof_df))
@@ -788,10 +790,17 @@ get_r_gof_min <- function(rx_glmmtmb) {
     
     
 
-gen_r_f <- function(dvfmt, r_vars) {
-    #' generate r formula for regression model
+gen_r_f <- function(dvfmt, r_vars, time_ri = F) {
+    #' generate r formula for negbin glmmtmb regression model
     
-    fx_prep <- sprintf("nbr_opened ~ %s + (1 | iso3c)", paste0(r_vars, collapse = " + ")) 
+    if (time_ri == T) {
+        fx_prep <- sprintf("nbr_opened ~ %s + (1 | iso3c) + (1 | year)", paste0(r_vars, collapse = " + ")) 
+
+    } else if (time_ri == F) {
+
+        fx_prep <- sprintf("nbr_opened ~ %s + (1 | iso3c)", paste0(r_vars, collapse = " + ")) 
+
+    }
 
     ## generate formula, depending on whether counts or rates are calculated
     if (dvfmt == "counts") {
@@ -865,7 +874,9 @@ run_glmmtmb <- function(dfx, dvfmt, r_vars, verbose) {
     if (as.character(match.call()[[1]]) %in% fstd){browser()}
     #' run a regression specification from R
 
-    fx <- gen_r_f(dvfmt, r_vars)
+    ## fx <- gen_r_f(dvfmt, r_vars)
+    
+    fx <- gen_r_f(dvfmt, r_vars, time_ri = T)
 
     ## glmmcrol <- glmmTMBControl(profile = T, optCtrl = list(iter.max = 300))
 
@@ -889,9 +900,20 @@ run_glmmtmb <- function(dfx, dvfmt, r_vars, verbose) {
     ## rx_glmmtmb_optim1 <- glmmTMB(fx, dfx, family = nbinom1, verbose = verbose)    
     ## t3 <- Sys.time()
 
+    ## super manual comparison to see effect of adding year random intercept, seems super irrelevant
     rx_glmmtmb <- glmmTMB(fx, dfx, family = nbinom1, verbose = verbose)
+
+    ## rx_glmmtmb_ri <- glmmTMB(fx_ri, dfx, family = nbinom1, verbose = verbose)
+
+    ## dt_coef <- rx_glmmtmb %>% summary %>% chuck("coefficients", "cond") %>%
+    ##     adt(keep.rownames = "vrbl") %>% .[, .(vrbl, Estimate)]
+
+    ## dt_coef_ri <- rx_glmmtmb_ri %>% summary %>% chuck("coefficients", "cond") %>%
+    ##     adt(keep.rownames = "vrbl") %>% .[, .(vrbl, estim_ri = Estimate)]
     
-    
+    ## join(dt_coef, dt_coef_ri, on = "vrbl") %>% .[, diff := estim_ri - Estimate]
+
+
     ## t2-t1
     ## t3-t2
     
