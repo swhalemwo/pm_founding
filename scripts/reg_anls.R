@@ -1452,7 +1452,7 @@ gen_plt_oneout_llrt_z <- function(ou_anls) {
     ## ou_anls[, .(z, ou_set_title_unlag, hyp)]
 
     ## violin plot z
-    ou_anls %>%
+    plt_oneout_llrt_z <- ou_anls %>%
         ggplot(aes(x=z, y = ou_set_title_unlag)) +
         geom_violin(bw = 0.1) +
         scale_y_discrete(labels = map_chr(addline_format(vvs$vrbl_lbls),
@@ -1462,6 +1462,15 @@ gen_plt_oneout_llrt_z <- function(ou_anls) {
         geom_vline(xintercept = 1.96, linetype = "dashed") +
         labs(x="Z-score", y = element_blank()) +
         theme_orgpop()
+
+    
+    ## if there are few observations (like in test runs) add points so that ggplot doesn't crash
+    if (any(ou_anls[, .N, .(vrbl, cbn_name)]==1)) {
+        plt_oneout_llrt_z <- plt_oneout_llrt_z + geom_point()
+    }
+
+    return(plt_oneout_llrt_z)    
+
 
     ## ## point plot: doesn't scale well 
     ## ou_anls %>%
@@ -1481,7 +1490,7 @@ gen_plt_oneout_llrt_lldiff <- function(ou_anls) {
     ## are removed
 
     ## violin LL diff
-    ou_anls %>%
+    plt_oneout_llrt_lldiff <- ou_anls %>%
         ggplot(aes(x=log_likelihood_diff, y = ou_set_title_unlag)) +
         geom_violin(bw = 0.4) + # , size = 0.3, color = "black") +
         scale_y_discrete(labels = map_chr(addline_format(vvs$vrbl_lbls),
@@ -1491,6 +1500,14 @@ gen_plt_oneout_llrt_lldiff <- function(ou_anls) {
         labs(x="Log likelihood improvement", y = element_blank()) +
         theme_orgpop() +
         theme(plot.margin = unit(rep(5.5, 4), "points"))
+
+    ## if there are few observations (like in test runs) add points so that ggplot doesn't crash
+    if (any(ou_anls[, .N, .(vrbl, cbn_name)]==1)) {
+
+        plt_oneout_llrt_lldiff <- plt_oneout_llrt_lldiff + geom_point()
+    }
+
+    return(plt_oneout_llrt_lldiff)
 
     
     ## ou_anls %>%
@@ -1550,7 +1567,13 @@ gen_plt_coef_violin <- function(top_coefs) {
         labs(x="coefficient value", y = element_blank()) +
         theme_orgpop() +
         theme(plot.margin = unit(rep(4, 4), "points"))
-    plt_coef_violin
+
+    ## add points if there are too few points for violin
+    if (any(top_coefs2[, .N, .(vrbl, cbn_name)][, N] == 1)) {
+        plt_coef_violin <- plt_coef_violin + geom_point()
+    }
+
+    ## plt_coef_violin
 
     return(plt_coef_violin)
     
@@ -2245,7 +2268,7 @@ gen_plt_vif <- function(dt_vif_res, top_coefs) {
     ## dt_vif_res2[vrbl == "NY.GDP.PCAP.CDk" & VIF > 8]
 
     
-    ggplot(dt_vif_res2, aes(x=VIF, y=vrbl, group = interaction(vrblset, vrbl),
+    plt_vif <- ggplot(dt_vif_res2, aes(x=VIF, y=vrbl, group = interaction(vrblset, vrbl),
                            fill = vrblset, color = vrblset)) +
         geom_violin(bw = 0.1, position = position_dodge(width = 0.5), size = 0.2) + 
         scale_y_discrete(labels = map_chr(addline_format(vvs$vrbl_lbls),
@@ -2259,6 +2282,10 @@ gen_plt_vif <- function(dt_vif_res, top_coefs) {
         scale_fill_discrete(guide = guide_legend(title = "Variable set"),
                             labels = c(all = "all", wosqrd = "all except squared variables and interactions"))
         
+    if (any(dt_vif_res2[, .N, .(vrbl, cbn_name, vrblset)]==1)) {
+        plt_vif <- plt_vif + geom_point()
+    }
+
 
 }
 
@@ -3710,11 +3737,12 @@ reg_res <- list()
 reg_res$plts <- gen_reg_res_plts(reg_res_objs, vvs, NBR_MDLS, only_priority_plts = T, stylecfg)
 
 ## nreg_res$plts$plt_best_coefs_single_cbn1 <- gen_plt_best_coefs_single_cbn1(reg_res_objs$top_coefs)
-reg_res$plts$plt_cntrfctl <- gen_plt_cntrfctl(reg_res_objs$dt_cntrfctl_cons, reg_res_objs$dt_cntrfctl_wse)
+## reg_res$plts$plt_cntrfctl <- gen_plt_cntrfctl(reg_res_objs$dt_cntrfctl_cons, reg_res_objs$dt_cntrfctl_wse)
+## reg_res$plts$plt_vif <- gen_plt_vif(reg_res_objs$dt_vif_res, reg_res_objs$top_coefs)
 ## render_reg_res("plt_cntrfctl", reg_res, batch_version = batch_version)
 
-
-gen_plt_best_coefs_single
+## gen_plt_oneout_llrt_z(reg_res_objs$ou_anls)
+## gen_plt_oneout_llrt_lldiff(reg_res_objs$ou_anls)
 
 ## reg_res$plts$plt_oucoefchng_tile <- gen_plt_oucoefchng_tile(reg_res_objs$dt_oucoefchng)
 ## render_reg_res("plt_oucoefchng_tile", reg_res, batch_version = "v75")
