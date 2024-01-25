@@ -2286,6 +2286,7 @@ gen_plt_vif <- function(dt_vif_res, top_coefs) {
         plt_vif <- plt_vif + geom_point()
     }
 
+    return(plt_vif)
 
 }
 
@@ -3737,8 +3738,7 @@ reg_res <- list()
 reg_res$plts <- gen_reg_res_plts(reg_res_objs, vvs, NBR_MDLS, only_priority_plts = T, stylecfg)
 
 ## nreg_res$plts$plt_best_coefs_single_cbn1 <- gen_plt_best_coefs_single_cbn1(reg_res_objs$top_coefs)
-## reg_res$plts$plt_cntrfctl <- gen_plt_cntrfctl(reg_res_objs$dt_cntrfctl_cons, reg_res_objs$dt_cntrfctl_wse)
-## reg_res$plts$plt_vif <- gen_plt_vif(reg_res_objs$dt_vif_res, reg_res_objs$top_coefs)
+reg_res$plts$plt_vif <- gen_plt_vif(reg_res_objs$dt_vif_res, reg_res_objs$top_coefs)
 ## render_reg_res("plt_cntrfctl", reg_res, batch_version = batch_version)
 
 ## gen_plt_oneout_llrt_z(reg_res_objs$ou_anls)
@@ -3774,7 +3774,7 @@ iwalk(res_tbls, ~do.call("render_xtbl", c(.x, gen_tblcfgs(TABLE_DIR, batch_versi
 
 ## ** predicting
 
-## gen_nbrs_pred(reg_res_objs$top_coefs, cbn_dfs_rates_uscld, df_reg, print_examples = F)
+gen_nbrs_pred(reg_res_objs$top_coefs, cbn_dfs_rates_uscld, df_reg, print_examples = F)
 
 
 dt_nbrs <- gen_nbrs(df_excl, df_open, cbn_dfs_rates, cbn_dfs_rates_uscld,
