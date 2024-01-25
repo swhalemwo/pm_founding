@@ -39,6 +39,7 @@ source(paste0(SCRIPT_DIR, "cbn_dfs.R"))
 source(paste0(SCRIPT_DIR, "marginal_tax_rates.R"))
 source(paste0(SCRIPT_DIR, "hdi.R"))
 source(paste0(SCRIPT_DIR, "gen_rates.R"))
+source(paste0(SCRIPT_DIR, "gen_cbn_df_dict.R"))
 
 
 PMDATA_LOCS <- gc_pmdata_locs()
@@ -55,13 +56,26 @@ df_reg_rts <- gen_df_reg_rts(df_reg)
 
 
 
-## df_reg_pre_impt %>% adt() %>% .[, lapply(.SD, \(x) sum(is.na(x)))]
-## df_reg %>% adt() %>% .[, map(.SD, ~sum(is.na(.x)))] %>% melt() %>% print(n=200)
-## df_reg_rts %>% adt() %>% .[, map(.SD, ~sum(is.na(.x)))] %>% melt() %>% print(n=200)
+## generate data objects needed for regression 
 
+vvs <- gen_vrbl_vectors()
+vrbl_cbns <- gen_cbns(vvs$all_rel_vars, vvs$base_vars)
+vrbl_thld_choices <- gen_vrbl_thld_choices(vvs$hnwi_vars, vvs$inc_ineq_vars, vvs$weal_ineq_vars)
+
+select <- dplyr::select
+lag <- dplyr::lag
+cbn_dfs_counts_uscld <- gen_cbn_dfs(df_reg, vvs$lngtd_vars, vvs$crscn_vars, vrbl_cbns, vvs$base_vars)
+cbn_dfs_counts <- scale_cbn_dfs(cbn_dfs_counts_uscld, vvs$base_vars, df_reg)
+cbn_dfs_rates_uscld <- gen_cbn_dfs(df_reg_rts, vvs$lngtd_vars, vvs$crscn_vars, vrbl_cbns, vvs$base_vars)
+cbn_dfs_rates <- scale_cbn_dfs(cbn_dfs_rates_uscld, vvs$base_vars, df_reg_rts)
+
+cbn_df_dict <- list(counts = cbn_dfs_counts,
+                    rates = cbn_dfs_rates)
 
 
 ## source(paste0(SCRIPT_DIR, "descriptives.R"))
 
-source(paste0(SCRIPT_DIR, "regression.R"))
+## source(paste0(SCRIPT_DIR, "regression.R"))
 
+
+objs_to_rds <- .c(cbn_df_dict, cbn_dfs_counts_uscld)
