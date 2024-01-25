@@ -23,10 +23,11 @@ PMDB_FILE <- "Private museum database25.xlsx"
 fstd <- ""
 
 source(paste0(SCRIPT_DIR, "startup_org_pop.R")) ## startup: libraries, global vars
+source(paste0(SCRIPT_DIR, "startup_static.R"))
 source(paste0(SCRIPT_DIR, "cultural_spending.R"))
 source(paste0(SCRIPT_DIR, "custom_funcs.R")) # random utils
 cur_df <- gen_cur_df(WID_VX)
-source(paste0(SCRIPT_DIR, "wb_api.R")) ## World Bank data, has to be run before sourcing base_df_creationn since it provides the country-year structure
+source(paste0(SCRIPT_DIR, "wb_api.R")) ## World Bank data, has to be run before sourcing base_df_creation since it provides the country-year structure
 source(paste0(SCRIPT_DIR, "base_df_creation.R")) # function to read in excel data
 source(paste0(SCRIPT_DIR, "WID_setup_and_checks.R"))
 source(paste0(SCRIPT_DIR, "viz_opngs.R"))
@@ -78,4 +79,8 @@ cbn_df_dict <- list(counts = cbn_dfs_counts,
 ## source(paste0(SCRIPT_DIR, "regression.R"))
 
 
-objs_to_rds <- .c(cbn_df_dict, cbn_dfs_counts_uscld)
+
+
+walk(objs_to_rds, ~saveRDS(get(.x), file = paste0(RDS_DIR, .x, ".rds")))
+
+

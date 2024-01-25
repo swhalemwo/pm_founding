@@ -45,3 +45,5 @@ colors_manual4 <- c("#ffa68b", "#001d5b", "#f4be4a", "#79007e", "#538500", "#bf9
 ## options("max.overlaps" = 100) ## didn't work
 options(ggrepel.max.overlaps = 100) ## this seems to have been it
 ## options("ggrepel.max.overlaps" = 100)
+
+OBJS_TO_RDS <- .c(cbn_df_dict, cbn_dfs_counts_uscld)
