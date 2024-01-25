@@ -1404,7 +1404,11 @@ gen_vrbl_vectors <- function() {
 
     ## non_thld_lngtd_vars <- c("tmitr_approx_linear20step", "ti_tmitr_interact", "smorc_dollar_fxm", "NY.GDP.PCAP.CDk", "SP.POP.TOTLm", "clctr_cnt_cpaer")
 
-    ctrl_vars <- c("NY.GDP.PCAP.CDk","NY.GDP.PCAP.KD.ZG", "SP.POP.TOTLm", "clctr_cnt_cpaer", "cnt_contemp_1990",
+    ctrl_vars <- c("NY.GDP.PCAP.CDk",
+                   "NY.GDP.PCAP.KD.ZG",
+                   "SP.POP.TOTLm",
+                   "clctr_cnt_cpaer",
+                   "cnt_contemp_1990",
                    "cnt_contemp_1990_sqrd")
     ctrl_vars_lngtd <- ctrl_vars[ctrl_vars %!in% crscn_vars]
     ti_vars <- c("tmitr_approx_linear20step", "ti_tmitr_interact")
