@@ -3475,7 +3475,8 @@ gen_nbrs <- function(df_excl, df_open, cbn_dfs_rates, cbn_dfs_rates_uscld,  df_r
         dt_velp_crycoefs[., on = "iso3c"] %>% # filter out countries with less than 20 CYs
         .[vrbl == "tmitr_approx_linear20step" & cbn_name == "cbn1"]
     
-    tmitr_scale <- scale(cbn_dfs_counts_uscld$cbn1$tmitr_approx_linear20step_lag0) %>% attr("scaled:scale")
+    tmitr_scale <- scale(cbn_dfs_counts_uscld$cbn1$tmitr_approx_linear20step_lag0) %>%
+        attr("scaled:scale")
 
     ## generate minmax nbrs
     l_velp_minmax <- dt_velp_tmitr_minmax %>%

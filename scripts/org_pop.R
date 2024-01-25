@@ -47,11 +47,13 @@ df_excl <- create_excel_df(PMDB_FILE, only_pms = F)
 ## df_excl <- create_excel_df(PMDB_FILE, only_pms = T)
 df_open <- aggregate_openings(df_excl, impute_closing_year = T)
 ## df_wb <- get_WB_data(c("NY.GDP.PCAP.CD", "SP.POP.TOTL", "NY.GDP.MKTP.CN", "NY.GDP.PCAP.KD.ZG"), refresh_all = T)
-df_wb <- get_WB_data(c("NY.GDP.PCAP.CD", "SP.POP.TOTL", "NY.GDP.MKTP.CN", "NY.GDP.PCAP.KD.ZG"), refresh_all = T)
+df_wb <- get_WB_data(c("NY.GDP.PCAP.CD", "SP.POP.TOTL", "NY.GDP.MKTP.CN", "NY.GDP.PCAP.KD.ZG"), refresh_all = F)
 df_anls <- create_anls_df(df_wb, df_open)
 df_reg_pre_impt <- get_df_reg(df_anls)
 df_reg <- impute_df_reg_vrbls(df_reg_pre_impt)
-df_reg_rts <- gen_df_reg_rts(df_reg) 
+df_reg_rts <- gen_df_reg_rts(df_reg)
+
+
 
 ## df_reg_pre_impt %>% adt() %>% .[, lapply(.SD, \(x) sum(is.na(x)))]
 ## df_reg %>% adt() %>% .[, map(.SD, ~sum(is.na(.x)))] %>% melt() %>% print(n=200)
