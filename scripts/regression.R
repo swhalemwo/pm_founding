@@ -1404,7 +1404,7 @@ gen_vrbl_vectors <- function() {
 
     ## non_thld_lngtd_vars <- c("tmitr_approx_linear20step", "ti_tmitr_interact", "smorc_dollar_fxm", "NY.GDP.PCAP.CDk", "SP.POP.TOTLm", "clctr_cnt_cpaer")
 
-    ctrl_vars <- c("NY.GDP.PCAP.CDk", "SP.POP.TOTLm", "clctr_cnt_cpaer", "cnt_contemp_1990",
+    ctrl_vars <- c("NY.GDP.PCAP.CDk","NY.GDP.PCAP.KD.ZG", "SP.POP.TOTLm", "clctr_cnt_cpaer", "cnt_contemp_1990",
                    "cnt_contemp_1990_sqrd")
     ctrl_vars_lngtd <- ctrl_vars[ctrl_vars %!in% crscn_vars]
     ti_vars <- c("tmitr_approx_linear20step", "ti_tmitr_interact")
@@ -1437,6 +1437,7 @@ gen_vrbl_vectors <- function() {
                    "smorc_dollar_fxm" = "Gvt cultural spending (millions)",
                    "smorc_dollar_fxm_sqrd" = "Gvt cultural spending (millions, sqrd)",
                    "NY.GDP.PCAP.CDk" = "GDP per capita (thousands)",
+                   "NY.GDP.PCAP.KD.ZG" = "GDP growth (%)",
                    "SP.POP.TOTLm" = "Population (millions)",
                    "cnt_contemp" = "# openings of contemporary art museums", 
                    "cnt_contemp_1985" = "# Museums of contemporary art in 1985",
@@ -1489,6 +1490,7 @@ gen_vrbl_vectors <- function() {
                    "hnwi_nbr_200M" = "HNWIs (net worth >= 200M)",
                    ## "hnwi_nbr_1B" = "HNWIs (net worth >= 1B)",
                    "NY.GDP.PCAP.CDk" = "GDP per cap. (thousands)",
+                   "NY.GDP.PCAP.KD.ZG" = "GDP growth (%)",
                    "SP.POP.TOTLm" = "Population (millions)",
                    "cnt_contemp" = "Nbr. openings of contemporary art museums per cap(M)", 
                    ## "cnt_contemp_1985" = "Nbr. Museums of contemporary art in 1985 per cap(M)",
@@ -1575,6 +1577,7 @@ gen_vrbl_vectors <- function() {
         c("cnt_contemp_1990"          = "zcontrols"),
         c("cnt_contemp_1990_sqrd"     = "zcontrols"),
         c("NY.GDP.PCAP.CDk"           = "zcontrols"),
+        c("NY.GDP.PCAP.KD.ZG"         = "zcontrols"),
         c("clctr_cnt_cpaer"           = "zcontrols"),
         c("pm_density"                = "zcontrols"),
         c("pm_density_sqrd"           = "zcontrols"),
@@ -3413,12 +3416,12 @@ vrbl_thld_choices <- gen_vrbl_thld_choices(vvs$hnwi_vars, vvs$inc_ineq_vars, vvs
 ##                                   inc_ineq_var == "sptinc992j_p99p100", weal_ineq_var == "shweal992j_p99p100")
 
 
-vrbl_thld_choices_optmz <- slice_sample(vrbl_thld_choices, n=2)
+vrbl_thld_choices_optmz <- slice_sample(vrbl_thld_choices, n=36)
 
 reg_settings_optmz <- list(
-    nbr_specs_per_thld = 1,
+    nbr_specs_per_thld = 3,
     dvfmts = c("rates"), # should also be counts, but multiple dvfmts not yet supported by reg_anls
-    batch_version = "v96",
+    batch_version = "v98",
     lags = 1:5,
     vary_vrbl_lag = F,
     technique_strs = c("nr"),
@@ -3492,6 +3495,12 @@ x <- reg_spec_mdls_optmz[[2]]
 ## x$cfg$regcmd <- "menbreg"
 x$cfg$regcmd <- "glmmTMB"
 run_vrbl_mdl_vars(x, vvs, fldr_info_optmz, verbose = T, wtf = F)
+
+## ** look at growth rate numbers
+
+cbn_dfs_rates$cbn2 %>% adt %>% .[, reg6 := rcd_iso3c_reg6(iso3c)] %>% atb %>%
+    viz_lines(y="NY.GDP.PCAP.KD.ZG_lag5", facets = "reg6", max_lines = 6)
+
 
 ## ** test different optimization settings for speed
 

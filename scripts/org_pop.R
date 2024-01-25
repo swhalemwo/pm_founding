@@ -46,7 +46,7 @@ PMDATA_LOCS <- gc_pmdata_locs()
 df_excl <- create_excel_df(PMDB_FILE, only_pms = F)
 ## df_excl <- create_excel_df(PMDB_FILE, only_pms = T)
 df_open <- aggregate_openings(df_excl, impute_closing_year = T)
-df_wb <- get_WB_data(c("NY.GDP.PCAP.CD", "SP.POP.TOTL", "NY.GDP.MKTP.CN"))
+df_wb <- get_WB_data(c("NY.GDP.PCAP.CD", "SP.POP.TOTL", "NY.GDP.MKTP.CN")) # , "NY.GDP.PCAP.KD.ZG"))
 df_anls <- create_anls_df(df_wb, df_open)
 df_reg_pre_impt <- get_df_reg(df_anls)
 df_reg <- impute_df_reg_vrbls(df_reg_pre_impt)
@@ -60,10 +60,11 @@ df_reg_rts <- gen_df_reg_rts(df_reg)
 
 ## source(paste0(SCRIPT_DIR, "descriptives.R"))
 
-source(paste0(SCRIPT_DIR, "regression.R"))
+
 
     
 ## ** check density numbers after v69
+
 
 cbn_dfs_rates_uscld$cbn1 %>% adt() %>% .[iso3c %in% c("NLD", "DEU", "BEL", "ITA", "USA")] %>%
     ggplot(aes(x=year, y = smorc_dollar_fxm_lag0, color = iso3c)) + geom_line()
@@ -106,6 +107,23 @@ dt_rng_visl[, .N, iso3c] %>% print(n=200)
     
 
     
+## ** check growth rates
+
+hist(df_reg$NY.GDP.PCAP.KD.ZG, breaks = 30)
+
+
+
+adt(df_reg)[NY.GDP.PCAP.KD.ZG > 50] %>%
+    adt(df_reg)[., on = "iso3c"] %>%
+    melt(id.vars = c("iso3c", "year"), measure.vars = c("NY.GDP.PCAP.CD", "NY.GDP.PCAP.KD.ZG")) %>% 
+    ggplot(aes(x=year, y=value)) + geom_line() +
+    facet_grid(variable~iso3c, scales = "free")
+
+adt(df_reg)[NY.GDP.PCAP.KD.ZG > 50] %>%
+    ggplot(aes(x=year, y=NY.GDP.PCAP.KD.ZG)) +
+    geom_line() + geom_point() + 
+    facet_wrap(~iso3c)
+
              
 
 

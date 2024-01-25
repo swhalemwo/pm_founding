@@ -25,6 +25,77 @@ read_WB_data <- function() {
     df_wb <- as_tibble(read.table(paste0(PROC_DATA_DIR, "WB_data_proc.csv")))
 }
 
+
+gd_wb_gdpgrowth <- function() {
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
+    1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;
+    #' explore WB indicators for GDP growth
+    
+
+    ## see what's there in WB 
+    l_wbcache <- wb_cache()
+
+    l_wbcache$indicators %>% adt %>% .[grepl("growth", indicator, ignore.case = T)] %>%
+        .[, .(indicator, indicator_id)] %>% print(n=300)
+
+    dt_gdp_growth_indicators <- l_wbcache$indicators %>% adt %>%
+        .[grepl("growth", indicator, ignore.case = T) & grepl("GDP", indicator_id)]
+    ## get 6 potential indicators
+
+    ## evaluate the 6 ->  gets down to 2
+    dt_wb_gdpgrowth <- wb_data(dt_gdp_growth_indicators[, indicator_id],
+                               start_date = STARTING_YEAR, end_date = ENDING_YEAR) %>% adt
+
+    dt_wb_gdpgrowth %>% summary
+    gdpgrowth_penl_indicators <- dt_wb_gdpgrowth %>% .[, map(.SD, ~sum(is.na(.x))),
+                                  .SDcols = dt_gdp_growth_indicators[, indicator_id]] %>%
+        keep(~.x < 2000) %>% names
+
+    
+    ## look into the two
+    dt_gdp_growth_indicators[indicator_id %in% gdpgrowth_penl_indicators,
+                             .(indicator_id, indicator, indicator_desc)] %>% adf
+
+    ## 1 NY.GDP.MKTP.KD.ZG            GDP growth (annual %)
+    ## 2 NY.GDP.PCAP.KD.ZG GDP per capita growth (annual %)
+
+    ## compare them 
+    dt_wb_gdpgrowth[, ..gdpgrowth_penl_indicators] %>% cor(use = "complete.obs")
+
+
+    dt_wb_gdpgrowth[, c("iso3c", "date", gdpgrowth_penl_indicators), with = F] %>%
+        ## .[iso3c %in% c("DEU", "USA", "ISR", "CHN")] %>% 
+        melt(id.vars = c("iso3c", "date")) %>% 
+        ggplot(aes(x=date, y=value, color = variable)) +
+        facet_wrap(~iso3c) + geom_line()
+    
+
+    ## dt_gdp_growth_indicators[
+    ## only viable indicators are  NY.GDP.PCAP.KD.ZG and NY.GDP.MKTP.KD.ZG, all others have no coverage
+    ## for now use NY.GDP.PCAP.KD.ZG, which fits more into PCAP framework that I'm using
+        
+
+    ## calculate myself
+    dt_wb_mnl <- df_wb %>% adt %>% .[, gdpgrwoth_mnl := fgrowth(NY.GDP.PCAP.CD), iso3c]
+
+    ## compare 
+
+    dt_gpdgrwth_cprn <- join(dt_wb_mnl[, .(iso3c, year, gdpgrwoth_mnl)], 
+         dt_wb_gdpgrowth[, .(iso3c, year = date, NY.GDP.PCAP.KD.ZG)], on = .c(iso3c, year), how = "full")
+
+    cor(dt_gpdgrwth_cprn[, .(gdpgrwoth_mnl, NY.GDP.PCAP.KD.ZG)], use = "complete.obs") ## 95 correlation..
+    
+    dt_gpdgrwth_cprn %>% melt(id.vars = .c(iso3c, year)) %>% 
+        .[iso3c %in% sample(funique(iso3c), 6)] %>% 
+        ggplot(aes(x=year, y=value, color = variable)) +
+        facet_wrap(~iso3c) + geom_line()
+    
+
+
+}
+
+## gd_wb_gdpgrowth()
+
 ## df_wb <- read_WB_data()
 
 cpr_gdp_sources <- function(gdp_cvrtd, wid_gdp_cvrtd) {
@@ -117,12 +188,14 @@ cvrt_ny.gdp.pcap.cd <- function(df_wb_new) {
         cpr_gdp_sources(gdp_cvrtd, wid_gdp_cvrtd)
     }
 
+    ## add WID GDP to the data
     df_wb_new2 <- inner_join(df_wb_new, select(wid_gdp_cvrtd, iso3c, year, USD_constant))
 
+    ## yeet WB GDP, replace by WID GDP
     df_wb_new3 <- df_wb_new2 %>%
         select(-NY.GDP.PCAP.CD) %>%
         select(everything(), NY.GDP.PCAP.CD = USD_constant) %>%
-        filter(iso3c != "VEN")
+        filter(iso3c != "VEN") # yeet vuvuzela, probably for being garbage
 
     ## df_wb_new3 %>% adt %>% .[iso3c == "HTI"] %>% viz_lines(y="NY.GDP.PCAP.CD", duration = 1)
 
@@ -156,6 +229,7 @@ get_WB_data <- function(indx, refresh_all=FALSE) {
 
     if (refresh_all) {
         print(paste0("download all indicators anew: ", indx))
+        ## indx <- c(indx,  "NY.GDP.PCAP.KD.ZG")
         df_wb_api <- download_WB_data(indx)
 
         unchanged_vars <- wb_vars_there[which(wb_vars_there %!in% indx)]
