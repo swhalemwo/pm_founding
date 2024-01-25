@@ -77,7 +77,8 @@ gen_cur_df <- function(wid_vx) {
     ## Faroe Islands (uses same as DNK)
     ## does nothing in v3 since no FRO entries whatsoever
 
-    fro_cpi <- read_excel(paste0(PROJECT_DIR, "data/fro_cpi/IP02050_PRIS_ARSMID_20220602-091544.xlsx"), skip = 2)[seq(82),]
+    fro_cpi <- read_excel(paste0(PROJECT_DIR, "data/fro_cpi/IP02050_PRIS_ARSMID_20220602-091544.xlsx"),
+                          skip = 2)[seq(82),]
     names(fro_cpi) <- c("year", "value")
     
     fro_cpi$inyixx999i_fro <- fro_cpi$value/filter(fro_cpi, year==2021)$value

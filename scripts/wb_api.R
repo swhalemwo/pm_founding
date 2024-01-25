@@ -219,6 +219,7 @@ get_WB_data <- function(indx, refresh_all=FALSE) {
         df_wb_local <- read_WB_data()
         wb_vars_there <- names(df_wb_local)[4:len(names(df_wb_local))]
         print(paste0("wb_vars_there: ", paste0(wb_vars_there, collapse = ", ")))
+        nothing_there <- FALSE
 
     } else {
         nothing_there <- TRUE
