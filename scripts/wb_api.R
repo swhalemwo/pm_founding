@@ -2,7 +2,7 @@
 
 download_WB_data <- function(indx){
     #' downloads data with the WB API, can take single WB variable codes or vectors thereof
-    print(paste0("now downloading: ", indx))
+    print(paste0("now downloading: ", paste0(indx, collapse = ", ")))
     indx_data <- wb_data(indicator = indx, start_date = STARTING_YEAR, end_date = ENDING_YEAR)
     
     date_pos <- which(names(indx_data)=="date")
@@ -12,6 +12,8 @@ download_WB_data <- function(indx){
 }
 
 ## dfx <- download_WB_data(c("NY.GDP.PCAP.CD"))
+## wb_indx <- c("NY.GDP.PCAP.CD", "SP.POP.TOTL", "NY.GDP.MKTP.CN", "NY.GDP.PCAP.KD.ZG")
+## dfx <- download_WB_data(wb_indx)
 
 save_WB_data <- function(df) {
     #' saves WB data
@@ -157,6 +159,8 @@ get_wid_gdp <- function(wid_vx) {
     return(wid_gdp_cvrtd)
 }
 
+
+
 CPR_GDP_SOURCES <- F
 
 cvrt_ny.gdp.pcap.cd <- function(df_wb_new) {
@@ -229,16 +233,16 @@ get_WB_data <- function(indx, refresh_all=FALSE) {
         
 
     if (refresh_all) {
-        print(paste0("download all indicators anew: ", indx))
+        print(paste0("download all indicators anew: ", paste0(indx, collapse = ", ")))
         ## indx <- c(indx,  "NY.GDP.PCAP.KD.ZG")
         df_wb_api <- download_WB_data(indx)
 
         unchanged_vars <- wb_vars_there[which(wb_vars_there %!in% indx)]
 
-        if (nothing_there) {
+        ## if (nothing_there) {
             ## assign result of API call to have something to be able to not change merge syntax below
             df_wb_local <- df_wb_api[,c("iso3c", "country", "year")]
-        }
+        ## }
         
     } else {
         wb_vars_to_download <- indx[which(indx %!in% wb_vars_there)]
