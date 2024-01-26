@@ -2985,18 +2985,18 @@ source(paste0(SCRIPT_DIR, "startup_reg.R"))
 
 
 
-vrbl_thld_choices_optmz <- slice_sample(vrbl_thld_choices, n=3)
+vrbl_thld_choices_optmz <- slice_sample(vrbl_thld_choices, n=1)
 
 reg_settings_optmz <- list(
-    nbr_specs_per_thld = 1,
+    nbr_specs_per_thld = 5,
     dvfmts = c("rates"), # should also be counts, but multiple dvfmts not yet supported by reg_anls
-    batch_version = "v01",
+    batch_version = "v02",
     lags = 1:5,
     vary_vrbl_lag = F,
     technique_strs = c("nr"),
     difficulty_switches = T,
     regcmds = c("glmmTMB"),
-    cbns_to_include = names(cbn_df_dict$counts)[1:3],
+    cbns_to_include = names(cbn_df_dict$counts)[1],
     mdls_to_include = c("full"),
     wtf = T
 )
