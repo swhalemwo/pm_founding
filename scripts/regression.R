@@ -1519,16 +1519,21 @@ gd_presence <- function(reg_specs_w_ids, db_mdlcache, vrblx) {
     return(dt_presence)
 }
 
-w_lagoptim <- function(reg_settings, dt_presence, db_mdlcache) {
+w_lagoptim <- function(reg_settings, dt_presence, db_str) {
     ## write model results to db cache for later easy access
 
     if (reg_settings$wtf) {
+
+        db_mdlcache <- dbConnect(RSQLite::SQLite(), db_str)
+        dbExecute(conn = db_mdlcache, "PRAGMA foreign_keys=ON")
         
         ## write LL back to file    
         dbAppendTable(db_mdlcache, "mdl_cache", dt_presence[missing_before == T, .(cbn_name, lag_spec, ll)])
 
         ## write log of all the mdls that are run (either directly or indirectly)
         dbAppendTable(db_mdlcache, "mdl_log", dt_presence[, .(mdl_id, cbn_name, lag_spec, loop_nbr, vrbl_optmzd)])
+
+        dbDisconnect(db_mdlcache)
 
         ## TEST: only write some back
         ## dbAppendTable(db_mdlcache, "mdl_cache", dt_presence[c(2,4), .(cbn_name, lag_spec, ll)])
@@ -1577,9 +1582,12 @@ optmz_vrbl_lag <- function(reg_spec, vrblx, loop_nbr, fldr_info, reg_settings,
     if (reg_settings$wtf) {map(reg_specs_w_ids, ~saveRDS(.x, file = paste0(fldr_info$REG_SPEC_DIR, .x$mdl_id)))}
 
     ## see which models are already there
-    db_mdlcache <- dbConnect(RSQLite::SQLite(), paste0(fldr_info$BATCH_DIR, "mdl_cache.sqlite"))
+    db_str <- paste0(fldr_info$BATCH_DIR, "mdl_cache.sqlite")
+    db_mdlcache <- dbConnect(RSQLite::SQLite(), db_str)
     dbExecute(conn = db_mdlcache, "PRAGMA foreign_keys=ON")
     dt_presence <- gd_presence(reg_specs_w_ids, db_mdlcache, vrblx)
+
+    dbDisconnect(db_mdlcache) # disconnect to see if that fixes db lock errors.. 
 
     print(sprintf("%s lags are already there", dt_presence[missing_before == F, .N]))
 
@@ -1602,7 +1610,8 @@ optmz_vrbl_lag <- function(reg_spec, vrblx, loop_nbr, fldr_info, reg_settings,
     }
     
     ## save results
-    w_lagoptim(reg_settings, dt_presence, db_mdlcache) 
+    w_lagoptim(reg_settings, dt_presence, db_str)
+    
 
     reg_spec_optimd <- m_regspec_after_lagoptim(reg_spec, vrblx, dt_presence, best_lag)
 
