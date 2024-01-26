@@ -17,10 +17,6 @@ library(Hmisc, include.only = "latexTranslate")
 library(collapse)
 
 
-PROJECT_DIR <- "/home/johannes/Dropbox/phd/papers/org_pop/"
-SCRIPT_DIR <- paste0(PROJECT_DIR, "scripts/")
-
-
 source(paste0(SCRIPT_DIR, "startup_static.R"))
 source(paste0(SCRIPT_DIR, "gen_cbn_df_dict.R"))
 source(paste0(SCRIPT_DIR, "custom_funcs.R"))

@@ -1,3 +1,6 @@
+args <- commandArgs(trailingOnly = T)
+options(width = 115)
+
 ## * regression
 
 ## ** variables and variable combinations (without lagging)
@@ -2939,6 +2942,21 @@ postestimation <- function(fldr_info) {
 }
 
 
+setup_db_mdlcache <- function(fldr_info) {
+    #' set up model cache, but only if it not already exists (otherwise would overwrite)
+    #' so far assumes that cbn_name + lag_spec is unique (no other things allowed to vary)
+    db_str <- paste0(fldr_info$BATCH_DIR, "mdl_cache.sqlite")
+
+    if (basename(db_str) %!in% list.files(fldr_info$BATCH_DIR)) {
+        db_mdlcache <- dbConnect(RSQLite::SQLite(), db_str)
+        dt_cacheschema <- data.table(cbn_name = "asdf", lag_spec = "asdf", ll = 11.1)
+        prep_sqlitedb(db_mdlcache, dt_cacheschema, "mdl_cache", constraints = "PRIMARY KEY (cbn_name, lag_spec)")
+        ## add log: all the models that are run
+        dt_mdllog_schema <- data.table(mdl_id = "id", cbn_name = "cbnx", lag_spec = "lag_spec", loop_nbr = 1L,
+                                       vrbl_optmzd = "vrbl")
+        prep_sqlitedb(db_mdlcache, dt_mdllog_schema, "mdl_log", constraints = "PRIMARY KEY (mdl_id)")
+    }
+}
 
 
 ## ** main
@@ -2951,15 +2969,19 @@ if (identical(args, character(0))) {
 if (is.null(args[[1]])) {
     stop("functions are DONE")
 }
+PROJECT_DIR <- "/home/johannes/Dropbox/phd/papers/org_pop/"
+SCRIPT_DIR <- paste0(PROJECT_DIR, "scripts/")
+
+source(paste0(SCRIPT_DIR, "startup_reg.R"))
 
 
 
-vrbl_thld_choices_optmz <- slice_sample(vrbl_thld_choices, n=36)
+vrbl_thld_choices_optmz <- slice_sample(vrbl_thld_choices, n=3)
 
 reg_settings_optmz <- list(
-    nbr_specs_per_thld = 3,
+    nbr_specs_per_thld = 1,
     dvfmts = c("rates"), # should also be counts, but multiple dvfmts not yet supported by reg_anls
-    batch_version = "v99",
+    batch_version = "v01",
     lags = 1:5,
     vary_vrbl_lag = F,
     technique_strs = c("nr"),
@@ -2979,23 +3001,13 @@ print(len(reg_spec_mdls_optmz))
 
 fldr_info_optmz <- setup_regression_folders_and_files(reg_settings_optmz$batch_version)
 
+setup_db_mdlcache(fldr_info_optmz)
 
-## set up model cache, but only if it not already exists (otherwise would overwrite)
-## so far assumes that cbn_name + lag_spec is unique (no other things allowed to vary)
-db_str <- paste0(fldr_info_optmz$BATCH_DIR, "mdl_cache.sqlite")
-if (basename(db_str) %!in% list.files(fldr_info_optmz$BATCH_DIR)) {
-    db_mdlcache <- dbConnect(RSQLite::SQLite(), db_str)
-    dt_cacheschema <- data.table(cbn_name = "asdf", lag_spec = "asdf", ll = 11.1)
-    prep_sqlitedb(db_mdlcache, dt_cacheschema, "mdl_cache", constraints = "PRIMARY KEY (cbn_name, lag_spec)")
-    ## add log: all the models that are run
-    dt_mdllog_schema <- data.table(mdl_id = "id", cbn_name = "cbnx", lag_spec = "lag_spec", loop_nbr = 1L,
-                                   vrbl_optmzd = "vrbl")
-    prep_sqlitedb(db_mdlcache, dt_mdllog_schema, "mdl_log", constraints = "PRIMARY KEY (mdl_id)")
-}
 
-pbmclapply(reg_spec_mdls_optmz, \(x) optmz_reg_spec(x, fldr_info_optmz, reg_settings_optmz),
-           mc.cores = 5, mc.preschedule = F)
+mclapply(reg_spec_mdls_optmz, \(x) optmz_reg_spec(x, fldr_info_optmz, reg_settings_optmz),
+         mc.cores = 5, mc.preschedule = F)
 
+stop("it's time to stop")
 print("models have been run, now combining files")
 
 cbn_splitted_files("_cfgs.csv[0-9]", fldr_info_optmz)

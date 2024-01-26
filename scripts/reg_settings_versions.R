@@ -781,6 +781,40 @@ reg_settings_optmz <- list(
     wtf = T
 )
 
+## ** v98: probably full model with gdp growth
+vrbl_thld_choices_optmz <- slice_sample(vrbl_thld_choices, n=36)
+
+reg_settings_optmz <- list(
+    nbr_specs_per_thld = 3,
+    dvfmts = c("rates"), # should also be counts, but multiple dvfmts not yet supported by reg_anls
+    batch_version = "v98",
+    lags = 1:5,
+    vary_vrbl_lag = F,
+    technique_strs = c("nr"),
+    difficulty_switches = T,
+    regcmds = c("glmmTMB"),
+    cbns_to_include = names(cbn_dfs_counts)[1:3],
+    mdls_to_include = c("full"),
+    wtf = T
+
+
+
+## ** v99: test regression code after isolating
+vrbl_thld_choices_optmz <- slice_sample(vrbl_thld_choices, n=3)
+
+reg_settings_optmz <- list(
+    nbr_specs_per_thld = 1,
+    dvfmts = c("rates"), # should also be counts, but multiple dvfmts not yet supported by reg_anls
+    batch_version = "v99",
+    lags = 1:5,
+    vary_vrbl_lag = F,
+    technique_strs = c("nr"),
+    difficulty_switches = T,
+    regcmds = c("glmmTMB"),
+    cbns_to_include = names(cbn_df_dict$counts)[1:3],
+    mdls_to_include = c("full"),
+    wtf = T
+)
 
 
 
