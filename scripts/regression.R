@@ -28,16 +28,6 @@ options(width = 115)
 
 ## ** sketching functionalization
 
-## library(RStata)
-## options(RStata.StataPath = "/usr/local/stata14/stata")
-## options(RStata.StataVersion = 14)
-library(ps)
-## make sure all kinds of basic functions aren't masked
-select <- dplyr::select
-lag <- dplyr::lag
-library(purrr)
-library(modelsummary)
-library(RSQLite)
 
 cleanup_old_r_procs <- function() {
     ## gw_fargs(match.call())
@@ -2990,7 +2980,7 @@ vrbl_thld_choices_optmz <- slice_sample(vrbl_thld_choices, n=1)
 reg_settings_optmz <- list(
     nbr_specs_per_thld = 5,
     dvfmts = c("rates"), # should also be counts, but multiple dvfmts not yet supported by reg_anls
-    batch_version = "v02",
+    batch_version = "v03",
     lags = 1:5,
     vary_vrbl_lag = F,
     technique_strs = c("nr"),
