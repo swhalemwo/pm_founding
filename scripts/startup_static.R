@@ -41,9 +41,21 @@ colors_manual4 <- c("#ffa68b", "#001d5b", "#f4be4a", "#79007e", "#538500", "#bf9
 
 
 
-## options(max.overlaps = 100) ## didn't work
-## options("max.overlaps" = 100) ## didn't work
-options(ggrepel.max.overlaps = 100) ## this seems to have been it
-## options("ggrepel.max.overlaps" = 100)
+options(ggrepel.max.overlaps = 100) # set some option for ggrepel
 
-OBJS_TO_RDS <- .c(cbn_df_dict, cbn_dfs_counts_uscld)
+
+## set static objects
+## These which get written to file after data wrangling data, and get read in for regression part
+
+
+OBJS_TO_RDS <- .c(
+    ## regression
+    vvs,
+    vrbl_cbns,
+    vrbl_thld_choices,
+    cbn_df_dict,
+    # for reg_anls (nbrs)
+    cbn_dfs_counts_uscld, 
+    df_reg,
+    df_reg_rts 
+    )

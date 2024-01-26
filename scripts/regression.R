@@ -25,10 +25,9 @@
 
 ## ** sketching functionalization
 
-library(RStata)
-
-options(RStata.StataPath = "/usr/local/stata14/stata")
-options(RStata.StataVersion = 14)
+## library(RStata)
+## options(RStata.StataPath = "/usr/local/stata14/stata")
+## options(RStata.StataVersion = 14)
 library(ps)
 ## make sure all kinds of basic functions aren't masked
 select <- dplyr::select
@@ -38,20 +37,20 @@ library(modelsummary)
 library(RSQLite)
 
 cleanup_old_r_procs <- function() {
-    gw_fargs(match.call())
+    ## gw_fargs(match.call())
     #' kill old R procs, not used so far
     
     df_ps <- ps() %>% filter(name == "R", pid != Sys.getpid()) %>%
         pull(pid) %>%
         lapply(\(x) ps_kill(ps_handle(x)))
 
-    attr(df_ps, "gnrtdby") <- as.character(match.call()[[1]])
+    ## attr(df_ps, "gnrtdby") <- as.character(match.call()[[1]])
     return(df_ps)
 
 }
 
 cleanup_old_stata_procs <- function() {
-    gw_fargs(match.call())
+    ## gw_fargs(match.call())
     #' yeet old (older than 12 secs) stata processes
     #' not needed anymore since now number of iterations are used to terminate stata process
 
@@ -83,7 +82,7 @@ cleanup_old_stata_procs <- function() {
 
 
 parse_stata_res <- function(stata_res, stata_output_vars, gof_names){
-    gw_fargs(match.call())
+    ## gw_fargs(match.call())
     
     if (as.character(match.call()[[1]]) %in% fstd){browser()}
     #' parse the stata res into result_list
@@ -109,7 +108,7 @@ parse_stata_res <- function(stata_res, stata_output_vars, gof_names){
                          gof_value = filter(stata_res_parsed, is_gof)$value)
 
     res_list <- list(coef_df = coef_df, gof_df = gof_df)
-    attr(res_list, "gnrtdby") <- as.character(match.call()[[1]])
+    ## attr(res_list, "gnrtdby") <- as.character(match.call()[[1]])
     return(res_list)
 }
 
@@ -117,7 +116,8 @@ parse_stata_res <- function(stata_res, stata_output_vars, gof_names){
 
 
 save_parsed_res <- function(res_list, idx, fldr_info) {
-    gw_fargs(match.call())
+
+    ## gw_fargs(match.call())
     #' save the parsed stata res to id
 
     saveRDS(res_list, file = paste0(fldr_info$REG_RES_DIR, idx))
@@ -136,7 +136,7 @@ save_parsed_res <- function(res_list, idx, fldr_info) {
 
 gen_reg_spec <- function(non_thld_lngtd_vars, vrbl_thld_choice, reg_settings) {
     if (as.character(match.call()[[1]]) %in% fstd){browser()}
-    gw_fargs(match.call())
+    ## gw_fargs(match.call())
     
     #' generate the regression specification: basically just choice of some variables/thresholds and lag lengths
 
@@ -188,13 +188,13 @@ gen_reg_spec <- function(non_thld_lngtd_vars, vrbl_thld_choice, reg_settings) {
     lngtd_vars <- cstrn_vrbl_lags(lngtd_vars)
 
     reg_spec <- list(lngtd_vrbls = lngtd_vars)
-    attr(reg_spec, "gnrtdby") <- as.character(match.call()[[1]])
+    ## attr(reg_spec, "gnrtdby") <- as.character(match.call()[[1]])
 
     return(reg_spec)
 }
 
 cstrn_vrbl_lags <- function(lngtd_vars) {
-    gw_fargs(match.call())
+    ## gw_fargs(match.call())
     ## constrain the lags of the variables listed in vvs$dt_cstrnd_vrbls
     ## to the lag of their lag determining variables
 
@@ -204,7 +204,7 @@ cstrn_vrbl_lags <- function(lngtd_vars) {
                               nomatch = NULL][, .(cstrnd, lag_new = lag)],
           lag := lag_new, on = .(vrbl = cstrnd)] %>% ## %>% # constrain values with update join
         adf()
-    attr(df_lngtd_vars, "gnrtdby") <- as.character(match.call()[[1]])
+    ## attr(df_lngtd_vars, "gnrtdby") <- as.character(match.call()[[1]])
     
     return(df_lngtd_vars)
     
@@ -233,7 +233,7 @@ cstrn_vrbl_lags <- function(lngtd_vars) {
 
 
 gen_cbn_models <- function(cbn_vars, base_vars, ctrl_vars) {
-    gw_fargs(match.call())
+    ## gw_fargs(match.call())
     #' generate the models that follow from a combination 
     #' cbn_vars: lagged variables
 
@@ -253,7 +253,8 @@ gen_cbn_models <- function(cbn_vars, base_vars, ctrl_vars) {
     ## atm only use full models
     all_cbn_models <- list(full = c(cbn_vars))
     
-    attr(all_cbn_models, "gnrtdby") <- as.character(match.call()[[1]])
+    ## attr(all_cbn_models, "gnrtdby") <- as.character(match.call()[[1]])
+    
 
     return(all_cbn_models)
 }
@@ -266,7 +267,7 @@ gen_cbn_models <- function(cbn_vars, base_vars, ctrl_vars) {
     
 
 gen_lag_id <- function(reg_spec, vvs) {
-    gw_fargs(match.call())
+    ## gw_fargs(match.call())
     #' generate the variable choice lag part of the id
     #' see which longitudinal variables are included with which lag,
     #' include variables which aren't included with "X" in id 
@@ -290,7 +291,7 @@ gen_lag_id <- function(reg_spec, vvs) {
         ## mutate(lag_str = ifelse(is.na(lag_str), "X", lag_str)) %>%
         ## select(variable=vrbl, value = lag_str)
 
-    attr(df_idx, "gnrtdby") <- as.character(match.call()[[1]])
+    ## attr(df_idx, "gnrtdby") <- as.character(match.call()[[1]])
     return(df_idx)
 }
     
@@ -860,7 +861,7 @@ reg_spec_run_dispatch <- function(iv_vars, dfx, regcmd, dvfmt, fldr_info, techni
 ## run_vrbl_mdl_vars <- function(mdl_vars, df_cbn, cbn_name, mdl_name, reg_specx) {
 run_vrbl_mdl_vars <- function(reg_spec, vvs, fldr_info, return_objs = c("converged"), verbose = F, wtf = T,
                               glmmtmb_control = 1) {
-    gw_fargs(match.call())
+    ## gw_fargs(match.call())
     if (as.character(match.call()[[1]]) %in% fstd){browser()}
     
     #' run one regression given the model vars
@@ -2958,13 +2959,13 @@ vrbl_thld_choices_optmz <- slice_sample(vrbl_thld_choices, n=36)
 reg_settings_optmz <- list(
     nbr_specs_per_thld = 3,
     dvfmts = c("rates"), # should also be counts, but multiple dvfmts not yet supported by reg_anls
-    batch_version = "v98",
+    batch_version = "v99",
     lags = 1:5,
     vary_vrbl_lag = F,
     technique_strs = c("nr"),
     difficulty_switches = T,
     regcmds = c("glmmTMB"),
-    cbns_to_include = names(cbn_dfs_counts)[1:3],
+    cbns_to_include = names(cbn_df_dict$counts)[1:3],
     mdls_to_include = c("full"),
     wtf = T
 )

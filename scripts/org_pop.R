@@ -79,8 +79,8 @@ cbn_df_dict <- list(counts = cbn_dfs_counts,
 ## source(paste0(SCRIPT_DIR, "regression.R"))
 
 
+print("writing objects to file")
 
-
-walk(objs_to_rds, ~saveRDS(get(.x), file = paste0(RDS_DIR, .x, ".rds")))
+walk(OBJS_TO_RDS, ~saveRDS(get(.x), file = paste0(RDS_DIR, .x, ".rds")))
 
 
