@@ -1666,7 +1666,8 @@ optmz_vrbl_lag <- function(reg_spec, vrblx, loop_nbr, fldr_info, reg_settings,
     print(sprintf("%s lags are already there", dt_presence[missing_before == F, .N]))
 
     ## actually run the models
-    dt_res <- lapply(reg_specs_w_ids[dt_presence[, is.na(ll)]], \(x)
+    ## dt_res <- lapply(reg_specs_w_ids[dt_presence[, is.na(ll)]], \(x)
+    dt_res <- lapply(reg_specs_w_ids[dt_presence[, missing_before == T]], \(x)
                       run_vrbl_mdl_vars(x, vvs, fldr_info, return_objs = c("log_likelihood", "converged"),
                                         glmmtmb_control = glmmtmb_control,
                                         wtf = reg_settings$wtf)) %>% rbindlist
