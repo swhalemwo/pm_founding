@@ -3048,7 +3048,7 @@ vrbl_thld_choices_optmz <- slice_sample(vrbl_thld_choices, n=1)
 reg_settings_optmz <- list(
     nbr_specs_per_thld = 5,
     dvfmts = c("rates"), # should also be counts, but multiple dvfmts not yet supported by reg_anls
-    batch_version = "v05",
+    batch_version = "v06",
     lags = 1:5,
     vary_vrbl_lag = F,
     technique_strs = c("nr"),
