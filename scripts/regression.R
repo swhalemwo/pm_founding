@@ -1486,15 +1486,17 @@ gd_presence <- function(reg_specs_w_ids, db_str, vrblx) {
                                                mdl_id = chuck(.x, "mdl_id"))) %>% rbindlist
     
 
+    
+    ## get all the models that are already in cache
+    ## if something isn't here, it should be estimated
+    cmd_mdlcache <- paste0("lag_spec = ", "'", dt_lagspecs[, lag_spec], "'", collapse = " OR ") %>%
+        sprintf("SELECT cbn_name, lag_spec, ll from mdl_cache where (%s) AND cbn_name = '%s'", .,
+                dt_lagspecs[1, "cbn_name"])
+
     db_mdlcache <- gb_mdlcache_locked(db_str, lock = T)
     dbExecute(conn = db_mdlcache, "PRAGMA foreign_keys=ON")
 
-    ## get all the models that are already in cache
-    ## if something isn't here, it should be estimated
-    dt_mdlcache <- paste0("lag_spec = ", "'", dt_lagspecs[, lag_spec], "'", collapse = " OR ") %>%
-        sprintf("SELECT cbn_name, lag_spec, ll from mdl_cache where (%s) AND cbn_name = '%s'", .,
-                dt_lagspecs[1, "cbn_name"]) %>%
-        dbGetQuery(db_mdlcache, .) %>% adt
+    dt_mdlcache <- dbGetQuery(db_mdlcache, cmd_mdlcache) %>% adt
 
     dbExecute(db_mdlcache, "COMMIT") # unlock DB 
     dbDisconnect(db_mdlcache) # disconnect to see if that fixes db lock errors.. 
@@ -1547,21 +1549,29 @@ gd_presence <- function(reg_specs_w_ids, db_str, vrblx) {
 }
 
 gb_mdlcache_locked <- function(db_str, lock) {
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
     #' generate connetion to sqlite DB that can be written to: is
     #' @db_str: location of DB
     #' @lock: whether connection should be locked: should probably be T when writing
  
     ## first try: if db is locked, it will produce warning
-    db_mdlcache <- dbConnect(RSQLite::SQLite(), db_str)
+    ## db_mdlcache <- dbConnect(RSQLite::SQLite(), db_str)
 
     ## check that nobody else is writing to db
-    while (is(db_mdlcache, "warning")) {
-
-        time_to_sleep <- runif(1, 0.1, 0.3)
-        print(sprintf("connection failed, now sleeping for %s seconds", round(time_to_sleep, 2)))
-        Sys.sleep(time_to_sleep) # in case there is (and db_mdlcache is a warning) try again later
-        db_mldcache <- tryCatch(dbConnect(RSQLite::SQLite(), db_str),
+    ## while (is(db_mdlcache, "warning")) {
+    while (T) {
+                
+        db_mdlcache <- tryCatch(dbConnect(RSQLite::SQLite(), db_str),
                                 warning = function(w) w)
+
+        if (!is(db_mdlcache, "warning")) {
+            break
+        } else {
+            time_to_sleep <- runif(1, 0.1, 0.3)
+            print(sprintf("connection failed, now sleeping for %s seconds", round(time_to_sleep, 2)))
+            Sys.sleep(time_to_sleep) # in case there is (and db_mdlcache is a warning) try again later
+        }
+        
     }
 
     if (lock) {
@@ -1586,12 +1596,13 @@ w_lagoptim <- function(reg_settings, dt_presence, db_str) {
         
 
         ## check which cbn-lagspecs are now there (maybe another process has already run the same results)
-        dt_presence_b4_writing <- paste0("lag_spec = ", "'", dt_presence[, lag_spec], "'", collapse = " OR ") %>% 
+        cmd_presence_b4_writing <- paste0("lag_spec = ", "'", dt_presence[, lag_spec], "'", collapse = " OR ") %>% 
             sprintf("SELECT cbn_name, lag_spec, ll from mdl_cache where (%s) AND cbn_name = '%s'" , .,
-                    dt_presence[1, cbn_name]) %>%
-            dbGetQuery(db_mdlcache, .) %>% adt
+                    dt_presence[1, cbn_name])
+
+        dt_presence_b4_writing <- dbGetQuery(db_mdlcache, cmd_presence_b4_writing) %>% adt
     
-        ## remove those that have already been run
+        ## remove those that have already been run elsewhere
         dt_to_write <- dt_presence[missing_before == T, .(cbn_name, lag_spec, ll)] %>%
             .[!dt_presence_b4_writing, on = .(cbn_name, lag_spec)]
 
@@ -3066,7 +3077,7 @@ vrbl_thld_choices_optmz <- slice_sample(vrbl_thld_choices, n=1)
 reg_settings_optmz <- list(
     nbr_specs_per_thld = 5,
     dvfmts = c("rates"), # should also be counts, but multiple dvfmts not yet supported by reg_anls
-    batch_version = "v07",
+    batch_version = "v08",
     lags = 1:5,
     vary_vrbl_lag = F,
     technique_strs = c("nr"),
@@ -3119,18 +3130,20 @@ stop("regression is DONE")
 
 ## ** garage for inspection
 
+## *** basic test
 regspec_x <- reg_spec_mdls_optmz[[2]]
-
-regspec_x <- get_reg_spec_from_id("XXX5XX3X5X553335511111115--cbn1--full--nr--TRUE--glmmTMB--rates--XXX3XX2X1X222231543344221--hn200iigwi99--3--XXX5XX3X5X553335511111115--14--NY.GDP.PCAP.CDk", fldr_info_optmz)
-
-
 
 reg_settings_garage <- copy(reg_settings_optmz) %>% `pluck<-`("wtf", value = F)
 optmz_reg_spec(reg_spec_mdls_optmz[[3]], fldr_info_optmz, reg_settings_garage)
 
+
+## *** some other test
+regspec_x <- get_reg_spec_from_id("XXX5XX3X5X553335511111115--cbn1--full--nr--TRUE--glmmTMB--rates--XXX3XX2X1X222231543344221--hn200iigwi99--3--XXX5XX3X5X553335511111115--14--NY.GDP.PCAP.CDk", fldr_info_optmz)
+
 optmz_reg_spec(regspec_x, fldr_info_optmz, reg_settings_garage)
 
-## convergence failure infinite loop
+
+## *** convergence failure infinite loop/db lock debugging
 regspec_x <- get_reg_spec_from_id("X1XX3XXX3X553315111111115--cbn1--full--nr--TRUE--glmmTMB--rates--X4XX4XXX3X445552153333224--hn5ii90wi99--3--X1XX3XXX3X553315111111115--12--clctr_cnt_cpaer", fldr_info_optmz)
 
 reg_settings_garage <- copy(reg_settings_optmz) %>% `pluck<-`("wtf", value = F)
