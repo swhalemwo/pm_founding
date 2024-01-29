@@ -870,6 +870,24 @@ reg_settings_optmz <- list(
     wtf = T
 )
 
+## ** v07: more parallel writing debugging
+vrbl_thld_choices_optmz <- slice_sample(vrbl_thld_choices, n=1)
+
+reg_settings_optmz <- list(
+    nbr_specs_per_thld = 5,
+    dvfmts = c("rates"), # should also be counts, but multiple dvfmts not yet supported by reg_anls
+    batch_version = "v07",
+    lags = 1:5,
+    vary_vrbl_lag = F,
+    technique_strs = c("nr"),
+    difficulty_switches = T,
+    regcmds = c("glmmTMB"),
+    cbns_to_include = names(cbn_df_dict$counts)[1],
+    mdls_to_include = c("full"),
+    wtf = T
+)
+
+
 
 
 

@@ -3065,7 +3065,7 @@ vrbl_thld_choices_optmz <- slice_sample(vrbl_thld_choices, n=1)
 reg_settings_optmz <- list(
     nbr_specs_per_thld = 5,
     dvfmts = c("rates"), # should also be counts, but multiple dvfmts not yet supported by reg_anls
-    batch_version = "v06",
+    batch_version = "v07",
     lags = 1:5,
     vary_vrbl_lag = F,
     technique_strs = c("nr"),
@@ -3122,10 +3122,20 @@ regspec_x <- reg_spec_mdls_optmz[[2]]
 
 regspec_x <- get_reg_spec_from_id("XXX5XX3X5X553335511111115--cbn1--full--nr--TRUE--glmmTMB--rates--XXX3XX2X1X222231543344221--hn200iigwi99--3--XXX5XX3X5X553335511111115--14--NY.GDP.PCAP.CDk", fldr_info_optmz)
 
-reg_settings_garage <- copy(reg_settings_optmz) %>% `pluck<-`("wtf", value = T)
+
+
+reg_settings_garage <- copy(reg_settings_optmz) %>% `pluck<-`("wtf", value = F)
 optmz_reg_spec(reg_spec_mdls_optmz[[3]], fldr_info_optmz, reg_settings_garage)
 
 optmz_reg_spec(regspec_x, fldr_info_optmz, reg_settings_garage)
+
+## convergence failure infinite loop
+regspec_x <- get_reg_spec_from_id("X1XX3XXX3X553315111111115--cbn1--full--nr--TRUE--glmmTMB--rates--X4XX4XXX3X445552153333224--hn5ii90wi99--3--X1XX3XXX3X553315111111115--12--clctr_cnt_cpaer", fldr_info_optmz)
+
+reg_settings_garage <- copy(reg_settings_optmz) %>% `pluck<-`("wtf", value = F)
+
+optmz_reg_spec(regspec_x, fldr_info_optmz, reg_settings_garage)
+
 
 ## reg_spec_mdls_optmz[[10]]$df_idx %>% print(n=30)
 x <- reg_spec_mdls_optmz[[2]]
