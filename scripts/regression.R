@@ -1583,7 +1583,10 @@ w_lagoptim <- function(reg_settings, dt_presence, db_str) {
 
 
         ## actually write to DB 
+        print(sprintf("nrow table mdl_cache: %s", dbGetQuery(db_mdlcache, "select count(*) from mdl_cache")))
+        print(sprintf("nrow table mdl_lag: %s", dbGetQuery(db_mdlcache, "select count(*) from mdl_log")))
         
+
         dbExecute(conn = db_mdlcache, "PRAGMA foreign_keys=ON")
         
         ## write LL back to file
