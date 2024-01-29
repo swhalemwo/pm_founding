@@ -1470,14 +1470,19 @@ gl_regspecs_wid <- function(reg_spec, reg_settings, vrblx, loop_nbr) {
 }
 
 
-gd_presence <- function(reg_specs_w_ids, db_mdlcache, vrblx) {
+gd_presence <- function(reg_specs_w_ids, db_str, vrblx) {
     if (as.character(match.call()[[1]]) %in% fstd){browser()}
     #' see which models have already been run
     #' @param reg_specs_w_ids list of regspecs with IDs, lngtd_vrbls adjusted etc
-    #' @param db_mdlcache sqlite-db with where run models are saved to
+    #' @param db_str string of sqlite-db with where run models are saved to
     #' @param vrblx the variable being optimized
 
     
+    ## db_mdlcache <- dbConnect(RSQLite::SQLite(), db_str)
+    db_mdlcache <- gb_mdlcache_locked(db_str, lock = T)
+    dbExecute(conn = db_mdlcache, "PRAGMA foreign_keys=ON")
+    
+
 
     cbn_lagspecs <- map(reg_specs_w_ids, ~list(cbn_name = chuck(.x, "cfg", "cbn_name"),
                                                lag_spec = chuck(.x, "cfg", "lag_spec"),
@@ -1493,6 +1498,11 @@ gd_presence <- function(reg_specs_w_ids, db_mdlcache, vrblx) {
                     paste0(
                         sprintf("SELECT ll from mdl_cache where cbn_name = '%s'", .x$cbn_name),
                         sprintf(" and lag_spec = '%s'", .x$lag_spec))))), .x))
+
+    dbExecute(db_mdlcache, "COMMIT") # unlock DB 
+
+    dbDisconnect(db_mdlcache) # disconnect to see if that fixes db lock errors.. 
+
     ## t2 <- Sys.time()
 
     
@@ -1634,12 +1644,8 @@ optmz_vrbl_lag <- function(reg_spec, vrblx, loop_nbr, fldr_info, reg_settings,
 
     ## see which models are already there
     db_str <- paste0(fldr_info$BATCH_DIR, "mdl_cache.sqlite")
-    db_mdlcache <- dbConnect(RSQLite::SQLite(), db_str)
-    dbExecute(conn = db_mdlcache, "PRAGMA foreign_keys=ON")
-    dt_presence <- gd_presence(reg_specs_w_ids, db_mdlcache, vrblx)
-
-    dbDisconnect(db_mdlcache) # disconnect to see if that fixes db lock errors.. 
-
+    dt_presence <- gd_presence(reg_specs_w_ids, db_str, vrblx)
+    
     print(sprintf("%s lags are already there", dt_presence[missing_before == F, .N]))
 
     ## actually run the models
