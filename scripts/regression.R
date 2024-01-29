@@ -1479,55 +1479,69 @@ gd_presence <- function(reg_specs_w_ids, db_str, vrblx) {
 
     
     ## db_mdlcache <- dbConnect(RSQLite::SQLite(), db_str)
-    db_mdlcache <- gb_mdlcache_locked(db_str, lock = T)
-    dbExecute(conn = db_mdlcache, "PRAGMA foreign_keys=ON")
     
-
-
-    cbn_lagspecs <- map(reg_specs_w_ids, ~list(cbn_name = chuck(.x, "cfg", "cbn_name"),
+    dt_lagspecs <- map(reg_specs_w_ids, ~list(cbn_name = chuck(.x, "cfg", "cbn_name"),
                                                lag_spec = chuck(.x, "cfg", "lag_spec"),
                                                loop_nbr = chuck(.x, "cfg", "loop_nbr"),
-                                               mdl_id = chuck(.x, "mdl_id")))
+                                               mdl_id = chuck(.x, "mdl_id"))) %>% rbindlist
+    
+
+    db_mdlcache <- gb_mdlcache_locked(db_str, lock = T)
+    dbExecute(conn = db_mdlcache, "PRAGMA foreign_keys=ON")
+
+    ## get all the models that are already in cache
+    ## if something isn't here, it should be estimated
+    dt_mdlcache <- paste0("lag_spec = ", "'", dt_lagspecs[, lag_spec], "'", collapse = " OR ") %>%
+        sprintf("SELECT cbn_name, lag_spec, ll from mdl_cache where (%s) AND cbn_name = '%s'", .,
+                dt_lagspecs[1, "cbn_name"]) %>%
+        dbGetQuery(db_mdlcache, .) %>% adt
+
+    dbExecute(db_mdlcache, "COMMIT") # unlock DB 
+    dbDisconnect(db_mdlcache) # disconnect to see if that fixes db lock errors.. 
+
+
+    ## if model was tried but didn't converge, it has ll == 10000
+    dt_mdlcache[is.na(ll), ll := 10000]
 
     ## get data of which of the lags are already in mdl_cache 5
     ## t1 <- Sys.time()
-    l_lagquery_res <- map(
-        cbn_lagspecs,
-        ~c(list(dt_lagquery_res = adt(dbGetQuery(
-                    db_mdlcache,
-                    paste0(
-                        sprintf("SELECT ll from mdl_cache where cbn_name = '%s'", .x$cbn_name),
-                        sprintf(" and lag_spec = '%s'", .x$lag_spec))))), .x))
+    ## l_lagquery_res <- map(
+    ##     cbn_lagspecs,
+    ##     ~c(list(dt_lagquery_res = adt(dbGetQuery(
+    ##                 db_mdlcache,
+    ##                 paste0(
+    ##                     sprintf("SELECT ll from mdl_cache where cbn_name = '%s'", .x$cbn_name),
+    ##                     sprintf(" and lag_spec = '%s'", .x$lag_spec))))), .x))
 
-    dbExecute(db_mdlcache, "COMMIT") # unlock DB 
-
-    dbDisconnect(db_mdlcache) # disconnect to see if that fixes db lock errors.. 
-
+    
     ## t2 <- Sys.time()
 
+    ## dbGetQuery(db_mdlcache,
+    ##                 paste0(
+    ##                     sprintf("SELECT ll from mdl_cache where cbn_name = '%s'", "cbn4"),
+    ##                     sprintf(" and lag_spec = '%s'", "jjj")))
     
     
-    ## t3 <- Sys.time()
-    ## t3-t2
-    ## t2-t1
-    
-    
-
-
     ## check if ll is already there
-    l_lagquery_res2 <- map(
-        l_lagquery_res,
-        ~c(list(ll = ifelse(nrow(.x$dt_lagquery_res) == 0, NA, .x$dt_lagquery_res[, ll])), .x))
+    ## l_lagquery_res2 <- map(
+    ##     l_lagquery_res,
+    ##     ~c(list(ll = ifelse(nrow(.x$dt_lagquery_res) == 0, NA, .x$dt_lagquery_res[, ll])), .x))
 
 
     ## saveRDS(reg_spec, file = paste0(fldr_info$REG_SPEC_DIR, file_id))}
     
-
-    dt_presence <- map(l_lagquery_res2,
-                       ~.x[c("cbn_name", "lag_spec", "ll", "mdl_id", "loop_nbr")]) %>% rbindlist() %>%
+    dt_presence <- join(dt_lagspecs, dt_mdlcache, on = .c(lag_spec, cbn_name)) %>% 
         .[, missing_before := is.na(ll)] %>% # get those that are missing to save later
-        .[, ll := as.numeric(ll)] %>% ## need to ensure that LLs are numeric (otherwise boolean) 
+        .[, ll := as.numeric(ll)] %>% ## need to ensure that LLs are numeric (otherwise boolean)
+        .[ll > 0, ll := NA] %>% # reset LL of convergence failures AFTER setting missing_before
         .[, vrbl_optmzd := vrblx]
+
+
+    ## dt_presence <- map(l_lagquery_res2,
+    ##                    ~.x[c("cbn_name", "lag_spec", "ll", "mdl_id", "loop_nbr")]) %>% rbindlist() %>%
+    ##     .[, missing_before := is.na(ll)] %>% # get those that are missing to save later
+    ##     .[, ll := as.numeric(ll)] %>% ## need to ensure that LLs are numeric (otherwise boolean) 
+    ##     .[, vrbl_optmzd := vrblx]
 
     return(dt_presence)
 }
