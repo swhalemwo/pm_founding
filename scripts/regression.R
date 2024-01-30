@@ -1493,14 +1493,15 @@ gd_presence <- function(reg_specs_w_ids, db_str, vrblx) {
         sprintf("SELECT cbn_name, lag_spec, ll from mdl_cache where (%s) AND cbn_name = '%s'", .,
                 dt_lagspecs[1, "cbn_name"])
 
-    ## db_mdlcache <- gb_mdlcache_locked(db_str, lock = F)
+    db_mdlcache <- gb_mdlcache_locked(db_str, lock = F)
 
     ## get basic mdlcache information
-    ## dt_mdlcache_raw <- dbGetQuery(db_mdlcache, cmd_mdlcache) %>% adt
-    dt_mdlcache_raw <- dbGetQuery(pool_mdlcache, cmd_mdlcache) %>% adt
-
+    dt_mdlcache_raw <- dbGetQuery(db_mdlcache, cmd_mdlcache) %>% adt
+    
+    ## dt_mdlcache_raw <- dbGetQuery(pool_mdlcache, cmd_mdlcache) %>% adt
+    
     ## dbExecute(db_mdlcache, "COMMIT") # unlock DB 
-    ## dbDisconnect(db_mdlcache) # disconnect to see if that fixes db lock errors.. 
+    dbDisconnect(db_mdlcache) # disconnect to see if that fixes db lock errors.. 
 
 
     ## drop models that have been run by different processes
@@ -1508,8 +1509,6 @@ gd_presence <- function(reg_specs_w_ids, db_str, vrblx) {
 
     ## check if same model produces always same result
     if (dt_mdlcache[, .N, lag_spec][, max(N)] > 1) {print("same model is converging differently")}
-
-    
 
     
 
@@ -1579,7 +1578,7 @@ w_lagoptim <- function(reg_settings, dt_presence, db_str) {
     if (reg_settings$wtf) {
 
         
-        ## db_mdlcache <- gb_mdlcache_locked(db_str, lock = F)        
+        db_mdlcache <- gb_mdlcache_locked(db_str, lock = F)        
 
         ## check that current results don't violate the sqlite constraints
         
@@ -1600,25 +1599,25 @@ w_lagoptim <- function(reg_settings, dt_presence, db_str) {
         
 
         ## print DB status
-        print(sprintf("nrow table mdl_cache: %s", dbGetQuery(pool_mdlcache, "select count(*) from mdl_cache")))
-        print(sprintf("nrow table mdl_lag: %s", dbGetQuery(pool_mdlcache, "select count(*) from mdl_log")))
+        print(sprintf("nrow table mdl_cache: %s", dbGetQuery(db_mdlcache, "select count(*) from mdl_cache")))
+        print(sprintf("nrow table mdl_lag: %s", dbGetQuery(db_mdlcache, "select count(*) from mdl_log")))
         
         ## actually write to DB 
         ## write LL back to file
-        ## dbAppendTable(db_mdlcache, "mdl_cache", dt_to_write)
-        dbAppendTable(pool_mdlcache, "mdl_cache", dt_to_write)
+        dbAppendTable(db_mdlcache, "mdl_cache", dt_to_write)
+        ## dbAppendTable(pool_mdlcache, "mdl_cache", dt_to_write)
 
         ## write log of all the mdls that are run (either directly or indirectly)
-        ## dbAppendTable(db_mdlcache, "mdl_log",
+        dbAppendTable(db_mdlcache, "mdl_log",
+                      dt_presence[, .(mdl_id, cbn_name, lag_spec, loop_nbr, vrbl_optmzd)])
+        ## dbAppendTable(pool_mdlcache, "mdl_log",
         ##               dt_presence[, .(mdl_id, cbn_name, lag_spec, loop_nbr, vrbl_optmzd)])
-        dbAppendTable(pool_mdlcache, "mdl_log", dt_presence[, .(mdl_id, cbn_name, lag_spec, loop_nbr, vrbl_optmzd)])
 
         ## dbExecute(db_mdlcache, "COMMIT") # unlock DB 
 
-        ## dbDisconnect(db_mdlcache) # close connection
+        dbDisconnect(db_mdlcache) # close connection
 
-        ## TEST: only write some back
-        ## dbAppendTable(db_mdlcache, "mdl_cache", dt_presence[c(2,4), .(cbn_name, lag_spec, ll)])
+        
     }
 }
 
@@ -1665,6 +1664,7 @@ optmz_vrbl_lag <- function(reg_spec, vrblx, loop_nbr, fldr_info, reg_settings,
 
     ## see which models are already there
     db_str <- paste0(fldr_info$BATCH_DIR, "mdl_cache.sqlite")
+    
     dt_presence <- gd_presence(reg_specs_w_ids, db_str, vrblx)
     
     print(sprintf("%s lags are already there", dt_presence[missing_before == F, .N]))
@@ -3031,7 +3031,7 @@ postestimation <- function(fldr_info) {
 }
 
 
-setup_db_mdlcache <- function(fldr_info,  pool) {
+setup_db_mdlcache <- function(fldr_info) {
     #' set up model cache, but only if it not already exists (otherwise would overwrite)
     #' so far assumes that cbn_name + lag_spec is unique (no other things allowed to vary)
     db_str <- paste0(fldr_info$BATCH_DIR, "mdl_cache.sqlite")
@@ -3048,13 +3048,13 @@ setup_db_mdlcache <- function(fldr_info,  pool) {
         prep_sqlitedb(db_mdlcache, dt_mdllog_schema, "mdl_log", constraints = "PRIMARY KEY (mdl_id)")
     }
 
-    if (pool) {
-        pool_mdlcache <- pool::dbPool(drv = RSQLite::SQLite(), dbname = db_str,
-                                      validateQuery = "select count(*) from mdl_cache")
-        return(pool_mdlcache)
-    } else {
-        return(invisible(T))
-    }
+    ## if (pool) {
+    ##     pool_mdlcache <- pool::dbPool(drv = RSQLite::SQLite(), dbname = db_str,
+    ##                                   validateQuery = "select count(*) from mdl_cache")
+    ##     return(pool_mdlcache)
+    ## } else {
+    return(invisible(T))
+    ## }
 }
 
 
@@ -3081,7 +3081,7 @@ vrbl_thld_choices_optmz <- slice_sample(vrbl_thld_choices, n=1)
 reg_settings_optmz <- list(
     nbr_specs_per_thld = 5,
     dvfmts = c("rates"), # should also be counts, but multiple dvfmts not yet supported by reg_anls
-    batch_version = "v11",
+    batch_version = "v12",
     lags = 1:5,
     vary_vrbl_lag = F,
     technique_strs = c("nr"),
@@ -3101,7 +3101,7 @@ print(len(reg_spec_mdls_optmz))
 
 fldr_info_optmz <- setup_regression_folders_and_files(reg_settings_optmz$batch_version)
 
-pool_mdlcache <- setup_db_mdlcache(fldr_info_optmz, pool = T)
+setup_db_mdlcache(fldr_info_optmz)
 
 
 mclapply(reg_spec_mdls_optmz, \(x) optmz_reg_spec(x, fldr_info_optmz, reg_settings_optmz),
