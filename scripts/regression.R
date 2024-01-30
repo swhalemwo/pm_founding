@@ -1487,8 +1487,8 @@ dbQuery_tryagain <- function(query, return_res, ...) {
         if (!is(query_res, "error")) {
             break
         } else {
-            nbr_failed <- nbr_failed + 1
             time_to_sleep <- runif(1, nbr_failed + 1, nbr_failed + 2)
+            nbr_failed <- nbr_failed + 1
             print(sprintf("query %s (%s), has failed %s times, now sleep %s",
                           deparse(substitute(query)), Sys.getpid(), nbr_failed, round(time_to_sleep, 2)))
             Sys.sleep(time_to_sleep)
