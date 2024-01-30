@@ -1493,46 +1493,32 @@ gd_presence <- function(reg_specs_w_ids, db_str, vrblx) {
         sprintf("SELECT cbn_name, lag_spec, ll from mdl_cache where (%s) AND cbn_name = '%s'", .,
                 dt_lagspecs[1, "cbn_name"])
 
-    db_mdlcache <- gb_mdlcache_locked(db_str, lock = T)
-    dbExecute(conn = db_mdlcache, "PRAGMA foreign_keys=ON")
+    db_mdlcache <- gb_mdlcache_locked(db_str, lock = F)
 
-    dt_mdlcache <- dbGetQuery(db_mdlcache, cmd_mdlcache) %>% adt
+    ## get basic mdlcache information
+    dt_mdlcache_raw <- dbGetQuery(db_mdlcache, cmd_mdlcache) %>% adt
 
-    dbExecute(db_mdlcache, "COMMIT") # unlock DB 
+    ## dbExecute(db_mdlcache, "COMMIT") # unlock DB 
     dbDisconnect(db_mdlcache) # disconnect to see if that fixes db lock errors.. 
 
 
-    ## if model was tried but didn't converge, it has ll == 10000
+    ## drop models that have been run by different processes
+    dt_mdlcache <- dt_mdlcache_raw %>% .[, .(cbn_name, lag_spec, ll)] %>% funique
+
+    ## check if same model produces always same result
+    if (dt_mdlcache[, .N, lag_spec][, max(N)] > 1) {print("same model is converging differently")}
+
+    
+
+    
+
+    ## if model was tried but didn't converge, it now has ll == 10000
     dt_mdlcache[is.na(ll), ll := 10000]
-
-    ## get data of which of the lags are already in mdl_cache 5
-    ## t1 <- Sys.time()
-    ## l_lagquery_res <- map(
-    ##     cbn_lagspecs,
-    ##     ~c(list(dt_lagquery_res = adt(dbGetQuery(
-    ##                 db_mdlcache,
-    ##                 paste0(
-    ##                     sprintf("SELECT ll from mdl_cache where cbn_name = '%s'", .x$cbn_name),
-    ##                     sprintf(" and lag_spec = '%s'", .x$lag_spec))))), .x))
-
-    
-    ## t2 <- Sys.time()
-
-    ## dbGetQuery(db_mdlcache,
-    ##                 paste0(
-    ##                     sprintf("SELECT ll from mdl_cache where cbn_name = '%s'", "cbn4"),
-    ##                     sprintf(" and lag_spec = '%s'", "jjj")))
-    
-    
-    ## check if ll is already there
-    ## l_lagquery_res2 <- map(
-    ##     l_lagquery_res,
-    ##     ~c(list(ll = ifelse(nrow(.x$dt_lagquery_res) == 0, NA, .x$dt_lagquery_res[, ll])), .x))
 
 
     ## saveRDS(reg_spec, file = paste0(fldr_info$REG_SPEC_DIR, file_id))}
     
-    dt_presence <- join(dt_lagspecs, dt_mdlcache, on = .c(lag_spec, cbn_name)) %>% 
+    dt_presence <- join(dt_lagspecs, dt_mdlcache, on = .c(lag_spec, cbn_name), verbose = 0) %>% 
         .[, missing_before := is.na(ll)] %>% # get those that are missing to save later
         .[, ll := as.numeric(ll)] %>% ## need to ensure that LLs are numeric (otherwise boolean)
         .[ll > 0, ll := NA] %>% # reset LL of convergence failures AFTER setting missing_before
@@ -1592,37 +1578,38 @@ w_lagoptim <- function(reg_settings, dt_presence, db_str) {
     if (reg_settings$wtf) {
 
         
-        db_mdlcache <- gb_mdlcache_locked(db_str, lock = T)        
+        db_mdlcache <- gb_mdlcache_locked(db_str, lock = F)        
 
         ## check that current results don't violate the sqlite constraints
         
 
         ## check which cbn-lagspecs are now there (maybe another process has already run the same results)
-        cmd_presence_b4_writing <- paste0("lag_spec = ", "'", dt_presence[, lag_spec], "'", collapse = " OR ") %>% 
-            sprintf("SELECT cbn_name, lag_spec, ll from mdl_cache where (%s) AND cbn_name = '%s'" , .,
-                    dt_presence[1, cbn_name])
+        ## cmd_presence_b4_writing <- paste0("lag_spec = ", "'",
+        ##                                   dt_presence[, lag_spec], "'", collapse = " OR ") %>% 
+        ##     sprintf("SELECT cbn_name, lag_spec, ll from mdl_cache where (%s) AND cbn_name = '%s'" , .,
+        ##             dt_presence[1, cbn_name])
 
-        dt_presence_b4_writing <- dbGetQuery(db_mdlcache, cmd_presence_b4_writing) %>% adt
+        ## dt_presence_b4_writing <- dbGetQuery(db_mdlcache, cmd_presence_b4_writing) %>% adt
     
         ## remove those that have already been run elsewhere
-        dt_to_write <- dt_presence[missing_before == T, .(cbn_name, lag_spec, ll)] %>%
-            .[!dt_presence_b4_writing, on = .(cbn_name, lag_spec)]
+        ## dt_to_write <- dt_presence[missing_before == T, .(cbn_name, lag_spec, ll)] %>%
+        ##     .[!dt_presence_b4_writing, on = .(cbn_name, lag_spec)]
 
+        dt_to_write <- dt_presence[missing_before == T, .(cbn_name, lag_spec, ll, proc_pid = Sys.getpid())]
+        
 
-        ## actually write to DB 
+        ## print DB status
         print(sprintf("nrow table mdl_cache: %s", dbGetQuery(db_mdlcache, "select count(*) from mdl_cache")))
         print(sprintf("nrow table mdl_lag: %s", dbGetQuery(db_mdlcache, "select count(*) from mdl_log")))
         
-
-        dbExecute(conn = db_mdlcache, "PRAGMA foreign_keys=ON")
-        
+        ## actually write to DB 
         ## write LL back to file
         dbAppendTable(db_mdlcache, "mdl_cache", dt_to_write)
 
         ## write log of all the mdls that are run (either directly or indirectly)
         dbAppendTable(db_mdlcache, "mdl_log", dt_presence[, .(mdl_id, cbn_name, lag_spec, loop_nbr, vrbl_optmzd)])
 
-        dbExecute(db_mdlcache, "COMMIT") # unlock DB 
+        ## dbExecute(db_mdlcache, "COMMIT") # unlock DB 
 
         dbDisconnect(db_mdlcache) # close connection
 
@@ -1694,7 +1681,7 @@ optmz_vrbl_lag <- function(reg_spec, vrblx, loop_nbr, fldr_info, reg_settings,
         best_lag <- sample(reg_settings$lags, 1)
         print("all lags of current model result in non-convergence, pick lag at random")
     } else {
-        best_lag <- which.max(dt_presence$ll)
+        best_lag <- reg_settings$lags[which.max(dt_presence$ll)] 
     }
     
     ## save results
@@ -1754,6 +1741,7 @@ optmz_reg_spec_once <- function(reg_spec, loop_nbr, vrbls_to_vary, fldr_info, re
 }
 
 ## optmz_reg_spec_once(reg_spec_mdls_optmz[[2]], 1, fldr_info_optmz)
+
 
 
 optmz_reg_spec <- function(reg_spec, fldr_info, reg_settings) {
@@ -3046,9 +3034,10 @@ setup_db_mdlcache <- function(fldr_info) {
 
     if (basename(db_str) %!in% list.files(fldr_info$BATCH_DIR)) {
         db_mdlcache <- dbConnect(RSQLite::SQLite(), db_str)
-        dt_cacheschema <- data.table(cbn_name = "asdf", lag_spec = "asdf", ll = 11.1)
+        dt_cacheschema <- data.table(cbn_name = "asdf", lag_spec = "asdf", ll = 11.1, proc_pid = 55L)
 
-        prep_sqlitedb(db_mdlcache, dt_cacheschema, "mdl_cache", constraints = "PRIMARY KEY (cbn_name, lag_spec)")
+        prep_sqlitedb(db_mdlcache, dt_cacheschema, "mdl_cache",
+                      constraints = "PRIMARY KEY (cbn_name, lag_spec, proc_pid)")
         ## add log: all the models that are run
         dt_mdllog_schema <- data.table(mdl_id = "id", cbn_name = "cbnx", lag_spec = "lag_spec", loop_nbr = 1L,
                                        vrbl_optmzd = "vrbl")
@@ -3067,6 +3056,7 @@ if (identical(args, character(0))) {
 if (is.null(args[[1]])) {
     stop("functions are DONE")
 }
+
 PROJECT_DIR <- "/home/johannes/Dropbox/phd/papers/org_pop/"
 SCRIPT_DIR <- paste0(PROJECT_DIR, "scripts/")
 
@@ -3079,7 +3069,7 @@ vrbl_thld_choices_optmz <- slice_sample(vrbl_thld_choices, n=1)
 reg_settings_optmz <- list(
     nbr_specs_per_thld = 5,
     dvfmts = c("rates"), # should also be counts, but multiple dvfmts not yet supported by reg_anls
-    batch_version = "v08",
+    batch_version = "v09",
     lags = 1:5,
     vary_vrbl_lag = F,
     technique_strs = c("nr"),
@@ -3139,19 +3129,64 @@ reg_settings_garage <- copy(reg_settings_optmz) %>% `pluck<-`("wtf", value = F)
 optmz_reg_spec(reg_spec_mdls_optmz[[3]], fldr_info_optmz, reg_settings_garage)
 
 
-## *** some other test
-regspec_x <- get_reg_spec_from_id("XXX5XX3X5X553335511111115--cbn1--full--nr--TRUE--glmmTMB--rates--XXX3XX2X1X222231543344221--hn200iigwi99--3--XXX5XX3X5X553335511111115--14--NY.GDP.PCAP.CDk", fldr_info_optmz)
+
+
+
+## *** pid hacking in mdl_cache
+
+regspec_x <- get_reg_spec_from_id("XX5X4XXXX3443311213344112--cbn1--full--nr--TRUE--glmmTMB--rates--XX5X4XXXX3443311213344442--hn30ii90wig--4--XX5X4XXXX3443311213344112--0--pm_density_global", fldr_info_optmz)
+
+reg_settings_garage <- copy(reg_settings_optmz) %>% `pluck<-`("wtf", value = F)
 
 optmz_reg_spec(regspec_x, fldr_info_optmz, reg_settings_garage)
 
 
+## run exact same model with multiple threads
+
+reg_settings_garage <- copy(reg_settings_optmz) %>% `pluck<-`("wtf", value = T)
+reg_settings_garage <- copy(reg_settings_optmz) %>% `pluck<-`("wtf", value = F)
+
+db_mdlcache_debug <- gb_mdlcache_locked("/home/johannes/reg_res/v08/mdl_cache.sqlite", lock = F)
+print(sprintf("nrow table mdl_cache: %s", dbGetQuery(db_mdlcache_debug, "select count(*) from mdl_cache")))
+print(sprintf("nrow table mdl_lag: %s", dbGetQuery(db_mdlcache_debug, "select count(*) from mdl_log")))
+dbDisconnect(db_mdlcache_debug)
+
+gg <- mclapply(rep(list(regspec_x),3), \(x) optmz_vrbl_lag(x, vrblx = "NY.GDP.PCAP.CDk", loop_nbr = 3,
+                                               fldr_info = fldr_info_optmz,
+                                               reg_settings = reg_settings_garage),
+         mc.cores = 3)
+
+db_mdlcache_debug <- gb_mdlcache_locked("/home/johannes/reg_res/v08/mdl_cache.sqlite", lock = F)
+print(sprintf("nrow table mdl_cache: %s", dbGetQuery(db_mdlcache_debug, "select count(*) from mdl_cache")))
+print(sprintf("nrow table mdl_lag: %s", dbGetQuery(db_mdlcache_debug, "select count(*) from mdl_log")))
+dbDisconnect(db_mdlcache_debug)
+
+## now check (debug) gd_presence afterwards
+optmz_vrbl_lag(regspec_x, vrblx = "NY.GDP.PCAP.CDk", loop_nbr = 3, 
+               fldr_info = fldr_info_optmz,
+               reg_settings = reg_settings_garage)
+
+
+
+
+
 ## *** convergence failure infinite loop/db lock debugging
+## no longer relevant due to switch to PID log hack
 regspec_x <- get_reg_spec_from_id("X1XX3XXX3X553315111111115--cbn1--full--nr--TRUE--glmmTMB--rates--X4XX4XXX3X445552153333224--hn5ii90wi99--3--X1XX3XXX3X553315111111115--12--clctr_cnt_cpaer", fldr_info_optmz)
 
 reg_settings_garage <- copy(reg_settings_optmz) %>% `pluck<-`("wtf", value = F)
 
 optmz_reg_spec(regspec_x, fldr_info_optmz, reg_settings_garage)
 
+
+
+## *** some other test
+regspec_x <- get_reg_spec_from_id("XXX5XX3X5X553335511111115--cbn1--full--nr--TRUE--glmmTMB--rates--XXX3XX2X1X222231543344221--hn200iigwi99--3--XXX5XX3X5X553335511111115--14--NY.GDP.PCAP.CDk", fldr_info_optmz)
+
+optmz_reg_spec(regspec_x, fldr_info_optmz, reg_settings_garage)
+
+
+## *** some other basic test
 
 ## reg_spec_mdls_optmz[[10]]$df_idx %>% print(n=30)
 x <- reg_spec_mdls_optmz[[2]]
