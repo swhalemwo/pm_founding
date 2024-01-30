@@ -1470,6 +1470,40 @@ gl_regspecs_wid <- function(reg_spec, reg_settings, vrblx, loop_nbr) {
 }
 
 
+dbQuery_tryagain <- function(query, return_res, ...) {
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
+    1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;
+    #' run a query against a connection until it succeeds
+    #' @query the query (an R expression, involving conn)
+    #' @return_res if T, return the output (e.g. table)
+
+    nbr_failed <- 0
+    while (T) {
+        ## print(substitute(query))
+
+        query_res <- tryCatch({eval(substitute(query), envir = parent.frame())},
+                              error = \(e) e)
+
+        if (!is(query_res, "error")) {
+            break
+        } else {
+            nbr_failed <- nbr_failed + 1
+            time_to_sleep <- runif(1, nbr_failed + 1, nbr_failed + 2)
+            print(sprintf("query %s (%s), has failed %s times, now sleep %s",
+                          deparse(substitute(query)), Sys.getpid(), nbr_failed, time_to_sleep))
+            Sys.sleep(time_to_sleep)
+        }
+    }
+    if (return_res) {
+        return(query_res)
+    } else {
+        return(invisible(T))
+    }
+}
+        
+
+
+
 gd_presence <- function(reg_specs_w_ids, db_str, vrblx) {
     if (as.character(match.call()[[1]]) %in% fstd){browser()}
     #' see which models have already been run
@@ -1496,12 +1530,18 @@ gd_presence <- function(reg_specs_w_ids, db_str, vrblx) {
     db_mdlcache <- gb_mdlcache_locked(db_str, lock = F)
 
     ## get basic mdlcache information
-    dt_mdlcache_raw <- dbGetQuery(db_mdlcache, cmd_mdlcache) %>% adt
-    
+
+    ## dt_mdlcache_raw <- dbGetQuery(db_mdlcache, cmd_mdlcache) %>% adt
+
     ## dt_mdlcache_raw <- dbGetQuery(pool_mdlcache, cmd_mdlcache) %>% adt
     
-    ## dbExecute(db_mdlcache, "COMMIT") # unlock DB 
-    dbDisconnect(db_mdlcache) # disconnect to see if that fixes db lock errors.. 
+    ## dbExecute(db_mdlcache, "COMMIT") # unlock DB
+
+    dt_mdlcache_raw <- dbQuery_tryagain(dbGetQuery(db_mdlcache, cmd_mdlcache), return_res = T,
+                                        db_mdlcache = db_mdlcache, cmd_mdlcache = cmd_mdlcache) %>% adt
+    
+    dbQuery_tryagain(dbDisconnect(db_mdlcache), return_res = F)
+    ## dbDisconnect(db_mdlcache) # disconnect to see if that fixes db lock errors.. 
 
 
     ## drop models that have been run by different processes
@@ -1545,6 +1585,8 @@ gb_mdlcache_locked <- function(db_str, lock) {
 
     ## check that nobody else is writing to db
     ## while (is(db_mdlcache, "warning")) {
+    nbr_failed <- 0
+    
     while (T) {
                 
         db_mdlcache <- tryCatch(dbConnect(RSQLite::SQLite(), db_str),
@@ -1553,9 +1595,20 @@ gb_mdlcache_locked <- function(db_str, lock) {
         if (!is(db_mdlcache, "warning")) {
             break
         } else {
-            time_to_sleep <- runif(1, 0.1, 0.3)
-            print(sprintf("connection failed, now sleeping for %s seconds", round(time_to_sleep, 2)))
+            time_to_sleep <- runif(1, nbr_failed + 1, nbr_failed + 2)
+            print(sprintf("connection failed for %s, now sleeping for %s seconds",
+                          Sys.getpid(), round(time_to_sleep, 2)))
             Sys.sleep(time_to_sleep) # in case there is (and db_mdlcache is a warning) try again later
+            nbr_failed <- nbr_failed + 1
+
+            if (nbr_failed %% 10 == 0) {
+                time_to_breakout <- runif(1, nbr_failed + 1, nbr_failed + 2)
+                print(sprintf("connection failed %s times for %s; sleep for %s",
+                              nbr_failed, Sys.getpid(),
+                              round(time_to_breakout, 2)))                
+                Sys.sleep(time_to_breakout)
+                
+            }
         }
         
     }
@@ -1579,7 +1632,7 @@ wb_tryagain <- function(conn, table_name, dt_to_append) {
     #' @table_name DB table name
     #' @dt_to_append data.frame/table to append
     
-
+    nbr_failed <- 0
     while (T) {
         write_res <- tryCatch(dbAppendTable(conn, table_name, dt_to_append),
                               error = \(e) e)
@@ -1587,10 +1640,35 @@ wb_tryagain <- function(conn, table_name, dt_to_append) {
         if (!is(write_res, "error")) {
             break
         } else {
-            time_to_sleep <- runif(1, 0.04, 0.12)
-            print(sprintf("writing failed, now sleeping for %s seconds"), round(time_to_sleep,2))
+            time_to_sleep <- runif(1, nbr_failed + 1, nbr_failed + 2)
+            print(sprintf("writing failed for %s, now sleeping for %s seconds",
+                          Sys.getpid(), round(time_to_sleep,2)))
             Sys.sleep(time_to_sleep)
+            nbr_failed <- nbr_failed + 1
+
+            ## reconnect
+            db_name <- attr(conn, "dbname")
+            dbDisconnect(conn)
+            conn <- gb_mdlcache_locked(db_name, lock = F)
+            
+
+            if (nbr_failed %% 10 == 0) {
+                time_to_breakout <- runif(1, nbr_failed + 1, nbr_failed + 2)
+                print(sprintf("writing failed %s times for %s; sleep for %s", nbr_failed,
+                              Sys.getpid(),
+                              round(time_to_breakout, 2)))
+                Sys.sleep(time_to_breakout)
+
+
+                ## reconnect
+                ## conn <- attr(conn, "dbname") %>% 
+                ##     gb_mdlcache_locked(lock = F)
+            }
+
+            
         }
+
+        
     }
     return(invisible(T))
 }
@@ -1659,7 +1737,7 @@ w_lagoptim <- function(reg_settings, dt_presence, db_str) {
 
         ## dbExecute(db_mdlcache, "COMMIT") # unlock DB 
 
-        dbDisconnect(db_mdlcache) # close connection
+        dbQuery_tryagain(dbDisconnect(db_mdlcache), return_res = F) # close connection
 
         
     }
@@ -3126,10 +3204,10 @@ source(paste0(SCRIPT_DIR, "startup_reg.R"))
 vrbl_thld_choices_optmz <- slice_sample(vrbl_thld_choices, n=1)
 
 reg_settings_optmz <- list(
-    nbr_specs_per_thld = 5,
+    nbr_specs_per_thld = 8,
     dvfmts = c("rates"), # should also be counts, but multiple dvfmts not yet supported by reg_anls
-    batch_version = "v14",
-    lags = 1:5,
+    batch_version = "v16",
+    lags = 1:3,
     vary_vrbl_lag = F,
     technique_strs = c("nr"),
     difficulty_switches = T,
@@ -3137,7 +3215,7 @@ reg_settings_optmz <- list(
     cbns_to_include = names(cbn_df_dict$counts)[1],
     mdls_to_include = c("full"),
     wtf = T,
-    max_loop_nbr = 1
+    max_loop_nbr = 100
 )
 
 
@@ -3153,7 +3231,7 @@ setup_db_mdlcache(fldr_info_optmz)
 
 
 mclapply(reg_spec_mdls_optmz, \(x) optmz_reg_spec(x, fldr_info_optmz, reg_settings_optmz),
-         mc.cores = 5, mc.preschedule = F)
+         mc.cores = 8, mc.preschedule = F)
 
 stop("it's time to stop")
 print("models have been run, now combining files")
@@ -3190,6 +3268,7 @@ optmz_reg_spec(reg_spec_mdls_optmz[[3]], fldr_info_optmz, reg_settings_garage)
 
 
 
+
 ## *** some other test
 regspec_x <- get_reg_spec_from_id("XXX5XX3X5X553335511111115--cbn1--full--nr--TRUE--glmmTMB--rates--XXX3XX2X1X222231543344221--hn200iigwi99--3--XXX5XX3X5X553335511111115--14--NY.GDP.PCAP.CDk", fldr_info_optmz)
 
@@ -3210,7 +3289,13 @@ regspec_x <- get_reg_spec_from_id("XX5X4XXXX3443311213344112--cbn1--full--nr--TR
 
 optmz_reg_spec(regspec_x, fldr_info_optmz, reg_settings_garage)
 
+## *** wb_tryagain test
 
+reg_settings_garage <- copy(reg_settings_optmz) %>% `pluck<-`("wtf", value = F)
+conx <- dbConnect(RSQLite::SQLite(), "/home/johannes/reg_res/v16/mdl_cache.sqlite")
+dbGetQuery(conx, "select * from mdl_cache limit 10")
+
+optmz_reg_spec(regspec_x, fldr_info_optmz, reg_settings_garage)
 
 
 ## ** look at growth rate numbers
