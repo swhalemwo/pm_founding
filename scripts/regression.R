@@ -1571,6 +1571,32 @@ gb_mdlcache_locked <- function(db_str, lock) {
 }
 
 
+
+
+wb_tryagain <- function(conn, table_name, dt_to_append) {
+    #' try to append to DB until it succeeds
+    #' @conn DBI connection
+    #' @table_name DB table name
+    #' @dt_to_append data.frame/table to append
+    
+
+    while (T) {
+        write_res <- tryCatch(dbAppendTable(conn, table_name, dt_to_append),
+                              error = \(e) e)
+
+        if (!is(write_res, "error")) {
+            break
+        } else {
+            time_to_sleep <- runif(1, 0.04, 0.12)
+            print(sprintf("writing failed, now sleeping for %s seconds"), round(time_to_sleep,2))
+            Sys.sleep(time_to_sleep)
+        }
+    }
+    return(invisible(T))
+}
+        
+
+
 w_lagoptim <- function(reg_settings, dt_presence, db_str) {
     if (as.character(match.call()[[1]]) %in% fstd){browser()}
     ## write model results to db cache for later easy access
@@ -1604,14 +1630,32 @@ w_lagoptim <- function(reg_settings, dt_presence, db_str) {
         
         ## actually write to DB 
         ## write LL back to file
-        dbAppendTable(db_mdlcache, "mdl_cache", dt_to_write)
+        wb_tryagain(db_mdlcache, "mdl_cache", dt_to_write)
+
+
+       ## while (T) {
+       ##      write_res <- tryCatch(dbAppendTable(db_mdlcache, "mdl_cache", dt_to_write),
+       ##                            error = \(e) e)
+
+       ##      if (!is(write_res), "error") {
+       ##          break
+       ##      } else {
+       ##          time_to_sleep <- runif(1, 0.04, 0.12)
+       ##          print("writing failed, now sleeping for %s seconds", round(time_to_sleep,2))
+       ##          Sys.sleep(time_to_sleep)
+       ##      }
+       ##  }
+        
+        
+        
         ## dbAppendTable(pool_mdlcache, "mdl_cache", dt_to_write)
 
         ## write log of all the mdls that are run (either directly or indirectly)
-        dbAppendTable(db_mdlcache, "mdl_log",
-                      dt_presence[, .(mdl_id, cbn_name, lag_spec, loop_nbr, vrbl_optmzd)])
-        ## dbAppendTable(pool_mdlcache, "mdl_log",
+        ## dbAppendTable(db_mdlcache, "mdl_log",
         ##               dt_presence[, .(mdl_id, cbn_name, lag_spec, loop_nbr, vrbl_optmzd)])
+        
+        wb_tryagain(db_mdlcache, "mdl_log",
+                    dt_presence[, .(mdl_id, cbn_name, lag_spec, loop_nbr, vrbl_optmzd)])
 
         ## dbExecute(db_mdlcache, "COMMIT") # unlock DB 
 
