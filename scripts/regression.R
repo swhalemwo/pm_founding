@@ -1490,7 +1490,7 @@ dbQuery_tryagain <- function(query, return_res, ...) {
             nbr_failed <- nbr_failed + 1
             time_to_sleep <- runif(1, nbr_failed + 1, nbr_failed + 2)
             print(sprintf("query %s (%s), has failed %s times, now sleep %s",
-                          deparse(substitute(query)), Sys.getpid(), nbr_failed, time_to_sleep))
+                          deparse(substitute(query)), Sys.getpid(), nbr_failed, round(time_to_sleep, 2)))
             Sys.sleep(time_to_sleep)
         }
     }
@@ -1703,8 +1703,10 @@ w_lagoptim <- function(reg_settings, dt_presence, db_str) {
         
 
         ## print DB status
-        print(sprintf("nrow table mdl_cache: %s", dbGetQuery(db_mdlcache, "select count(*) from mdl_cache")))
-        print(sprintf("nrow table mdl_lag: %s", dbGetQuery(db_mdlcache, "select count(*) from mdl_log")))
+        print(sprintf("nrow table mdl_cache: %s",
+                      dbQuery_tryagain(dbGetQuery(db_mdlcache, "select count(*) from mdl_cache"), return_res = T)))
+        print(sprintf("nrow table mdl_lag: %s",
+                      dbQuery_tryagain(dbGetQuery(db_mdlcache, "select count(*) from mdl_log"), return_res = T)))
         
         ## actually write to DB 
         ## write LL back to file
@@ -3206,9 +3208,9 @@ source(paste0(SCRIPT_DIR, "startup_reg.R"))
 vrbl_thld_choices_optmz <- slice_sample(vrbl_thld_choices, n=1)
 
 reg_settings_optmz <- list(
-    nbr_specs_per_thld = 8,
+    nbr_specs_per_thld = 10,
     dvfmts = c("rates"), # should also be counts, but multiple dvfmts not yet supported by reg_anls
-    batch_version = "v16",
+    batch_version = "v17",
     lags = 1:3,
     vary_vrbl_lag = F,
     technique_strs = c("nr"),
@@ -3233,7 +3235,7 @@ setup_db_mdlcache(fldr_info_optmz)
 
 
 mclapply(reg_spec_mdls_optmz, \(x) optmz_reg_spec(x, fldr_info_optmz, reg_settings_optmz),
-         mc.cores = 8, mc.preschedule = F)
+         mc.cores = 10, mc.preschedule = F)
 
 stop("it's time to stop")
 print("models have been run, now combining files")
