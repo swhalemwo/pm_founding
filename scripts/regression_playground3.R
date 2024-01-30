@@ -599,3 +599,60 @@ ggplot(data, aes(x = X, y = Y)) +
   scale_color_manual(values = c("blue", "red")) +
   scale_linetype_manual(values = c("solid", "dashed")) +
   theme_minimal()
+
+## ** old garage
+
+## *** pid hacking in mdl_cache
+
+regspec_x <- get_reg_spec_from_id("XX5X4XXXX3443311213344112--cbn1--full--nr--TRUE--glmmTMB--rates--XX5X4XXXX3443311213344442--hn30ii90wig--4--XX5X4XXXX3443311213344112--0--pm_density_global", fldr_info_optmz)
+
+reg_settings_garage <- copy(reg_settings_optmz) %>% `pluck<-`("wtf", value = F)
+
+optmz_reg_spec(regspec_x, fldr_info_optmz, reg_settings_garage)
+
+
+## run exact same model with multiple threads
+
+reg_settings_garage <- copy(reg_settings_optmz) %>% `pluck<-`("wtf", value = T)
+reg_settings_garage <- copy(reg_settings_optmz) %>% `pluck<-`("wtf", value = F)
+
+db_mdlcache_debug <- gb_mdlcache_locked("/home/johannes/reg_res/v08/mdl_cache.sqlite", lock = F)
+print(sprintf("nrow table mdl_cache: %s", dbGetQuery(db_mdlcache_debug, "select count(*) from mdl_cache")))
+print(sprintf("nrow table mdl_lag: %s", dbGetQuery(db_mdlcache_debug, "select count(*) from mdl_log")))
+dbDisconnect(db_mdlcache_debug)
+
+gg <- mclapply(rep(list(regspec_x),3), \(x) optmz_vrbl_lag(x, vrblx = "NY.GDP.PCAP.CDk", loop_nbr = 3,
+                                               fldr_info = fldr_info_optmz,
+                                               reg_settings = reg_settings_garage),
+         mc.cores = 3)
+
+db_mdlcache_debug <- gb_mdlcache_locked("/home/johannes/reg_res/v08/mdl_cache.sqlite", lock = F)
+print(sprintf("nrow table mdl_cache: %s", dbGetQuery(db_mdlcache_debug, "select count(*) from mdl_cache")))
+print(sprintf("nrow table mdl_lag: %s", dbGetQuery(db_mdlcache_debug, "select count(*) from mdl_log")))
+dbDisconnect(db_mdlcache_debug)
+
+## now check (debug) gd_presence afterwards
+optmz_vrbl_lag(regspec_x, vrblx = "NY.GDP.PCAP.CDk", loop_nbr = 3, 
+               fldr_info = fldr_info_optmz,
+               reg_settings = reg_settings_garage)
+
+
+
+
+
+## *** convergence failure infinite loop/db lock debugging
+## no longer relevant due to switch to PID log hack
+regspec_x <- get_reg_spec_from_id("X1XX3XXX3X553315111111115--cbn1--full--nr--TRUE--glmmTMB--rates--X4XX4XXX3X445552153333224--hn5ii90wi99--3--X1XX3XXX3X553315111111115--12--clctr_cnt_cpaer", fldr_info_optmz)
+
+reg_settings_garage <- copy(reg_settings_optmz) %>% `pluck<-`("wtf", value = F)
+
+optmz_reg_spec(regspec_x, fldr_info_optmz, reg_settings_garage)
+
+## *** some other basic test
+
+## reg_spec_mdls_optmz[[10]]$df_idx %>% print(n=30)
+x <- reg_spec_mdls_optmz[[2]]
+## x$cfg$dvfmt <- "counts"
+## x$cfg$regcmd <- "menbreg"
+x$cfg$regcmd <- "glmmTMB"
+run_vrbl_mdl_vars(x, vvs, fldr_info_optmz, verbose = T, wtf = F)
