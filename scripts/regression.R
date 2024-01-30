@@ -1908,9 +1908,11 @@ optmz_reg_spec <- function(reg_spec, fldr_info, reg_settings) {
         l <- l+1
 
         ## allow interruption after previously set max loop nbr
-        if (reg_spec$cfg$loop_nbr == reg_settings$max_loop_nbr) {break}
+        ## if (reg_spec$cfg$loop_nbr == reg_settings$max_loop_nbr) {break}
 
     }
+    print(sprintf("PID %s finished processing a regspec", Sys.getpid()))
+    
     return (reg_spec)
 }
 
