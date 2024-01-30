@@ -1579,6 +1579,8 @@ gb_mdlcache_locked <- function(db_str, lock) {
         dbExecute(db_mdlcache, "BEGIN EXCLUSIVE")
     }
 
+    dbExecute(conn = db_mdlcache, "PRAGMA foreign_keys=ON")
+
     return(db_mdlcache)
 }
 
