@@ -3049,7 +3049,8 @@ setup_db_mdlcache <- function(fldr_info,  pool) {
     }
 
     if (pool) {
-        pool_mdlcache <- pool::dbPool(drv = RSQLite::SQLite(), dbname = db_str)
+        pool_mdlcache <- pool::dbPool(drv = RSQLite::SQLite(), dbname = db_str,
+                                      validateQuery = "select count(*) from mdl_cache")
         return(pool_mdlcache)
     } else {
         return(invisible(T))
@@ -3080,7 +3081,7 @@ vrbl_thld_choices_optmz <- slice_sample(vrbl_thld_choices, n=1)
 reg_settings_optmz <- list(
     nbr_specs_per_thld = 5,
     dvfmts = c("rates"), # should also be counts, but multiple dvfmts not yet supported by reg_anls
-    batch_version = "v10",
+    batch_version = "v11",
     lags = 1:5,
     vary_vrbl_lag = F,
     technique_strs = c("nr"),
