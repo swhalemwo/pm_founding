@@ -1829,6 +1829,9 @@ optmz_reg_spec <- function(reg_spec, fldr_info, reg_settings) {
         if (reg_spec$nbr_skipped_in_row > (len(vrbls_to_vary)*len(reg_settings$lags))+1) {break}
         l <- l+1
 
+        ## allow interruption after previously set max loop nbr
+        if (reg_spec$cfg$loop_nbr == reg_settings$max_loop_nbr) {break}
+
     }
     return (reg_spec)
 }
@@ -3125,7 +3128,7 @@ vrbl_thld_choices_optmz <- slice_sample(vrbl_thld_choices, n=1)
 reg_settings_optmz <- list(
     nbr_specs_per_thld = 5,
     dvfmts = c("rates"), # should also be counts, but multiple dvfmts not yet supported by reg_anls
-    batch_version = "v12",
+    batch_version = "v14",
     lags = 1:5,
     vary_vrbl_lag = F,
     technique_strs = c("nr"),
@@ -3133,7 +3136,8 @@ reg_settings_optmz <- list(
     regcmds = c("glmmTMB"),
     cbns_to_include = names(cbn_df_dict$counts)[1],
     mdls_to_include = c("full"),
-    wtf = T
+    wtf = T,
+    max_loop_nbr = 1
 )
 
 
