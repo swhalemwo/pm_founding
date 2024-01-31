@@ -5,7 +5,7 @@ args <- commandArgs(trailingOnly = T)
 options(width = 115)
 
 
-
+## *** data objects
 
 
 
@@ -1744,7 +1744,7 @@ gen_plt_pred_taxinc <- function(top_coefs) {
     mdl_idx <- top_coefs[vrbl_name_unlag == "Ind.tax.incentives" & cbn_name == "cbn1",
               .SD[which.max(log_likelihood), mdl_id]]
     
-    regspecx <- get_reg_spec_from_id(mdl_idx, fldr_info)
+    regspecx <- get_reg_spec_from_id(mdl_idx, fldr_info_optmz)
 
     tmitr_vrbl <- keep(regspecx$mdl_vars, ~grepl("tmitr_approx_linear20step_lag[0-5]", .x))
     interact_vrbl <- keep(regspecx$mdl_vars, ~grepl("ti_tmitr_interact_lag[0-5]", .x))
@@ -1860,7 +1860,7 @@ gen_plt_pred_smorc <- function(top_coefs) {
     mdl_idx <- top_coefs[vrbl_name_unlag == "smorc_dollar_fxm" & cbn_name == "cbn1",
                          .SD[which.max(log_likelihood), mdl_id]]
 
-    regspecx <- get_reg_spec_from_id(mdl_idx, fldr_info)
+    regspecx <- get_reg_spec_from_id(mdl_idx, fldr_info_optmz)
 
     smorc_vrbl <- keep(regspecx$mdl_vars, ~grepl("smorc_dollar_fxm_lag", .x))
     smorc_vrbl_sqrd <- keep(regspecx$mdl_vars, ~grepl("smorc_dollar_fxm_sqrd_lag", .x))
@@ -1916,7 +1916,7 @@ predder <- function(mdl_id, vrbl) {
     
     vrbl_scale <- scale(chuck(cbn_dfs_rates_uscld$cbn1, vrbl))
 
-    regspecx <- get_reg_spec_from_id(mdl_id, fldr_info)
+    regspecx <- get_reg_spec_from_id(mdl_id, fldr_info_optmz)
 
     dfx <- chuck(cbn_df_dict, "rates", chuck(regspecx, "cfg", "cbn_name"))
     iv_vars <- keep(setdiff(regspecx$mdl_vars, vvs$base_vars), ~!grepl("^SP\\.POP\\.TOTLm", .x))
@@ -2512,6 +2512,8 @@ c.screenreg <- function(trl) {
 ## }
     
 
+
+## *** table processing
 gen_tblcfg <- function(label, TABLE_DIR, caption, batch_version) {
     list(label = label,
          file = paste0(TABLE_DIR, label, "_", batch_version, ".tex"),
@@ -3850,16 +3852,21 @@ if (is.null(args[[1]])) {
 
 
 
-stop("functions done")
+## ** main 
 
-## ** main analysis
-stylecfg <- list(lbl_fntsz = 9)
+PROJECT_DIR <- "/home/johannes/Dropbox/phd/papers/org_pop/"
+SCRIPT_DIR <- paste0(PROJECT_DIR, "scripts/")
+
+source(paste0(SCRIPT_DIR, "startup_anls.R"))
+
+
+chstylecfg <- list(lbl_fntsz = 9)
 
 NBR_MDLS <- 1
-batch_version <- "v18"
+## batch_version <- fldr_info_optmz$batch_version
 ## fldr_info <- fldr_info_optmz
-fldr_info <- setup_regression_folders_and_files(batch_version)
-reg_anls_base <- read_reg_anls_files(fldr_info)
+## fldr_info <- setup_regression_folders_and_files(batch_version)
+reg_anls_base <- read_reg_anls_files(fldr_info_optmz)
 reg_res_objs <- proc_reg_res_objs(reg_anls_base, vvs, NBR_MDLS)
 
 
@@ -3871,19 +3878,14 @@ reg_res$plts <- gen_reg_res_plts(reg_res_objs, vvs, NBR_MDLS, only_priority_plts
 
 ## nreg_res$plts$plt_best_coefs_single_cbn1 <- gen_plt_best_coefs_single_cbn1(reg_res_objs$top_coefs)
 reg_res$plts$plt_vif <- gen_plt_vif(reg_res_objs$dt_vif_res, reg_res_objs$top_coefs)
-## render_reg_res("plt_cntrfctl", reg_res, batch_version = batch_version)
 
 ## gen_plt_oneout_llrt_z(reg_res_objs$ou_anls)
-## gen_plt_oneout_llrt_lldiff(reg_res_objs$ou_anls)
-
-## reg_res$plts$plt_oucoefchng_tile <- gen_plt_oucoefchng_tile(reg_res_objs$dt_oucoefchng)
-## render_reg_res("plt_oucoefchng_tile", reg_res, batch_version = "v75")
 
 plt_inspector(reg_res$plts)
 
-## plot inspection if there are few models (like in test runs) to draw proper violins, which then crashes ggplot
-reg_res$plts[names(reg_res$plts) %!in% c("plt_coef_violin", "plt_oneout_llrt_z",
-                                         "plt_oneout_llrt_lldiff", "plt_vif")] %>% plt_inspector
+## ## plot inspection if there are few models (like in test runs) to draw proper violins, which then crashes ggplot
+## reg_res$plts[names(reg_res$plts) %!in% c("plt_coef_violin", "plt_oneout_llrt_z",
+##                                          "plt_oneout_llrt_lldiff", "plt_vif")] %>% plt_inspector
 
 
 ## regenerate and render all plots

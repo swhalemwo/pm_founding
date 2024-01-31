@@ -2769,17 +2769,7 @@ setup_db_mdlcache <- function(fldr_info) {
 }
 
 
-## ## ** main
-
-## if (identical(args, character(0))) {
-##     stop("functions are done")
-## }
-
-
-## if (is.null(args[[1]])) {
-##     stop("functions are DONE")
-## }
-
+## ** stuff needed for postestimation and regression
 
 
 read_reg_res_files <- function(fldr_info) {
@@ -2825,7 +2815,7 @@ read_reg_res_files <- function(fldr_info) {
         .[, `:=`(mdl_id = NULL,
                  loop_nbr = NULL,
                  vrbl_optmzd = NULL,
-                 base_lag_spec = NULL,
+                 ## base_lag_spec = NULL,
                  ## t_diff = NULL,
                  vrblx = NULL,
                  vrbl_choice_cbn_nbr = NULL)] %>%
