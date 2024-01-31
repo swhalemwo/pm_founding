@@ -26,6 +26,8 @@ ENDING_YEAR <- 2020
 
 MAX_GAP_SIZE = 4
 
+NBR_THREADS <- 5
+
 colors_manual_light <- c("#a4e3a5","#f197c1","#98fff4","#f29a83","#2bcef0","#ffefa5","#75bfff","#c2bc71","#d6d3ff","#52bcae","#ffc9c2","#85b4b6","#f3ffd5","#b0ad84")
 
 ## colors_manual <- c("#c78ab5","#74b648","#6f4aca","#c7994f","#cb4fc2","#516833","#cd4872","#5cb099","#d25133","#6289c0","#814135","#613a76")
@@ -55,7 +57,8 @@ OBJS_TO_RDS_WRNGL <- .c(
     vrbl_thld_choices,
     cbn_df_dict,
     # for reg_anls (nbrs)
-    cbn_dfs_counts_uscld, 
+    cbn_dfs_counts_uscld,
+    cbn_dfs_rates,
     df_reg,
     df_reg_rts 
 )

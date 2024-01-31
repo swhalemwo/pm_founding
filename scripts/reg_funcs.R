@@ -1,5 +1,3 @@
-args <- commandArgs(trailingOnly = T)
-options(width = 115)
 
 ## * regression
 
@@ -2032,6 +2030,8 @@ gen_regspecs_ou <- function(reg_spec, vvs) {
 }
 
 gen_mdl_id_dt <- function(gof_df_cbn) {
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
+    
     #' construct some model id
     #' get data for the comparision: mdl_id for joining, LL and df for LLRT
     #' first filter by LL
@@ -2040,10 +2040,11 @@ gen_mdl_id_dt <- function(gof_df_cbn) {
         .[gof_names == "log_likelihood", .SD[which.max(gof_value)], by = .(cbn_name, vrbl_choice),
           .SDcols = c("mdl_id", "gof_value")] %>%
         .[, setnames(.SD, "gof_value", "log_likelihood")]
+    
     ## then add df
     mdl_id_dt <- gof_df_cbn %>% adt() %>%
         .[gof_names == "df", .(mdl_id, df = gof_value)] %>% 
-        .[mdl_id_dt_prep, on = "mdl_id"]
+        .[mdl_id_dt_prep, on = "mdl_id"] %>% funique
 
     return(mdl_id_dt)
 }
@@ -2233,22 +2234,6 @@ read_reg_res_files_ou <- function(fldr_info) {
 
 
 
-gen_top_coefs <- function(df_anls_base, gof_df_cbn) {
-    if (as.character(match.call()[[1]]) %in% fstd){browser()}
-
-    top_mdls_per_thld_choice <- gof_df_cbn %>% adt() %>%
-        .[!is.na(gof_value) & gof_names == "log_likelihood"] %>% # focus on lls
-        .[, vrbl_choice := gsub("[1-5]", "0", base_lag_spec)] %>% # again generate vrbl_choice urg
-        .[, .SD[which.max(gof_value)], by=.(cbn_name, vrbl_choice)] %>% # pick best fitting model
-        .[, .(mdl_id ,log_likelihood = gof_value)]
-
-    top_coefs <- df_anls_base %>% adt() %>% .[top_mdls_per_thld_choice, on ="mdl_id"] %>%
-        .[, vrbl_name_unlag := factor(vrbl_name_unlag, levels = rev(names(vvs$vrbl_lbls)))]
-        
-    
-    
-    return(top_coefs)
-}
 
 add_coef_sig <- function(coef_df,  df_reg_anls_cfgs_wide) {
     #' add significance to coefs

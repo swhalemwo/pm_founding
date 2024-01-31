@@ -1,3 +1,7 @@
+args <- commandArgs(trailingOnly = T)
+options(width = 115)
+
+
 ## * postestimation funcs 
 
 read_reg_res_files <- function(fldr_info) {
@@ -27,6 +31,9 @@ read_reg_res_files <- function(fldr_info) {
     dt_mdllog <- dbGetQuery(db_mdlcache,
                             "SELECT mdl_id, cbn_name, lag_spec, loop_nbr, vrbl_optmzd from mdl_log") %>% adt()
 
+    ## dbGetQuery(db_mdlcache,
+    ##            "select * from mdl_cache") %>% adt
+
     ## adt(df_reg_anls_cfgs_wide)[, uniqueN(paste0(cbn_name, lag_spec))]
     
     ## can I stretch df_reg_anls_cfgs_wide with dt_mdllog?
@@ -35,25 +42,28 @@ read_reg_res_files <- function(fldr_info) {
     ##     .[dt_mdllog, on = .(cbn_name, lag_spec)]
 
     ## delete some more variables to allow proper merging
-    df_reg_anls_cfgs_wide2 <- adt(df_reg_anls_cfgs_wide) %>%
+    ## some lagspecs were run multiple times, have different t_diffs -> just use first one
+    df_reg_anls_cfgs_wide2_prep <- adt(df_reg_anls_cfgs_wide) %>%
         .[, `:=`(mdl_id = NULL,
                  loop_nbr = NULL,
                  vrbl_optmzd = NULL,
                  base_lag_spec = NULL,
                  ## t_diff = NULL,
                  vrblx = NULL,
-                 vrbl_choice_cbn_nbr = NULL)] %>% funique %>%
+                 vrbl_choice_cbn_nbr = NULL)] %>%
+        .[, head(.SD,1), .(cbn_name, lag_spec)] 
+
+
+    df_reg_anls_cfgs_wide2 <- df_reg_anls_cfgs_wide2_prep %>% funique %>%
         .[dt_mdllog, on = .(cbn_name, lag_spec), allow.cartesian = T]
 
-    
-    
     
     all_mdl_res <- unique(filter(df_reg_anls_cfgs, cvrgd == 1)$mdl_id) %>%
         lapply(\(x) read_reg_res(x, fldr_info))
 
 
-    coef_df <- mclapply(all_mdl_res, \(x) atb(x[["coef_df"]]), mc.cores = 6) %>% bind_rows()
-    gof_df <- mclapply(all_mdl_res, \(x) x[["gof_df"]], mc.cores = 6) %>% bind_rows() %>% atb()
+    coef_df <- mclapply(all_mdl_res, \(x) atb(x[["coef_df"]]), mc.cores = NBR_THREADS) %>% bind_rows()
+    gof_df <- mclapply(all_mdl_res, \(x) x[["gof_df"]], mc.cores = NBR_THREADS) %>% bind_rows() %>% atb()
 
     ## "inflate" the coef_df/gof_df with the models that have not actually been run (but identical have been)
     ## first need to add cbn_name, lag_spec (unique identifiers)
@@ -239,7 +249,8 @@ gen_cntrfctl <- function(gof_df_cbn, fldr_info) {
     t2 <- Sys.time()
     t2-t1
     
-    l_cntrfctl_res <- mclapply(mdl_id_dt$mdl_id, \(x) gen_preds_given_mdfd_vrbls(x, fldr_info), mc.cores = 5)
+    l_cntrfctl_res <- mclapply(mdl_id_dt$mdl_id, \(x) gen_preds_given_mdfd_vrbls(x, fldr_info),
+                               mc.cores = NBR_THREADS)
 
     dt_cntrfctl_cons <- map(l_cntrfctl_res, ~chuck(.x, "dt_predres_cons")) %>% rbindlist()
 
@@ -289,12 +300,12 @@ one_out_setup_and_run <- function(batch_version, gof_df_cbn) {
 
     ## get original reg_spec to modify 
     reg_specs_orig <- mclapply(mdl_id_dt[, mdl_id],
-                               \(x) get_reg_spec_from_id(x, fldr_info = fldr_info), mc.cores = 4)
+                               \(x) get_reg_spec_from_id(x, fldr_info = fldr_info), mc.cores = NBR_THREADS)
 
     
     ## modify original regspecs to make them work with one-out
         
-    regspecs_ou <- mclapply(reg_specs_orig, \(x) gen_regspecs_ou(x, vvs), mc.cores = 4) %>% flatten()
+    regspecs_ou <- mclapply(reg_specs_orig, \(x) gen_regspecs_ou(x, vvs), mc.cores = NBR_THREADS) %>% flatten()
     print(paste0("number of regspecs_ou: ", len(regspecs_ou)))
 
     ## map_chr(regspecs_ou, ~chuck(.x, "cfg", "cbn_name")) %>% table()
@@ -342,7 +353,7 @@ one_out_setup_and_run <- function(batch_version, gof_df_cbn) {
     
     if (len(setdiff(ou_ids, ou_files)) != 0) {
         ## run modified regspecs
-        mclapply(regspecs_ou, \(x) run_vrbl_mdl_vars(x, vvs, fldr_info_ou), mc.cores = 4)
+        mclapply(regspecs_ou, \(x) run_vrbl_mdl_vars(x, vvs, fldr_info_ou), mc.cores = NBR_THREADS)
     }
 
     cbn_splitted_files(grep_pattern = "_cfgs.csv", fldr_info = fldr_info_ou) 
@@ -357,8 +368,28 @@ one_out_setup_and_run <- function(batch_version, gof_df_cbn) {
 }
 
 
+## ** VIF
+gen_top_coefs <- function(df_anls_base, gof_df_cbn) {
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
+
+    top_mdls_per_thld_choice <- gof_df_cbn %>% adt() %>%
+        .[!is.na(gof_value) & gof_names == "log_likelihood"] %>% # focus on lls
+        .[, vrbl_choice := gsub("[1-5]", "0", lag_spec)] %>% # again generate vrbl_choice urg
+        .[, .SD[which.max(gof_value)], by=.(cbn_name, vrbl_choice)] %>% # pick best fitting model
+        .[, .(mdl_id ,log_likelihood = gof_value)]
+
+    top_coefs <- df_anls_base %>% adt() %>% .[top_mdls_per_thld_choice, on ="mdl_id"] %>%
+        .[, vrbl_name_unlag := factor(vrbl_name_unlag, levels = rev(names(vvs$vrbl_lbls)))]
+        
+    
+    
+    return(top_coefs)
+}
+
+
 
 ## ** combined 
+
 
 postestimation <- function(fldr_info) {
     if (as.character(match.call()[[1]]) %in% fstd){browser()}
@@ -401,7 +432,7 @@ postestimation <- function(fldr_info) {
 
 }
 
-## ** 
+
 
 if (identical(args, character(0))) {
     stop("functions are done")
@@ -418,6 +449,13 @@ PROJECT_DIR <- "/home/johannes/Dropbox/phd/papers/org_pop/"
 SCRIPT_DIR <- paste0(PROJECT_DIR, "scripts/")
 
 source(paste0(SCRIPT_DIR, "startup_postestimation.R"))
+
+print("combining files")
+
+cbn_splitted_files("_cfgs.csv[0-9]", fldr_info_optmz)
+
+print("files have been combined, now saving files")
+
 
 print("run postestimation")
 

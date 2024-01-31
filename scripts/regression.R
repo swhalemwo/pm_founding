@@ -1,5 +1,9 @@
 ## * regression
 
+args <- commandArgs(trailingOnly = T)
+options(width = 115)
+
+
 PROJECT_DIR <- "/home/johannes/Dropbox/phd/papers/org_pop/"
 SCRIPT_DIR <- paste0(PROJECT_DIR, "scripts/")
 
@@ -36,14 +40,10 @@ setup_db_mdlcache(fldr_info_optmz)
 
 
 mclapply(reg_spec_mdls_optmz, \(x) optmz_reg_spec(x, fldr_info_optmz, reg_settings_optmz),
-         mc.cores = 5, mc.preschedule = F)
+         mc.cores = NBR_THREADS, mc.preschedule = F)
 
 
-print("models have been run, now combining files")
-
-cbn_splitted_files("_cfgs.csv[0-9]", fldr_info_optmz)
-
-print("files have been combined, now saving files")
+print("models have been run, now saving files")
 
 walk(OBJS_TO_RDS_REG, ~saveRDS(get(.x), file = paste0(RDS_DIR, .x, ".rds")))
 
