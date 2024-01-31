@@ -3205,13 +3205,13 @@ source(paste0(SCRIPT_DIR, "startup_reg.R"))
 
 
 
-vrbl_thld_choices_optmz <- slice_sample(vrbl_thld_choices, n=1)
+vrbl_thld_choices_optmz <- slice_sample(vrbl_thld_choices, n=36)
 
 reg_settings_optmz <- list(
-    nbr_specs_per_thld = 10,
+    nbr_specs_per_thld = 2,
     dvfmts = c("rates"), # should also be counts, but multiple dvfmts not yet supported by reg_anls
-    batch_version = "v17",
-    lags = 1:3,
+    batch_version = "v18",
+    lags = 1:5,
     vary_vrbl_lag = F,
     technique_strs = c("nr"),
     difficulty_switches = T,
@@ -3235,7 +3235,7 @@ setup_db_mdlcache(fldr_info_optmz)
 
 
 mclapply(reg_spec_mdls_optmz, \(x) optmz_reg_spec(x, fldr_info_optmz, reg_settings_optmz),
-         mc.cores = 10, mc.preschedule = F)
+         mc.cores = 5, mc.preschedule = F)
 
 stop("it's time to stop")
 print("models have been run, now combining files")
