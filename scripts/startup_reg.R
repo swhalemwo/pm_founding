@@ -25,6 +25,7 @@ filter <- dplyr::filter
 source(paste0(SCRIPT_DIR, "startup_static.R"))
 source(paste0(SCRIPT_DIR, "gen_cbn_df_dict.R"))
 source(paste0(SCRIPT_DIR, "custom_funcs.R"))
+source(paste0(SCRIPT_DIR, "reg_funcs.R"))
 
 ## read back objects from wrangling stage
 walk(OBJS_TO_RDS_WRNGL, ~assign(.x, value = readRDS(file = paste0(RDS_DIR, .x, ".rds")), envir = .GlobalEnv))
