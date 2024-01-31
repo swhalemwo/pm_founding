@@ -1,6 +1,8 @@
 args <- commandArgs(trailingOnly = T)
 options(width = 115)
 library(data.table)
+library(collapse)
+library(purrr)
 library(parallel) # parallel
 library(docstring) # documentation
 library(DBI) # databases
