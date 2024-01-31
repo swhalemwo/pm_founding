@@ -122,19 +122,24 @@ gendt_oucoefchng <- function(ou_objs, df_anls_base) {
         .[, .(mdl_id_ou = mdl_id, vrbl_name_unlag = gsub("_lag[1-5]", "", vrbl_name), coef_ou = coef)] %>%
         ## need to nonou_id here
         .[dt_oucfg_wide[, .(mdl_id, nonou_id, ou_set_title)], on = .(mdl_id_ou = mdl_id)] %>%
-        .[, ou_set_title := gsub("_lag[1-5]", "", ou_set_title)]
+        .[, ou_set_title := gsub("_lag[1-5]", "", ou_set_title)] %>% na.omit
         
 
     ## get original coefs
     dt_coefs_nonou <- adt(df_anls_base) %>%
         ## only select columns needed here atm 
         .[, .(mdl_id, vrbl_name_unlag, coef, cbn_name)] %>%
-        ## only need nonou_id here to filter to filter down to original coefs
+        ## only need nonou_id here to filter down to original coefs
         .[dt_oucfg_wide[, .(nonou_id = unique(nonou_id))], on = .(mdl_id = nonou_id)]
 
     ## combine original and one-out coefs
-    dt_coef_cprn <- dt_coefs_nonou[dt_coefs_ou, on = .(mdl_id = nonou_id, vrbl_name_unlag)]
+    ## dt_coef_cprn <- dt_coefs_nonou[dt_coefs_ou, on = .(mdl_id = nonou_id, vrbl_name_unlag)]
+    ## dt_coefs_ou[, .N, .(nonou_id, vrbl_name_unlag)]
 
+    dt_coef_cprn <- join(dt_coefs_ou, dt_coefs_nonou, on = c("nonou_id" = "mdl_id", "vrbl_name_unlag"),
+                         verbose = 1)
+
+    
     ## some debuggin
     
     ## dt_coef_cprn[ou_set_title == "sptinc992j_p90p100" & vrbl_name_unlag == "shweal992j_p90p100" &
