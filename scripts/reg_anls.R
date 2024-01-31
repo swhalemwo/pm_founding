@@ -171,8 +171,357 @@ gendt_oucoefchng <- function(ou_objs, df_anls_base) {
 
 ## gendt_oucoefchng(reg_anls_base$ou_objs, reg_res_objs$df_anls_base)
 
+construct_df_anls_within_prep <- function(df_anls_base, optmzd) {
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
+    #' construct the within-base-spec changes:
+    #' only get the coefs of variables where the variable is varied (within base-spec changes)
+    #' only get coefs where all 5 variations converged
+    
+    df_anls_within_prep1 <- df_anls_base %>%
+        filter(vrbl_name_unlag != vrbl_name) %>% ## only use the lag variables
+        mutate(lag = as.numeric(substring(str_extract(vrbl_name, "_lag(\\d+)"), 5)))
 
 
+    ## if reg_res is created by step-wise optimization, vrbl_varied is not available 
+    ## here it's created from vrbl_optmzd, which is the best within-lag variation I think I have for optmzed runs
+    ## if optmzd: also group by loop_nbr: otherwise super large
+    
+    if (optmzd) {
+        df_anls_within_prep2 <- df_anls_within_prep1 %>%
+            mutate(vrbl_varied = vrbl_optmzd)
+        
+        group_vrbls <- c("vrbl_name_unlag", "cbn_name", "base_lag_spec_id", "regcmd", "loop_nbr")
+
+    } else {
+        df_anls_within_prep2 <- df_anls_within_prep1
+        group_vrbls <- c("vrbl_name_unlag", "cbn_name", "base_lag_spec_id", "regcmd")
+    }
+    
+    ## only use within-base_spec changes, add special case for tmitr
+    df_anls_within_prep3 <- df_anls_within_prep2 %>% 
+        filter(vrbl_varied == vrbl_name_unlag |
+               (vrbl_varied == "tmitr_approx_linear20step" & vrbl_name_unlag == "ti_tmitr_interact") 
+              ,cbn_name != "cbn_controls")
+
+    ## names(df_anls_within_prep3)
+    ## dt_anls_within_prep3 <- adt(df_anls_within_prep3)
+    ## dt_anls_within_prep3[, lapply(.SD, uniqueN)] %>% melt() ## check nbr of unique values, maybe lagspec?
+    ## dt_anls_within_prep3[, .N, lag_spec][, .N, N] ## doesn't seem like it: so much
+    
+
+    df_anls_within_prep4 <- df_anls_within_prep3 %>%
+        group_by(vrbl_name_unlag, cbn_name) %>%
+        mutate(base_lag_spec_id = as.numeric(factor(base_lag_spec)))
+
+    ## add some lag_variation ID (lag_variatn): convert to dt because dt is awesome
+    ## lag_variatn: the grouping of models by varying the lag of one variable while keeping all others constant
+    dt_anls_within_prep4 <- adt(df_anls_within_prep4)
+    dt_anls_within_prep4[, lag_variatn := .GRP, by = group_vrbls]
+    ## dt_anls_within_prep4[, .N, group_vrbls][, .N, N] ## check the grouping counts
+    ## dt_anls_within_prep4[, .N, lag_variatn][, .N, N]
+
+    ## only use the models that have as many models converged as the groups with the most models
+    ## hopefully equivalent to number of lags
+    nbr_mdls_max <- dt_anls_within_prep4[, .N, lag_variatn][, max(N)]
+
+    nbr_mdls_max <- 5
+
+    df_anls_within_prep5 <- atb(dt_anls_within_prep4) %>%
+        group_by(across(all_of(group_vrbls))) %>% # haha plain english verbs make it so EZ AMIRITE
+        mutate(nbr_mdls_cvrgd = len(base_lag_spec_id)) %>% 
+        filter(nbr_mdls_cvrgd == nbr_mdls_max)
+
+
+    return(df_anls_within_prep5)
+
+}
+
+
+
+
+construct_time_invariant_coefs <- function(df_anls_base, vvs, df_anls_within_prep2, NBR_MDLS) {
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
+    #' grab some coefs of cross-sectional variables, to be rbinded with the longitudinal coefs
+    
+    df_anls_time_invariant_prep1 <- df_anls_base %>%
+        filter(vrbl_name %in% vvs$crscn_vars)
+
+    ## inner_join(df_anls_time_invariant_prep1, df_anls_within_prep2, on = "mdl_id")
+    ## intersect(df_anls_time_invariant_prep1$mdl_id, df_anls_within_prep2$mdl_id) %>% len()
+
+    ## can't get ALL the coefs of invariant variables from the models used in df_anls_within_prep2:
+    ## each model has its own set of coefs for the time-invariant variables -> way too many
+    ## just pick some top ones -> need gof
+
+    ## join with data table because for some reason inner_join doesn't work?
+    dt_anls_time_invariant_prep2 <- adt(df_anls_time_invariant_prep1)[
+        ## include all kinds of variables in df_anls_within_prep2 that are later need in rbind 
+        adt(df_anls_within_prep2)[, .(mdl_id,gof_value, lag_variatn, base_lag_spec_id, nbr_mdls_cvrgd)],
+        on = "mdl_id"]
+      
+    ## need to get the mdls from which I want to take coefs
+    ## then use the mdl_ids to get the coefs of time-invariant vrbls
+    ## and also use the mdl_ids to get the lag_variatn/gof_value from df_anls_within_prep2 to rbind stuff together
+    ## LUL actually don't need to because .SD is just so amazing in tucking all the vrbls I need in there
+
+    grp_vrbls <- c("regcmd", "cbn_name", "vrbl_name_unlag")
+
+    ## order the data.table, select top models
+    time_invrnt_mdl_ids <- dt_anls_time_invariant_prep2[order(-gof_value), .SD[1:NBR_MDLS], by= grp_vrbls]
+
+    ## just assign lag = 3 to time invariant variables
+    time_invrnt_mdl_ids$lag <- 3
+
+    ## if optzmd: make sure that time invariant-variables are also properly labeled 
+    if ("vrbl_optmzd" %in% names(time_invrnt_mdl_ids)) {
+        time_invrnt_mdl_ids$vrbl_varied = time_invrnt_mdl_ids$vrbl_optmzd
+    }
+            
+    ## plot(time_invrnt_mdl_ids$gof_value)
+    ## data.table seems robust enough to allow different group order? 
+    ## len(intersect(time_invrnt_mdl_ids$mdl_id, time_invrnt_mdl_ids2$mdl_id))
+    ## grp_vrbls2 <- c("vrbl_name_unlag", "regcmd", "cbn_name")
+    ## time_invrnt_mdl_ids2 <- dt_anls_time_invariant_prep2[order(-gof_value), .SD[1:NBR_MDLS], by= grp_vrbls2]
+    ## plot(dt_anls_time_invariant_prep2[order(-gof_value), .SD, by= grp_vrbls2]$gof_value)
+    ## plot(dt_anls_time_invariant_prep2[order(-gof_value), .SD, by = grp_vrbls]$gof_value)
+
+    ##     group_by(cbn_name, vrbl_name) %>%
+    ##     slice_sample(n=15) %>%
+    ##     mutate(base_lag_spec_id = 1,
+    ##            lag = 1,
+    ##            nbr_mdls_cvrgd = 1)
+
+    ## return(df_anls_time_invariant)
+
+    return(atb(time_invrnt_mdl_ids))
+}
+
+construct_df_anls_within <- function(df_anls_base, vvs, NBR_MDLS, optmzd, gof_df_cbn) {
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
+    #' construct the dataset of the within lag-spec changes
+
+    df_anls_within_prep <- construct_df_anls_within_prep(df_anls_base, optmzd = optmzd)
+
+    gof_df_cbn_fltrd <- gof_df_cbn %>%
+        filter(gof_names == "log_likelihood") %>%
+        select(mdl_id, gof_value)
+
+    ## intersect(names(df_anls_within_prep), names(gof_df_cbn_fltrd))
+
+    df_anls_within_prep1 <- inner_join(df_anls_within_prep, gof_df_cbn_fltrd, by="mdl_id")
+
+    ## filter out a number of models per lag (and cbn)
+    ## really seems like I need to stick to this awkward filtering: 
+    ## slicing would only select rows, not groups of rows:
+    ## -> either drop coefs or get all (when also grouping by base_lag_spec_id)
+    ## df_anls_within_prep2 <- df_anls_within_prep %>%
+    ##     group_by(cbn_name, vrbl_name_unlag, regcmd) %>%
+    ##     filter(base_lag_spec_id %in% sample(unique(base_lag_spec_id),
+    ##                                         min(NBR_MDLS, n_distinct(base_lag_spec_id))))
+
+    ## ## only select coefs from the NBR_MDLS best fitting ones
+    ## ## probably have to re-number the base_lag_spec_ids
+    ## df_anls_within_prep2 <- df_anls_within_prep1 %>%
+    ##     group_by(cbn_name, vrbl_name_unlag, regcmd) %>%
+    ##     arrange(-gof_value) %>%
+    ##     mutate(base_lag_spec_id2 = as.numeric(factor(base_lag_spec))) %>%
+    ##     select(mdl_id, gof_value, base_lag_spec_id2) %>% 
+    ##     print(n=200)
+        
+
+    ##     filter(base_lag_spec_id %in% sample(unique(base_lag_spec_id),
+    ##                                         min(NBR_MDLS, n_distinct(base_lag_spec_id))))
+
+    
+
+    df_lag_variatns <- df_anls_within_prep1 %>%
+        group_by(cbn_name, vrbl_name_unlag, regcmd, lag_variatn) %>%
+        summarize(max_gof = max(gof_value)) %>%
+        group_by(regcmd, cbn_name, vrbl_name_unlag) %>%
+        slice_max(max_gof, n=NBR_MDLS, with_ties = F) %>%
+        ungroup() %>% 
+        select(lag_variatn)
+    
+    df_anls_within_prep2 <- inner_join(df_lag_variatns, df_anls_within_prep1, by="lag_variatn") 
+    ## select(-lag_variatn, -gof_value) ## yeet variables that are not in df_anls_time_invariant
+    ## ehhh should add them there as well
+    
+    ## should get the time-invariant coefs of the mdls that I'm using in df_anls_within_prep2
+    
+    df_anls_time_invariant <- construct_time_invariant_coefs(df_anls_base, vvs, df_anls_within_prep2, NBR_MDLS)
+
+    ## setdiff(names(df_anls_within_prep2), names(df_anls_time_invariant))
+
+    df_anls_within <- rbind(df_anls_within_prep2, df_anls_time_invariant)
+
+    ## order the factors: use the vvs$vrbl_lbls order
+    df_anls_within$vrbl_name_unlag <- factor(df_anls_within$vrbl_name_unlag,
+                                             levels = names(vvs$vrbl_lbls)[names(vvs$vrbl_lbls) %in%
+                                                                           unique(df_anls_within$vrbl_name_unlag)])
+    ## c(vvs$ti_vars, vvs$density_vars, vvs$hnwi_vars,
+    ##   vvs$inc_ineq_vars, vvs$weal_ineq_vars,
+    ##   vvs$cult_spending_vars, vvs$ctrl_vars_lngtd,
+    ##   vvs$crscn_vars))
+
+
+    return(df_anls_within)
+}
+
+
+
+construct_df_anls_all <- function(df_anls_base, vvs, NBR_MDLS) {
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
+    #' pick coefs from all models 
+
+    df_anls_all <- df_anls_base %>%
+        filter(vrbl_name_unlag != vrbl_name) %>% ## only use lagged variables
+        mutate(lag = as.numeric(substring(str_extract(vrbl_name, "_lag(\\d+)"), 5))) %>%
+        filter(cbn_name != "cbn_controls") %>%
+        group_by(vrbl_name_unlag, cbn_name, lag) %>%
+        slice_sample(n=NBR_MDLS)
+
+    ## table(df_anls_all$vrbl_name_unlag)
+
+    ## adt(df_anls_all)[, .N, by = .(vrbl_name_unlag, cbn_name, lag)][order(N)]
+
+    df_anls_all$vrbl_name_unlag <- factor(df_anls_all$vrbl_name_unlag,
+                                          levels = c(names(vvs$vrbl_lbls)[names(vvs$vrbl_lbls) %in%
+                                                                          df_anls_all$vrbl_name_unlag]))
+
+    return(df_anls_all)
+}
+
+construct_df_best_mdls <- function(df_anls_base, gof_df_cbn) {
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
+    #' construct the data of the best fitting models per combination
+    
+
+    ## filter out HNWI 1B for now 
+    df_anls_base_no1B <- df_anls_base %>% group_by(mdl_id) %>%
+        filter("hnwi_nbr_1B" %!in% vrbl_name_unlag)
+
+    ## add some check to make sure there are no NAs in gof_value
+    if (any(is.na(gof_df_cbn$gof_value))) {
+        stop("some NAs in gof_df_cbn$gof_value (construct_df_best_mdls)")}
+
+    ## select best model per combination
+    best_mdls <- gof_df_cbn %>%
+        filter(gof_names == "log_likelihood", cbn_name != "cbn_controls",
+               mdl_id %in% unique(df_anls_base_no1B$mdl_id)) %>%
+        filter(!is.na(gof_value)) %>% 
+        group_by(cbn_name, regcmd) %>% 
+        arrange(gof_value) %>%
+        slice_tail(n=1)
+    
+    ## gof_df_cbn %>% filter(is.na(gof_value)) %>% pull(mdl_id)
+
+
+    best_mdl_coefs <- merge(df_anls_base, best_mdls) %>% atb()
+    
+    ## setdiff(unique(best_mdl_coefs$vrbl_name_unlag), names(vvs$vrbl_lbls))
+
+    ## best_mdl_coefs$lag <- as.numeric(substring(str_extract(best_mdl_coefs$vrbl_name, "_lag(\\d+)"), 5))
+    ## best_mdl_coefs$lag[is.na(best_mdl_coefs$lag)] <- 0
+    
+    ## vrbl_levels <- c("sum_core", vvs$ti_vars, vvs$density_vars, vvs$hnwi_vars, vvs$inc_ineq_vars,
+    ##                  vvs$weal_ineq_vars, vvs$cult_spending_vars, vvs$ctrl_vars_lngtd)
+    
+    ## other_var_names <- c(unique(best_mdl_coefs$vrbl_name_unlag)[unique(best_mdl_coefs$vrbl_name_unlag) %!in% vrbl_levels])
+    ## levels = c(vrbl_levels, other_var_names))
+    
+
+    ## filter out stuff I don't need
+    best_mdl_coefs2 <- filter(best_mdl_coefs, vrbl_name_unlag %!in%
+                                              c("ln_s", "cons", "ln_r", "alpha", "intcpt_var"))
+
+    ## reordering the variables: TI, hnwi, inequ, cult spending, controls (defined in vvs$vrbl_labels)
+   
+    vrbl_lbls <- names(vvs$vrbl_lbls)[names(vvs$vrbl_lbls) %in% unique(best_mdl_coefs2$vrbl_name_unlag)]
+
+    best_mdl_coefs3 <- best_mdl_coefs2 %>%
+        mutate(vrbl_name_unlag = factor(vrbl_name_unlag, levels = vrbl_lbls))
+
+
+    return(best_mdl_coefs3)
+}
+
+
+construct_best_mdls_summary <- function(df_best_mdls) {
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
+    #' summary variables for best models 
+    
+    mdl_summary <- df_best_mdls %>% group_by(vrbl_name_unlag, cbn_name, regcmd) %>%
+        summarize(coef = mean(coef), lag_mean = mean(lag), lag_sd = sd(lag), p_value = mean(pvalues),
+                  t_value = mean(t_value), se = mean(se), min = coef - 1.96*se, max = coef + 1.96*se,
+                  sig = ifelse(abs(t_value) > 1.96, 1,0))
+
+    ## have to reverse order to make points look good 
+    mdl_summary$vrbl_name_unlag <- factor(mdl_summary$vrbl_name_unlag,
+                                          levels = rev(levels(mdl_summary$vrbl_name_unlag)))
+
+    return(mdl_summary)
+}
+
+
+proc_reg_res_objs <- function(reg_anls_base, vvs, NBR_MDLS) {
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
+    #' further processing of the regression res objects, no reading-in here
+
+    
+    coef_df <- reg_anls_base$coef_df
+    df_reg_anls_cfgs_wide <- reg_anls_base$df_reg_anls_cfgs_wide
+    gof_df_cbn <- reg_anls_base$gof_df_cbn
+
+
+
+    ## merging significance to all coefs (maybe can be 
+    df_anls_base <- add_coef_sig(coef_df, df_reg_anls_cfgs_wide)
+
+    ou_objs <- reg_anls_base$ou_objs
+    ## number of models to pick for the analyses
+    
+
+    optmzd = "loop_nbr" %in% names(gof_df_cbn)
+        
+    df_anls_within <- construct_df_anls_within(df_anls_base, vvs, NBR_MDLS, optmzd, gof_df_cbn)
+    df_anls_all <- construct_df_anls_all(df_anls_base, vvs, NBR_MDLS)
+
+    df_best_mdls <- construct_df_best_mdls(df_anls_base, gof_df_cbn)
+    mdl_summary <- construct_best_mdls_summary(df_best_mdls)
+
+    top_coefs <- gen_top_coefs(df_anls_base, gof_df_cbn)
+    
+    ou_procd <- proc_ou_files(ou_objs, gof_df_cbn, top_coefs)
+
+    ## generate change of coef size from one-out models (what happens to all coefs when variable X gets yeeted)
+    dt_oucoefchng <- gendt_oucoefchng(ou_objs, df_anls_base)
+
+
+    return(
+        list(
+            gof_df_cbn = gof_df_cbn,
+            df_anls_base = df_anls_base,
+            df_anls_within = df_anls_within,
+            df_anls_all = df_anls_all,
+            df_best_mdls = df_best_mdls,
+            mdl_summary = mdl_summary,
+            top_coefs = top_coefs,
+            top_coefs_llrt = ou_procd$top_coefs_llrt,
+            ou_anls = ou_procd$ou_anls,
+            dt_vif_res = reg_anls_base$dt_vif_res,
+            dt_oucoefchng = dt_oucoefchng,
+            dt_cntrfctl_cons = reg_anls_base$dt_cntrfctl_cons,
+            dt_cntrfctl_wse = reg_anls_base$dt_cntrfctl_wse,
+            dt_velp_scalars = reg_anls_base$dt_velp_scalars,
+            dt_velp_crycoefs = reg_anls_base$dt_velp_crycoefs
+        )
+    )
+    
+}
+
+
+
+## *** plotting
 
 gen_plt_oucoefchng_tile <- function(dt_oucoefchng) {
     #' plot of one-out coef changes, but as tiles
@@ -638,353 +987,6 @@ gen_plt_velp <- function(dt_velp_crycoefs, dt_velp_scalars) {
 
 
 
-construct_df_anls_within_prep <- function(df_anls_base, optmzd) {
-    if (as.character(match.call()[[1]]) %in% fstd){browser()}
-    #' construct the within-base-spec changes:
-    #' only get the coefs of variables where the variable is varied (within base-spec changes)
-    #' only get coefs where all 5 variations converged
-    
-    df_anls_within_prep1 <- df_anls_base %>%
-        filter(vrbl_name_unlag != vrbl_name) %>% ## only use the lag variables
-        mutate(lag = as.numeric(substring(str_extract(vrbl_name, "_lag(\\d+)"), 5)))
-
-
-    ## if reg_res is created by step-wise optimization, vrbl_varied is not available 
-    ## here it's created from vrbl_optmzd, which is the best within-lag variation I think I have for optmzed runs
-    ## if optmzd: also group by loop_nbr: otherwise super large
-    
-    if (optmzd) {
-        df_anls_within_prep2 <- df_anls_within_prep1 %>%
-            mutate(vrbl_varied = vrbl_optmzd)
-        
-        group_vrbls <- c("vrbl_name_unlag", "cbn_name", "base_lag_spec_id", "regcmd", "loop_nbr")
-
-    } else {
-        df_anls_within_prep2 <- df_anls_within_prep1
-        group_vrbls <- c("vrbl_name_unlag", "cbn_name", "base_lag_spec_id", "regcmd")
-    }
-    
-    ## only use within-base_spec changes, add special case for tmitr
-    df_anls_within_prep3 <- df_anls_within_prep2 %>% 
-        filter(vrbl_varied == vrbl_name_unlag |
-               (vrbl_varied == "tmitr_approx_linear20step" & vrbl_name_unlag == "ti_tmitr_interact") 
-              ,cbn_name != "cbn_controls")
-
-    ## names(df_anls_within_prep3)
-    ## dt_anls_within_prep3 <- adt(df_anls_within_prep3)
-    ## dt_anls_within_prep3[, lapply(.SD, uniqueN)] %>% melt() ## check nbr of unique values, maybe lagspec?
-    ## dt_anls_within_prep3[, .N, lag_spec][, .N, N] ## doesn't seem like it: so much
-    
-
-    df_anls_within_prep4 <- df_anls_within_prep3 %>%
-        group_by(vrbl_name_unlag, cbn_name) %>%
-        mutate(base_lag_spec_id = as.numeric(factor(base_lag_spec)))
-
-    ## add some lag_variation ID (lag_variatn): convert to dt because dt is awesome
-    ## lag_variatn: the grouping of models by varying the lag of one variable while keeping all others constant
-    dt_anls_within_prep4 <- adt(df_anls_within_prep4)
-    dt_anls_within_prep4[, lag_variatn := .GRP, by = group_vrbls]
-    ## dt_anls_within_prep4[, .N, group_vrbls][, .N, N] ## check the grouping counts
-    ## dt_anls_within_prep4[, .N, lag_variatn][, .N, N]
-
-    ## only use the models that have as many models converged as the groups with the most models
-    ## hopefully equivalent to number of lags
-    nbr_mdls_max <- dt_anls_within_prep4[, .N, lag_variatn][, max(N)]
-
-    nbr_mdls_max <- 5
-
-    df_anls_within_prep5 <- atb(dt_anls_within_prep4) %>%
-        group_by(across(all_of(group_vrbls))) %>% # haha plain english verbs make it so EZ AMIRITE
-        mutate(nbr_mdls_cvrgd = len(base_lag_spec_id)) %>% 
-        filter(nbr_mdls_cvrgd == nbr_mdls_max)
-
-
-    return(df_anls_within_prep5)
-
-}
-
-
-
-
-construct_time_invariant_coefs <- function(df_anls_base, vvs, df_anls_within_prep2, NBR_MDLS) {
-    if (as.character(match.call()[[1]]) %in% fstd){browser()}
-    #' grab some coefs of cross-sectional variables, to be rbinded with the longitudinal coefs
-    
-    df_anls_time_invariant_prep1 <- df_anls_base %>%
-        filter(vrbl_name %in% vvs$crscn_vars)
-
-    ## inner_join(df_anls_time_invariant_prep1, df_anls_within_prep2, on = "mdl_id")
-    ## intersect(df_anls_time_invariant_prep1$mdl_id, df_anls_within_prep2$mdl_id) %>% len()
-
-    ## can't get ALL the coefs of invariant variables from the models used in df_anls_within_prep2:
-    ## each model has its own set of coefs for the time-invariant variables -> way too many
-    ## just pick some top ones -> need gof
-
-    ## join with data table because for some reason inner_join doesn't work?
-    dt_anls_time_invariant_prep2 <- adt(df_anls_time_invariant_prep1)[
-        ## include all kinds of variables in df_anls_within_prep2 that are later need in rbind 
-        adt(df_anls_within_prep2)[, .(mdl_id,gof_value, lag_variatn, base_lag_spec_id, nbr_mdls_cvrgd)],
-        on = "mdl_id"]
-      
-    ## need to get the mdls from which I want to take coefs
-    ## then use the mdl_ids to get the coefs of time-invariant vrbls
-    ## and also use the mdl_ids to get the lag_variatn/gof_value from df_anls_within_prep2 to rbind stuff together
-    ## LUL actually don't need to because .SD is just so amazing in tucking all the vrbls I need in there
-
-    grp_vrbls <- c("regcmd", "cbn_name", "vrbl_name_unlag")
-
-    ## order the data.table, select top models
-    time_invrnt_mdl_ids <- dt_anls_time_invariant_prep2[order(-gof_value), .SD[1:NBR_MDLS], by= grp_vrbls]
-
-    ## just assign lag = 3 to time invariant variables
-    time_invrnt_mdl_ids$lag <- 3
-
-    ## if optzmd: make sure that time invariant-variables are also properly labeled 
-    if ("vrbl_optmzd" %in% names(time_invrnt_mdl_ids)) {
-        time_invrnt_mdl_ids$vrbl_varied = time_invrnt_mdl_ids$vrbl_optmzd
-    }
-            
-    ## plot(time_invrnt_mdl_ids$gof_value)
-    ## data.table seems robust enough to allow different group order? 
-    ## len(intersect(time_invrnt_mdl_ids$mdl_id, time_invrnt_mdl_ids2$mdl_id))
-    ## grp_vrbls2 <- c("vrbl_name_unlag", "regcmd", "cbn_name")
-    ## time_invrnt_mdl_ids2 <- dt_anls_time_invariant_prep2[order(-gof_value), .SD[1:NBR_MDLS], by= grp_vrbls2]
-    ## plot(dt_anls_time_invariant_prep2[order(-gof_value), .SD, by= grp_vrbls2]$gof_value)
-    ## plot(dt_anls_time_invariant_prep2[order(-gof_value), .SD, by = grp_vrbls]$gof_value)
-
-    ##     group_by(cbn_name, vrbl_name) %>%
-    ##     slice_sample(n=15) %>%
-    ##     mutate(base_lag_spec_id = 1,
-    ##            lag = 1,
-    ##            nbr_mdls_cvrgd = 1)
-
-    ## return(df_anls_time_invariant)
-
-    return(atb(time_invrnt_mdl_ids))
-}
-
-construct_df_anls_within <- function(df_anls_base, vvs, NBR_MDLS, optmzd, gof_df_cbn) {
-    if (as.character(match.call()[[1]]) %in% fstd){browser()}
-    #' construct the dataset of the within lag-spec changes
-
-    df_anls_within_prep <- construct_df_anls_within_prep(df_anls_base, optmzd = optmzd)
-
-    gof_df_cbn_fltrd <- gof_df_cbn %>%
-        filter(gof_names == "log_likelihood") %>%
-        select(mdl_id, gof_value)
-
-    ## intersect(names(df_anls_within_prep), names(gof_df_cbn_fltrd))
-
-    df_anls_within_prep1 <- inner_join(df_anls_within_prep, gof_df_cbn_fltrd, by="mdl_id")
-
-    ## filter out a number of models per lag (and cbn)
-    ## really seems like I need to stick to this awkward filtering: 
-    ## slicing would only select rows, not groups of rows:
-    ## -> either drop coefs or get all (when also grouping by base_lag_spec_id)
-    ## df_anls_within_prep2 <- df_anls_within_prep %>%
-    ##     group_by(cbn_name, vrbl_name_unlag, regcmd) %>%
-    ##     filter(base_lag_spec_id %in% sample(unique(base_lag_spec_id),
-    ##                                         min(NBR_MDLS, n_distinct(base_lag_spec_id))))
-
-    ## ## only select coefs from the NBR_MDLS best fitting ones
-    ## ## probably have to re-number the base_lag_spec_ids
-    ## df_anls_within_prep2 <- df_anls_within_prep1 %>%
-    ##     group_by(cbn_name, vrbl_name_unlag, regcmd) %>%
-    ##     arrange(-gof_value) %>%
-    ##     mutate(base_lag_spec_id2 = as.numeric(factor(base_lag_spec))) %>%
-    ##     select(mdl_id, gof_value, base_lag_spec_id2) %>% 
-    ##     print(n=200)
-        
-
-    ##     filter(base_lag_spec_id %in% sample(unique(base_lag_spec_id),
-    ##                                         min(NBR_MDLS, n_distinct(base_lag_spec_id))))
-
-    
-
-    df_lag_variatns <- df_anls_within_prep1 %>%
-        group_by(cbn_name, vrbl_name_unlag, regcmd, lag_variatn) %>%
-        summarize(max_gof = max(gof_value)) %>%
-        group_by(regcmd, cbn_name, vrbl_name_unlag) %>%
-        slice_max(max_gof, n=NBR_MDLS, with_ties = F) %>%
-        ungroup() %>% 
-        select(lag_variatn)
-    
-    df_anls_within_prep2 <- inner_join(df_lag_variatns, df_anls_within_prep1, by="lag_variatn") 
-    ## select(-lag_variatn, -gof_value) ## yeet variables that are not in df_anls_time_invariant
-    ## ehhh should add them there as well
-    
-    ## should get the time-invariant coefs of the mdls that I'm using in df_anls_within_prep2
-    
-    df_anls_time_invariant <- construct_time_invariant_coefs(df_anls_base, vvs, df_anls_within_prep2, NBR_MDLS)
-
-    ## setdiff(names(df_anls_within_prep2), names(df_anls_time_invariant))
-
-    df_anls_within <- rbind(df_anls_within_prep2, df_anls_time_invariant)
-
-    ## order the factors: use the vvs$vrbl_lbls order
-    df_anls_within$vrbl_name_unlag <- factor(df_anls_within$vrbl_name_unlag,
-                                             levels = names(vvs$vrbl_lbls)[names(vvs$vrbl_lbls) %in%
-                                                                           unique(df_anls_within$vrbl_name_unlag)])
-    ## c(vvs$ti_vars, vvs$density_vars, vvs$hnwi_vars,
-    ##   vvs$inc_ineq_vars, vvs$weal_ineq_vars,
-    ##   vvs$cult_spending_vars, vvs$ctrl_vars_lngtd,
-    ##   vvs$crscn_vars))
-
-
-    return(df_anls_within)
-}
-
-
-
-construct_df_anls_all <- function(df_anls_base, vvs, NBR_MDLS) {
-    if (as.character(match.call()[[1]]) %in% fstd){browser()}
-    #' pick coefs from all models 
-
-    df_anls_all <- df_anls_base %>%
-        filter(vrbl_name_unlag != vrbl_name) %>% ## only use lagged variables
-        mutate(lag = as.numeric(substring(str_extract(vrbl_name, "_lag(\\d+)"), 5))) %>%
-        filter(cbn_name != "cbn_controls") %>%
-        group_by(vrbl_name_unlag, cbn_name, lag) %>%
-        slice_sample(n=NBR_MDLS)
-
-    ## table(df_anls_all$vrbl_name_unlag)
-
-    ## adt(df_anls_all)[, .N, by = .(vrbl_name_unlag, cbn_name, lag)][order(N)]
-
-    df_anls_all$vrbl_name_unlag <- factor(df_anls_all$vrbl_name_unlag,
-                                          levels = c(names(vvs$vrbl_lbls)[names(vvs$vrbl_lbls) %in%
-                                                                          df_anls_all$vrbl_name_unlag]))
-
-    return(df_anls_all)
-}
-
-construct_df_best_mdls <- function(df_anls_base, gof_df_cbn) {
-    if (as.character(match.call()[[1]]) %in% fstd){browser()}
-    #' construct the data of the best fitting models per combination
-    
-
-    ## filter out HNWI 1B for now 
-    df_anls_base_no1B <- df_anls_base %>% group_by(mdl_id) %>%
-        filter("hnwi_nbr_1B" %!in% vrbl_name_unlag)
-
-    ## add some check to make sure there are no NAs in gof_value
-    if (any(is.na(gof_df_cbn$gof_value))) {
-        stop("some NAs in gof_df_cbn$gof_value (construct_df_best_mdls)")}
-
-    ## select best model per combination
-    best_mdls <- gof_df_cbn %>%
-        filter(gof_names == "log_likelihood", cbn_name != "cbn_controls",
-               mdl_id %in% unique(df_anls_base_no1B$mdl_id)) %>%
-        filter(!is.na(gof_value)) %>% 
-        group_by(cbn_name, regcmd) %>% 
-        arrange(gof_value) %>%
-        slice_tail(n=1)
-    
-    ## gof_df_cbn %>% filter(is.na(gof_value)) %>% pull(mdl_id)
-
-
-    best_mdl_coefs <- merge(df_anls_base, best_mdls) %>% atb()
-    
-    ## setdiff(unique(best_mdl_coefs$vrbl_name_unlag), names(vvs$vrbl_lbls))
-
-    ## best_mdl_coefs$lag <- as.numeric(substring(str_extract(best_mdl_coefs$vrbl_name, "_lag(\\d+)"), 5))
-    ## best_mdl_coefs$lag[is.na(best_mdl_coefs$lag)] <- 0
-    
-    ## vrbl_levels <- c("sum_core", vvs$ti_vars, vvs$density_vars, vvs$hnwi_vars, vvs$inc_ineq_vars,
-    ##                  vvs$weal_ineq_vars, vvs$cult_spending_vars, vvs$ctrl_vars_lngtd)
-    
-    ## other_var_names <- c(unique(best_mdl_coefs$vrbl_name_unlag)[unique(best_mdl_coefs$vrbl_name_unlag) %!in% vrbl_levels])
-    ## levels = c(vrbl_levels, other_var_names))
-    
-
-    ## filter out stuff I don't need
-    best_mdl_coefs2 <- filter(best_mdl_coefs, vrbl_name_unlag %!in%
-                                              c("ln_s", "cons", "ln_r", "alpha", "intcpt_var"))
-
-    ## reordering the variables: TI, hnwi, inequ, cult spending, controls (defined in vvs$vrbl_labels)
-   
-    vrbl_lbls <- names(vvs$vrbl_lbls)[names(vvs$vrbl_lbls) %in% unique(best_mdl_coefs2$vrbl_name_unlag)]
-
-    best_mdl_coefs3 <- best_mdl_coefs2 %>%
-        mutate(vrbl_name_unlag = factor(vrbl_name_unlag, levels = vrbl_lbls))
-
-
-    return(best_mdl_coefs3)
-}
-
-
-construct_best_mdls_summary <- function(df_best_mdls) {
-    if (as.character(match.call()[[1]]) %in% fstd){browser()}
-    #' summary variables for best models 
-    
-    mdl_summary <- df_best_mdls %>% group_by(vrbl_name_unlag, cbn_name, regcmd) %>%
-        summarize(coef = mean(coef), lag_mean = mean(lag), lag_sd = sd(lag), p_value = mean(pvalues),
-                  t_value = mean(t_value), se = mean(se), min = coef - 1.96*se, max = coef + 1.96*se,
-                  sig = ifelse(abs(t_value) > 1.96, 1,0))
-
-    ## have to reverse order to make points look good 
-    mdl_summary$vrbl_name_unlag <- factor(mdl_summary$vrbl_name_unlag,
-                                          levels = rev(levels(mdl_summary$vrbl_name_unlag)))
-
-    return(mdl_summary)
-}
-
-
-proc_reg_res_objs <- function(reg_anls_base, vvs, NBR_MDLS) {
-    if (as.character(match.call()[[1]]) %in% fstd){browser()}
-    #' further processing of the regression res objects, no reading-in here
-
-    
-    coef_df <- reg_anls_base$coef_df
-    df_reg_anls_cfgs_wide <- reg_anls_base$df_reg_anls_cfgs_wide
-    gof_df_cbn <- reg_anls_base$gof_df_cbn
-
-
-
-    ## merging significance to all coefs (maybe can be 
-    df_anls_base <- add_coef_sig(coef_df, df_reg_anls_cfgs_wide)
-
-    ou_objs <- reg_anls_base$ou_objs
-    ## number of models to pick for the analyses
-    
-
-    optmzd = "loop_nbr" %in% names(gof_df_cbn)
-        
-    df_anls_within <- construct_df_anls_within(df_anls_base, vvs, NBR_MDLS, optmzd, gof_df_cbn)
-    df_anls_all <- construct_df_anls_all(df_anls_base, vvs, NBR_MDLS)
-
-    df_best_mdls <- construct_df_best_mdls(df_anls_base, gof_df_cbn)
-    mdl_summary <- construct_best_mdls_summary(df_best_mdls)
-
-    top_coefs <- gen_top_coefs(df_anls_base, gof_df_cbn)
-    
-    ou_procd <- proc_ou_files(ou_objs, gof_df_cbn, top_coefs)
-
-    ## generate change of coef size from one-out models (what happens to all coefs when variable X gets yeeted)
-    dt_oucoefchng <- gendt_oucoefchng(ou_objs, df_anls_base)
-
-
-    return(
-        list(
-            gof_df_cbn = gof_df_cbn,
-            df_anls_base = df_anls_base,
-            df_anls_within = df_anls_within,
-            df_anls_all = df_anls_all,
-            df_best_mdls = df_best_mdls,
-            mdl_summary = mdl_summary,
-            top_coefs = top_coefs,
-            top_coefs_llrt = ou_procd$top_coefs_llrt,
-            ou_anls = ou_procd$ou_anls,
-            dt_vif_res = reg_anls_base$dt_vif_res,
-            dt_oucoefchng = dt_oucoefchng,
-            dt_cntrfctl_cons = reg_anls_base$dt_cntrfctl_cons,
-            dt_cntrfctl_wse = reg_anls_base$dt_cntrfctl_wse,
-            dt_velp_scalars = reg_anls_base$dt_velp_scalars,
-            dt_velp_crycoefs = reg_anls_base$dt_velp_crycoefs
-        )
-    )
-    
-}
 
 ## gen_plt_mdl_summary(mdl_summary, vvs)
 
