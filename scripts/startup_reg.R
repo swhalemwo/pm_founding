@@ -4,24 +4,16 @@ options(width = 115)
 library(data.table)
 library(dplyr)
 library(purrr)
-library(furrr) # parallel processing
-library(performance) # probably postestimation (VIF)
 library(glmmTMB) # regression
 library(ggplot2)
 library(parallel) # parallel
 library(docstring) # documentation
 library(DBI) # databases
-library(xtable) # table generation, maybe yeet
 library(rsdmx) # saving model results
-library(Hmisc, include.only = "latexTranslate") # table generation?, maybe yeet?
 library(collapse) # data processing
-library(modelsummary) # analysis? maybe can be yeeted? but maybe postestimation -> TESTME
+library(modelsummary) # needed, probably for GOF? 
 library(RSQLite) # caching
 
-## library(ps) # should be obsolte by now: no more stata
-## library(RStata)
-## options(RStata.StataPath = "/usr/local/stata14/stata")
-## options(RStata.StataVersion = 14)
 
 
 ## make sure all kinds of basic functions aren't masked
