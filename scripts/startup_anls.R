@@ -3,22 +3,23 @@ options(width = 115)
 library(data.table)
 library(collapse)
 library(purrr)      
-library(furrr)      # rendering of figures
-library(parallel)   # parallel
-library(docstring)  # documentation
-library(xtable)     # table generation
-library(Hmisc,      # table generation
+library(furrr)       # rendering of figures
+library(parallel)    # parallel
+library(docstring)   # documentation
+library(xtable)      # table generation
+library(Hmisc,       # table generation
         include.only = "latexTranslate") 
-library(tidyr)      # pivot_longer/wider
-library(stringr)    # string processing
-library(ggbeeswarm) # visualization
-library(patchwork)  # visualization
-library(ggridges)   # visualization
-library(ggrepel)    # visualization
-library(DBI)        # connection to mdl caches i guess
-library(glmmTMB)    # running predicted figures
-library(texreg,     # table generation
+library(tidyr)       # pivot_longer/wider
+library(stringr)     # string processing
+library(ggbeeswarm)  # visualization
+library(patchwork)   # visualization
+library(ggridges)    # visualization
+library(ggrepel)     # visualization
+library(DBI)         # connection to mdl caches i guess
+library(glmmTMB)     # running predicted figures
+library(texreg,      # table generation
         include.only = "coeftostring")
+library(countrycode) # summary table
 
 ## library(sf)
 ## library(stars)

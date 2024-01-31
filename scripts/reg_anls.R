@@ -3860,7 +3860,7 @@ SCRIPT_DIR <- paste0(PROJECT_DIR, "scripts/")
 source(paste0(SCRIPT_DIR, "startup_anls.R"))
 
 
-chstylecfg <- list(lbl_fntsz = 9)
+stylecfg <- list(lbl_fntsz = 9)
 
 NBR_MDLS <- 1
 ## batch_version <- fldr_info_optmz$batch_version
@@ -3890,21 +3890,21 @@ plt_inspector(reg_res$plts)
 
 ## regenerate and render all plots
 reg_res$plts <- gen_reg_res_plts(reg_res_objs, vvs, NBR_MDLS, only_priority_plts = T, stylecfg)
-purrr::map(names(reg_res$plts), ~render_reg_res(.x, reg_res, batch_version = batch_version))
+purrr::map(names(reg_res$plts), ~render_reg_res(.x, reg_res, batch_version = fldr_info_optmz$batch_version))
 ## only render those plots that are generated (not all version plots)
 pdftk_cmd <- sprintf("cd %s && pdftk %s output plts_%s.pdf", FIG_DIR,
                      paste0(paste0("plt_", batch_version, "_", gsub("plt_", "", names(reg_res$plts)), ".pdf"),
                             collapse = " "),
-                     batch_version)
+                     fldr_info_optmz$batch_version)
 system(pdftk_cmd)
 
 ## tables
-res_tbls <- gen_res_tbls(reg_res_objs)
+res_tbls <- gen_res_tbls(reg_res_objs) 
 pvxtbl(res_tbls$tbl_regrslts_wcptblF, landscape = T)
 pvxtbl(res_tbls$tbl_descs, landscape = T)
 pvxtbl(res_tbls$tbl_cbn_cpsgn, landscape = T)
 
-iwalk(res_tbls, ~do.call("render_xtbl", c(.x, gen_tblcfgs(TABLE_DIR, batch_version)[[.y]])))
+iwalk(res_tbls, ~do.call("render_xtbl", c(.x, gen_tblcfgs(TABLE_DIR, fldr_info_optmz$batch_version)[[.y]])))
 
 ## ** predicting
 
