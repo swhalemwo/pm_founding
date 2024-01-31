@@ -1,16 +1,8 @@
-## * header
+## * regression analysis
 ## ** functions 
 
-library(stringr)
-library(ggbeeswarm)
-library(patchwork)
-library(ggridges)
-
-## library(sf)
-## library(stars)
-
-library(scales, include.only = "trans_format")
-
+args <- commandArgs(trailingOnly = T)
+options(width = 115)
 
 
 
@@ -3717,6 +3709,14 @@ theme_orgpop <- function(extra_space_top=2) {
     )
 }
 
+if (identical(args, character(0))) {
+    stop("functions are done")
+}
+
+if (is.null(args[[1]])) {
+    stop("functions are DONE")
+}
+
 
 
 stop("functions done")
@@ -3725,7 +3725,7 @@ stop("functions done")
 stylecfg <- list(lbl_fntsz = 9)
 
 NBR_MDLS <- 1
-batch_version <- "v98"
+batch_version <- "v18"
 ## fldr_info <- fldr_info_optmz
 fldr_info <- setup_regression_folders_and_files(batch_version)
 reg_anls_base <- read_reg_anls_files(fldr_info)
