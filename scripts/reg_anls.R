@@ -1248,10 +1248,10 @@ gen_plt_cvrgnc <- function(gof_df_cbn) {
     ## first: get the top values (values only go up)
 
     cvrgnc_df_prep <- filter(gof_df_cbn, gof_names == "log_likelihood") %>%
-        select(mdl_id, gof_value, loop_nbr, vrbl_optmzd, cbn_name, regcmd, vrbl_choice, vrbl_choice_cbn_nbr) %>%
+        select(mdl_id, gof_value, loop_nbr, vrbl_optmzd, cbn_name, regcmd, vrbl_choice) %>% # vrbl_choice_cbn_nbr
         mutate(step_base = 1,
                loop_nbr = as.numeric(loop_nbr),
-               base_lag_spec = paste0(cbn_name, vrbl_choice, vrbl_choice_cbn_nbr))
+               base_lag_spec = paste0(cbn_name, vrbl_choice)) # vrbl_choice_cbn_nbr
                ## vrbl_choice = gsub("[1-5]", "0", base_lag_spec))
 
     ## cvrgnc_df_prep %>% ggplot(aes(x=gof_value)) +
@@ -1272,7 +1272,8 @@ gen_plt_cvrgnc <- function(gof_df_cbn) {
         ## group_by(vrbl_choice, base_lag_spec, regcmd, cbn_name) %>% # get top values 
         slice_max(gof_value, n=1, with_ties = F) %>%
         group_by(cbn_name, vrbl_choice, regcmd) %>% ## group by nbr_specs per thld
-        summarize(n_gof = len(gof_value), n_distinct_gof = n_distinct(gof_value), var_gof = sd(gof_value),
+        summarize(n_gof = len(gof_value), n_distinct_gof = n_distinct(gof_value),
+                  var_gof = sd(gof_value, na.rm = T),
                   vlu_proc = paste0(table(gof_value), collapse = "")) %>%
         adt()
 
