@@ -81,6 +81,6 @@ cbn_df_dict <- list(counts = cbn_dfs_counts,
 
 print("writing objects to file")
 
-walk(OBJS_TO_RDS, ~saveRDS(get(.x), file = paste0(RDS_DIR, .x, ".rds")))
+walk(OBJS_TO_RDS_WRNGL, ~saveRDS(get(.x), file = paste0(RDS_DIR, .x, ".rds")))
 
 

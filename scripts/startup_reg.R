@@ -27,14 +27,15 @@ library(RSQLite) # caching
 ## make sure all kinds of basic functions aren't masked
 select <- dplyr::select
 lag <- dplyr::lag
-
+filter <- dplyr::filter
 
 
 source(paste0(SCRIPT_DIR, "startup_static.R"))
 source(paste0(SCRIPT_DIR, "gen_cbn_df_dict.R"))
 source(paste0(SCRIPT_DIR, "custom_funcs.R"))
 
-walk(OBJS_TO_RDS, ~assign(.x, value = readRDS(file = paste0(RDS_DIR, .x, ".rds")), envir = .GlobalEnv))
+## read back objects from wrangling stage
+walk(OBJS_TO_RDS_WRNGL, ~assign(.x, value = readRDS(file = paste0(RDS_DIR, .x, ".rds")), envir = .GlobalEnv))
 
 
      

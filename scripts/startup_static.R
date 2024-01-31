@@ -48,7 +48,7 @@ options(ggrepel.max.overlaps = 100) # set some option for ggrepel
 ## These which get written to file after data wrangling data, and get read in for regression part
 
 
-OBJS_TO_RDS <- .c(
+OBJS_TO_RDS_WRNGL <- .c(
     ## regression
     vvs,
     vrbl_cbns,
@@ -58,4 +58,8 @@ OBJS_TO_RDS <- .c(
     cbn_dfs_counts_uscld, 
     df_reg,
     df_reg_rts 
-    )
+)
+
+OBJS_TO_RDS_REG <- .c(
+    fldr_info_optmz)
+

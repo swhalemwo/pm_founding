@@ -3237,18 +3237,14 @@ setup_db_mdlcache(fldr_info_optmz)
 mclapply(reg_spec_mdls_optmz, \(x) optmz_reg_spec(x, fldr_info_optmz, reg_settings_optmz),
          mc.cores = 5, mc.preschedule = F)
 
-stop("it's time to stop")
+
 print("models have been run, now combining files")
 
 cbn_splitted_files("_cfgs.csv[0-9]", fldr_info_optmz)
 
-print("files have been combined, now run postestimation")
+print("files have been combined, now saving files")
 
-## run the one-out analysis
-
-
-postestimation(fldr_info_optmz)
-
+walk(OBJS_TO_RDS_REG, ~saveRDS(get(.x), file = paste0(RDS_DIR, .x, ".rds")))
 ## one_out_setup_and_run("v67")
 
 
