@@ -57,8 +57,9 @@ OBJS_TO_RDS_WRNGL <- .c(
     vrbl_thld_choices,
     cbn_df_dict,
     # for reg_anls (nbrs)
-    cbn_dfs_counts_uscld,
     cbn_dfs_rates,
+    cbn_dfs_counts_uscld,
+    cbn_dfs_rates_uscld,
     df_reg,
     df_reg_rts 
 )
