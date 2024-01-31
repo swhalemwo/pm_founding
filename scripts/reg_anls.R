@@ -2710,6 +2710,129 @@ gen_res_tbls <- function(reg_res_objs) {
 
 
 
+gen_dt_splong <- function(dfs_cbnsx, df_regx) {
+    #' generate super long (quintuple) dataframe: iso3c, year, cbn_name, variable, value
+    #' useful for summary descriptives across combinations
+    
+    dtx_cbn <- imap(dfs_cbnsx[1:3], ~adt(.x)[, cbn_name := .y]) %>% # cbn_dfds_rates_uscld go brrr
+        map_dfr(~adt(select(df_regx, iso3c, year, nbr_opened_prop))[.x, on =.(iso3c, year)]) %>% # add DV
+        melt(id.vars = c("iso3c", "year", "cbn_name")) %>%
+        ## yeet obs with lag!=0 and keep unlagged (crscn,dv)
+        .[grepl("_lag0$", variable) | !grepl("_lag\\d$", variable)] %>%
+        .[!grepl("_sqrd", variable) & !grepl("_interact", variable)] %>% # yeet squared/interactions
+        .[, variable := gsub("_lag0", "", variable)] # yeet remaining lag indication
+
+    return(dtx_cbn)
+}
+
+
+gentbl_sum_stats_rates <- function(df_regx, dfs_cbnsx, vvs) {
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
+    #' create and render summary stats
+
+    dtx_cbn <- gen_dt_splong(dfs_cbnsx, df_regx)
+
+    ## adt(df_regx)[, .(iso3c, year, nbr_opened, nbr_opened_prop, SP.POP.TOTLm)] %>% copy() %>%
+    ##     .[, rate_opened := nbr_opened/SP.POP.TOTLm] %>% 
+    ##     ## .[nbr_opened_prop != 0]
+    ##     .[nbr_opened_prop != rate_opened]
+        ## .[, .(mean_old = mean(nbr_opened_prop, na.rm = T), mean_new = mean(rate_opened, na.rm = T))]
+    
+
+    ## ## get variable classes
+    ## dt_vrblcls <- sapply(dfs_cbnsx$cbn_all, class) %>%
+    ##     data.table(vrbl = names(.), cls = unname(.)) %>% .[, .(vrbl, cls)]
+    ## dt_vrblcls[, .N, cls] %>% print(n=1000)
+
+    ## dtx <- dfs_cbnsx$cbn_all %>% adt()
+    ## class(as.numeric(dtx$pm_density_global_lag0))
+    ## ## class(dtx$year)
+    ## as.numeric
+    ## as.integer(dtx$gptinc992j_lag0)
+
+    ## sapply(dtx[, 2:ncol(dtx)], \(x) all(x %% 1 == 0))
+    ## dtx[, 2:ncol(dtx)]
+     
+    ## adt(dfs_cbnsx$cbn_all)[, lapply(.SD, \(x) is.integer(x))]
+
+    ## dtx_cbn %>% copy() %>%
+    ##     .[, is.int := all(value %% 1 == 0), variable] %>%
+    ##     .[is.int == T] %>% 
+    ##     .[, .N, variable]
+
+    ## dtx_cbn[, .N, variable] %>% print(n=30)
+
+    
+    ## generate statistics separately
+    func_names = c("mean", "sd", "min", "max")
+    funcs <- lapply(func_names, get)
+    sumry_sprt <- dtx_cbn[, lapply(funcs, \(x) x(value)), by = c("cbn_name", "variable")]
+    setnames(sumry_sprt, c("cbn_name", "variable", func_names))
+
+    ## generate combination names
+    cbn_lbls_dt <- data.table(cbn_name = names(vvs$cbn_lbls), cbn_lbl = vvs$cbn_lbls)
+    cbn_lbls_dt$n <- map_int(cbn_lbls_dt$cbn_name, ~nrow(cbn_dfs_rates[[.x]]))
+    cbn_lbls_dt[, cbn_lbl := sprintf("%s (n=%s)", cbn_lbl, n)]
+        
+    ## nicely format; have to move to second value column to convert to character
+    ## also need some ugly filtering in by to apply nicely_fmt_number row-wise: 
+    sumry_sprt_mlt <- melt(sumry_sprt, id.vars = c("cbn_name", "variable"), variable.name = "stat") %>%
+        .[!is.na(value)] %>% .[, rnbr := .I] %>%
+        .[, value2 := nicely_fmt_number_v(value), by = rnbr]
+ 
+    ## cast and reorder (matching with vvs)
+    wide_tbl_sprt <- sumry_sprt_mlt %>%
+        .[, .(cbn_name, variable, stat, value = value2)] %>% 
+        dcast.data.table(variable ~ cbn_name + stat) %>% 
+        .[na.omit(match(names(vvs$vrbl_lbls), variable))]
+    ## wide_tbl_sprt
+
+    ## use real names
+    dt_vrbl_lbls <- data.table(vrbl_name = names(vvs$vrbl_lbls), vrbl_lbl =  vvs$vrbl_lbls)
+    wide_tbl_sprt[dt_vrbl_lbls, variable := latexTranslate(vrbl_lbl), on = .(variable = vrbl_name)]
+
+    ## fill up missing values with "-"
+    wide_tbl_sprt[is.na(wide_tbl_sprt)] <- "--"
+
+    stat_dt_sprt <- data.table(stat_name = func_names, stat_lbl = c("Mean", "SD", "Min.", "Max."))
+
+    ## generate cmidrules: better than hlines
+    cmidrules <- map_chr(seq(1,3), ~sprintf("\\cmidrule(r){%s-%s}", (.x * 4)-2, (.x*4)+1)) %>% paste0(collapse = "")
+    ## generate the headers: some hacking with hlines/cmidrules
+    clm_names <- list()
+    clm_names$pos <- list(-1, -1, nrow(wide_tbl_sprt))
+    clm_names$command <- c(
+        paste0(paste0(c("\\hline \n ",
+                        map_chr(cbn_lbls_dt$cbn_lbl, ~sprintf("\\multicolumn{4}{c}{%s}", .x))),
+                      collapse = " & "),  # gen dataset n=x
+               " \\\\ \n", cmidrules), # add dataset cmidrules separators
+        ## gen stat headers1
+        paste0(paste0(c(" \n Variable", rep(stat_dt_sprt$stat_lbl, 3)), collapse = " & "), " \\\\ \n"),
+        sprintf("\\hline \\multicolumn{%s}{l}{\\footnotesize{%s}}\n", ncol(wide_tbl_sprt),
+               "all country-level count variables are per million population; all monetary amounts are 2021 USD"))
+
+
+    ## xtable(wide_tbl_sprt, align = c("l", "p{7cm}", rep("l", 12)),
+    ##        label = "tbl_summary_stats",
+    ##        caption = "Summary Statistics") %>%
+    ##     print(include.rownames = F, include.colnames = F,
+    ##           file = paste0(TABLE_DIR, "tbl_summary_stats.tex"),
+    ##           add.to.row = clm_names,
+    ##           hline.after = c(0),
+    ##           sanitize.text.function = identity)
+
+    list(dt_fmtd = wide_tbl_sprt,
+         align_cfg = c("l", "p{7cm}", rep("l", 12)),
+         add_to_row = clm_names,
+         hline_after = 0)
+
+
+    
+
+}
+
+
+## *** misc stuff
 
 
 render_all_reg_res_plts <- function(reg_res, batch_version) {
