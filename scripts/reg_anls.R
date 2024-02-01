@@ -3228,7 +3228,9 @@ gen_nbrs_pred <- function(top_coefs, cbn_dfs_rates_uscld, df_reg, print_examples
     
     ## longitudinal comparison with self-join
     
-    dt_shweal_cprn_lngtd <- get_wealth_ineq("p90p100", WID_VX) %>% adt() %>%
+    dt_shweal_cprn_lngtd <- dt_shweal %>% 
+    ## dt_shweal_cprn_lngtd <- df_reg %>% adt %>% .[, .(iso3c, year, shweal992j_p90p100)] %>% na.omit %>% 
+    ## dt_shweal_cprn_lngtd <- get_wealth_ineq("p90p100", WID_VX) %>% adt() %>%
         .[, .(iso3c, year, shweal = shweal992j_p90p100*100)] %>% 
         ## adt(cbn_dfs_rates_uscld$cbn_all)[, .(iso3c, year, shweal = shweal992j_p90p100_lag0)] %>%
         .[., on = "iso3c", allow.cartesian = T] %>%
@@ -3237,7 +3239,7 @@ gen_nbrs_pred <- function(top_coefs, cbn_dfs_rates_uscld, df_reg, print_examples
         ## .[, max(diff)]
         ## .[iso3c == "USA" & year == 1991] %>% print(n=200)
         ## ggplot(aes(x=diff, y = ..density..)) + geom_density()
-        .[diff > shweal_1SD_cbn1 *0.97 & diff < shweal_1SD_cbn1*1.03]
+        .[diff > shweal_1SD_cbn1 *0.95 & diff < shweal_1SD_cbn1*1.05]
 
     if (print_examples) print(dt_shweal_cprn_lngtd, n = 2000)
         
@@ -3495,7 +3497,7 @@ gen_nbrs <- function(df_excl, df_open, cbn_dfs_rates, cbn_dfs_rates_uscld,  df_r
     if (as.character(match.call()[[1]]) %in% fstd){browser()}
     1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;
 
-    source(paste0(SCRIPT_DIR, "startup_org_pop.R")) ## startup: libraries, global vars
+    ## source(paste0(SCRIPT_DIR, "startup_org_pop.R")) ## startup: libraries, global vars
     
     dt_excl <- df_excl %>% adt() %>% .[, .(ID, museum_status, year_opened_int, year_closed, countrycode)]
     ## number of museums in database as a whole 
@@ -3615,7 +3617,7 @@ gen_nbrs <- function(df_excl, df_open, cbn_dfs_rates, cbn_dfs_rates_uscld,  df_r
         dt_velp_crycoefs[., on = "iso3c"] %>% # filter out countries with less than 20 CYs
         .[vrbl == "tmitr_approx_linear20step" & cbn_name == "cbn1"]
     
-    tmitr_scale <- scale(cbn_df_dict$cbn_dfs_counts_uscld$cbn1$tmitr_approx_linear20step_lag0) %>%
+    tmitr_scale <- scale(cbn_dfs_counts_uscld$cbn1$tmitr_approx_linear20step_lag0) %>%
         attr("scaled:scale")
 
     ## generate minmax nbrs
@@ -3890,8 +3892,6 @@ reg_res <- list()
 ## generate plots, construct configs
 ## reg_res$plts <- gen_reg_res_plts(reg_res_objs, vvs, NBR_MDLS, only_priority_plts = T, stylecfg)
 
-## plt_inspector(reg_res$plts)
-
 ## regenerate and render all plots
 reg_res$plts <- gen_reg_res_plts(reg_res_objs, vvs, NBR_MDLS, only_priority_plts = T, stylecfg)
 map(names(reg_res$plts), ~render_reg_res(.x, reg_res, batch_version = fldr_info_optmz$batch_version))
@@ -3900,6 +3900,9 @@ pdftk_cmd <- sprintf("cd %s && pdftk %s output plts_%s.pdf", FIG_DIR,
                      paste0(paste0("plt_", fldr_info_optmz$batch_version, "_",
                                    gsub("plt_", "", names(reg_res$plts)), ".pdf"),
                             collapse = " "), fldr_info_optmz$batch_version)
+
+plt_inspector(reg_res$plts)
+
 
 system(pdftk_cmd)
 
@@ -3911,7 +3914,7 @@ res_tbls <- gen_res_tbls(reg_res_objs)
 
 iwalk(res_tbls, ~do.call("render_xtbl", c(.x, gen_tblcfgs(TABLE_DIR, fldr_info_optmz$batch_version)[[.y]])))
 
-## ** predicting
+## ** nbrs
 
 gen_nbrs_pred(reg_res_objs$top_coefs, cbn_dfs_rates_uscld, df_reg, print_examples = F)
 
@@ -3925,7 +3928,7 @@ dt_nbrs <- gen_nbrs(df_excl, df_open, cbn_dfs_rates, cbn_dfs_rates_uscld,
 dt_nbrs %>% print(n=300)
 
 ## run again after v75, then I get all changes in one commit
-fwrite(dt_nbrs, paste0(TABLE_DIR, "tbl_nbrs_", batch_version, ".csv"), quote = F)
+fwrite(dt_nbrs, paste0(TABLE_DIR, "tbl_nbrs_", fldr_info_optmz$batch_version, ".csv"), quote = F)
 
 ## dt_nbrs2 <- fread("/home/johannes/Dropbox/phd/papers/org_pop/tables/tbl_nbrs_v75.csv", quote = "")
 ## tail(dt_nbrs2)
