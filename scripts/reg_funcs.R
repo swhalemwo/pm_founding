@@ -2305,7 +2305,8 @@ pred_collector <- function(dtxx, rx, dt_id) {
         nbr_opened = sum(dtxx$nbr_opened),
         pred = sum(dtxx$pred),
         gini = dtxx[, map(.SD, sum), iso3c, .SDcols = c("pred", "nbr_opened")] %>%
-            .[, diff := nbr_opened - pred] %>% .[, Gini(diff - min(diff))]
+            ## .[, diff := nbr_opened - pred] %>% .[, Gini(diff - min(diff))]
+            .[, diff := nbr_opened - pred] %>% .[, gini.wtd(diff - min(diff))]
         )
     
 

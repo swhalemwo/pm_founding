@@ -13,7 +13,8 @@ library(furrr) # parallel processing, needed for VIF
 library(performance) # probably postestimation (VIF)
 library(tidyr) # some postestimation still uses pivot_wider
 library(glmmTMB) # for counterfactual/development? 
-library(DescTools, include.only = "Gini") # for postestimation
+## library(DescTools, include.only = "Gini") # for postestimation
+library(dineq, include.only = "gini.wtd")
 library(stringr)
 
 select <- dplyr::select
