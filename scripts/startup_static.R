@@ -70,3 +70,20 @@ OBJS_TO_RDS_WRNGL <- .c(## regression
 OBJS_TO_RDS_REG <- .c(
     fldr_info_optmz)
 
+reg_settings_optmz <- list(
+    ## relevant parameters
+    batch_version       = "v20",
+    nbr_specs_per_thld  = 2,
+    lags                = 1:5,
+    cbns_to_include     = paste0("cbn", 1:3),
+    n_vrbl_thld_choices = 36,
+    ## no longer varying
+    dvfmts              = c("rates"), 
+    vary_vrbl_lag       = F,
+    technique_strs      = c("nr"),
+    difficulty_switches = T,
+    regcmds             = c("glmmTMB"),
+    mdls_to_include     = c("full"),
+    wtf                 = T,
+    max_loop_nbr        = 100    
+)
