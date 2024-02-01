@@ -21,7 +21,7 @@ ENDING_YEAR <- 2020
 
 MAX_GAP_SIZE = 4
 
-NBR_THREADS <- 5
+NBR_THREADS <- 2
 
 colors_manual_light <- c("#a4e3a5","#f197c1","#98fff4","#f29a83","#2bcef0","#ffefa5","#75bfff","#c2bc71","#d6d3ff","#52bcae","#ffc9c2","#85b4b6","#f3ffd5","#b0ad84")
 
