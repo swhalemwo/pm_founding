@@ -1,9 +1,11 @@
 ## * master script for org_pop
 
+PROJ_DIR <- getwd()
+
 ## define commands
-cmd_reg <- paste0("Rscript regression.R asdf=jj")
-cmd_postestimation <- paste0("Rscript postestimation.R asdf=jj")
-cmd_anls <- paste0("Rscript reg_anls.R asdf=jj")
+cmd_reg            <- sprintf("Rscript regression.R %s"    , PROJ_DIR)
+cmd_postestimation <- sprintf("Rscript postestimation.R %s", PROJ_DIR)
+cmd_anls           <- sprintf("Rscript reg_anls.R %s"      , PROJ_DIR)
 
 ## run commands
 system(cmd_reg)

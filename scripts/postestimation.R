@@ -302,7 +302,8 @@ if (is.null(args[[1]])) {
 
 ## * main
 
-PROJECT_DIR <- "/home/johannes/Dropbox/phd/papers/org_pop/"
+## PROJECT_DIR <- "/home/johannes/Dropbox/phd/papers/org_pop/"
+PROJECT_DIR <- args[1]
 SCRIPT_DIR <- paste0(PROJECT_DIR, "scripts/")
 
 source(paste0(SCRIPT_DIR, "startup_postestimation.R"))
