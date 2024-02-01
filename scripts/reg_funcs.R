@@ -1188,13 +1188,13 @@ vary_spec <- function(reg_spec, vvs, vary_vrbl_lag, lags){
 
 
 
-setup_regression_folders_and_files <- function(batch_version, batch_dir_addgn = "") {
+setup_regression_folders_and_files <- function(REG_MONKEY_DIR, batch_version, batch_dir_addgn = "") {
     #' setup folders and files for running regressions
     if (as.character(match.call()[[1]]) %in% fstd){browser()}
     
 
     ## batch_version <- "v20"
-    REG_MONKEY_DIR <- "/home/johannes/reg_res/"
+    ## REG_MONKEY_DIR <- "/home/johannes/reg_res/"
     BATCH_DIR <- paste0(REG_MONKEY_DIR, batch_dir_addgn, batch_version, "/")
 
     REG_RES_DIR <- paste0(BATCH_DIR, "reg_res/")

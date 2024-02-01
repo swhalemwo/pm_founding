@@ -3939,6 +3939,8 @@ dt_nbrs %>% print(n=300)
 ## run again after v75, then I get all changes in one commit
 fwrite(dt_nbrs, paste0(TABLE_DIR, "tbl_nbrs_", fldr_info_optmz$batch_version, ".csv"), quote = F)
 
+print("reg_anls is done")
+
 ## dt_nbrs2 <- fread("/home/johannes/Dropbox/phd/papers/org_pop/tables/tbl_nbrs_v75.csv", quote = "")
 ## tail(dt_nbrs2)
 

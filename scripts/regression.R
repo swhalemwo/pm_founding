@@ -19,8 +19,8 @@ vrbl_thld_choices_optmz <- slice_sample(vrbl_thld_choices, n= reg_settings_optmz
 reg_spec_mdls_optmz <- gen_batch_reg_specs(reg_settings_optmz, vvs, vrbl_thld_choices_optmz)
 print(len(reg_spec_mdls_optmz))
 
-
-fldr_info_optmz <- setup_regression_folders_and_files(reg_settings_optmz$batch_version)
+print(chuck(reg_settings_optmz, "batch_version"))
+fldr_info_optmz <- setup_regression_folders_and_files(REG_MONKEY_DIR, reg_settings_optmz$batch_version)
 
 setup_db_mdlcache(fldr_info_optmz)
 

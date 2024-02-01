@@ -1,4 +1,10 @@
-PROJECT_DIR <- "/home/johannes/Dropbox/phd/papers/org_pop/"
+## * setting all kinds of general stuff
+
+## this is where I clone it to, i.e. its own location
+## PROJECT_DIR <- "/home/johannes/Dropbox/phd/papers/org_pop/" 
+
+PROJECT_DIR <- "/home/johannes/remtest/code/"
+REG_MONKEY_DIR <- "/home/johannes/remtest/regres/"
 
 PMDB_DIR <- paste0(PROJECT_DIR, "data/pmdb/") # DIR for private museum database (currently excel import)
 SCRIPT_DIR <- paste0(PROJECT_DIR, "scripts/")
@@ -50,9 +56,10 @@ options(ggrepel.max.overlaps = 100) # set some option for ggrepel
 ## These which get written to file after data wrangling data, and get read in for regression part
 
 
-OBJS_TO_RDS_WRNGL <- .c(## regression
+OBJS_TO_RDS_WRNGL <- .c(
+    ## regression
     df_reg,
-    df_reg_rts , 
+    df_reg_rts, 
     vvs,
     vrbl_cbns,
     vrbl_thld_choices,
@@ -72,7 +79,7 @@ OBJS_TO_RDS_REG <- .c(
 
 reg_settings_optmz <- list(
     ## relevant parameters
-    batch_version       = "v22",        # "v20",                  
+    batch_version       = "v23",        # "v20",                  
     nbr_specs_per_thld  = 1,            # 2,                      
     lags                = 1:3,          # 1:5,                    
     cbns_to_include     = "cbn1",       # paste0("cbn", 1:3),     
