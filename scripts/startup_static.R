@@ -11,18 +11,6 @@ PMDB_DIR <- paste0(PROJECT_DIR, "data/pmdb/") # DIR for private museum database 
 SCRIPT_DIR <- paste0(PROJECT_DIR, "scripts/")
 FIG_DIR <- paste0(PROJECT_DIR, "figures/")
 TABLE_DIR <- paste0(PROJECT_DIR, "tables/")
-WID_DIR_v1 = paste0(PROJECT_DIR, "data/wid/wid_world_db/version1_oct21/")
-WID_DIR_v2 = paste0(PROJECT_DIR, "data/wid/wid_world_db/version2_feb22/")
-WID_DIR_v3 = paste0(PROJECT_DIR, "data/wid/wid_world_db/version3_nov1/")
-
-WID_VX <- "wid_v3"
-
-MOW_DIR <- paste0(PROJECT_DIR, "data/degruyter/mow/")
-IDA_DIR <- paste0(PROJECT_DIR, "data/degruyter/ida/")
-
-TAX_INCENTIVES_DIR <- paste0(PROJECT_DIR, "data/tax_incentives/")
-
-SKETCH_DIR <- "/home/johannes/Dropbox/phd/papers/org_pop/sketches/"
 RDS_DIR <- paste0(PROJECT_DIR, "data/RDS/")
 
 
