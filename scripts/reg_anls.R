@@ -3304,20 +3304,35 @@ gen_nbrs_pred <- function(top_coefs, cbn_dfs_rates_uscld, df_reg, print_examples
     dt_sptinc_cprn_lngtd <- adt(cbn_dfs_rates_uscld$cbn1)[, .(iso3c, year, sptinc = sptinc992j_p90p100_lag0)] %>%
         .[., on = "iso3c", allow.cartesian = T] %>%
         .[i.year > year] %>%
-        .[, diff := i.sptinc - sptinc] %>%
+        .[, diff := i.sptinc - sptinc] %>% 
         ## ggplot(aes(x=diff, y = ..density..)) + geom_density()
         .[diff > sptinc_1SD_cbn1 *0.95 & diff < sptinc_1SD_cbn1*1.05] 
         ## print(n=200) 
 
-    sptinc_iso_lngtd <- "LTU"
-    sptinc_lngtd_year1 <- 2000
-    sptinc_lngtd_year2 <- 2014
+    ## ## plot the time series for the relevant countries
+    ## adt(cbn_dfs_rates_uscld$cbn1)[, .(iso3c, year, sptinc = sptinc992j_p90p100_lag0)] %>%
+    ##     .[dt_sptinc_cprn_lngtd[, .(year = seq(min(year, i.year), 2020)), iso3c],
+    ##       on = .(iso3c, year)] %>% 
+    ##     ## .[dt_sptinc_cprn_lngtd, on = .(iso3c, year)] %>%
+    ##     ggplot(aes(x=year, y=sptinc, color = iso3c))  + geom_line()
+    
+    ## lithuania value in 2014 is quite an outlier 
+    ## sptinc_iso_lngtd <- "LTU"
+    ## sptinc_lngtd_year1 <- 2000
+    ## sptinc_lngtd_year2 <- 2014
+
+    ## -> use Bulgaria instead
+    sptinc_iso_lngtd <- "BGR"
+    sptinc_lngtd_year1 <- 2010
+    sptinc_lngtd_year2 <- 2017
+
 
     dt_sptinc_cprn_lngtd_fltrd <- dt_sptinc_cprn_lngtd[iso3c == sptinc_iso_lngtd &
                                                        year == sptinc_lngtd_year1 & i.year == sptinc_lngtd_year2]
     
-    sptinc_lngtd_vlu_year1 <- dt_sptinc_cprn_lngtd_fltrd$sptinc
-    sptinc_lngtd_vlu_year2 <- dt_sptinc_cprn_lngtd_fltrd$i.sptinc
+    
+    sptinc_lngtd_vlu_year1 <- dt_sptinc_cprn_lngtd_fltrd %>% chuck("sptinc")
+    sptinc_lngtd_vlu_year2 <- dt_sptinc_cprn_lngtd_fltrd %>% chuck("i.sptinc")
     
     
     ## income inequality hasn't actually increased much...
