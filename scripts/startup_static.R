@@ -72,11 +72,11 @@ OBJS_TO_RDS_REG <- .c(
 
 reg_settings_optmz <- list(
     ## relevant parameters
-    batch_version       = "v21",        # "v20",                  
+    batch_version       = "v22",        # "v20",                  
     nbr_specs_per_thld  = 1,            # 2,                      
     lags                = 1:3,          # 1:5,                    
     cbns_to_include     = "cbn1",       # paste0("cbn", 1:3),     
-    n_vrbl_thld_choices = 1,            # 36,                     
+    n_vrbl_thld_choices = 5,            # 36,                     
     ## no longer varying
     dvfmts              = c("rates"), 
     vary_vrbl_lag       = F,

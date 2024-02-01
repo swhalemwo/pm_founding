@@ -3462,7 +3462,16 @@ gen_nbrs_pred <- function(top_coefs, cbn_dfs_rates_uscld, df_reg, print_examples
         gdp_stats = gdp_stats,
         hnwi_stats = lnbrs_hnwi)
     
-    dt_nbrs_pred_prep <- imap_dfr(l_res, ~rbindlist(.x)[, grp := .y]) %>%
+    dt_nbrs_pred_prep1 <- imap_dfr(l_res, ~rbindlist(.x)[, grp := .y])
+
+    ## if numbers are missing, yeet them
+    if (dt_nbrs_pred_prep1[is.na(nbr), .N] > 0) {
+        warning(sprintf("%s pred nbrs are missing", dt_nbrs_pred_prep1[is.na(nbr), .N]))
+        
+        dt_nbrs_pred_prep1 <- dt_nbrs_pred_prep1[!is.na(nbr)]
+    }
+
+    dt_nbrs_pred_prep <- dt_nbrs_pred_prep1 %>% 
         .[, nbr_fmt := fmt_nbr_flex(nbr, digits)] %>%
         .[, .(nbr_name, nbr_fmt, grp)]
 

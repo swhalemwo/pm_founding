@@ -11,7 +11,7 @@ source(paste0(SCRIPT_DIR, "startup_reg.R"))
 
 
 
-vrbl_thld_choices_optmz <- slice_sample(vrbl_thld_choices, n= n_vrbl_thld_choices)
+vrbl_thld_choices_optmz <- slice_sample(vrbl_thld_choices, n= reg_settings_optmz$n_vrbl_thld_choices)
 
 
 
