@@ -148,7 +148,8 @@ one_out_setup_and_run <- function(batch_version, gof_df_cbn) {
     1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;
     
     ## reg_res64 <- gen_reg_res(setup_regression_folders_and_files("v64"))
-    fldr_info <- setup_regression_folders_and_files(batch_version)
+    fldr_info <- setup_regression_folders_and_files(REG_MONKEY_DIR = REG_MONKEY_DIR,
+                                                    batch_version = batch_version)
 
     
     # reg_res_files <- read_reg_res_files(fldr_info)
@@ -169,8 +170,10 @@ one_out_setup_and_run <- function(batch_version, gof_df_cbn) {
     ou_cmd <- paste0("mkdir /home/johannes/reg_res/", batch_version, "/ou/") %>% system()
     ## then setup new folders there
     ## fldr_info_ou <- setup_regression_folders_and_files("v64ou", batch_dir_addgn = "v64/ou/")
-    fldr_info_ou <- setup_regression_folders_and_files(batch_version = paste0(batch_version, "ou"),
-                                                       batch_dir_addgn = paste0(batch_version, "/ou/"))
+    fldr_info_ou <- setup_regression_folders_and_files(
+        REG_MONKEY_DIR = REG_MONKEY_DIR, 
+        batch_version = paste0(batch_version, "ou"),
+        batch_dir_addgn = paste0(batch_version, "/ou/"))
 
     ## get original reg_spec to modify 
     reg_specs_orig <- mclapply(mdl_id_dt[, mdl_id],
