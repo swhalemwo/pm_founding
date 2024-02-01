@@ -1,7 +1,7 @@
 ## * master script for org_pop
 
 ## hacky way to get PROJ DIR
-PROJ_DIR <- getwd() %>% gsub("org_pop/scripts", "org_pop/", .)
+PROJ_DIR <- getwd() |> gsub("org_pop/scripts", "org_pop/", x = _)
 
 
 ## define commands
