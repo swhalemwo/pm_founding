@@ -3870,39 +3870,29 @@ reg_anls_base <- read_reg_anls_files(fldr_info_optmz)
 reg_res_objs <- proc_reg_res_objs(reg_anls_base, vvs, NBR_MDLS)
 
 
-
 reg_res <- list()
 
 ## generate plots, construct configs
-reg_res$plts <- gen_reg_res_plts(reg_res_objs, vvs, NBR_MDLS, only_priority_plts = T, stylecfg)
+## reg_res$plts <- gen_reg_res_plts(reg_res_objs, vvs, NBR_MDLS, only_priority_plts = T, stylecfg)
 
-## nreg_res$plts$plt_best_coefs_single_cbn1 <- gen_plt_best_coefs_single_cbn1(reg_res_objs$top_coefs)
-reg_res$plts$plt_vif <- gen_plt_vif(reg_res_objs$dt_vif_res, reg_res_objs$top_coefs)
-
-## gen_plt_oneout_llrt_z(reg_res_objs$ou_anls)
-
-plt_inspector(reg_res$plts)
-
-## ## plot inspection if there are few models (like in test runs) to draw proper violins, which then crashes ggplot
-## reg_res$plts[names(reg_res$plts) %!in% c("plt_coef_violin", "plt_oneout_llrt_z",
-##                                          "plt_oneout_llrt_lldiff", "plt_vif")] %>% plt_inspector
-
+## plt_inspector(reg_res$plts)
 
 ## regenerate and render all plots
 reg_res$plts <- gen_reg_res_plts(reg_res_objs, vvs, NBR_MDLS, only_priority_plts = T, stylecfg)
-purrr::map(names(reg_res$plts), ~render_reg_res(.x, reg_res, batch_version = fldr_info_optmz$batch_version))
+map(names(reg_res$plts), ~render_reg_res(.x, reg_res, batch_version = fldr_info_optmz$batch_version))
 ## only render those plots that are generated (not all version plots)
 pdftk_cmd <- sprintf("cd %s && pdftk %s output plts_%s.pdf", FIG_DIR,
-                     paste0(paste0("plt_", batch_version, "_", gsub("plt_", "", names(reg_res$plts)), ".pdf"),
-                            collapse = " "),
-                     fldr_info_optmz$batch_version)
+                     paste0(paste0("plt_", fldr_info_optmz$batch_version, "_",
+                                   gsub("plt_", "", names(reg_res$plts)), ".pdf"),
+                            collapse = " "), fldr_info_optmz$batch_version)
+
 system(pdftk_cmd)
 
 ## tables
 res_tbls <- gen_res_tbls(reg_res_objs) 
-pvxtbl(res_tbls$tbl_regrslts_wcptblF, landscape = T)
-pvxtbl(res_tbls$tbl_descs, landscape = T)
-pvxtbl(res_tbls$tbl_cbn_cpsgn, landscape = T)
+## pvxtbl(res_tbls$tbl_regrslts_wcptblF, landscape = T)
+## pvxtbl(res_tbls$tbl_descs, landscape = T)
+## pvxtbl(res_tbls$tbl_cbn_cpsgn, landscape = T)
 
 iwalk(res_tbls, ~do.call("render_xtbl", c(.x, gen_tblcfgs(TABLE_DIR, fldr_info_optmz$batch_version)[[.y]])))
 
@@ -3914,7 +3904,7 @@ gen_nbrs_pred(reg_res_objs$top_coefs, cbn_dfs_rates_uscld, df_reg, print_example
 dt_nbrs <- gen_nbrs(df_excl, df_open, cbn_dfs_rates, cbn_dfs_rates_uscld,
                     reg_anls_base$df_reg_anls_cfgs_wide, df_reg,
                     reg_res_objs$dt_velp_scalars, reg_res_objs$dt_velp_crycoefs,
-                    batch_version, print_examples = F,
+                    fldr_info_optmz$batch_version, print_examples = F,
                     names(reg_res$plts))
 
 dt_nbrs %>% print(n=300)
@@ -3922,14 +3912,14 @@ dt_nbrs %>% print(n=300)
 ## run again after v75, then I get all changes in one commit
 fwrite(dt_nbrs, paste0(TABLE_DIR, "tbl_nbrs_", batch_version, ".csv"), quote = F)
 
-dt_nbrs2 <- fread("/home/johannes/Dropbox/phd/papers/org_pop/tables/tbl_nbrs_v75.csv", quote = "")
-tail(dt_nbrs2)
+## dt_nbrs2 <- fread("/home/johannes/Dropbox/phd/papers/org_pop/tables/tbl_nbrs_v75.csv", quote = "")
+## tail(dt_nbrs2)
 
-xtable(adt(mtcars)[1:3, .(mpg, cyl, disp)]) %>%
-    print.xtable(floating = F, file = paste0(TABLE_DIR, "testtable.tex"))
+## xtable(adt(mtcars)[1:3, .(mpg, cyl, disp)]) %>%
+##     print.xtable(floating = F, file = paste0(TABLE_DIR, "testtable.tex"))
 
 
-mutate(cbn_dfs_rates$cbn_all, region = countrycode(iso3c, "iso3c", "un.region.name")) %>%
-    viz_lines(y="ghweal992j_lag0", duration = 1, facets = "region", max_lines = 6)
+## mutate(cbn_dfs_rates$cbn_all, region = countrycode(iso3c, "iso3c", "un.region.name")) %>%
+##     viz_lines(y="ghweal992j_lag0", duration = 1, facets = "region", max_lines = 6)
 
 ## ** more version comparison 
