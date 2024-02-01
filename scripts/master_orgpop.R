@@ -1,6 +1,8 @@
 ## * master script for org_pop
 
-PROJ_DIR <- getwd()
+## hacky way to get PROJ DIR
+PROJ_DIR <- getwd() %>% gsub("org_pop/scripts", "org_pop/", .)
+
 
 ## define commands
 cmd_reg            <- sprintf("Rscript regression.R %s"    , PROJ_DIR)
