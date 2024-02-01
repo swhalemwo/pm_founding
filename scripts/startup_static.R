@@ -57,15 +57,14 @@ OBJS_TO_RDS_WRNGL <- .c(## regression
     vrbl_cbns,
     vrbl_thld_choices,
     cbn_df_dict,
-                                        # for reg_anls (nbrs)
+    ## for reg_anls (nbrs)
     cbn_dfs_rates,
     cbn_dfs_counts_uscld,
     cbn_dfs_rates_uscld,
     ## data for nbrs
     df_excl,
     df_open,
-    dt_shweal 
-    
+    dt_shweal    
 )
 
 OBJS_TO_RDS_REG <- .c(
