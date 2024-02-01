@@ -55,6 +55,7 @@ df_reg_pre_impt <- get_df_reg(df_anls)
 df_reg <- impute_df_reg_vrbls(df_reg_pre_impt)
 df_reg_rts <- gen_df_reg_rts(df_reg)
 
+dt_shweal <- get_wealth_ineq("p90p100", WID_VX) %>% adt
 
 
 ## generate data objects needed for regression 
