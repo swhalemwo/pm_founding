@@ -6,7 +6,7 @@
 
 ## code for regression results
 ## REG_MONKEY_DIR <- "/home/johannes/remtest/regres/"
-REG_MONKEY_DIR <- "/home/jaengehey/surftest/regres/"
+REG_MONKEY_DIR <- "/home/jaengenhey/surftest/regres/"
 
 PMDB_DIR <- paste0(PROJECT_DIR, "data/pmdb/") # DIR for private museum database (currently excel import)
 SCRIPT_DIR <- paste0(PROJECT_DIR, "scripts/")
