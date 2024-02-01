@@ -2,8 +2,9 @@
 
 ## this is where I clone it to, i.e. its own location
 ## PROJECT_DIR <- "/home/johannes/Dropbox/phd/papers/org_pop/" 
+PROJECT_DIR <- "/home/johannes/remtest/code/org_pop/"
 
-PROJECT_DIR <- "/home/johannes/remtest/code/"
+## code for regression results
 REG_MONKEY_DIR <- "/home/johannes/remtest/regres/"
 
 PMDB_DIR <- paste0(PROJECT_DIR, "data/pmdb/") # DIR for private museum database (currently excel import)
