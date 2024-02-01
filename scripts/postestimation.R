@@ -167,7 +167,8 @@ one_out_setup_and_run <- function(batch_version, gof_df_cbn) {
     
     ## set up ou (one-out) folder for new regression results
     ## first get /ou/ folder in v64
-    ou_cmd <- paste0("mkdir /home/johannes/reg_res/", batch_version, "/ou/") %>% system()
+    ## ou_cmd <- paste0("mkdir /home/johannes/reg_res/", batch_version, "/ou/") %>% system()
+    ou_cmd <- sprintf("mkdir %s%s/ou/", REG_MONKEY_DIR, batch_version) %>% system()
     ## then setup new folders there
     ## fldr_info_ou <- setup_regression_folders_and_files("v64ou", batch_dir_addgn = "v64/ou/")
     fldr_info_ou <- setup_regression_folders_and_files(
