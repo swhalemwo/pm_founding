@@ -5,7 +5,8 @@
 ## PROJECT_DIR <- "/home/johannes/remtest/code/org_pop/"
 
 ## code for regression results
-REG_MONKEY_DIR <- "/home/johannes/remtest/regres/"
+## REG_MONKEY_DIR <- "/home/johannes/remtest/regres/"
+REG_MONKEY_DIR <- "/home/jaengehey/surftest/regres/"
 
 PMDB_DIR <- paste0(PROJECT_DIR, "data/pmdb/") # DIR for private museum database (currently excel import)
 SCRIPT_DIR <- paste0(PROJECT_DIR, "scripts/")
@@ -13,6 +14,7 @@ FIG_DIR <- paste0(PROJECT_DIR, "figures/")
 TABLE_DIR <- paste0(PROJECT_DIR, "tables/")
 RDS_DIR <- paste0(PROJECT_DIR, "data/RDS/")
 
+source(paste0(SCRIPT_DIR, "rprofile.R"))
 
 PROC_DATA_DIR <- paste0(PROJECT_DIR, "data/processed/")
 
