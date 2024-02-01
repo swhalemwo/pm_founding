@@ -18,8 +18,10 @@ read_reg_anls_files <- function(fldr_info) {
 
 
     ## setup and read-in ou results
-    fldr_info_ou <- setup_regression_folders_and_files(batch_version = paste0(fldr_info$batch_version, "ou"),
-                                                       batch_dir_addgn = paste0(fldr_info$batch_version, "/ou/"))
+    fldr_info_ou <- setup_regression_folders_and_files(
+        REG_MONKEY_DIR = REG_MONKEY_DIR, 
+        batch_version = paste0(fldr_info$batch_version, "ou"),
+        batch_dir_addgn = paste0(fldr_info$batch_version, "/ou/"))
 
     reg_anls_ou_objs <- read_reg_res_files_ou(fldr_info_ou)
 
