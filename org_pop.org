@@ -351,7 +351,7 @@ While multiple hypotheses for the spread of this new form have been raised, syst
 #
 In particular, the rise of private museums has been hypothesized to be associated with tax incentives, reductions in government spending, increasing inequality and increasing elite wealth. 
 #
-Combining various socio-economic and art field data sources, I conduct quantitative tests of these hypotheses with datasets of {{{nbr_cy_cbn1}}}, {{{nbr_cy_cbn2}}} and {{{nbr_cy_cbn3}}} country years using random effects negative binomial regression models.
+Combining various socio-economic and art field data sources, I conduct quantitative tests of these hypotheses with datasets of {{{nbr_cy_cbn1}}}, {{{nbr_cy_cbn2}}} and {{{nbr_cy_cbn3}}} country years using multilevel negative binomial regression models.
 #
 While I find support for a positive effect of tax incentives, government spending is associated non-monotonically (reverse U-shaped) with private museum founding (not, as hypothesized, negatively). 
 #
@@ -686,10 +686,11 @@ A hypothesis on elite wealth can thus be formulated as:
 | Elite Wealth                   | Population above threshold of 1M, 5M, 30M, 200M USD                         | World Inequality Database        |
 | Size                           | Population                                                                  | World Bank                       |
 | Development/art demand         | GDP per capita                                                              | World Bank                       |
+| *???????*                      | GDP per capita growth (%)                                                   | World Bank                       |
 | Presence of potential founders | Number of art collectors                                                    | Artnews top200 collector ranking |
 | Museum population              | Number of modern/contemp. art museums                                       | Museums of the World Database    |
-| Density: Legitimacy            | Number of PMs open                                                          | PM Database                      |
-| Density: Competition           | Number of PMs open^2                                                        | PM Database                      |
+| Density: Legitimacy            | Number of PMs open (country, neighbors, global)                             | PM Database                      |
+| Density: Competition           | Number of PMs open^2 (country, neighbors, global)                           | PM Database                      |
 |--------------------------------+-----------------------------------------------------------------------------+----------------------------------|
 
 
@@ -792,6 +793,8 @@ GDP is included to account for potentially imperfect measurement of government s
 #
 Furthermore, given the stratified character of art consumption [[parencite:&Bourdieu_1984_distinction]] within countries, controlling for GDP also includes a demand dimension as more developed countries potentially host larger population shares interested in post-material art consumption.
 #
+*FIXME: Additionally, growth of GDP per capita controlled for to capture changes in the*
+#
 Population size is included as an offset (cf. section Regression specification). 
 
 
@@ -811,7 +814,7 @@ I argue that the number of Artnews collectors per country-year constitutes an in
 
 
 **** Density dependence
-Research on organizational population parencite:&Carroll_1989_density;&Hannan_1992_dynamics has argued that foundings of organization are driven by legitimacy and competition:
+Research on organizational populations parencite:&Carroll_1989_density;&Hannan_1992_dynamics has argued that foundings of organization are driven by legitimacy and competition:
 #
 While increasing legitimacy of a new organizational form is argued to encourage new foundings, competition is hypothesized to discourage it.
 #
@@ -823,7 +826,7 @@ Both legitimacy and competition are generally derived from the number of already
 # also feels wrong: first-order effect doesn't tell you much, just value if x = 0
 # although i guess if first-order effect is smaller, peak is reached sooner -> legitimacy overall weaker..
 
-However, density effects have been argued to be weaker for populations of non-profit organizations [[parencite:&Bogaert_etal_2014_ecological]], as these are characterized by demands more diverse and conflicting than the for-profit companies for which the density dependence paradigm was originally developed; in particular the absence of the profit motive is argued to correspond to a weaker legitimation effect. 
+However, density effects have been argued to be weaker for populations of non-profit organizations [[parencite:&Bogaert_etal_2014_ecological]] as these are characterized by demands more diverse and conflicting than the for-profit companies for which the density dependence paradigm was originally developed; in particular the absence of the profit motive is argued to correspond to a weaker legitimation effect. 
 #
 # However, density effects may be limited by the non-profit character of the private museum population:
 # # 
@@ -843,14 +846,18 @@ I therefore include for each country-year measures based on the number of open p
 #
 # Both these operationalizations follow the density-dependence literature, and result in competition growing slowly at first, but outpacing legitimacy as the organizational population increases.
 # 
-Given the transnational nature of the art field (due to which legitimation and competition might not be limited to country borders) I also add global linear and squared density measures which are the same for every country in a given year and describe the number of museums open worldwide in a given year.
+Given the transnational nature of the art field due to which legitimation and competition might not be limited to country borders, I include two measures of density beyond the country.
+#
+First, I add global linear and squared density measures which are the same for every country in a given year and describe the number of museums open worldwide in a given year.
+#
+Secondly, I add a linear and squared density term based on the private museum population in a country's neighbors; in particular I calculate for each country the neighbor density as the sum of private museum in neighboring countries divided by the total neighbor population (for island countries, countries in the same UN-subregion classification are considered to be the neighbors). 
 
 
 Another variable of the organizational population concerns closures:
 # 
 The private museum population has seen substantial numbers of closures with {{{nbr_clsd_wld}}} institutions having been shut down or transformed (cf. [[cite:&Velthuis_Gera_forthcoming_fragility]]), and growing awareness of the fragility of these institutions might in turn make their founding less attractive to founders keen of leaving a mark in history.
 #
-I therefore add a global variable of the number of cumulative museum closures to capture the potential delegitimating effect of the closing of institutions that often are planned as personal legacies [[parencite:&Walker_2019_collector]].[fn::While one could measure this variable also on a country-level, the low number of closings would lead to a highly skewed variable, and therefore to coefficients disproportionately reflecting a few countries (in particular Switzerland, the United States and Netherlands, depending on whether the estimator measures closing numbers or proporitions). I therefore limit myself to measuring the global effect of museum closures.] 
+I therefore add a global variable of the number of cumulative museum closures to capture the potential delegitimating effect of the closing of institutions that often are planned as personal legacies [[parencite:&Walker_2019_collector]].[fn::While this variable could also be measured on the country-level, the low number of closings would lead to a highly skewed variable, and therefore to coefficients disproportionately reflecting a few countries (in particular Switzerland, the United States and Netherlands, depending on whether the estimator measures closing numbers or proporitions). I therefore limit myself to measuring the global effect of museum closures.] 
 
 
 
@@ -965,11 +972,11 @@ While the random starting values and random order of variables help to explore t
 :ID:       d2d676fc-e644-4815-a06d-906a30c823f0
 :END:
 
-Each regression model is specified as a negative binomial model (which is robust to potential overdispersion of the dependent variable) run using the glmmTMB command [[parencite:&Brooks_etal_2017_glmmTMB]] of R 4.3.0. 
+Each regression model is specified as a negative binomial model (which is robust to potential overdispersion of the dependent variable) run using the glmmTMB command [[parencite:&Brooks_etal_2017_glmmTMB]] of R 4.1.2. 
 #
-Random country intercepts are added to account for clustering of observations in countries.
+Due to the presence of variables that do not vary across time (tax incentives and museum population) or country (global density) pure fixed effects models are not feasible. 
 #
-# Due to the presence of time-invariant variables (tax incentives and museum population) fixed effects models (which would capture only within-country variation) are not feasible, coefficients therefore describe both within-country and between-country variation.
+To account for clustering I instead add random country and year intercepts; coefficients therefore describe both within-country and between-country variation. 
 #
 I furthermore use population as an offset (which estimates founding rate per capita) to allow comparison between countries of different population sizes; all count predictors are therefore first transformed into per capita rates.
 # 
