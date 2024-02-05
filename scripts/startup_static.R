@@ -91,8 +91,8 @@ reg_settings_optmz <- list(
 
 ## FIG_DIR        <- paste0(PROJECT_DIR, "figures/")
 ## TABLE_DIR      <- paste0(PROJECT_DIR, "tables/")
-FIG_DIR        <- paste0(REG_MONKEY_DIR, reg_settings_optmz$batch_version, "figures/")
-TABLE_DIR      <- paste0(REG_MONKEY_DIR, reg_settings_optmz$batch_version, "tables/")
+FIG_DIR        <- paste0(REG_MONKEY_DIR, reg_settings_optmz$batch_version, "/figures/")
+TABLE_DIR      <- paste0(REG_MONKEY_DIR, reg_settings_optmz$batch_version, "/tables/")
 
 if (!dir.exists(FIG_DIR))   {dir.create(FIG_DIR,   recursive = T)}
 if (!dir.exists(TABLE_DIR)) {dir.create(TABLE_DIR, recursive = T)}
