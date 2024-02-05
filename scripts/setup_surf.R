@@ -2,8 +2,15 @@
 
 ## ** install system packages necessary for R packages
 
-syspkgs <- c("cmake", "libxml2-dev", "libssl-dev", "libcurl4-openssl-dev", "libfontconfig1-dev")
 
+dir_rlib <- "/home/jaengenhey/R/x86_64-pc-linux-gnu-library/4.1"
+if (!dir.exists(dir_rlib)) {dir.create(dir_rlib)}
+
+dir_regres <- "/data/volume_2/surftest/regres/"
+if (!dir.exists(dir_regres)) {dir.create(dir_regres)}
+    
+
+syspkgs <- c("cmake", "libxml2-dev", "libssl-dev", "libcurl4-openssl-dev", "libfontconfig1-dev")
 
 cmd_syspkgs <- sprintf("sudo apt-get install %s", paste0(syspkgs, collapse = " "))
 system(cmd_syspkgs)
@@ -21,7 +28,7 @@ rlib_status <- sapply(rlibs, \(x) require(x, character.only = T))
 
 ## install those that aren't installed yet 
 install.packages(rlibs[!rlib_status],
-                 lib = "/home/jaengenhey/R/x86_64-pc-linux-gnu-library/4.1")
+                 lib = dir_rlib)
 
 
 ## check that packages have been installed
