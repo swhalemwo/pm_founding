@@ -975,13 +975,13 @@ I furthermore use population as an offset (which estimates founding rate per cap
 # 
 This results in the following model specification:
 
-# FIXME LUL
 \begin{equation*}
-y_{it} = \beta_i + \beta X + 1 \times ln(pop_{it}) + \epsilon_{it}
+y_{it} = \exp(\beta_0 + \beta \text{X} + u_{\text{country}[i]} + v_{\text{year}[t]}) \cdot \text{pop}_{it}
 \end{equation*}
 
-with $y_{it}$ as number of private museum foundings in country $i$ for year $t$, $\beta_i$ as country-intercept, $\beta$ as coefficient vector of predictor matrix $X$, $1 \times ln(pop_{it})$ as the population offset, and $e_{it}$ as error component.
-#
+with $y_{it}$ as number of private museum foundings in country $i$ for year $t$, $\beta_0$ as intercept, $\beta$ as coefficient vector of predictor matrix $\text{X}$, $u$ and $v$ as country and year random intercepts, and $\text{pop}_{it}$ as the population offset.
+
+
 To facilitate convergence and interpretation, all variables except the binary variable of tax deductibility of charitable donations are also rescaled to a mean of 0 and a standard deviation of 1. 
 # (the interaction between tax deductibility of charitable donations and top marginal income tax rate and the squared terms of other variables are calculated after rescaling).
 #
