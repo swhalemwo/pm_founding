@@ -6,13 +6,13 @@
 
 ## code for regression results
 ## REG_MONKEY_DIR <- "/home/johannes/remtest/regres/"
-REG_MONKEY_DIR <- "/home/jaengenhey/surftest/regres/"
-
-PMDB_DIR <- paste0(PROJECT_DIR, "data/pmdb/") # DIR for private museum database (currently excel import)
-SCRIPT_DIR <- paste0(PROJECT_DIR, "scripts/")
-FIG_DIR <- paste0(PROJECT_DIR, "figures/")
-TABLE_DIR <- paste0(PROJECT_DIR, "tables/")
-RDS_DIR <- paste0(PROJECT_DIR, "data/RDS/")
+## REG_MONKEY_DIR <- "/home/jaengenhey/surftest/regres/"
+REG_MONKEY_DIR <- "/data/volume_2/surftest/regres/"
+PMDB_DIR       <- paste0(PROJECT_DIR, "data/pmdb/") # DIR for private museum database (currently excel import)
+SCRIPT_DIR     <- paste0(PROJECT_DIR, "scripts/")
+FIG_DIR        <- paste0(PROJECT_DIR, "figures/")
+TABLE_DIR      <- paste0(PROJECT_DIR, "tables/")
+RDS_DIR        <- paste0(PROJECT_DIR, "data/RDS/")
 
 source(paste0(SCRIPT_DIR, "rprofile.R"))
 
