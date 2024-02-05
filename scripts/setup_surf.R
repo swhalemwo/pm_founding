@@ -36,7 +36,8 @@ rlib_status <- sapply(rlibs, \(x) require(x, character.only = T))
 
 ## install those that aren't installed yet 
 install.packages(rlibs[!rlib_status],
-                 lib = dir_rlib)
+                 lib = dir_rlib,
+                 Ncpus = 12)
 
 
 ## check that packages have been installed
