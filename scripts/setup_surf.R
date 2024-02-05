@@ -1,14 +1,20 @@
 # * setup script for surf
 
-## ** install system packages necessary for R packages
-
-
+## ** create paths
+## dir for R libraries
 dir_rlib <- "/home/jaengenhey/R/x86_64-pc-linux-gnu-library/4.1"
 if (!dir.exists(dir_rlib)) {dir.create(dir_rlib)}
 
+## regression results on external storage
 dir_regres <- "/data/volume_2/surftest/regres/"
 if (!dir.exists(dir_regres)) {dir.create(dir_regres)}
-    
+
+## ## clone code 
+## if (!dir.exists("/home/jaengenhey/org_pop/")) {
+##     system("cd && git clone https://github.com/swhalemwo/org_pop")
+## }
+
+## ** install system packages necessary for R packages
 
 syspkgs <- c("cmake", "libxml2-dev", "libssl-dev", "libcurl4-openssl-dev", "libfontconfig1-dev")
 
