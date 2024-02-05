@@ -23,7 +23,7 @@ ENDING_YEAR <- 2020
 
 MAX_GAP_SIZE = 4
 
-NBR_THREADS <- 2
+NBR_THREADS <- 12
 
 colors_manual_light <- c("#a4e3a5","#f197c1","#98fff4","#f29a83","#2bcef0","#ffefa5","#75bfff","#c2bc71","#d6d3ff","#52bcae","#ffc9c2","#85b4b6","#f3ffd5","#b0ad84")
 
@@ -70,11 +70,11 @@ OBJS_TO_RDS_REG <- .c(
 
 reg_settings_optmz <- list(
     ## relevant parameters
-    batch_version       = "v24",        # "v20",                  
-    nbr_specs_per_thld  = 1,            # 2,                      
-    lags                = 1:3,          # 1:5,                    
-    cbns_to_include     = "cbn1",       # paste0("cbn", 1:3),     
-    n_vrbl_thld_choices = 4,            # 36,                     
+    batch_version       = "v25",                #  "v24",         
+    nbr_specs_per_thld  = 4,                    #  1,             
+    lags                = 1:5,                  #  1:3,           
+    cbns_to_include     = paste0("cbn", 1:3),   #  "cbn1",        
+    n_vrbl_thld_choices = 36,                   #  4,             
     ## no longer varying
     dvfmts              = c("rates"), 
     vary_vrbl_lag       = F,
