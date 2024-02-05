@@ -1,9 +1,12 @@
 ## * finalize everything
 
+## get variables: need to source startup_static to get access to REG_MONKEY_DIR and batch_version
+library(collapse) # needed for parsing startup_static
+
 print("start finalizing")
 args <- commandArgs(trailingOnly = T)
 PROJECT_DIR <- args[1]
-print(PROJECT_DIR)
+
 SCRIPT_DIR <- paste0(PROJECT_DIR, "scripts/")
 source(paste0(SCRIPT_DIR, "startup_static.R"))
 
