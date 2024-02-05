@@ -782,3 +782,23 @@ some_page <- x[[1]]
 ## would be necessary to make all the aliases of museum names
 
 
+## * check density calculations after finding typo (actually isn't typo but test)
+
+## ** before debugging
+df_anls %>% viz_lines(y="pmdens_neigh")
+df_anls %>% adt %>% .[, .(mean_pmdens_neigh = mean(pmdens_neigh)), iso3c] %>% .[order(-mean_pmdens_neigh)]
+
+##  1 LIE               0.433
+##  2 SWE               0.290
+##  3 DNK               0.278
+##  4 NLD               0.278
+##  5 FRA               0.237
+##  6 CZE               0.231
+##  7 AUT               0.217
+##  8 AUS               0.202
+##  9 PRT               0.199
+## 10 LUX               0.195
+
+
+## ** after debugging: actually I think the iso3cxx is intentional, seems to be some check?
+
