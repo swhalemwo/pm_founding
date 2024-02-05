@@ -8,9 +8,11 @@ PROJ_DIR <- gsub("org_pop/scripts", "org_pop/", x = getwd())
 cmd_reg            <- sprintf("Rscript regression.R %s"    , PROJ_DIR)
 cmd_postestimation <- sprintf("Rscript postestimation.R %s", PROJ_DIR)
 cmd_anls           <- sprintf("Rscript reg_anls.R %s"      , PROJ_DIR)
+cmd_finalize       <- sprintf("Rscript finalize.R %s"      , PROJ_DIR)
 
 ## run commands
 system(cmd_reg)
 system(cmd_postestimation)
 system(cmd_anls)
+system(cmd_finalize)
        
