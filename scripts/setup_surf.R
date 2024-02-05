@@ -16,7 +16,7 @@ if (!dir.exists(dir_regres)) {dir.create(dir_regres)}
 
 ## ** install system packages necessary for R packages
 
-syspkgs <- c("cmake", "libxml2-dev", "libssl-dev", "libcurl4-openssl-dev", "libfontconfig1-dev")
+syspkgs <- c("cmake", "libxml2-dev", "libssl-dev", "libcurl4-openssl-dev", "libfontconfig1-dev", "mutt")
 
 cmd_syspkgs <- sprintf("sudo apt-get install %s", paste0(syspkgs, collapse = " "))
 system(cmd_syspkgs)

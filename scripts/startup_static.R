@@ -10,9 +10,9 @@
 REG_MONKEY_DIR <- "/data/volume_2/surftest/regres/"
 PMDB_DIR       <- paste0(PROJECT_DIR, "data/pmdb/") # DIR for private museum database (currently excel import)
 SCRIPT_DIR     <- paste0(PROJECT_DIR, "scripts/")
-FIG_DIR        <- paste0(PROJECT_DIR, "figures/")
-TABLE_DIR      <- paste0(PROJECT_DIR, "tables/")
 RDS_DIR        <- paste0(PROJECT_DIR, "data/RDS/")
+
+
 
 source(paste0(SCRIPT_DIR, "rprofile.R"))
 
@@ -70,11 +70,11 @@ OBJS_TO_RDS_REG <- .c(
 
 reg_settings_optmz <- list(
     ## relevant parameters
-    batch_version       = "v23",        # "v20",                  
+    batch_version       = "v24",        # "v20",                  
     nbr_specs_per_thld  = 1,            # 2,                      
     lags                = 1:3,          # 1:5,                    
     cbns_to_include     = "cbn1",       # paste0("cbn", 1:3),     
-    n_vrbl_thld_choices = 5,            # 36,                     
+    n_vrbl_thld_choices = 4,            # 36,                     
     ## no longer varying
     dvfmts              = c("rates"), 
     vary_vrbl_lag       = F,
@@ -85,3 +85,18 @@ reg_settings_optmz <- list(
     wtf                 = T,
     max_loop_nbr        = 100    
 )
+
+
+## output dirs: now moved to reg_res folder for better zipping
+
+## FIG_DIR        <- paste0(PROJECT_DIR, "figures/")
+## TABLE_DIR      <- paste0(PROJECT_DIR, "tables/")
+FIG_DIR        <- paste0(REG_MONKEY_DIR, reg_settings_optmz$batch_version, "figures/")
+TABLE_DIR      <- paste0(REG_MONKEY_DIR, reg_settings_optmz$batch_version, "tables/")
+
+if (!dir.exists(FIG_DIR))   {dir.create(FIG_DIR,   recursive = T)}
+if (!dir.exists(TABLE_DIR)) {dir.create(TABLE_DIR, recursive = T)}
+
+
+
+
