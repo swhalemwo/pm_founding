@@ -1,5 +1,6 @@
-
+print("start finalizing")
 PROJECT_DIR <- args[1]
+print(PROJECT_DIR)
 SCRIPT_DIR <- paste0(PROJECT_DIR, "scripts/")
 source(paste0(SCRIPT_DIR, "startup_static.R"))
 
