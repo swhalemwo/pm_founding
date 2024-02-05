@@ -14,6 +14,7 @@ source(paste0(SCRIPT_DIR, "startup_static.R"))
 ## ** zip the results
 cmd_zip <- sprintf("cd %s && zip -r res%s.zip %s", REG_MONKEY_DIR,
                    reg_settings_optmz$batch_version, reg_settings_optmz$batch_version)
+system(cmd_zip)
 
 print("files zipped")
 
