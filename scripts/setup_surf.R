@@ -11,7 +11,7 @@ rlibs <- c("data.table", "dplyr", "purrr", "glmmTMB", "ggplot2", "parallel",
 cmd_syspkgs <- sprintf("sudo apt-get install %s", paste0(syspkgs, collapse = " "))
 system(cmd_syspkgs)
 
-install.packages(r_libs)
+install.packages(rlibs)
 
 
                      
