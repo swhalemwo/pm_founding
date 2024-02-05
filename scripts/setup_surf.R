@@ -28,7 +28,7 @@ install.packages(rlibs[!rlib_status],
 rlib_status2 <- sapply(rlibs, \(x) require(x, character.only = T))
 if (any(!rlib_status2)) {
     stop(sprintf("packages %s not installed",
-                 paste0(rlibs[!rlib_status2], collapse = ", "))}
+                 paste0(rlibs[!rlib_status2], collapse = ", ")))}
 
 ## pckgs_test <- c("data.table", "kapparino", "dplyr")
 ## lapply(pckgs_test, \(x) library(x, character.only = T))
