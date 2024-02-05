@@ -1,4 +1,7 @@
+## * finalize everything
+
 print("start finalizing")
+args <- commandArgs(trailingOnly = T)
 PROJECT_DIR <- args[1]
 print(PROJECT_DIR)
 SCRIPT_DIR <- paste0(PROJECT_DIR, "scripts/")
