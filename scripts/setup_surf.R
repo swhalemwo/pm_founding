@@ -3,11 +3,11 @@
 ## ** create paths
 ## dir for R libraries
 dir_rlib <- "/home/jaengenhey/R/x86_64-pc-linux-gnu-library/4.1"
-if (!dir.exists(dir_rlib)) {dir.create(dir_rlib)}
+if (!dir.exists(dir_rlib)) {dir.create(dir_rlib, recursive = T)}
 
 ## regression results on external storage
 dir_regres <- "/data/volume_2/surftest/regres/"
-if (!dir.exists(dir_regres)) {dir.create(dir_regres)}
+if (!dir.exists(dir_regres)) {dir.create(dir_regres, recursive = T)}
 
 ## ## clone code 
 ## if (!dir.exists("/home/jaengenhey/org_pop/")) {
