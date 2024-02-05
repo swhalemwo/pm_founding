@@ -11,7 +11,8 @@ rlibs <- c("data.table", "dplyr", "purrr", "glmmTMB", "ggplot2", "parallel",
 cmd_syspkgs <- sprintf("sudo apt-get install %s", paste0(syspkgs, collapse = " "))
 system(cmd_syspkgs)
 
-install.packages(rlibs)
+install.packages(rlibs,
+                 lib = "/home/jaengenhey/R/x86_64-pc-linux-gnu-library/4.1")
 
 
                      
