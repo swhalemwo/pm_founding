@@ -80,11 +80,11 @@ OBJS_TO_RDS_WRNGL <- .c(
 
 reg_settings_optmz <- list(
     ## relevant parameters
-    batch_version       = "v25",                #  "v24",         
-    nbr_specs_per_thld  = 2,                    #  1,             
+    batch_version       = "v27",                #  "v24",         
+    nbr_specs_per_thld  = 4,                    #  1,             
     lags                = 1:5,                  #  1:3,           
     cbns_to_include     = paste0("cbn", 1:3),   #  "cbn1",        
-    n_vrbl_thld_choices = 3,                   #  4,             
+    n_vrbl_thld_choices = 36,                   #  4,             
     ## no longer varying
     dvfmts              = c("rates"), 
     vary_vrbl_lag       = F,
