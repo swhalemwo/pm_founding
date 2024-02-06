@@ -27,8 +27,13 @@ source(paste0(SCRIPT_DIR, "startup_static.R"))
 source(paste0(SCRIPT_DIR, "reg_funcs.R"))
 source(paste0(SCRIPT_DIR, "custom_funcs.R"))
 
-walk(c(OBJS_TO_RDS_REG, OBJS_TO_RDS_WRNGL),
-       ~assign(.x, value = readRDS(file = paste0(RDS_DIR, .x, ".rds")), envir = .GlobalEnv))
+walk(c(OBJS_TO_RDS_WRNGL), # OBJS_TO_RDS_REG
+     ~assign(.x, value = readRDS(file = paste0(RDS_DIR, .x, ".rds")), envir = .GlobalEnv))
+
+fldr_info_optmz <- readRDS(paste0(REG_MONKEY_DIR, reg_settings_optmz$batch_version, "/fldr_info_optmz.rds"))
+
+
+
 
 
 

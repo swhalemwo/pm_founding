@@ -78,9 +78,6 @@ OBJS_TO_RDS_WRNGL <- .c(
     dt_shweal    
 )
 
-OBJS_TO_RDS_REG <- .c(
-    fldr_info_optmz)
-
 reg_settings_optmz <- list(
     ## relevant parameters
     batch_version       = "v25",                #  "v24",         

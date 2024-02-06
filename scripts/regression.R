@@ -32,7 +32,10 @@ mclapply(reg_spec_mdls_optmz, \(x) optmz_reg_spec(x, fldr_info_optmz, reg_settin
 
 print("models have been run, now saving files")
 
-walk(OBJS_TO_RDS_REG, ~saveRDS(get(.x), file = paste0(RDS_DIR, .x, ".rds")))
+## walk(OBJS_TO_RDS_REG, ~saveRDS(get(.x), file = paste0(RDS_DIR, .x, ".rds")))
+
+## save fldr_info_optmz for later steps
+saveRDS(fldr_info_optmz, file = paste0(fldr_info_optmz$BATCH_DIR, "fldr_info_optmz.rds"))
 
 ## this stop should never be commented out 
 ## stop("regression is DONE")
