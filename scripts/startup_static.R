@@ -110,3 +110,43 @@ if (!dir.exists(TABLE_DIR)) {dir.create(TABLE_DIR, recursive = T)}
 
 
 
+setup_regression_folders_and_files <- function(REG_MONKEY_DIR, batch_version, batch_dir_addgn = "") {
+    #' setup folders and files for running regressions
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
+    
+
+    ## batch_version <- "v20"
+    ## REG_MONKEY_DIR <- "/home/johannes/reg_res/"
+    BATCH_DIR <- paste0(REG_MONKEY_DIR, batch_dir_addgn, batch_version, "/")
+
+    REG_RES_DIR <- paste0(BATCH_DIR, "reg_res/")
+    REG_RES_FILE_LAGS <- paste0(BATCH_DIR, batch_version, "_lags.csv")
+    REG_RES_FILE_CFGS <- paste0(BATCH_DIR, batch_version, "_cfgs.csv")
+    REG_SPEC_DIR <- paste0(BATCH_DIR, "specs/")
+    MDL_START_FILE <- paste0(BATCH_DIR, batch_version, "_start.csv")
+    MDL_END_FILE <- paste0(BATCH_DIR, batch_version, "_end.csv")
+    ## generate existing dirs: have to normalizePath (remove //), and paste additional "/" at the end reeee
+    existing_batch_dirs <- paste0(normalizePath(list.dirs(REG_MONKEY_DIR, recursive = F)), "/")
+    
+    if (BATCH_DIR %!in% existing_batch_dirs) { system(paste0("mkdir ", BATCH_DIR))}
+    existing_dirs <- paste0(normalizePath(list.dirs(BATCH_DIR, recursive = F)), "/")
+
+    if (REG_RES_DIR %!in% existing_dirs){ system(paste0("mkdir ", REG_RES_DIR))}
+    if (REG_SPEC_DIR %!in% existing_dirs){ system(paste0("mkdir ", REG_SPEC_DIR))}
+    PID_DIR <- "/home/johannes/pid_dir/"
+
+    return(list(
+        batch_version = batch_version,
+        BATCH_DIR = BATCH_DIR,
+        REG_MONKEY_DIR = REG_MONKEY_DIR,
+        REG_RES_DIR = REG_RES_DIR,
+        REG_RES_FILE_LAGS = REG_RES_FILE_LAGS,
+        REG_RES_FILE_CFGS = REG_RES_FILE_CFGS,
+        REG_SPEC_DIR = REG_SPEC_DIR,
+        MDL_START_FILE = MDL_START_FILE,
+        MDL_END_FILE = MDL_END_FILE,
+        PID_DIR = PID_DIR
+    )
+    )
+}
+

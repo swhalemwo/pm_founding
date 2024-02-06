@@ -37,5 +37,7 @@ filter <- dplyr::filter
 walk(c(OBJS_TO_RDS_WRNGL), # OBJS_TO_RDS_REG),
      ~assign(.x, value = readRDS(file = paste0(RDS_DIR, .x, ".rds")), envir = .GlobalEnv))
 
-fldr_info_optmz <- readRDS(paste0(REG_MONKEY_DIR, reg_settings_optmz$batch_version, "/fldr_info_optmz.rds"))
+## fldr_info_optmz <- readRDS(paste0(REG_MONKEY_DIR, reg_settings_optmz$batch_version, "/fldr_info_optmz.rds"))
+
+fldr_info_optmz <- setup_regression_folders_and_files(REG_MONKEY_DIR, reg_settings_optmz$batch_version)
 
