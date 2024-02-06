@@ -7,7 +7,20 @@
 ## code for regression results
 ## REG_MONKEY_DIR <- "/home/johannes/remtest/regres/"
 ## REG_MONKEY_DIR <- "/home/jaengenhey/surftest/regres/"
-REG_MONKEY_DIR <- "/data/volume_2/surftest/regres/"
+
+
+## set environmental variables depending on whether analysis runs on my machine or in cloud
+if (grepl("jaengenhey", PROJECT_DIR)) { # this is at the cloud 
+    REG_MONKEY_DIR <- "/data/volume_2/surftest/regres/"
+    NBR_THREADS <- 12
+} else {
+    ## this is at home 
+    REG_MONKEY_DIR <- "/home/johannes/surfres/"
+    NBR_THREADS <- 5
+}
+
+
+
 PMDB_DIR       <- paste0(PROJECT_DIR, "data/pmdb/") # DIR for private museum database (currently excel import)
 SCRIPT_DIR     <- paste0(PROJECT_DIR, "scripts/")
 RDS_DIR        <- paste0(PROJECT_DIR, "data/RDS/")
