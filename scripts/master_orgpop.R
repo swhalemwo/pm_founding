@@ -6,7 +6,7 @@ PROJECT_DIR <- gsub("org_pop/scripts", "org_pop/", x = getwd())
 library(collapse) # needed for reading startup_static
 
 
-SCRIPT_DIR <- paste0(PROJECT_DIR_DIR, "scripts/")
+SCRIPT_DIR <- paste0(PROJECT_DIR, "scripts/")
 
 source(paste0(SCRIPT_DIR, "startup_static.R"))
 
