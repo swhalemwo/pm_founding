@@ -21,6 +21,7 @@ cmd_finalize       <- sprintf("Rscript finalize.R %s >& %slog_finalize.txt"  , P
 
 ## run commands
 status_reg   <- system(cmd_reg)
+print(cmd_reg)
 if (status_reg != 0) {stop("error in cmd_reg")}
 
 status_post  <- system(cmd_postestimation)
