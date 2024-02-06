@@ -1320,7 +1320,7 @@ vary_batch_reg_spec <- function(reg_specs, reg_settings, vvs) {
     ## generate variations of basic reg_spec
     reg_spec_varyns <- mclapply(reg_specs, \(x)
                                 vary_spec(x, vvs, reg_settings$vary_vrbl_lag, reg_settings$lags),
-                                mc.cores = 6) %>% flatten()
+                                mc.cores = NBR_THREADS) %>% flatten()
 
     ## vary_spec(reg_specs[[1]], vvs, reg_settings$vary_vrbl_lag, reg_settings$lags)
     ## vary_spec(reg_specs[[3]], vvs, T, c(1,2,3,4))
@@ -1331,7 +1331,7 @@ vary_batch_reg_spec <- function(reg_specs, reg_settings, vvs) {
     ## add the combination info
     reg_spec_cbns <- mclapply(reg_spec_varyns, \(x)
                               gen_spec_cbn_info(x, reg_settings$cbns_to_include, vvs),
-                              mc.cores = 6) %>%
+                              mc.cores = NBR_THREADS) %>%
         flatten()
 
     ## map(reg_spec_cbns, ~.x$cfg$cbn_name) %>% unlist() %>% table()
@@ -1347,25 +1347,25 @@ vary_batch_reg_spec <- function(reg_specs, reg_settings, vvs) {
     ## reg_spec_mdls <- sapply(reg_spec_cbns, gen_spec_mdl_info)
     
     
-    reg_spec_mdls <- mclapply(reg_spec_cbns, gen_spec_mdl_info, mc.cores = 6) %>% flatten()
+    reg_spec_mdls <- mclapply(reg_spec_cbns, gen_spec_mdl_info, mc.cores = NBR_THREADS) %>% flatten()
     ## same issue here: mclapply with Reduce is slow, but with flatten it's faster :)))
 
     reg_spec_techniques <- mclapply(reg_spec_mdls, \(x)
                                     gen_spec_technique_info(x, reg_settings$technique_strs),
-                                    mc.cores = 6) %>% flatten()
+                                    mc.cores = NBR_THREADS) %>% flatten()
     ## gen_spec_technique_info(reg_spec_mdls[[1]])
 
     reg_spec_difficulties <- mclapply(reg_spec_techniques, \(x)
                                       gen_spec_difficulty_info(x, reg_settings$difficulty_switches),
-                                      mc.cores = 6) %>% flatten()
+                                      mc.cores = NBR_THREADS) %>% flatten()
 
     reg_spec_regcmds <- mclapply(reg_spec_difficulties, \(x)
                                  gen_spec_regcmd_info(x, reg_settings$regcmds),
-                                 mc.cores = 6) %>% flatten()
+                                 mc.cores = NBR_THREADS) %>% flatten()
 
     reg_spec_dvfmts <- mclapply(reg_spec_regcmds, \(x)
                                 gen_spec_dvfmt_info(x, reg_settings$dvfmts),
-                                mc.cores = 6) %>% flatten()
+                                mc.cores = NBR_THREADS) %>% flatten()
 
 
     return(reg_spec_dvfmts)
@@ -2258,8 +2258,8 @@ read_reg_res_files_ou <- function(fldr_info) {
         lapply(\(x) read_reg_res(x, fldr_info))
 
 
-    coef_df <- mclapply(all_mdl_res, \(x) atb(x[["coef_df"]]), mc.cores = 6) %>% bind_rows()
-    gof_df <- mclapply(all_mdl_res, \(x) x[["gof_df"]], mc.cores = 6) %>% bind_rows() %>% atb()
+    coef_df <- mclapply(all_mdl_res, \(x) atb(x[["coef_df"]]), mc.cores = NBR_THREADS) %>% bind_rows()
+    gof_df <- mclapply(all_mdl_res, \(x) x[["gof_df"]], mc.cores = NBR_THREADS) %>% bind_rows() %>% atb()
 
     ## add the model details as variables 
     gof_df_cbn <- merge(gof_df, df_reg_anls_cfgs_wide) %>% atb() %>%
