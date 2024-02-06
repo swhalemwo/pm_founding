@@ -12,7 +12,7 @@
 ## set environmental variables depending on whether analysis runs on my machine or in cloud
 if (grepl("jaengenhey", PROJECT_DIR)) { # this is at the cloud 
     REG_MONKEY_DIR <- "/data/volume_2/surftest/regres/"
-    NBR_THREADS <- 12
+    NBR_THREADS <- 14
 } else {
     ## this is at home 
     REG_MONKEY_DIR <- "/home/johannes/surfres/"
@@ -21,9 +21,9 @@ if (grepl("jaengenhey", PROJECT_DIR)) { # this is at the cloud
 
 
 
-PMDB_DIR       <- paste0(PROJECT_DIR, "data/pmdb/") # DIR for private museum database (currently excel import)
-SCRIPT_DIR     <- paste0(PROJECT_DIR, "scripts/")
-RDS_DIR        <- paste0(PROJECT_DIR, "data/RDS/")
+PMDB_DIR   <- paste0(PROJECT_DIR, "data/pmdb/") # DIR for private museum database (currently excel import)
+SCRIPT_DIR <- paste0(PROJECT_DIR, "scripts/")
+RDS_DIR    <- paste0(PROJECT_DIR, "data/RDS/")
 
 
 
@@ -80,11 +80,11 @@ OBJS_TO_RDS_WRNGL <- .c(
 
 reg_settings_optmz <- list(
     ## relevant parameters
-    batch_version       = "v25",                #  "v24",         
-    nbr_specs_per_thld  = 4,                    #  1,             
+    batch_version       = "v26",                #  "v24",         
+    nbr_specs_per_thld  = 2,                    #  1,             
     lags                = 1:5,                  #  1:3,           
     cbns_to_include     = paste0("cbn", 1:3),   #  "cbn1",        
-    n_vrbl_thld_choices = 36,                   #  4,             
+    n_vrbl_thld_choices = 3,                   #  4,             
     ## no longer varying
     dvfmts              = c("rates"), 
     vary_vrbl_lag       = F,
