@@ -80,7 +80,7 @@ OBJS_TO_RDS_WRNGL <- .c(
 
 reg_settings_optmz <- list(
     ## relevant parameters
-    batch_version       = "v26",                #  "v24",         
+    batch_version       = "v25",                #  "v24",         
     nbr_specs_per_thld  = 2,                    #  1,             
     lags                = 1:5,                  #  1:3,           
     cbns_to_include     = paste0("cbn", 1:3),   #  "cbn1",        

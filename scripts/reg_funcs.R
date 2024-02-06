@@ -2077,16 +2077,57 @@ cbn_splitted_files <- function(grep_pattern, fldr_info) {
 
 
 gen_VIF_res <- function(iv_vars, dfx) {
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
     #' generate VIF results from some set of variables
 
     
     f_allvrbls <- gen_r_f("rates", iv_vars, time_ri = T)
+    ## r_check <- glmmTMB(f_allvrbls, dfx, family = nbinom1, control = glmmTMBControl(rank_check = "adjust"))
+    ## check_singularity(r_check)
     r_check <- glmmTMB(f_allvrbls, dfx, family = nbinom1)
+    ## check_collinearity(r_check, verbose = F)
 
-    check_collinearity(r_check)
+    ## skip models that don't like to be estimated
+    dt_check_collin <- tryCatch(
+        check_collinearity(r_check, verbose = F) %>% adt,
+        error = \(e) data.table(Term = character(0), VIF = double(0), VIF_CI_low = double(0),
+                                VIF_CI_high = double(0), SE_factor = double(0), Tolerance = double(0),
+                                Tolerance_CI_low = double(0), Tolerance_CI_high = double(0)))
+
+    
+    
+
+    ## ranef(r_check)
+    ## debugging section
+
+    ## fx_base <- gen_r_f("rates", iv_vars, time_ri = F)
+    ## ## fx_tiy <- gen_r_f("rates", iv_vars, time_ri = T)
+
+    ## r_check_base <- glmmTMB(fx_base, dfx, family = nbinom1)
+    ## ## r_check_tiy <- glmmTMB(fx_tiy, dfx, family = nbinom1)
+
+    ## model.matrix(fx_tiy, data = dfx)
+    
+    ## coef(r_check)$cond$year %>% adt(keep.rownames = "year")
+    ## coef(r_check)$cond$iso3c %>% adt(keep.rownames = "iso3c")
+
+
+    ## ranef(r_check_tiy, condVar = F) %>% adt %>%
+    ##     ggplot(aes(x=condval, group = grpvar)) + geom_density() +
+    ##     facet_wrap(~grpvar, scales = "free") +
+    ##     geom_vline(xintercept = 0)
+    
+    
+    
+    ## ranef(r_check_base, condVar = F) %>% adt %>%
+    ##     ggplot(aes(x=condval)) + geom_density() + geom_vline(xintercept = 0)
+
+    return(dt_check_collin)
+    
 }
 
 vif_tester <- function(regspec) {
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
     #' generate VIF stats for a regspec
 
     dfx <- chuck(cbn_df_dict, "rates", chuck(regspec, "cfg", "cbn_name"))
@@ -2115,6 +2156,7 @@ vif_tester <- function(regspec) {
 
 
 gen_VIF_regspec_res <- function(mdl_id, fldr_info) {
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
     #' generate VIF stats for one regspec/mdl (given model ID)
 
     ## read from file 
@@ -2162,9 +2204,15 @@ gen_VIF_allres <- function(top_coefs, fldr_info) {
     ## dt_vifx <- gen_VIF_regspec_res(unique(top_coefs$mdl_id)[1], fldr_info)
     ## dt_vifx[, .(Term, VIF, vrblset)] %>% print(n=30)
 
-    plan(multicore, workers = 5)
+    
+    ## gen_VIF_regspec_res(unique(top_coefs$mdl_id)[8], fldr_info)
 
-    dt_vif_res <- future_map_dfr(unique(top_coefs$mdl_id), ~gen_VIF_regspec_res(.x, fldr_info))
+    ## plan(multicore, workers = 5)
+    ## dt_vif_res <- future_map_dfr(unique(top_coefs$mdl_id), ~gen_VIF_regspec_res(.x, fldr_info))
+
+    dt_vif_res <- mclapply(unique(top_coefs$mdl_id), \(x) gen_VIF_regspec_res(x, fldr_info),
+                           mc.cores = NBR_THREADS) %>% rbindlist
+    
     fwrite(dt_vif_res, paste0(fldr_info$BATCH_DIR, "VIF_res.csv"))
     
     
