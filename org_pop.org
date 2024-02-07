@@ -914,11 +914,11 @@ Despite substantial efforts to collect complete data for the relevant variables,
 # #
 # To partly remedy these shortcomings, I construct multiple datasets which vary in their inclusion of variables and country years (the more variables are included, the fewer country years can be covered).
 #
-As excluding a large number of country-years limits the generalizability of findings, I construct multiple datasets that differ regarding variable and country-year coverage.
+As excluding a large number of country-years limits the generalizability of findings, I construct multiple datasets each of which strikes a different balance between variable and country-year coverage.
 # 
 In particular, I construct one dataset with all variables ({{{nbr_cy_cbn1}}} country years, {{{nbr_crys_cbn1}}} countries; referred to as "DS all IVs"), one with all variables except cultural spending ({{{nbr_cy_cbn2}}} country years, {{{nbr_crys_cbn2}}} countries; "DS --CuSp"), and one with all variables except cultural spending and top marginal income tax rates ({{{nbr_cy_cbn3}}} country years, {{{nbr_crys_cbn3}}} countries; "DS --CuSp/TMITR").
 #
-In terms of composition, DS all IVs overrepresents Europe and underepresents the Global South, while the other datasetes are more balanced (table {{{rtbl_cbn_cpsgn}}} and appendix \ref{app_cbncpsgn}).
+In terms of composition, DS all IVs overrepresents Europe and underepresents the Global South, while the other datasets are more balanced (table {{{rtbl_cbn_cpsgn}}}).
 #
 All country-years except for some of Denmark, France and the United States are situated between 2000 and 2020 with country-coverage generally increasing over time (cf. appendix \ref{app_data_coverage})
 # 
@@ -1078,65 +1078,14 @@ Coefficients can be interpreted as logged multipliers of a country's founding ra
 #+latex: \FloatBarrier
 
 **** Control Variables 
-
-***** GDP :ignhead:
-
-The coefficient of GDP per capita is generally positive. 
+The coefficients of the control variables indicate that a number of other factors beyond the main processes are associated with private museum founding.
 #
-In the two larger datasets, it is significant and also substantially larger with values of {{{gdp_coef_cbn2}}} and {{{gdp_coef_cbn3}}} for "DS --CuSp" and "DS --CuSP/TMITR" respectively, compared to {{{gdp_coef_cbn1}}} for "DS all IVs".
+In particular GDP and private museum densities feature strongly across datasets and specifications.
+GDP variables generally showing a positive associations while density variables exhibit either an inverse U-shaped relationship compatible with the density-dependence literature (in the case of country and global density) or a weak U-shaped relationship in the case of density of neighboring countries.
 #
-# *which is substantial especially when considering that in datasets with more country years GDP per capita has a smaller standard deviation ({{{gdp_1SD_cbn2}}}, {{{gdp_1SD_cbn3}}} and {{{gdp_1SD_cbn1}}} in "DS -CuSp", "DS -CuSp/TMTIR and "DS all IVs", respectively).*
-# not clear if this makes sense, maybe just cut -> just focus on smorc mediation/DS composition
-# 
-This between-dataset variation in coefficient size could indicate mediation of GDP through cultural spending (cf. appendix \ref{app_mediation} and figure {{{rplt_oucoefchng}}}); however further investigation would be required to more clearly determine the mechanism at play. 
-# could link to {{{rplt_oucoefchng}}}, supports mediation
-# FIXME add speculation about mechanism
-Economic growth is also positive and significant in all data sets.
-
-
-***** density dependence :ignhead:
-
-In all datasets on the country and global level, measures of density (legitimacy) and density squared (competition) correspond to the density-dependence paradigm, i.e. an inverted U-shaped relationship between density and private museum founding (indicated by the significant negative coefficient of the squared density measure on the country and global level for all datasets). 
+No substantial impact on private museum founding is found for cumulative private museum closures and the other art field indicators, number of artnews collectors and number of modern and contemporary museums.
 #
-# The pattern of a negative coefficient of the squared density measure (which is significant everywhere except for the global coefficient in "DS all IVs"; where however it is marginally significant), is present for the density measures on the level of both the country and the world.
-#
-Private museum founding thus is generally compatible with the density dependence paradigm, according to which potential founders are motivated by their peers' decision to establish a private museum up to the point where private museum numbers increased to the extent that additional founding does not appear advantageous anymore.
-#
-However, density in neighboring countries does not fit this trend.
-#
-While the coefficients are insignificant in the two larger datasets, in DS all IVs it describes a U-shaped relationship, corresponding to higher rates of founding at the extreme ends of the scale.
-#
-Given the right-skewed distribution of neighbor density increasing density in neighboring countries primarily decreases private museum founding in the focal country.
-#
-Furthermore, while prospective founders might ultimately be disincentivized by growing private museum numbers, there is no evidence for a demotivating effect of museum closures, as the coefficient of the cumulative number of museum closures is not significant.
-
-# While the general pattern thus follows the density-dependence literature, the particular values of the coefficients indicate additional complexities.
-# #
-# Whereas in "DS all IVs" the maximum of the private museum country density curve is reached at a value of {{{dens_cry_top_point_std_cbn1}}}, correponding to a density of {{{dens_cry_top_point_cbn1}}} private museums per million inhabitants, which constitutes a value higher than observed in {{{dens_cry_top_below_CYs_prop}}}% of country years, the maxium of the global density curve is already reached at a value of {{{dens_glbl_top_point_std_cbn1}}}, corresponding to the global private museum count of {{{dens_glbl_top_point_cbn1}}}, which is a value only higher than {{{dens_glbl_top_below_CYs_prop}}}% of country years (and corresponds to the value reached in year XXXX).
-# #
-# In other words, the country-level capacity appears to be higher than the global carrying capacity, as on the country-level increasing private museum densities are associated with higher chances of private museum foundings for a substantially larger section of the data than on the global level.
-# # this is 92% made up
-# A possible reason for this phenomenon could be that unobserved variables limit the founding chances for a number of countries, as a consequence of which the country-level carrying capacity is disproportionally based on the countries in which foundings take place and therefore constitutes a level which can't be reached in most countries. 
-# #
-# However, more research is needed to investigate this phenomenon further. 
-
-
-# density dependence also has large model improvement
-
-
-***** Art field indicators :ignhead:
-
-Similary, the coefficients of the art field indicators (the number of museums of modern and contemporary art and of the number of collectors in the Artnews top collector ranking) are relatively small and insignificant in all datasets.
-
-# ***** intercept :ignhead:
-# leave for now
-
-# The intercepts describe the predicted founding rate for a hypothetical country with values of zero on all predictors, which given the standardizing corresponds to the mean values on all variables except the tax deductibility of donations, where zero instead corresponds to no tax deductibility of donations.
-# #
-# The 
-
-
-
+For a more detailed discussion of the control variables see appendix \ref{app_controls}.
 
 
 
@@ -1425,24 +1374,25 @@ Given this state of data coverage and the fact that five years of subsequent dat
 
 # As a consequence of the data availability of longitudinal variables, for most countries the analysis covers the years 2000-2020.
 
-** Combination composition
-:PROPERTIES:
-:ID:       b758316a-6acb-446a-870b-9177b54571ba
-:CUSTOM_ID: app_cbncpsgn
-:END:
 
-# #+INCLUDE: "./tables/tbl:cbn_cpsgn_v27.tex" export latex
+# ** Combination composition
+# :PROPERTIES:
+# :ID:       b758316a-6acb-446a-870b-9177b54571ba
+# :CUSTOM_ID: app_cbncpsgn
+# :END:
+
+# # #+INCLUDE: "./tables/tbl:cbn_cpsgn_v27.tex" export latex
 
 
-Table {{{rtbl_cbn_cpsgn}}} shows the coverage of datasets by region. 
-#
-Relative between-dataset differences are particularly strong for Africa, Latin America and Europe.
-# FIXME: numbers that are not org-macros
-While Europe with more than half of the country-years is "DS all IVs" constitutes the largest region (indicating that European countries report relatively detailed statistics on government spending), its share declines to 27.9% and 23% in "DS -CuSp" and "DS -CuSp/TMITR", respectively.
-#
-Conversely, Africa and Latin America claim larger shares in the larger datasets, with the former becoming the region contributing the largest nubmer of country years (1088 or 32.1%) in "DS -CuSp/TMITR".
-#
-The proportion of North America and Oceania also declines in larger datasets, but this results in comparatively less changes in dataset composition as these regions consist of relatively few countries. 
+# Table {{{rtbl_cbn_cpsgn}}} shows the coverage of datasets by region. 
+# #
+# Relative between-dataset differences are particularly strong for Africa, Latin America and Europe.
+# # FIXME: numbers that are not org-macros
+# While Europe with more than half of the country-years is "DS all IVs" constitutes the largest region (indicating that European countries report relatively detailed statistics on government spending), its share declines to 27.9% and 23% in "DS -CuSp" and "DS -CuSp/TMITR", respectively.
+# #
+# Conversely, Africa and Latin America claim larger shares in the larger datasets, with the former becoming the region contributing the largest nubmer of country years (1088 or 32.1%) in "DS -CuSp/TMITR".
+# #
+# The proportion of North America and Oceania also declines in larger datasets, but this results in comparatively less changes in dataset composition as these regions consist of relatively few countries. 
 
 
 
@@ -1528,6 +1478,77 @@ Since the number of Artnews collectors is a discrete count variable it is unable
 
 # #+INCLUDE: "./tables/tbl:descs_v27.tex" export latex
 # #+latex: \end{landscape}
+
+
+
+
+** Control Variables
+:PROPERTIES:
+:CREATED:  [2024-02-07 wo 17:51]
+:ID:       b60f84ec-baff-4f09-bc01-10ae96d70d13
+:CUSTOM_ID: app_controls
+:END:
+
+*** GDP :ignhead:
+
+The coefficient of GDP per capita is generally positive. 
+#
+In the two larger datasets, it is significant and also substantially larger with values of {{{gdp_coef_cbn2}}} and {{{gdp_coef_cbn3}}} for "DS --CuSp" and "DS --CuSP/TMITR" respectively, compared to {{{gdp_coef_cbn1}}} for "DS all IVs".
+#
+# *which is substantial especially when considering that in datasets with more country years GDP per capita has a smaller standard deviation ({{{gdp_1SD_cbn2}}}, {{{gdp_1SD_cbn3}}} and {{{gdp_1SD_cbn1}}} in "DS -CuSp", "DS -CuSp/TMTIR and "DS all IVs", respectively).*
+# not clear if this makes sense, maybe just cut -> just focus on smorc mediation/DS composition
+# 
+This between-dataset variation in coefficient size could indicate mediation of GDP through cultural spending (cf. appendix \ref{app_mediation} and figure {{{rplt_oucoefchng}}}); however further investigation would be required to more clearly determine the mechanism at play. 
+# could link to {{{rplt_oucoefchng}}}, supports mediation
+# FIXME add speculation about mechanism
+Economic growth is also positive and significant in all data sets.
+
+
+*** density dependence :ignhead:
+
+In all datasets on the country and global level, measures of density (legitimacy) and density squared (competition) correspond to the density-dependence paradigm, i.e. an inverted U-shaped relationship between density and private museum founding (indicated by the significant negative coefficient of the squared density measure on the country and global level for all datasets). 
+#
+# The pattern of a negative coefficient of the squared density measure (which is significant everywhere except for the global coefficient in "DS all IVs"; where however it is marginally significant), is present for the density measures on the level of both the country and the world.
+#
+Private museum founding thus is generally compatible with the density dependence paradigm, according to which potential founders are motivated by their peers' decision to establish a private museum up to the point where private museum numbers increased to the extent that additional founding does not appear advantageous anymore.
+#
+However, density in neighboring countries does not fit this trend.
+#
+While the coefficients are insignificant in the two larger datasets, in DS all IVs it describes a U-shaped relationship, corresponding to higher rates of founding at the extreme ends of the scale.
+#
+Given the right-skewed distribution of neighbor density increasing density in neighboring countries primarily decreases private museum founding in the focal country.
+#
+Furthermore, while prospective founders might ultimately be disincentivized by growing private museum numbers, there is no evidence for a demotivating effect of museum closures, as the coefficient of the cumulative number of museum closures is not significant.
+
+# While the general pattern thus follows the density-dependence literature, the particular values of the coefficients indicate additional complexities.
+# #
+# Whereas in "DS all IVs" the maximum of the private museum country density curve is reached at a value of {{{dens_cry_top_point_std_cbn1}}}, correponding to a density of {{{dens_cry_top_point_cbn1}}} private museums per million inhabitants, which constitutes a value higher than observed in {{{dens_cry_top_below_CYs_prop}}}% of country years, the maxium of the global density curve is already reached at a value of {{{dens_glbl_top_point_std_cbn1}}}, corresponding to the global private museum count of {{{dens_glbl_top_point_cbn1}}}, which is a value only higher than {{{dens_glbl_top_below_CYs_prop}}}% of country years (and corresponds to the value reached in year XXXX).
+# #
+# In other words, the country-level capacity appears to be higher than the global carrying capacity, as on the country-level increasing private museum densities are associated with higher chances of private museum foundings for a substantially larger section of the data than on the global level.
+# # this is 92% made up
+# A possible reason for this phenomenon could be that unobserved variables limit the founding chances for a number of countries, as a consequence of which the country-level carrying capacity is disproportionally based on the countries in which foundings take place and therefore constitutes a level which can't be reached in most countries. 
+# #
+# However, more research is needed to investigate this phenomenon further. 
+
+
+# density dependence also has large model improvement
+
+
+*** Art field indicators :ignhead:
+
+Similary, the coefficients of the art field indicators (the number of museums of modern and contemporary art and of the number of collectors in the Artnews top collector ranking) are relatively small and insignificant in all datasets.
+
+# ***** intercept :ignhead:
+# leave for now
+
+# The intercepts describe the predicted founding rate for a hypothetical country with values of zero on all predictors, which given the standardizing corresponds to the mean values on all variables except the tax deductibility of donations, where zero instead corresponds to no tax deductibility of donations.
+# #
+# The 
+
+
+
+
+
 
 
 
