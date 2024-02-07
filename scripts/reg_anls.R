@@ -3115,7 +3115,10 @@ gen_nbrs_pred <- function(top_coefs, cbn_dfs_rates_uscld, df_reg, print_examples
     tmitr_iso3c1 <- dt_tmitr_exmpl_fltrd$tmitr
     tmitr_iso3c2 <- dt_tmitr_exmpl_fltrd$i.tmitr
 
-    
+    imap(cbn_dfs_counts_uscld[1:3], ~adt(.x)[, .(ti = tmitr_approx_linear20step_lag0, cbn = .y)]) %>% rbindlist %>%
+        ggplot(aes(x=ti)) +  geom_density() + facet_grid(cbn~.)
+        
+
 
     txinctvs <- c(lnbrs_ti, list(
         ## lnbr(txdctblt_cbn3, 2),
