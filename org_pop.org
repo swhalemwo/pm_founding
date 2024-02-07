@@ -1037,7 +1037,7 @@ Only {{{nbr_nzero_cbn1}}} country-years see show at least one private museum fou
 # Figure [[fig:best_models_condensed]] shows the results of the best-fitting models for each dataset (the time lags of the independent variables are omitted here, but can be seen in figure [[fig:plt_v62_reg_res_within]] in the appendix).
 
 
-#+INCLUDE: "./tables/tbl:regrslts_wcptblF_v91.tex" export latex
+#+INCLUDE: "./tables/tbl:regrslts_wcptblF_v27.tex" export latex
 
 
 
@@ -1182,7 +1182,7 @@ Nevertheless, in the range above this turning point which (in 2020) includes cou
 # 
 The data thus supports both the crowding-out argument of the private museum literature which considers private museum founding  a consequence of declining government spending (H2) as well as the crowding-in argument raised by philanthropy scholars. 
 #
-However, little evidence is found for a lack of government spending facilitating private museum founding in countries  with emerging art scenes, as these are located in the range in which government spending is positively associated with private museum founding. 
+However, little evidence is found for a lack of government spending facilitating private museum founding in countries with emerging art scenes, as these are located in the range in which government spending is positively associated with private museum founding. 
 
 **** Inequality (H3)
 
@@ -1403,7 +1403,7 @@ Given this state of data coverage and the fact that five years of subsequent dat
 :CUSTOM_ID: app_cbncpsgn
 :END:
 
-#+INCLUDE: "./tables/tbl:cbn_cpsgn_v91.tex" export latex
+#+INCLUDE: "./tables/tbl:cbn_cpsgn_v27.tex" export latex
 
 
 Table {{{rtbl_cbn_cpsgn}}} shows the coverage of datasets by region. 
@@ -1497,7 +1497,7 @@ Since the number of Artnews collectors is a discrete count variable it is unable
 :END:
 
 
-#+INCLUDE: "./tables/tbl:descs_v91.tex" export latex
+#+INCLUDE: "./tables/tbl:descs_v27.tex" export latex
 #+latex: \end{landscape}
 
 
