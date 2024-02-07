@@ -3381,6 +3381,13 @@ gen_nbrs_pred <- function(top_coefs, cbn_dfs_rates_uscld, df_reg, print_examples
     dens_glbl_top_point_cbn1 <- (dens_glbl_top_point_std_cbn1 * attr(dens_glbl_scale, "scaled:scale")) +
         attr(dens_glbl_scale, "scaled:center")
 
+    ## cbn_dfs_rates$cbn1 %>% adt %>% .[, .(minx = min(pmdens_neigh_lag1), maxx = max(pmdens_neigh_lag1))] %$%
+    ##     data.table(x=seq(minx, maxx, 0.1)) %>%
+    ##     .[, y := -0.32*x + 0.12*x^2] %>%
+    ##     ggplot(aes(x=x, y=exp(y))) + geom_line()
+    
+    ## cbn_dfs_rates$cbn1 %>% ggplot(aes(x=pmdens_neigh_lag1)) + geom_density()
+
     dens_coef_stats <- list(
         lnbr(pm_density_cbn1, 2),
         lnbr(pm_density_sqrd_cbn1, 2),
