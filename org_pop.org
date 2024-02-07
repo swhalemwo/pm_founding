@@ -1155,10 +1155,21 @@ This range of a positive association between government spending and private mus
 It is furthermore worth to consider that since "DS all IVs" consists disproportionately of developed countries, the true proportion of country-years in which higher government expenditure is associated with higher private museum is likely even higher.
 #
 Nevertheless, in the range above this turning point which (in 2020) includes countries prominent for their private museum populations such as Germany ({{{smorc_2020_DEU}}} USD), France ({{{smorc_2020_FRA}}} USD), the Netherlands ({{{smorc_2020_NLD}}} USD) or Switzerland ({{{smorc_2020_CHE}}} USD) increases in government spending are associated with lower rates of private museum founding (and conversely, decreases in government spending with higher rates of private museum founding).
-# 
-The data thus supports both the crowding-out argument of the private museum literature which considers private museum founding  a consequence of declining government spending (H2) as well as the crowding-in argument raised by philanthropy scholars. 
 #
-However, little evidence is found for a lack of government spending facilitating private museum founding in countries with emerging art scenes, as these are located in the range in which government spending is positively associated with private museum founding. 
+
+These results are not compatible with an exclusive focus on either crowding-out nor signalling.
+#
+Instead, it is plausible that both mechanisms operate depending on the level of cultural spending.
+#
+At lower levels of government demand for cultural services is likely relatively unsaturated due to low service provision, therefore government spending can legitimate the cultural field as a whole, including iniatives of private collectors.
+#
+As demand surpasses supply, the few public museum exhibitions might receive so much attention that private collectors feel confirmed in entering the cultural field by setting up their own museums and thereby attracting a substantial slice of the audience.
+#
+On the other hand, at high levels of cultural spending art demand is likely already relatively saturated, therefore further increases in government spending increases the capability of public museums to compete with their private counterparts over audiences; such a highly competitive environment thus makes it increasingly unattractive for private founders to set up their museums. 
+# 
+The data thus supports both the crowding-out argument of the private museum literature which considers private museum founding a consequence of declining government spending (H2) as well as the crowding-in argument raised by philanthropy scholars, albeit the former only at high levels of cultural spending and the latter at lower levels.
+#
+However, little evidence is found for a lack of government spending facilitating private museum founding in countries with emerging cultural fields, as these are located in the range in which government spending is positively associated with private museum founding. 
 
 **** Inequality (H3)
 
