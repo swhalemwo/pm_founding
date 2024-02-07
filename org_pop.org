@@ -1117,13 +1117,13 @@ For a more detailed discussion of the control variables see appendix \ref{app_co
 # new version
 The results for tax incentives largely support the hypothesis of tax incentives as a factor contributing to private museum founding:
 #
-In DS all IVs (as well as DS -CuSp), the interaction between tax deductibility of donations and top marginal income tax rates is positive and significant, which indicates that increases in top marginal income tax rates have a larger positive effect in countries where charitable donations are tax deductible than in countries where they are not.
+In DS all IVs (as well as DS-CuSp), the interaction between tax deductibility of donations and top marginal income tax rates is positive and significant, which indicates that increases in top marginal income tax rates have a larger positive effect in countries where charitable donations are tax deductible than in countries where they are not.
 #
 Figure {{{rplt_pred_taxinc}}} visualizes how the impact of top marginal income tax rates depends on the presence of tax deductibility of donations.
 #
 In particular at higher top marginal income tax rates countries with tax deductibility of donations see more private museum foundings than countries where charitable donations are not tax deductible.
 #
-The fact that in the former countries collectors can receive substantial tax benefits appears to indeed incentivize potential founders to establish their museums.
+The option for collectors in these countries to receive substantial tax benefits appears to indeed incentivize them to establish private museums.
 #
 A positive role of tax incentives is further supported by the positive (but insignificant; p = {{{Ind_tax_incentives_cbn3_pvlu}}}) coefficient of tax deductibility of donations in DS --CuSp/TMITR, indicating that countries with tax deductibility of donations see $e$^{{{{Ind_tax_incentives_cbn3_coef}}}} = {{{Ind_tax_incentives_cbn3_coef_exp}}} times more private museum founding than countries without. 
 
