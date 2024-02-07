@@ -8,7 +8,7 @@
 #+OPTIONS: h:5
 
 #+BEGIN_SRC R :session calc :exports none :results values drawer :dir /home/johannes/Dropbox/
-dt_nbrs <- fread("/home/johannes/Dropbox/phd/papers/org_pop/tables/tbl_nbrs_v91.csv")
+dt_nbrs <- fread("/home/johannes/Dropbox/phd/papers/org_pop/misc/tbl_nbrs_v27.csv")
 
 dt_nbrs[, .(macro_str = sprintf("#+MACRO: %s %s", nbr_name, nbr_fmt)), grp] %>%
   .[, .(grp_str = paste(macro_str, collapse = "\n")), grp] %>%
@@ -38,12 +38,12 @@ dt_nbrs[, .(macro_str = sprintf("#+MACRO: %s %s", nbr_name, nbr_fmt)), grp] %>%
 
 
 # cbn_info
-#+MACRO: nbr_cy_cbn1 1245
-#+MACRO: nbr_cy_cbn2 2514
-#+MACRO: nbr_cy_cbn3 3330
+#+MACRO: nbr_cy_cbn1 1241
+#+MACRO: nbr_cy_cbn2 2508
+#+MACRO: nbr_cy_cbn3 3244
 #+MACRO: nbr_crys_cbn1 85
 #+MACRO: nbr_crys_cbn2 150
-#+MACRO: nbr_crys_cbn3 161
+#+MACRO: nbr_crys_cbn3 160
 #+MACRO: nbr_opngs_cbn1 355
 #+MACRO: nbr_opngs_cbn2 402
 #+MACRO: nbr_opngs_cbn3 404
