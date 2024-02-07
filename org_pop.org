@@ -453,7 +453,7 @@ As the quantitative analysis of private museums is still it its infancy, this pa
 #
 In the remainder of the paper, I review the literature on the causes of private museum founding, and describe the data sources used to investigate each mechanism.
 #
-I then report results of regression analyses, which indicate support for a positive effect of tax incentives, an inverse U-shaped relationship with cultural spending, divergent effects of different inequality measures and no support for an effect of elite wealth.
+I then report results of regression analyses, which indicate support for a positive effect of tax incentives, an inverse U-shaped relationship with cultural spending, divergent effects of different inequality measures and little support for an effect of elite wealth.
 
 # to investigate the impact that each of the main mechanisms
 # (tax incentives, government spending, inequality and elite wealth).
@@ -467,7 +467,13 @@ For this study I use "private" to denote being established by a private art coll
 #
 A "museum" is conceptualized as an organization that possesses a building and a collection of its own (which excludes kunsthalles and exhibition centers), which is sufficiently accessible to the public.
 #
-For the purpose of this research I also only include institutions that focuses on modern or contemporary art, with modern and contemporary art operationalized as art created after 1900. 
+For the purpose of this research I also only include institutions that focuses on modern or contemporary art, with modern and contemporary art operationalized as art created after 1900.
+# FIXME: stress personal aspect
+This definition, in particular the focus on the private art collector as the primary founder, owner and *governor*, serves to investigate the phenomenon of personal projects of the people who decide to found them.
+#
+Unlike museums founded by foundations (collectives of community members, groups of art collectors), the private museums in question here are highly individual projects.
+
+
 
 
 ** Theoretical framework
@@ -686,8 +692,7 @@ A hypothesis on elite wealth can thus be formulated as:
 | Inequality                     | Wealth/Income inequality: 10% share, 1% share, Gini                         | World Inequality Database        |
 | Elite Wealth                   | Population above threshold of 1M, 5M, 30M, 200M USD                         | World Inequality Database        |
 | Size                           | Population                                                                  | World Bank                       |
-| Development/art demand         | GDP per capita                                                              | World Bank                       |
-| *???????*                      | GDP per capita growth (%)                                                   | World Bank                       |
+| Development/art demand         | GDP per capita, GDP per capita growth (%)                                   | World Bank                       |
 | Presence of potential founders | Number of art collectors                                                    | Artnews top200 collector ranking |
 | Museum population              | Number of modern/contemp. art museums                                       | Museums of the World Database    |
 | Density: Legitimacy            | Number of PMs open (country, neighbors, global)                             | PM Database                      |
@@ -731,7 +736,7 @@ However both the time period and number of countries that can be investigated ar
 *** Independent Variables
 **** Tax incentives
 #
-For this study, I focus on top marginal income tax rates, i.e. the amount of tax to be paid on income in the uppermost tax bracket, and tax deductibility of donations.
+To measure tax incentives, I focus on top marginal income tax rates, i.e. the amount of tax to be paid on income in the uppermost tax bracket, and tax deductibility of donations.
 #
 Higher top marginal income tax rates (in combination with tax deductibility of charitable donations) generally decrease the net cost of a donation (as higher rates increase the amount of taxes returned; cf. cite:&Hemels_2017_incentives for a more detailed discussion), and are thus expected to increase the incentive for founders to donate their collection (or parts of it) to their private museum and receive a tax deduction in return. 
 
@@ -746,14 +751,14 @@ The report describes the situtation in 193 countries but only covers the state o
 #
 # As I have been unable to find good longitudinal data sources on tax deductibility of donations that covers large numbers of countries (especially for the earlier parts of the time period) tax deductibility of donations can only be investigated in regards to between-country differences.
 # 
-As top marginal income tax rates are only expected to provide an incentive if tax donations are tax deductible, I calculate an interaction term between the tax deductibility of donations and marginal income tax rates. 
+As top marginal income tax rates are only expected to provide an incentive if tax donations are tax deductible, I include interaction term between the tax deductibility of donations and top marginal income tax rates. 
 # (as tax deductibility is a binary variable, the value of the interaction term is 0 for countries in which charitable donations are not tax-deductible, and the value of top marginal income tax rates otherwise).
  
 **** Cultural Spending
 
 I use data on government spending on culture, recreation and religion collected by the UN [[parencite:&UN_2022_consumption]], the IMF [[parencite:&IMF_2022_GFS]], the OECD [[parencite:&OECD_2022_SNA_TABLE11_ARCHIVE;&OECD_2022_SNA_TABLE11]] and Eurostat [[parencite:&Eurostat_2022_COFOG]] as an indicator of cultural spending.
 #
-These organizations use the System of National Accounts (SNA), where Classification of the function of government (COFOG) Code 8 describes "culture, recreation and religion".
+These organizations use the System of National Accounts (SNA), where Classification of the function of Government (COFOG) Code 8 describes "culture, recreation and religion".
 #
 The single digit code 8 is rather broad, and the more detailed  double digit SNA code 82 "cultural services" would be preferable to exclude state spending on e.g. sport events, broadcasting, publishing and religion. 
 #
@@ -763,13 +768,13 @@ Even with the broader single-digit Code 8, cultural spending constitutes the ind
 
 
 **** Inequality
-The WID provides Gini coefficients for wealth and pre-tax income[fn::While data on post-tax income is also available in the WID, its coverage is very limited].
+The World Inequality Database (WID) provides Gini coefficients for wealth and pre-tax income[fn::While data on post-tax income is also available in the WID, its coverage is very limited].
 #
-The top 1% and 10% wealth and income shares are used as alternative measures of inequality (the actual process of operationalizing concepts with different measures is described in section Variable selection).
+The top 1% and 10% wealth and income shares are used as different measures of inequality (the actual process of operationalizing concepts with different measures is described in section Variable selection).
 
 
 **** High Net Worth Individuals
-I use the WID to calculate HNWIs indicators, i.e. the population above a certain wealth threshold in a given year. 
+I use the WID to calculate HNWIs indicators which measure population numbers above a certain wealth threshold in a given year. 
 #
 The WID contains for each country-year measures of wealth at various quantile thresholds, e.g. the value for the 90th percentile describes the amount of wealth of the least wealthy member of the top 10%.
 #
@@ -790,11 +795,9 @@ The so-obtained proportion of HNWIs is converted into a count using World Bank p
 *** Control Variables
 **** GDP and Population size
 #
-GDP is included to account for potentially imperfect measurement of government spending and other art field indicators (discussed below). 
+GDP and GDP growth are included to account for potentially imperfect measurement of government spending and other art field indicators (discussed below). 
 #
 Furthermore, given the stratified character of art consumption [[parencite:&Bourdieu_1984_distinction]] within countries, controlling for GDP also includes a demand dimension as more developed countries potentially host larger population shares interested in post-material art consumption.
-#
-*FIXME: Additionally, growth of GDP per capita controlled for to capture changes in the*
 #
 Population size is included as an offset (cf. section Regression specification). 
 
@@ -897,7 +900,9 @@ First, data coverage on some variables was substantially limited; second, the pr
 #
 I address these challenges as follows: 
 
-*** Variable combinations 
+*** Datasets
+
+#+INCLUDE: "./tables/tbl:cbn_cpsgn_v27.tex" export latex
 # 
 Despite substantial efforts to collect complete data for the relevant variables, it was not possible to collect data for all country-years; especially cultural spending and top marginal income tax rate have considerable coverage gaps.
 #
@@ -913,9 +918,11 @@ As excluding a large number of country-years limits the generalizability of find
 # 
 In particular, I construct one dataset with all variables ({{{nbr_cy_cbn1}}} country years, {{{nbr_crys_cbn1}}} countries; referred to as "DS all IVs"), one with all variables except cultural spending ({{{nbr_cy_cbn2}}} country years, {{{nbr_crys_cbn2}}} countries; "DS --CuSp"), and one with all variables except cultural spending and top marginal income tax rates ({{{nbr_cy_cbn3}}} country years, {{{nbr_crys_cbn3}}} countries; "DS --CuSp/TMITR").
 #
-In terms of composition, DS all IVs overrepresents Europe and underepresents the Global South, while the other datasetes are more balanced (cf. appendix \ref{app_cbncpsgn}).
+In terms of composition, DS all IVs overrepresents Europe and underepresents the Global South, while the other datasetes are more balanced (table {{{rtbl_cbn_cpsgn}}} and appendix \ref{app_cbncpsgn}).
 #
-Most country-years are situated between 2000 and 2020 with coverage generally increasing over time (figure {{{rplt_cbn_cycnt}}}); the datasets therefore effectively cover the period in which the majority of private museum founding has taken place (the datasets cover {{{perc_opngs_cvrd_cbn1}}}, {{{perc_opngs_cvrd_cbn2}}} and {{{perc_opngs_cvrd_cbn3}}} of foundings, respectively).
+All country-years except for some of Denmark, France and the United States are situated between 2000 and 2020 with country-coverage generally increasing over time (cf. appendix \ref{app_data_coverage})
+# 
+The datasets effectively cover the period in which the majority of private museum founding has taken place and cover {{{perc_opngs_cvrd_cbn1}}}, {{{perc_opngs_cvrd_cbn2}}} and {{{perc_opngs_cvrd_cbn3}}} of foundings, respectively.
 #
 
 
@@ -964,7 +971,7 @@ If multiple models fit equally well, a lag among these is selected at random.
 #
 This selection of variables in random order followed by lag choice is continued until no further improvement is achieved.
 #
-While the random starting values and random order of variables help to explore the lag space, models can still be stuck in local optima; I therefore run each model four times, each with a different set of random starting values (see figure {{{rplt_lag_dens}}}). 
+While the random starting values and random order of variables help to explore the lag space, models can still be stuck in local optima; I therefore run each model four times, each with a different set of random starting values. 
 
 
 
@@ -1014,9 +1021,16 @@ The main variable of interest, private museum founding (and consequently private
 For example, while in "DS all IVs" on average each year one private museum is founded per {{{nbr_pop_p_1pm_cbn1}}} million inhabitants (1/{{{opng_rate_cbn1}}}), this rate is substantially lower in "DS --CuSP" and "DS --CuSp/TMITR" with one private museum founding per {{{nbr_pop_p_1pm_cbn2}}} and {{{nbr_pop_p_1pm_cbn3}}} million inhabitants, respectively.
 # [fn::These rates refer to country-year averages which weigh all units evenly regardless of population size. The dataset-year private museum founding rates are lower at on average one private museum founding per {{{opng_p1m_glbl_yearly_cbn1}}}, {{{opng_p1m_glbl_yearly_cbn2}}}, {{{opng_p1m_glbl_yearly_cbn3}}} million inhabitants in "DS all IVs", "DS --CuSP", and "DS -CuSp/TMITR", respectively, indicating that private museum founding takes place disproportionally in country-years with below average population size.]
 #
-Secondly, several variables show substantial skew (indicated by high standard deviations compared to the mean), such as cultural spending, GDP and HNWI, art museum and collector rates, as well as the dependent variable of private museum openings: 
+Secondly, several variables show substantial skew (indicated by high standard deviations compared to the mean), such as cultural spending, GDP and HNWI, art museum and collector rates. 
+# 
+The dependent variable of private museum openings is strongly concentrated as well: 
 #
-Only {{{nbr_nzero_cbn1}}} country-years see show at least one private museum founding in "DS all IVs" ({{{prop_nzero_cbn1}}}%), while the other datasets see even lower proportions ({{{prop_nzero_cbn2}}}% for "DS --CuSP" and {{{prop_nzero_cbn3}}}% for "DS --CuSP/TMTIR", respectively).
+Only {{{nbr_nzero_cbn1}}} country-years see at least one private museum founding in "DS all IVs" ({{{prop_nzero_cbn1}}}%), while the other datasets see even lower proportions ({{{prop_nzero_cbn2}}}% for "DS --CuSP" and {{{prop_nzero_cbn3}}}% for "DS --CuSP/TMTIR", respectively).
+
+
+#+latex: \begin{landscape}
+#+INCLUDE: "./tables/tbl:descs_v27.tex" export latex
+#+latex: \end{landscape}
 
 
 
@@ -1045,7 +1059,7 @@ Only {{{nbr_nzero_cbn1}}} country-years see show at least one private museum fou
 Table {{{rtbl_regrslts_wcptblF}}} displays the regression results. 
 #
 As the estimation procedure involves the calculation of multiple models from different variable sets, table {{{rtbl_regrslts_wcptblF}}} displays for each variable and dataset the coefficient of the best-fitting model[fn::Coefficient variation due to different variable choice (e.g. the difference between the coefficients of cultural spending between a model with income inequality measured once with the Gini coefficient and once with 10% concentration) generally does not result in qualitatively different coefficients; see figure {{{rplt_coef_violin}}} in. For multicollinearity checks see appendix \ref{app_vif}, for marginal model improvement appendix \ref{app_llrt}.]; the log likelihoods similarly correspond to the best-fitting model. 
-# 
+# FIXME: for additional model discussion such as coefficient variation due to variable choice, diagnostics, marginal model improvement and mediation see appendix X
 Coefficients can be interpreted as logged multipliers of a country's founding rate [[parencite:&Coxe_West_Aiken_2009_count]], therefore a coefficient of 0.25 corresponds to a $e$^{0.25} = 1.28 multiplier, i.e. a 28% increase in average predicted country founding rate given a 1 standard deviation change in the independent variable (the independent variables are standardized), while a coefficient of -0.25 corresponds to a $e$^{-0.25} = 0.78 multiplier.
 #
 # Coefficients above 0 indicate multipliers above 1, while coefficients below 0 indicate multipliers below 1.
@@ -1090,7 +1104,7 @@ Private museum founding thus is generally compatible with the density dependence
 #
 However, density in neighboring countries does not fit this trend.
 #
-While the coefficients are insignificant in the larger dataset, in DS all IVs it describes a U-shaped relationship, corresponding to higher rates of founding at the extreme ends of the scale.
+While the coefficients are insignificant in the two larger datasets, in DS all IVs it describes a U-shaped relationship, corresponding to higher rates of founding at the extreme ends of the scale.
 #
 Given the right-skewed distribution of neighbor density increasing density in neighboring countries primarily decreases private museum founding in the focal country.
 #
@@ -1120,6 +1134,8 @@ Similary, the coefficients of the art field indicators (the number of museums of
 # The intercepts describe the predicted founding rate for a hypothetical country with values of zero on all predictors, which given the standardizing corresponds to the mean values on all variables except the tax deductibility of donations, where zero instead corresponds to no tax deductibility of donations.
 # #
 # The 
+
+
 
 
 
@@ -1415,7 +1431,7 @@ Given this state of data coverage and the fact that five years of subsequent dat
 :CUSTOM_ID: app_cbncpsgn
 :END:
 
-#+INCLUDE: "./tables/tbl:cbn_cpsgn_v27.tex" export latex
+# #+INCLUDE: "./tables/tbl:cbn_cpsgn_v27.tex" export latex
 
 
 Table {{{rtbl_cbn_cpsgn}}} shows the coverage of datasets by region. 
@@ -1500,17 +1516,18 @@ Since the number of Artnews collectors is a discrete count variable it is unable
 
 
 
-
-#+latex: \begin{landscape}
-** Descriptive statistics 
-:PROPERTIES:
-:ID:       9853457d-2c24-43bc-be97-28cafaa98a63
-:CUSTOM_ID: app_descs
-:END:
+# #+latex: \begin{landscape}
 
 
-#+INCLUDE: "./tables/tbl:descs_v27.tex" export latex
-#+latex: \end{landscape}
+# ** Descriptive statistics 
+# :PROPERTIES:
+# :ID:       9853457d-2c24-43bc-be97-28cafaa98a63
+# :CUSTOM_ID: app_descs
+# :END:
+
+
+# #+INCLUDE: "./tables/tbl:descs_v27.tex" export latex
+# #+latex: \end{landscape}
 
 
 
@@ -1635,9 +1652,6 @@ Exploring the various cases of potential mediation (or other forms of variable r
 :CUSTOM_ID: app_lagchoice
 :END:
 
-# #+label: fig:lag_dens
-# #+caption: Distribution of lags of longitudinal variables
-# [[file:figures/plt_v75_lag_dens.pdf]]
 
 {{{ynkplt_lag_dens}}}
 
