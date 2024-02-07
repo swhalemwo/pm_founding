@@ -57,73 +57,73 @@ dt_nbrs[, .(macro_str = sprintf("#+MACRO: %s %s", nbr_name, nbr_fmt)), grp] %>%
 
 # opng_rates_fmt
 #+MACRO: opng_rate_cbn1 0.0112
-#+MACRO: opng_rate_cbn2 0.0060
-#+MACRO: opng_rate_cbn3 0.0046
+#+MACRO: opng_rate_cbn2 0.0061
+#+MACRO: opng_rate_cbn3 0.0048
 
 
 # opng_prop_vlus
-#+MACRO: nbr_zero_cbn1 1 034
+#+MACRO: nbr_zero_cbn1 1 030
 #+MACRO: nbr_nzero_cbn1 211
-#+MACRO: prop_nzero_cbn1 16.9
-#+MACRO: nbr_zero_cbn2 2 262
+#+MACRO: prop_nzero_cbn1 17.0
+#+MACRO: nbr_zero_cbn2 2 256
 #+MACRO: nbr_nzero_cbn2 252
 #+MACRO: prop_nzero_cbn2 10.0
-#+MACRO: nbr_zero_cbn3 3 076
+#+MACRO: nbr_zero_cbn3 2 990
 #+MACRO: nbr_nzero_cbn3 254
-#+MACRO: prop_nzero_cbn3 7.6
-#+MACRO: nbr_zero_cbn_controls 5 841
+#+MACRO: prop_nzero_cbn3 7.8
+#+MACRO: nbr_zero_cbn_controls 5 845
 #+MACRO: nbr_nzero_cbn_controls 298
 #+MACRO: prop_nzero_cbn_controls 4.9
 
 
 # popnbrs_p1pm
-#+MACRO: nbr_pop_p_1pm_cbn1 89.6
-#+MACRO: nbr_pop_p_1pm_cbn2 166
-#+MACRO: nbr_pop_p_1pm_cbn3 216
-#+MACRO: nbr_pop_p_1pm_cbn_controls 84.2
+#+MACRO: nbr_pop_p_1pm_cbn1 89.5
+#+MACRO: nbr_pop_p_1pm_cbn2 165
+#+MACRO: nbr_pop_p_1pm_cbn3 210
+#+MACRO: nbr_pop_p_1pm_cbn_controls 83.1
 
 
 # cvrgnc
-#+MACRO: cvrgd1 137 734
-#+MACRO: cvrgd0 0
-#+MACRO: mdlcnt_ttl 137 734
-#+MACRO: cvrgnc_rate 100
-#+MACRO: nbr_runs_p_cbn_spec 320
+#+MACRO: cvrgd1 210 335
+#+MACRO: cvrgd0 1 780
+#+MACRO: mdlcnt_ttl 212 115
+#+MACRO: cvrgnc_rate 99.2
+#+MACRO: nbr_runs_p_cbn_spec 491
 
 
 # velp_minmax
 #+MACRO: velp_cryname_min Hungary
 #+MACRO: velp_cryname_max Portugal
-#+MACRO: velp_year_scld_min -0.117
+#+MACRO: velp_year_scld_min -0.116
 #+MACRO: velp_year_scld_max 0.063
 #+MACRO: velp_year_pct_min 1.6
 #+MACRO: velp_year_pct_max 0.9
 
 
 # rate_opng_glbl
-#+MACRO: rate_opng_glbl_cbn1 0.00433
-#+MACRO: rate_opng_glbl_cbn2 0.00299
+#+MACRO: rate_opng_glbl_cbn1 0.00430
+#+MACRO: rate_opng_glbl_cbn2 0.00297
 #+MACRO: rate_opng_glbl_cbn3 0.00282
-#+MACRO: rate_opng_glbl_cbn_controls 0.00231
+#+MACRO: rate_opng_glbl_cbn_controls 0.00229
 
 
 # rate_opng_glbl_yearly
-#+MACRO: rate_opng_glbl_yearly_cbn1 0.00406
-#+MACRO: rate_opng_glbl_yearly_cbn2 0.00289
-#+MACRO: rate_opng_glbl_yearly_cbn3 0.00274
-#+MACRO: rate_opng_glbl_yearly_cbn_controls 0.00223
+#+MACRO: rate_opng_glbl_yearly_cbn1 0.00404
+#+MACRO: rate_opng_glbl_yearly_cbn2 0.00287
+#+MACRO: rate_opng_glbl_yearly_cbn3 0.00273
+#+MACRO: rate_opng_glbl_yearly_cbn_controls 0.00221
 
 
 # opng_p1m_glbl_yearly
-#+MACRO: opng_p1m_glbl_yearly_cbn1 246
-#+MACRO: opng_p1m_glbl_yearly_cbn2 346
-#+MACRO: opng_p1m_glbl_yearly_cbn3 365
-#+MACRO: opng_p1m_glbl_yearly_cbn_controls 449
+#+MACRO: opng_p1m_glbl_yearly_cbn1 248
+#+MACRO: opng_p1m_glbl_yearly_cbn2 348
+#+MACRO: opng_p1m_glbl_yearly_cbn3 366
+#+MACRO: opng_p1m_glbl_yearly_cbn_controls 452
 
 
 # velp_mean
-#+MACRO: velp_mean_uscld -0.010
-#+MACRO: velp_quantl25_uscld -0.025
+#+MACRO: velp_mean_uscld -0.009
+#+MACRO: velp_quantl25_uscld -0.024
 #+MACRO: velp_quantl75_uscld 0.007
 #+MACRO: velp_mean_scld 0.13
 #+MACRO: velp_quantl25_scld 0.34
