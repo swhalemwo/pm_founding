@@ -3160,9 +3160,11 @@ gen_nbrs_pred <- function(top_coefs, cbn_dfs_rates_uscld, df_reg, print_examples
     
     ## get countries around smorc_top_point (0.2 around), also at least 1.4 of those
 
+    ## filter(cbn_dfs_rates_uscld$cbn1, year == 2020 & iso3c == "DEU") %>% adt %>% .[, .(smorc_dollar_fxm_lag0)]
+
     smorc_vlus_2020 <- filter(cbn_dfs_rates_uscld$cbn1, year == 2020) %>% 
         filter((smorc_dollar_fxm_lag0 < smorc_top_point * 1.2 & smorc_dollar_fxm_lag0 > smorc_top_point * 0.8) |
-               smorc_dollar_fxm_lag0 > smorc_top_point * 1.4) %>%
+               smorc_dollar_fxm_lag0 > smorc_top_point * 1.3) %>%
         select(iso3c, smorc_dollar_fxm_lag0) %>% arrange(smorc_dollar_fxm_lag0) %>% adt() %>%
         ## converting to list in lnbr format with apply 
         apply(1, \(x) list(nbr_name = paste0("smorc_2020_", x[["iso3c"]]),
