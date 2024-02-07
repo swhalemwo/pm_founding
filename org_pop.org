@@ -131,68 +131,69 @@ dt_nbrs[, .(macro_str = sprintf("#+MACRO: %s %s", nbr_name, nbr_fmt)), grp] %>%
 
 
 # intcpt_info
-#+MACRO: intcpt -4.49
-#+MACRO: intcpt_exp 0.011
+#+MACRO: intcpt -4.64
+#+MACRO: intcpt_exp 0.010
 
 
 # txinctvs
-#+MACRO: Ind_tax_incentives_cbn3_coef 0.72
-#+MACRO: Ind_tax_incentives_cbn3_coef_exp 2.1
-#+MACRO: Ind_tax_incentives_cbn3_pvlu 0.10
-#+MACRO: Ind_tax_incentives_cbn2_coef 0.56
-#+MACRO: tmitr_approx_linear20step_cbn2_coef -0.47
-#+MACRO: ti_tmitr_interact_cbn2_coef 0.84
-#+MACRO: ti_tmitr_interact_cbn2_coef_exp 2.33
+#+MACRO: Ind_tax_incentives_cbn3_coef 0.68
+#+MACRO: Ind_tax_incentives_cbn3_coef_exp 2.0
+#+MACRO: Ind_tax_incentives_cbn3_pvlu 0.14
+#+MACRO: Ind_tax_incentives_cbn2_coef 0.61
+#+MACRO: tmitr_approx_linear20step_cbn2_coef -0.58
+#+MACRO: ti_tmitr_interact_cbn2_coef 0.94
+#+MACRO: ti_tmitr_interact_cbn2_coef_exp 2.57
 #+MACRO: tmitr_1SD_cbn2 13.5
-#+MACRO: tmitr_neteffct_txdctblt1_cbn2 0.38
-#+MACRO: tmitr_neteffct_txdctblt1_cbn2_exp 1.46
+#+MACRO: tmitr_neteffct_txdctblt1_cbn2 0.37
+#+MACRO: tmitr_neteffct_txdctblt1_cbn2_exp 1.44
 #+MACRO: tmitr_iso3c1 50
 #+MACRO: tmitr_iso3c2 36
 
 
 # smorc_stats
-#+MACRO: smorc_lin 0.38
-#+MACRO: smorc_lin_flipped -0.38
-#+MACRO: smorc_sqrd -0.63
-#+MACRO: smorc_top_point_std 0.30
-#+MACRO: smorc_top_point 439
+#+MACRO: smorc_lin 0.59
+#+MACRO: smorc_lin_flipped -0.59
+#+MACRO: smorc_sqrd -0.65
+#+MACRO: smorc_top_point_std 0.45
+#+MACRO: smorc_top_point 485
 
 
 # smorc_vlus_2020
-#+MACRO: smorc_2020_ITA 362
 #+MACRO: smorc_2020_SVK 415
-#+MACRO: smorc_2020_NZL 463
+#+MACRO: smorc_2020_NZL 462
 #+MACRO: smorc_2020_POL 466
-#+MACRO: smorc_2020_LVA 467
-#+MACRO: smorc_2020_AUS 499
+#+MACRO: smorc_2020_LVA 468
+#+MACRO: smorc_2020_AUS 500
 #+MACRO: smorc_2020_ESP 501
 #+MACRO: smorc_2020_CAN 513
 #+MACRO: smorc_2020_HRV 521
+#+MACRO: smorc_2020_IRL 529
+#+MACRO: smorc_2020_SGP 541
 #+MACRO: smorc_2020_CZE 634
-#+MACRO: smorc_2020_DEU 660
-#+MACRO: smorc_2020_FRA 680
-#+MACRO: smorc_2020_BEL 688
+#+MACRO: smorc_2020_DEU 661
+#+MACRO: smorc_2020_FRA 678
+#+MACRO: smorc_2020_BEL 689
 #+MACRO: smorc_2020_AUT 694
 #+MACRO: smorc_2020_NLD 782
 #+MACRO: smorc_2020_FIN 799
 #+MACRO: smorc_2020_CHE 806
-#+MACRO: smorc_2020_EST 819
+#+MACRO: smorc_2020_EST 820
 #+MACRO: smorc_2020_SWE 859
 #+MACRO: smorc_2020_DNK 1 058
 #+MACRO: smorc_2020_HUN 1 410
 #+MACRO: smorc_2020_NOR 1 544
-#+MACRO: smorc_2020_LUX 1 559
+#+MACRO: smorc_2020_LUX 1 563
 
 
 # smorc_top_point_stats
-#+MACRO: smorctop_below_CYs_cnt 818
-#+MACRO: smorctop_above_CYs_cnt 427
-#+MACRO: smorctop_below_nbr_opened_cnt 212
-#+MACRO: smorctop_above_nbr_opened_cnt 143
-#+MACRO: smorctop_below_CYs_prop 65.7
-#+MACRO: smorctop_above_CYs_prop 34.3
-#+MACRO: smorctop_below_nbr_opened_prop 59.7
-#+MACRO: smorctop_above_nbr_opened_prop 40.3
+#+MACRO: smorctop_below_CYs_cnt 864
+#+MACRO: smorctop_above_CYs_cnt 377
+#+MACRO: smorctop_below_nbr_opened_cnt 222
+#+MACRO: smorctop_above_nbr_opened_cnt 133
+#+MACRO: smorctop_below_CYs_prop 69.6
+#+MACRO: smorctop_above_CYs_prop 30.4
+#+MACRO: smorctop_below_nbr_opened_prop 62.5
+#+MACRO: smorctop_above_nbr_opened_prop 37.5
 
 
 # shweal_stats
@@ -1151,7 +1152,7 @@ In particular at higher top marginal income tax rates countries with tax deducti
 #
 The fact that in the former countries collectors can receive substantial tax benefits appears to indeed incentivize potential founders to establish their museums.
 #
-A positive role of tax incentives is further supported by the positive and marginally significant (p = {{{Ind_tax_incentives_cbn3_pvlu}}}) coefficient of tax deductibility of donations in DS --CuSp/TMITR, indicating that countries with tax deductibility of donations see $e$^{{{{Ind_tax_incentives_cbn3_coef}}}} = {{{Ind_tax_incentives_cbn3_coef_exp}}} times more private museum founding than countries without. 
+A positive role of tax incentives is further supported by the positive (but insignificant; p = {{{Ind_tax_incentives_cbn3_pvlu}}}) coefficient of tax deductibility of donations in DS --CuSp/TMITR, indicating that countries with tax deductibility of donations see $e$^{{{{Ind_tax_incentives_cbn3_coef}}}} = {{{Ind_tax_incentives_cbn3_coef_exp}}} times more private museum founding than countries without. 
 
 
 
@@ -1172,7 +1173,9 @@ Government cultural spending is found to have a significant inverse-U shaped ass
 #
 While at lower values the association is positive, the effect decreases at higher levels and eventually turns negative (figure {{{rplt_pred_smorc}}}).
 #
-In particular, up to a value of {{{smorc_lin_flipped}}}/(2*{{{smorc_sqrd}}}) = {{{smorc_top_point_std}}} (corresponding to cultural spending of {{{smorc_top_point}}} USD per capita, approximately the 2020 government cultural spending of Slovakia ({{{smorc_2020_SVK}}} USD) or New Zealand ({{{smorc_2020_NZL}}} USD)) an increase in government spending corresponds to a higher predicted likelihood of private museum founding. 
+In particular, up to a value of {{{smorc_lin_flipped}}}/(2*{{{smorc_sqrd}}}) = {{{smorc_top_point_std}}} (corresponding to cultural spending of {{{smorc_top_point}}} USD per capita, approximately the 2020 government cultural spending of Latvia ({{{smorc_2020_LVA}}} USD) or Australia ({{{smorc_2020_AUS}}} USD) an increase in government spending corresponds to a higher predicted likelihood of private museum founding.
+
+
 #
 This range of a positive association between government spending and private museum founding consists of {{{smorctop_below_CYs_cnt}}} ({{{smorctop_below_CYs_prop}}}%) of the country-years belonging to "DS all IVs"; it also contains {{{smorctop_below_nbr_opened_prop}}}% of covered private museum foundings.
 #
