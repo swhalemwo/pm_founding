@@ -1185,15 +1185,27 @@ Conversely, a 1 SD increase of the wealth share of the top 10% ({{{shweal_1SD_cb
 There is thus substantial evidence for H3 in regards of wealth inequality, but also strong empirical evidence against a positive association between income inequality and private museum founding. 
 
 
-Two additional patterns are visible for both wealth and income inequality: 
+A possible explanation for this divergence of the effects of wealth and income could be the role of meritocracy.
+#
+[[textcite:&Mijs_2019_paradox]] argues that income inequality in particular increases beliefs in a meritocratic society, which in turn could result in lower demands to justify inequalities towards the economic elites.
+#
+The negative coefficients of income inequality would then indicate that as societies become more unequal, they at the same time become less critical of the ever-growing inequalities, which in turn disincentivizes elites to engage in charitable behavior to demonstrate their commitment to the common good. 
 # 
-Firstly, the effects are substantially larger in "DS --CuSP" and "DS --CuSp/TMITR".
+Increases in wealth inequality however might not be legitimated by meritocracy, as wealth inequality can more easily be seen as resulting not from hard work or talents, but rather from the inheritance of intergenerationally accumulated fortunes.
 #
-Secondly, in all datasets the coefficients of the top percentile shares are larger (in absolute terms) than those of the gini coefficients.
+While only a small amount of founders of private museum have amassed their wealth by inheritance [[parencite:&Velthuis_etal_2023_boom]], even the founders whose fortune is based on entrepeneurship might feel more compelled to justify it in a more society in which wealth is relatively unevenly distributed compared to one with a more egalitarian distribution, and engage in philanthropic activities such as art museum founding as a result.
 #
-# Either one or both of these patterns possibly lead to the gini coefficients in "DS all IVs" to become insignificant;
-Investigating the mechanisms behind these patterns constitutes fruitful approaches for future research. 
+Direct measures of concerns about inequality could be employed to test this explanation, and furthermore investigate the reversed effect of private museum founding reducing dissatisfaction.
 
+
+# Two additional patterns are visible for both wealth and income inequality: 
+# # 
+# Firstly, the effects are substantially larger in "DS --CuSP" and "DS --CuSp/TMITR".
+# #
+# Secondly, in all datasets the coefficients of the top percentile shares are larger (in absolute terms) than those of the gini coefficients.
+# #
+# # Either one or both of these patterns possibly lead to the gini coefficients in "DS all IVs" to become insignificant;
+# Investigating the mechanisms behind these patterns constitutes fruitful approaches for future research. 
 
 
 **** HNWI (H4)
