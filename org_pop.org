@@ -1203,41 +1203,35 @@ Increases in the number of HNWI do not seem to be substantially associated with 
 In these two datasets, the coefficient of the HNWI population with a wealth larger than 5 million USD in particular is substantially negative ({{{hnwi_nbr_5M_cbn2_coef}}} and {{{hnwi_nbr_5M_cbn3_coef}}}) and significant (p = {{{hnwi_nbr_5M_cbn2_pvlu}}} and p = {{{hnwi_nbr_5M_cbn3_pvlu}}} for DS -CuSp and DS -CuSP/TMITR, respectively).
 #
 Consequently, there is little evidence that HNWI rates are substantially positively associated with private museum founding, thus rejecting H4.
+
+
+A possible explanation for this might be found when investigating the process of the original argument[fn::Another more technical explanation based on the model specification, in particular the overcontrolling of elite wealth effects with other variables is discussed in \ref{app_mediation} as I consider it less likely].
 #
-# FIXME add explanation
+The main proponents of the link between HNWI and private museum founding, [[textcite:&Gnyp_2015_collectors, ]][[textcite:&Zorloni_Resch_2016_opportunities]] and to a lesser extent [[textcite:&Walker_2019_collector]], advanced their argument primarily based on research with collectors and existing museums, rather than studying wealth development more broadly.
+#
+As such, increase of HNWIs in the art worlds that they do not systematically capture the wealth levels in countries beyond their research scope.  
+#
+Consequently, such sampling on the dependent variable or selection bias might have lead these researchers to postulate a relationship between elite wealth and private museum founding, as cases where increasing levels of elite wealth did not lead to private museum founding were not considered. 
+
+
+The fact that substantial wealth is required to found a private museum on first sight makes the argument of an association compelling; yet the overall link between between elite wealth and private museum founding is more remote: 
+#
+Of all HNWIs, only some will engage in philanthropy, of which only some will engage in art philanthropy, and  an even smaller subset of these will found a private museum.
+#
+The particular ways in which HNWI decide to spend their money might be ultimately depend on a number of other variables to such an extent that a direct link between levels of elite wealth and private museum founding is not observable.
+# 
+There might thus be countries where a positive exists between HNWI numbers and founding rates, yet it does not appear to be a pattern that applies across all countries. 
+# 
+# Some evidence for such speculation is that the HNWI coefficients are positive in "DS all IVs", which 
+Studies of comparative elite wealth spending could help to illucidate how various forms of elite spending are conditional on different structural conditions.
 
 
 # Overall, cbn_no_cult_spending and cbn_no_cult_spending_and_mitr are more similar in coefficient results than either is to cbn_all. 
 # #
 # This can be seen in the identical selection of variables for HNWI and inequality as well as similar coefficient signs, sizes and significances:
-# #
-
-
-# *** HNWIs (H4)
-
-# The coefficients are positive in the "cbn_no_cult_spending" and "cbn_no_cult_spending_and_mitr", but they are small and insignificant, thus lending no support to H4, as does the coefficient in "cbn_all", which is virtually indistinguishable from 0.
-# #
-# Thus there is little support for the hypothesis that the private museum founding is associated with an increasing number of super-rich.
 
 
 
-#
-
-
-
-
-# # Figure [[fig:reg_within_tmitr_fixed]] shows one way of evaluating the results (while all inequality and HNWI variables are included in the figure, only one per group is included in each model).
-
-
-
-
-# # While figure [[fig:reg_within_tmitr_fixed]] already allows to assess coefficient size and significance, the impact of the variables and lags to model fit has not been fully evaluated yet.
-# # # 
-# # While substantial model fit variation exists between combinations (figure [[fig:cbn_log_likelihoods]]), this is expected as combinations differ in size and variables.
-# # #
-# # Figure [[fig:mdl_fit_plot]] shows the average changes in log-likelihood resulting from different lag choices, which paint a picture similar to figure [[fig:reg_within_tmitr_fixed]] as larger coefficients are associated with larger model improvements (especially in the inequality variables).
-# # #
-# # A selection of the best-fitting models (figure [[fig:best_models_tmitr_fixed]]) also shows that lagged indicators are often chosen (the necessity for further data cleaning is especially visible in the exclusive choice of 1 billion as the HNWI cutoff, which as in figure [[fig:reg_within_tmitr_fixed]] is likely an artifact, but here results in the complete exclusion of other HNWI thresholds).
 
 
 
@@ -1673,6 +1667,21 @@ Finally, there are a number of substantial coefficient changes given inclusion w
 #
 Exploring the various cases of potential mediation (or other forms of variable relations) is beyond the scope of the paper, but constitutes a promising start for future research.
 
+
+
+*** Insignifiance of HNWI effects
+
+Next to the substantial argument for the insignifiance of elite wealth effects proposed in the main text, namely a theoretical expectation based on selection bias, a more technical possibility is that HNWI effects might be controlled away by other variables that also measure HWNI rates, such as GDP per capita, Artnews collector rates, wealth inequality or private museum density.
+#
+The evidence for this is strongest in the case of GDP, as its addition shrinks HNWI coefficients in the two larger datasets (figure {{{rplt_oucoefchng}}}).
+#
+However since in the full model the HNWI coefficients are negative the addition of GDP does not reduce the strength of the association from substantial to negative, but rather from unsubstantial to negative and (marginally) significant. 
+#
+Furthermore, little evidence of HNWI coefficient change exists following the addition of wealth inequality and Artnews collectors, and even less for private museum density the addition of which actually marginally increases the HNWI coefficients.
+#
+As the models which form the basis for figure {{{rplt_oucoefchng}}} exclude only one variable at a time, it cannot be ruled out completely that a different specification without any variables that might also capture the elite wealth mechanism might result in substantial main HWNI effects.
+#
+However, the overall relative small size of coefficient changes by single variable exclusion does not provide strong evidence for overcontrolling as the explanation of insignificant HNWI effects. 
 
 
 
