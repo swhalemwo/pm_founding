@@ -3460,7 +3460,12 @@ gen_nbrs_pred <- function(top_coefs, cbn_dfs_rates_uscld, df_reg, print_examples
         .[, .(nbr_name = sprintf("%s_%s_%s", vrbl, cbn_name, msr), value, dgts)] %>% split(1:nrow(.)) %>%
         map(~list(nbr_name = .x$nbr_name, nbr = .x$value, digits = .x$dgts)) %>% unname()
 
-        
+    ## xtsum(cbn_dfs_rates$cbn1, hnwi_nbr_5M_lag0, iso3c)
+    ## xtsum(cbn_dfs_rates$cbn1, pm_density_lag0, iso3c)
+    ## xtsum(cbn_dfs_rates$cbn1, nbr_opened, iso3c)
+
+    
+
     ## numbers that can get formated comfily with lnbr/fmt_nbr_flex
     l_res <- list(
         intcpt_info = intcpt_info,
