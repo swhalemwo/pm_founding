@@ -1033,6 +1033,7 @@ gen_plt_cbn_log_likelihoods <- function(gof_df_cbn) {
 
 }
 
+
 gen_plt_reg_res_within <- function(df_anls_within, vvs, NBR_MDLS) {
     if (as.character(match.call()[[1]]) %in% fstd){browser()}
     #' plot the within coef change (all other coefs constant)
@@ -1999,6 +2000,58 @@ gen_plt_pred_smorc4way <- function(top_coefs) {
 }
     
 ## gen_plt_pred_smord4way(reg_res_objs$top_coefs)
+
+
+gen_plt_pred_tmitrRS <- function(top_coefs) {
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
+    1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;
+    
+    mdl_idx <- top_coefs[cbn_name == "cbn1", .SD[which.max(log_likelihood), mdl_id]]
+
+    regspecx <- get_reg_spec_from_id(mdl_idx, fldr_info_optmz)
+    dtx <- chuck(cbn_df_dict, "rates", chuck(regspecx, "cfg", "cbn_name")) %>% adt
+
+    tmitr_vrbl <- keep(regspecx$mdl_vars, ~grepl("tmitr_approx_linear20step", .x))
+
+    ## yeet both tmitr main variable and interation
+    iv_vrbls_yeeted <- keep(regspecx$mdl_vars, ~!grepl("tmitr_|Ind.tax.incentives", .x)) %>%
+        setdiff(vvs$base_vars)
+
+    fx <- paste0(sprintf("nbr_opened ~ %s * Ind.tax.incentives + (%s | iso3c) ", tmitr_vrbl, tmitr_vrbl),
+                 " + ", paste0(iv_vrbls_yeeted[1:5], collapse = " + "), 
+                 "+ (1 | year) + (1 | iso3c) + ", # add year RI 
+                 "offset(log(SP_POP_TOTLm_lag0_uscld))") %>% as.formula ## add offset
+    
+    rx2 <- glmmTMB(fx, dtx, family = nbinom1)
+    summary(rx2)
+
+    dt_pred <- expand.grid(tmitr_vrbl = dtx[, seq(min(.SD), max(.SD), length.out = 3), .SDcols = tmitr_vrbl],
+                           ## Ind.tax.incentives = c(1,0),
+                           iso3c = dtx[, funique(iso3c)]) %>% adt %>%
+               setnames(old = "tmitr_vrbl", new = tmitr_vrbl) %>%
+               .[, (iv_vrbls_yeeted) := 0] %>%
+               .[, `:=`(SP_POP_TOTLm_lag0_uscld = 100, year = 10)] %>% # set bogus values for RI
+               join(., funique(dtx[, .(iso3c, Ind.tax.incentives)]), on = "iso3c")
+    
+    ranef(rx2) %>% chuck("cond", "iso3c") %>% adt %>% .[, 1:2] %>% 
+        ggplot(aes(x=get(tmitr_vrbl))) + geom_density()
+
+
+    dt_pred2 <- copy(dt_pred) %>% .[, c("pred", "se") := map(predict(rx2, dt_pred, se.fit = T), ~.x)]
+
+    ranef(rx2)
+
+
+    ggplot(dt_pred2, aes(x=get(tmitr_vrbl), y = pred, color = factor(iso3c)),
+           group = factor(iso3c)) + geom_line()
+        
+    dt_pred2[iso3c == "DEU"]
+
+
+
+}
+
+gen_plt_pred_tmitrRS(reg_res_objs$top_coefs)
 
 
 predder <- function(mdl_id, vrbl) {
