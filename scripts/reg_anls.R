@@ -1994,7 +1994,7 @@ gen_plt_pred_smorc4way <- function(top_coefs) {
             breaks = dt_pred_4way[, seq(min(min), max(max), by = 2)], 
             labels = trans_format("exp", \(x) format2(x, scientific = F, nsmall = 0, digits = 1))) +
         labs(x="Gvt Cultural Spending (2021 USD)",
-             y=("predicted number of foundings at means, population = 100m"))
+             y=("predicted number of foundings at means,\npopulation = 100m"))
         
 }
     
