@@ -1906,10 +1906,100 @@ gen_plt_pred_smorc <- function(top_coefs) {
         theme(plot.margin = unit(c(2,6,2,2), "points")) # adjust for x axis tick labels
     
 
+
 }
-    
+
 format2 <- format
 ## gen_plt_pred_smorc(reg_res_objs$top_coefs)
+
+
+gen_plt_pred_smorc4way <- function(top_coefs) {
+    #' generate 4-way interaction smorc fun for letter
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
+
+    mdl_idx <- top_coefs[vrbl_name_unlag == "smorc_dollar_fxm" & cbn_name == "cbn1",
+                         .SD[which.max(log_likelihood), mdl_id]]
+
+    regspecx <- get_reg_spec_from_id(mdl_idx, fldr_info_optmz)
+
+    ## retrieve variables programatically to use them dynamically later
+    smorc_vrbl <- keep(regspecx$mdl_vars, ~grepl("smorc_dollar_fxm_lag", .x))
+    smorc_vrbl_sqrd <- keep(regspecx$mdl_vars, ~grepl("smorc_dollar_fxm_sqrd_lag", .x))
+    tmitr_vrbl <- keep(regspecx$mdl_vars, ~grepl("tmitr_approx_linear20step", .x))
+    interact_vrbl <- keep(regspecx$mdl_vars, ~grepl("ti_tmitr_interact", .x))
+
+    ## get variable scales
+    smorc_scale <- scale(chuck(cbn_dfs_rates_uscld$cbn1, smorc_vrbl))
+    tmitr_scale <- scale(chuck(cbn_dfs_rates_uscld$cbn1, tmitr_vrbl))
+
+    ## yeet all kind of stuff from iv_vars that is later added manually for 4-way interaction fun 
+    dfx <- chuck(cbn_df_dict, "rates", chuck(regspecx, "cfg", "cbn_name"))
+    iv_vars <- keep(setdiff(regspecx$mdl_vars, vvs$base_vars), ~!grepl("^SP\\.POP\\.TOTLm", .x)) %>%
+        setdiff(., c("Ind.tax.incentives", smorc_vrbl, smorc_vrbl_sqrd, tmitr_vrbl, interact_vrbl))
+    
+    ## add smorc and tmitr vrbls here to formula
+    fx2 <- sprintf("nbr_opened ~ Ind.tax.incentives*%s*I(%s^2) + ", tmitr_vrbl, smorc_vrbl) %>%
+        paste0(paste0(iv_vars, collapse = " + "), " + (1 | iso3c) + (1 | year) + ", # add RI 
+               "offset(log(SP_POP_TOTLm_lag0_uscld))") %>% as.formula ## add offset
+
+    rx2 <- glmmTMB(fx2, dfx, family = nbinom1)
+    summary(rx2)
+
+    ## example data
+    ## Ind tax incentives: 1 or 0
+    ## TMITR: 20% and 80% percentiles
+    dt_pred_4way <- expand.grid(smorc_vrbl = seq(round(min(smorc_scale),2),
+                                                 round(max(smorc_scale)/2,2), 0.05),
+                                Ind.tax.incentives = c(0,1),
+                                tmitr_vrbl =
+                                    adt(dfx)[, quantile(get(tmitr_vrbl), probs = c(0.2, 0.8))]) %>% 
+        adt %>% setnames(old = c("smorc_vrbl", "tmitr_vrbl"), new = c(smorc_vrbl, tmitr_vrbl)) %>%
+        .[, (iv_vars) := 0] %>% # set other TI vars to means
+        .[, `:=`(iso3c = "asdf", SP_POP_TOTLm_lag0_uscld = 100, year = 10)] # set bogus values for RI -> ignore
+        
+    ## actual prediction
+    dt_pred_4way[, c("pred", "se") := map(predict(rx2, dt_pred_4way, se.fit = T), ~.x)] %>%
+        .[, smorc_vrbl_scld := attr(smorc_scale, "scaled:center") +
+                attr(smorc_scale, "scaled:scale")*get(smorc_vrbl)] %>% 
+        .[, `:=`(min = pred - 1.96 * se, max = pred + 1.96 * se)]
+
+    ## create recoded TMITR facet label
+    dt_rcd_tmitr <- dt_pred_4way[, .N, tmitr_vrbl][order(get(tmitr_vrbl))] %>%
+        .[, qntl_tmitr := c(20,80)] %>% 
+        .[, vlu_tmitr := attr(tmitr_scale, "scaled:center") +
+                attr(tmitr_scale, "scaled:scale") * get(tmitr_vrbl)] %>% 
+        .[, lbl_tmitr := sprintf("%s%% TMITR (%s-th percentile)", vlu_tmitr, qntl_tmitr)]
+ 
+    ## create recode tax incentives labels
+    dt_rcd_ti <- data.table(Ind.tax.incentives = c(1,0),
+                            lbl_ti = c("charitable donations\ntax deductible",
+                                       "charitable donations not\ntax deductible"))
+    
+    ## actually recode tmitr/TI labels
+    dt_pred_4way_vis <- dt_pred_4way %>% copy() %>%
+        dt_rcd_tmitr[., on = tmitr_vrbl] %>%
+        dt_rcd_ti[., on = "Ind.tax.incentives"]
+       
+    ggplot(dt_pred_4way_vis, aes(x=smorc_vrbl_scld, y=pred)) + geom_line() +
+        geom_ribbon(mapping = aes(ymin = min, ymax = max),
+                    linetype = "dashed",
+                    color = "black",
+                    alpha = 0.15, show.legend = F) +
+        coord_cartesian(y = c(-10, 4)) + 
+        facet_grid(lbl_ti ~ lbl_tmitr, switch = "y") +
+        theme_bw() + 
+        theme(strip.text.y.left = element_text(angle = 0)) +
+        scale_y_continuous(
+            ## breaks = seq(dt_pred_4way[, floor(min(min))], dt_pred_4way[, ceiling(max(max))], by = 2)
+            breaks = dt_pred_4way[, seq(min(min), max(max), by = 2)], 
+            labels = trans_format("exp", \(x) format2(x, scientific = F, nsmall = 0, digits = 1))) +
+        labs(x="Gvt Cultural Spending (2021 USD)",
+             y=("predicted number of foundings at means, population = 100m"))
+        
+}
+    
+## gen_plt_pred_smord4way(reg_res_objs$top_coefs)
+
 
 predder <- function(mdl_id, vrbl) {
     if (as.character(match.call()[[1]]) %in% fstd){browser()}
@@ -2366,7 +2456,8 @@ gen_reg_res_plts <- function(reg_res_objs, vvs, NBR_MDLS, only_priority_plts, st
         plt_vif = gen_plt_vif(dt_vif_res, top_coefs),
         plt_oucoefchng = gen_plt_oucoefchng(dt_oucoefchng),
         plt_cntrfctl = gen_plt_cntrfctl(dt_cntrfctl_cons, dt_cntrfctl_wse),
-        plt_velp = gen_plt_velp(dt_velp_crycoefs, dt_velp_scalars)
+        plt_velp = gen_plt_velp(dt_velp_crycoefs, dt_velp_scalars),
+        plt_pred_smorc4way = gen_plt_pred_smorc4way(top_coefs)
         ## plt_oucoefchng_tile = gen_plt_oucoefchng_tile(dt_oucoefchng),
         ## plt_oucoefchng_cbn1 = gen_plt_oucoefchng(dt_oucoefchng[cbn_name == "cbn_all"]),
         ## plt_oucoefchng_cbn2 = gen_plt_oucoefchng(dt_oucoefchng[cbn_name == "cbn_no_cult_spending"]),
@@ -2491,7 +2582,9 @@ gen_plt_cfgs <- function() {
                                                         "(DS --CuSp)")),
             plt_oucoefchng_cbn3 = list(filename = "oucoefchng_cbn3.pdf", width = 14, height = 12,
                                        caption = paste0("Coefficient changes given addition of other variables ",
-                                                        "(DS --CuSp/TMITR"))
+                                                        "(DS --CuSp/TMITR")),
+            plt_pred_smorc4way = list(filename = "pred_smorc4way.pdf", widht = 17, height = 9,
+                                      caption = "asdf")
 
         )
     )
