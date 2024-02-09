@@ -1871,7 +1871,7 @@ gen_plt_pred_smorc <- function(top_coefs) {
     dfx <- chuck(cbn_df_dict, "rates", chuck(regspecx, "cfg", "cbn_name"))
     iv_vars <- keep(setdiff(regspecx$mdl_vars, vvs$base_vars), ~!grepl("^SP\\.POP\\.TOTLm", .x))
 
-    fx <- gen_r_f("rates", iv_vars)
+    fx <- gen_r_f("rates", iv_vars, time_ri = T)
     
     ## generate model
     rx <- glmmTMB(fx, dfx, family = nbinom1)
@@ -1882,7 +1882,7 @@ gen_plt_pred_smorc <- function(top_coefs) {
         .[, smorc_vrbl_sqrd := smorc_vrbl^2] %>%
         setnames(old = c("smorc_vrbl", "smorc_vrbl_sqrd"), new = c(smorc_vrbl, smorc_vrbl_sqrd)) %>%
         .[, (setdiff(iv_vars, c(smorc_vrbl, smorc_vrbl_sqrd))) := 0] %>%
-        .[, `:=`(iso3c = "asdf", SP_POP_TOTLm_lag0_uscld = 100)]
+        .[, `:=`(iso3c = "asdf", year = 10, SP_POP_TOTLm_lag0_uscld = 100)]
 
     dt_smorc_pred[, c("pred", "se") :=  map(predict(rx, dt_smorc_pred, se.fit = T), ~.x)] %>% 
         .[, (smorc_vrbl) := attr(smorc_scale, "scaled:center") +
