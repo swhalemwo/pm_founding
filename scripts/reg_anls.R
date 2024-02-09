@@ -1937,10 +1937,14 @@ gen_plt_pred_smorc4way <- function(top_coefs) {
     dfx <- chuck(cbn_df_dict, "rates", chuck(regspecx, "cfg", "cbn_name"))
     iv_vars <- keep(setdiff(regspecx$mdl_vars, vvs$base_vars), ~!grepl("^SP\\.POP\\.TOTLm", .x)) %>%
         setdiff(., c("Ind.tax.incentives", smorc_vrbl, smorc_vrbl_sqrd, tmitr_vrbl, interact_vrbl))
+
+    ## try to get the full model
+    ## dfx$smorc_copy <- adt(dfx)[, get(smorc_vrbl)]
     
     ## add smorc and tmitr vrbls here to formula
     fx2 <- sprintf("nbr_opened ~ Ind.tax.incentives*%s*I(%s^2) + ", tmitr_vrbl, smorc_vrbl) %>%
-        paste0(paste0(iv_vars, collapse = " + "), " + (1 | iso3c) + (1 | year) + ", # add RI 
+        paste0(sprintf("Ind.tax.incentives*%s*%s +", tmitr_vrbl, smorc_vrbl),
+               paste0(iv_vars, collapse = " + "), " + (1 | iso3c) + (1 | year) + ", # add RI 
                "offset(log(SP_POP_TOTLm_lag0_uscld))") %>% as.formula ## add offset
 
     rx2 <- glmmTMB(fx2, dfx, family = nbinom1)
@@ -1999,7 +2003,7 @@ gen_plt_pred_smorc4way <- function(top_coefs) {
         
 }
     
-## gen_plt_pred_smord4way(reg_res_objs$top_coefs)
+## gen_plt_pred_smorc4way(reg_res_objs$top_coefs)
 
 
 gen_plt_pred_tmitrRS <- function(top_coefs) {
@@ -2051,7 +2055,7 @@ gen_plt_pred_tmitrRS <- function(top_coefs) {
 
 }
 
-gen_plt_pred_tmitrRS(reg_res_objs$top_coefs)
+## gen_plt_pred_tmitrRS(reg_res_objs$top_coefs)
 
 
 predder <- function(mdl_id, vrbl) {
