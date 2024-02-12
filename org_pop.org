@@ -729,13 +729,13 @@ Following this, additional information about each museum was collected by resear
 Currently, the database includes {{{nbr_muem_in_pmdb}}} museums (of which {{{nbr_pm_openatm}}} are currently open, the remainder having closed or transformed to the extent that they no longer constitute a private museum), which are located in {{{nbr_cry_wal1pm_all}}} countries, with the majority being located in Western Europe ({{{regsub_cnt_Western_Europe}}}), East Asia ({{{regsub_cnt_Eastern_Asia}}}) and North America ({{{regsub_cnt_Northern_America}}}).
 #
 The majority of them ({{{nbr_opnd_snc2k}}}, or {{{perc_opnd_snc2k}}}) have been founded after 2000.
-
-
-Information on country and opening year is used to construct a count indicator of the number of private museums opened in each country-year, the typical operationalization for studying organizational founding [[parencite:&Bogaert_etal_2014_ecological]]. 
-#
-This study has a global scope and includes a large number of countries without private museums to avoid sampling on the dependent variable. 
 # 
-However both the time period and number of countries that can be investigated are limited by the coverage of the independent variables (cf. appendix \ref{app_data_coverage}). 
+Information on country and opening year is used to construct a count indicator of the number of private museums opened in each country-year, the typical operationalization for studying organizational founding [[parencite:&Bogaert_etal_2014_ecological]].
+
+
+# This study has a global scope and includes a large number of country-years without private museum foundings to avoid sampling on the dependent variable. 
+# 
+# However both the time period and number of countries that can be investigated are limited by the coverage of the independent variables (see Analytical strategy for supplementary materials). 
 
 
 *** Independent Variables
@@ -756,7 +756,7 @@ The report describes the situtation in 193 countries but only covers the state o
 #
 # As I have been unable to find good longitudinal data sources on tax deductibility of donations that covers large numbers of countries (especially for the earlier parts of the time period) tax deductibility of donations can only be investigated in regards to between-country differences.
 # 
-As top marginal income tax rates are only expected to provide an incentive if tax donations are tax deductible, I include interaction term between the tax deductibility of donations and top marginal income tax rates. 
+As increasing top marginal income tax rates are only expected to provide an incentive if tax donations are tax deductible, I include an interaction term between the tax deductibility of donations and top marginal income tax rates. 
 # (as tax deductibility is a binary variable, the value of the interaction term is 0 for countries in which charitable donations are not tax-deductible, and the value of top marginal income tax rates otherwise).
  
 **** Cultural Spending
@@ -781,7 +781,7 @@ The top 1% and 10% wealth and income shares are used as different measures of in
 
 
 **** High Net Worth Individuals
-I use the WID to calculate HNWIs indicators which measure population numbers above a certain wealth threshold in a given year. 
+I use the WID to calculate HNWIs indicators which measure population counts above a certain wealth threshold in a given year. 
 #
 The WID contains for each country-year measures of wealth at various quantile thresholds, e.g. the value for the 90th percentile describes the amount of wealth of the least wealthy member of the top 10%.
 #
@@ -811,7 +811,7 @@ Population size is included as an offset (cf. section Regression specification).
 
 
 **** Artnews collector ranking
-As private museums are founded by collectors, they may be more likely to be founded in country-years where many potential founders exist.
+As private museums are founded by collectors, they may be more likely to be founded when more potential founders are present.
 #
 While a complete measure of the art collector population is not feasible (which necessitated the choice of country-year instead of collector-year as the unit of analysis), it is still possible to construct a proxy of the art collector population from the Artnews magazine collector ranking, an index published yearly since 1990 of the 200 art collectors the magazine considers most important.
 #
@@ -868,7 +868,7 @@ Another variable of the organizational population concerns closures:
 # 
 The private museum population has seen substantial numbers of closures with {{{nbr_clsd_wld}}} institutions having been shut down or transformed (cf. [[cite:&Velthuis_Gera_forthcoming_fragility]]), and growing awareness of the fragility of these institutions might in turn make their founding less attractive to founders keen of leaving a mark in history.
 #
-I therefore add a global variable of the number of cumulative museum closures to capture the potential delegitimating effect of the closing of institutions that often are planned as personal legacies [[parencite:&Walker_2019_collector]].[fn::While this variable could also be measured on the country-level, the low number of closings would lead to a highly skewed variable, and therefore to coefficients disproportionately reflecting a few countries (in particular Switzerland, the United States and Netherlands, depending on whether the estimator measures closing numbers or proporitions). I therefore limit myself to measuring the global effect of museum closures.] 
+I therefore add a global variable of the number of cumulative museum closures to capture the potential delegitimating effect of the closing of institutions that often are planned as personal legacies [[parencite:&Walker_2019_collector]].[fn::While closings could also be measured on the country-level, the low number of closings would lead to a highly skewed variable, and therefore to coefficients disproportionately reflecting a few countries (in particular Switzerland, the United States and Netherlands, depending on whether the estimator measures closing counts or proportions). I therefore limit myself to measuring the global effect of museum closures.] 
 
 
 

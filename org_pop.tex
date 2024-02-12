@@ -1,4 +1,4 @@
-% Created 2024-02-12 ma 14:01
+% Created 2024-02-12 ma 14:19
 % Intended LaTeX compiler: pdflatex
 \documentclass[11pt]{article}
 
@@ -390,11 +390,9 @@ After recording the names and deleting duplicates, it was investigated using pub
 Following this, additional information about each museum was collected by research assistants, the most relevant for this research being country and opening year.
 Currently, the database includes 547 museums (of which 446 are currently open, the remainder having closed or transformed to the extent that they no longer constitute a private museum), which are located in 64 countries, with the majority being located in Western Europe (136), East Asia (97) and North America (77).
 The majority of them (420, or 76.8\%) have been founded after 2000.
+Information on country and opening year is used to construct a count indicator of the number of private museums opened in each country-year, the typical operationalization for studying organizational founding \parencite{Bogaert_etal_2014_ecological}.
 
 
-Information on country and opening year is used to construct a count indicator of the number of private museums opened in each country-year, the typical operationalization for studying organizational founding \parencite{Bogaert_etal_2014_ecological}. 
-This study has a global scope and includes a large number of countries without private museums to avoid sampling on the dependent variable. 
-However both the time period and number of countries that can be investigated are limited by the coverage of the independent variables (cf. appendix \ref{app_data_coverage}). 
 
 
 \subsubsection*{Independent Variables}
@@ -409,7 +407,7 @@ Top marginal income tax rate data is taken from the Index of Economic Freedom of
 Tax deductibility of donations is measured from the report "Rules to Give - A Global Philanthropy Legal Environment Index" \parencite{Quick_Kruse_Pickering_2014_philanthropy}.
 I use the binary indicator measuring whether individuals can receive tax deductions for donations to non-profits\footnote{The report also includes a binary indicator whether non-profit organizations are exempt from at least some taxes, but as this is the case in the vast majority of countries, it does not provide sufficient variation to serve as an explantory variable.}.
 The report describes the situtation in 193 countries but only covers the state of the legal environment at its publication date, therefore tax deductibility of donations can only be investigated in regards to between-country differences.
-As top marginal income tax rates are only expected to provide an incentive if tax donations are tax deductible, I include interaction term between the tax deductibility of donations and top marginal income tax rates. 
+As increasing top marginal income tax rates are only expected to provide an incentive if tax donations are tax deductible, I include an interaction term between the tax deductibility of donations and top marginal income tax rates. 
 
 \paragraph*{Cultural Spending}
 
@@ -430,7 +428,7 @@ The top 1\% and 10\% wealth and income shares are used as different measures of 
 
 \paragraph*{High Net Worth Individuals}
 
-I use the WID to calculate HNWIs indicators which measure population numbers above a certain wealth threshold in a given year. 
+I use the WID to calculate HNWIs indicators which measure population counts above a certain wealth threshold in a given year. 
 The WID contains for each country-year measures of wealth at various quantile thresholds, e.g. the value for the 90th percentile describes the amount of wealth of the least wealthy member of the top 10\%.
 With higher quantiles, higher resolutions are included: Up to the 99th percentile, the largest step is 1\% (e.g. 91st,92nd, etc. quantile), while the 99th percentile is subdivided further into percentile tenths (99.1,99.2, etc.).
 The top 0.1\% and 0.01\% (the 99.9th and 99.99th quantile) are similarly subdivided into ten smaller slices.
@@ -452,7 +450,7 @@ Population size is included as an offset (cf. section Regression specification).
 
 \paragraph*{Artnews collector ranking}
 
-As private museums are founded by collectors, they may be more likely to be founded in country-years where many potential founders exist.
+As private museums are founded by collectors, they may be more likely to be founded when more potential founders are present.
 While a complete measure of the art collector population is not feasible (which necessitated the choice of country-year instead of collector-year as the unit of analysis), it is still possible to construct a proxy of the art collector population from the Artnews magazine collector ranking, an index published yearly since 1990 of the 200 art collectors the magazine considers most important.
 As Artnews includes the country of residence of each collector, I construct the collector population indicator for a country-year as the number of collectors included in the Artnews ranking for that country-year.
 Artnews furthermore includes information on the genre(s) of each collector, which allows me to only include collectors who collect modern and contemporary art.
@@ -475,7 +473,7 @@ Secondly, I add a linear and squared density term based on the private museum po
 
 Another variable of the organizational population concerns closures:
 The private museum population has seen substantial numbers of closures with 101 institutions having been shut down or transformed (cf. \cite{Velthuis_Gera_forthcoming_fragility}), and growing awareness of the fragility of these institutions might in turn make their founding less attractive to founders keen of leaving a mark in history.
-I therefore add a global variable of the number of cumulative museum closures to capture the potential delegitimating effect of the closing of institutions that often are planned as personal legacies \parencite{Walker_2019_collector}.\footnote{While this variable could also be measured on the country-level, the low number of closings would lead to a highly skewed variable, and therefore to coefficients disproportionately reflecting a few countries (in particular Switzerland, the United States and Netherlands, depending on whether the estimator measures closing numbers or proporitions). I therefore limit myself to measuring the global effect of museum closures.} 
+I therefore add a global variable of the number of cumulative museum closures to capture the potential delegitimating effect of the closing of institutions that often are planned as personal legacies \parencite{Walker_2019_collector}.\footnote{While closings could also be measured on the country-level, the low number of closings would lead to a highly skewed variable, and therefore to coefficients disproportionately reflecting a few countries (in particular Switzerland, the United States and Netherlands, depending on whether the estimator measures closing counts or proportions). I therefore limit myself to measuring the global effect of museum closures.} 
 
 
 
