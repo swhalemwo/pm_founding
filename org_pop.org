@@ -564,14 +564,15 @@ Another argument for the emergence of private museums has been the decline or ab
 #
 Whereas in the mid-to-late 20th century "wealthy industrialist collectors [...] looked to the public museum as a suitable home for their collections" [[parencite:&Walker_2019_collector p.144]], declines in cultural spending are argued to have reduced public museum capacities, thus making them less attractive for conserving, displaying and storing donations of private collectors, which in turn leads "many collectors [to] feel that they are better qualified to create their own museums" (ibid, p.145).
 #
-While some forms of public-private partnerships "[appear] to contradict the premise that many private museums are founded because of the weakness of the public sector and the limitations of the public museum" (p.150),  [[textcite:&Walker_2019_collector]] nevertheless argues that "the growing popularity of German private collector museums can be attributed to the difficult economic climate that is negatively impacting public museums" (p.146). 
+# While some forms of public-private partnerships "[appear] to contradict the premise that many private museums are founded because of the weakness of the public sector and the limitations of the public museum" (p.150),  [[textcite:&Walker_2019_collector]] nevertheless argues that "the growing popularity of German private collector museums can be attributed to the difficult economic climate that is negatively impacting public museums" (p.146). 
 # 
-Similarly, textcite:&Boloten_Hacking_2021_foreword argue that "with their inevitably strained resources, public museums often struggle to satisfy the substantial demands of the collector/patron communities on which their collections, and institutions, very much rely. Against this backdrop [...] [art collectors] are increasingly turning to bespoke Private Museum solutions" (p.10). 
-#
+Similarly, textcite:&Boloten_Hacking_2021_foreword argue that "with their inevitably strained resources, public museums often struggle to satisfy the substantial demands of the collector/patron communities on which their collections, and institutions, very much rely. Against this backdrop [...] [art collectors] are increasingly turning to bespoke Private Museum solutions" (p.10).
+# 
 In particular, limited exhibition space in public museums has been argued to have been contributed to the rise of private museums ([[cite:&Walker_2019_collector p.217]], [[cite:&Zorloni_Resch_2016_opportunities p.1]]). 
 #
-# Additionally, textcite:&Franklin_Papastergiadis_2017_anti argue that private museums "became prominent once the price of contemporary art inflated beyond the means of most cash-strapped public museums to collect it systematically" (p.672)[fn:: While it is however not completely clear whether this refers to operations or acquisitions budgets, I argue that the general relation between public museum capacities and private museum founding is argued for clearly.]
-#
+# textcite:&Franklin_Papastergiadis_2017_anti argue that private museums "became prominent once the price of contemporary art inflated beyond the means of most cash-strapped public museums to collect it systematically" (p.672)[fn:: While it is however not completely clear whether this refers to operations or acquisitions budgets, I argue that the general relation between public museum capacities and private museum founding is argued for clearly.]
+
+
 Another pathway between low government spending and relatively high private museum founding concerns emerging art fields in developing countries, as it is argued that private individuals are more likely to dedicate philanthropic efforts to the arts there than in places where the cultural sector is already supported by the state [[parencite:&Durand_2018_jumex;&Bechtler_Imhof_2018_future;&Boloten_Hacking_2021_foreword]], a pattern that could correspond to the founding of gilded age cultural institutions by industrialists in the late 19th/early 20th century [[parencite:&diMaggio_1982_boston;&Adam_2004_philanthropy]]. 
  
 
