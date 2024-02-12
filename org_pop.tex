@@ -1,4 +1,4 @@
-% Created 2024-02-12 ma 18:15
+% Created 2024-02-12 ma 19:21
 % Intended LaTeX compiler: pdflatex
 \documentclass[11pt]{article}
 
@@ -416,7 +416,7 @@ I use data on government spending on culture, recreation and religion collected 
 These organizations use the System of National Accounts (SNA), where Classification of the function of Government (COFOG) Code 8 describes "culture, recreation and religion".
 The single digit code 8 is rather broad, and the more detailed  double digit SNA code 82 "cultural services" would be preferable to exclude state spending on e.g. sport events, broadcasting, publishing and religion. 
 However, data coverage is substantially worse for SNA Code 82, and as there appears to be substantial correlation between Codes 8 and 82 for countries that provide data on both levels, I consider it acceptable to use the broader single-digit Code 8.
-Even with the broader single-digit Code 8, cultural spending constitutes the indicator with the smallest coverage; I therefore combine as multiple data sources (the exact combination procedure is described in the supplementary materials.
+Even with the broader single-digit Code 8, cultural spending constitutes the indicator with the smallest coverage; I therefore combine as multiple data sources (the exact combination procedure is described in the supplementary materials).
 I estimate coefficients of the cultural spending variable as well as its squared term to account for potential non-linearities similar to those present in the density dependence paradigm (\cite{Hannan_1992_dynamics};  elaborated in section Control Variables); in particular, the crowding-out argument appears to indicate competition, while the crowding-in argument bears similarities to legitimation.
 
 
@@ -654,14 +654,14 @@ Top Marg. Inc. TR & .70 \; (0.33)^{*} & .94 \; (0.41)^{*} &  \\
 
 
 Table \ref{tbl:regrslts_wcptblF} displays the regression results. 
-As the estimation procedure involves the calculation of multiple models from different variable sets, table \ref{tbl:regrslts_wcptblF} displays for each variable and dataset the coefficient of the best-fitting model\footnote{Coefficient variation due to different variable choice (e.g. the difference between the coefficients of cultural spending between a model with income inequality measured once with the Gini coefficient and once with 10\% concentration) generally does not result in qualitatively different coefficients; cf. the supplemtary materials (also for robustness checks)}; the log likelihoods similarly correspond to the best-fitting model. 
+As the estimation procedure involves the calculation of multiple models from different variable sets, table \ref{tbl:regrslts_wcptblF} displays for each variable and dataset the coefficient of the best-fitting model\footnote{Coefficient variation due to different variable choice (e.g. the difference between the coefficients of cultural spending between a model with income inequality measured once with the Gini coefficient and once with 10\% concentration) generally does not result in qualitatively different coefficients. This and other robustness checks are reported the supplemtary materials.}; the log likelihoods similarly correspond to the best-fitting model. 
 Coefficients can be interpreted as logged multipliers of a country's founding rate \parencite{Coxe_West_Aiken_2009_count}, therefore a coefficient of 0.25 corresponds to a \(e\)\textsuperscript{0.25} = 1.28 multiplier, i.e. a 28\% increase in average predicted country founding rate given a 1 standard deviation change in the independent variable (the independent variables are standardized), while a coefficient of -0.25 corresponds to a \(e\)\textsuperscript{-0.25} = 0.78 multiplier.
 \FloatBarrier
 
 \paragraph*{Control Variables}
 
 The coefficients of the control variables indicate that a number of other factors beyond the main processes are associated with private museum founding.
-In particular GDP and private museum densities feature strongly across datasets and specifications.
+In particular GDP and private museum densities show strong associations across datasets.
 GDP variables generally show a positive associations while density variables exhibit either an inverse U-shaped relationship compatible with the density-dependence literature (in the case of country and global density) or a weak U-shaped relationship in the case of density of neighboring countries.
 No substantial impact on private museum founding is found for cumulative private museum closures and the other art field indicators, number of artnews collectors and number of modern and contemporary museums.
 For a more detailed discussion of the control variables see the supplementary materials. 
@@ -716,7 +716,7 @@ Nevertheless, in the range above this turning point which (in 2020) includes cou
 These results are not compatible with an exclusive focus on either crowding-out nor signalling.
 Instead, it is plausible that both mechanisms operate depending on the level of cultural spending.
 At lower levels of government demand for cultural services is likely relatively unsaturated due to low service provision, therefore government spending can legitimate the cultural field as a whole, including iniatives of private collectors.
-As demand surpasses supply, the few public museum exhibitions might receive so much attention that private collectors feel confirmed in entering the cultural field by setting up their own museums and thereby attracting a substantial slice of the audience.
+Since at lower levels of cultural spending demand surpasses supply, the few public museum exhibitions might receive so much attention that private collectors feel confirmed in entering the cultural field by setting up their own museums and thereby attracting a substantial slice of the audience.
 On the other hand, at high levels of cultural spending art demand is likely already relatively saturated, therefore further increases in government spending increases the capability of public museums to compete with their private counterparts over audiences; such a highly competitive environment thus makes it increasingly unattractive for private founders to set up their museums. 
 The data thus supports both the crowding-out argument of the private museum literature which considers private museum founding a consequence of declining government spending (H2) as well as the crowding-in argument raised by philanthropy scholars, albeit the former only at high levels of cultural spending and the latter at lower levels.
 However, little evidence is found for a lack of government spending facilitating private museum founding in countries with emerging cultural fields, as these are located in the range in which government spending is positively associated with private museum founding. 
@@ -750,9 +750,9 @@ In these two datasets, the coefficient of the HNWI population with a wealth larg
 Consequently, there is little evidence that HNWI rates are substantially positively associated with private museum founding, thus rejecting H4.
 
 
-A possible explanation for this might be found when investigating the process of the original argument\footnote{Another more technical explanation based on the model specification, in particular the overcontrolling of elite wealth effects with other variables is discussed in the supplementary materials as I consider it less likely}.
+A possible explanation for this might be found when investigating the process of the original argument\footnote{Another more technical explanation based on the model specification, in particular the overcontrolling of elite wealth effects with other variables is discussed in the supplementary materials as I consider it less likely.}.
 The main proponents of the link between HNWI and private museum founding, \textcite{Gnyp_2015_collectors}, \textcite{Zorloni_Resch_2016_opportunities} and to a lesser extent \textcite{Walker_2019_collector}, based their argument primarily on research with collectors and existing museums, rather than studying wealth development more broadly.
-As such, increase of HNWIs in the art worlds that they do not systematically capture the wealth levels in countries beyond their research scope.  
+As such, increase of HNWIs in the art worlds of the countries under investigation may not systematically reflect the wealth levels in countries beyond their research scope.  
 Consequently, such sampling on the dependent variable or selection bias might have lead these researchers to postulate a relationship between elite wealth and private museum founding, as cases where increasing levels of elite wealth did not lead to private museum founding were not considered. 
 
 
@@ -923,7 +923,7 @@ Amounts are reported in current local currency units and converted to 2021 USD u
 \subsubsection{Imputation}
 
 
-Due to the exploratory approach of testing variables at lag lengths varying from one to five years, missing values can potentialily substantially limit the number of country years as a single missing value leads to the exclusion of the next five years.
+Due to the exploratory approach of testing variables at lag lengths varying from one to five years, missing values can potentially substantially limit the number of country years as a single missing value leads to the exclusion of the next five years.
 To avoid such loss of data, missing values in the country year time series which are parts of gaps of up to three years are linearly imputed.
 This primarily concerns government cultural spending (25 country years imputed), and to a lesser extent wealth inequality measures, HNWI measures and population size (7, 4 and 3 country years imputed, respectively).
 
