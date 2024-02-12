@@ -1065,7 +1065,7 @@ Only {{{nbr_nzero_cbn1}}} country-years see at least one private museum founding
 
 Table {{{rtbl_regrslts_wcptblF}}} displays the regression results. 
 #
-As the estimation procedure involves the calculation of multiple models from different variable sets, table {{{rtbl_regrslts_wcptblF}}} displays for each variable and dataset the coefficient of the best-fitting model[fn::Coefficient variation due to different variable choice (e.g. the difference between the coefficients of cultural spending between a model with income inequality measured once with the Gini coefficient and once with 10% concentration) generally does not result in qualitatively different coefficients; see figure {{{rplt_coef_violin}}} in. For multicollinearity checks see appendix \ref{app_vif}, for marginal model improvement appendix \ref{app_llrt}.]; the log likelihoods similarly correspond to the best-fitting model. 
+As the estimation procedure involves the calculation of multiple models from different variable sets, table {{{rtbl_regrslts_wcptblF}}} displays for each variable and dataset the coefficient of the best-fitting model[fn::Coefficient variation due to different variable choice (e.g. the difference between the coefficients of cultural spending between a model with income inequality measured once with the Gini coefficient and once with 10% concentration) generally does not result in qualitatively different coefficients; cf. the supplemtary materials (also for robustness checks)]; the log likelihoods similarly correspond to the best-fitting model. 
 # FIXME: for additional model discussion such as coefficient variation due to variable choice, diagnostics, marginal model improvement and mediation see appendix X
 Coefficients can be interpreted as logged multipliers of a country's founding rate [[parencite:&Coxe_West_Aiken_2009_count]], therefore a coefficient of 0.25 corresponds to a $e$^{0.25} = 1.28 multiplier, i.e. a 28% increase in average predicted country founding rate given a 1 standard deviation change in the independent variable (the independent variables are standardized), while a coefficient of -0.25 corresponds to a $e$^{-0.25} = 0.78 multiplier.
 #
@@ -1088,11 +1088,12 @@ Coefficients can be interpreted as logged multipliers of a country's founding ra
 The coefficients of the control variables indicate that a number of other factors beyond the main processes are associated with private museum founding.
 #
 In particular GDP and private museum densities feature strongly across datasets and specifications.
-GDP variables generally showing a positive associations while density variables exhibit either an inverse U-shaped relationship compatible with the density-dependence literature (in the case of country and global density) or a weak U-shaped relationship in the case of density of neighboring countries.
+# 
+GDP variables generally show a positive associations while density variables exhibit either an inverse U-shaped relationship compatible with the density-dependence literature (in the case of country and global density) or a weak U-shaped relationship in the case of density of neighboring countries.
 #
 No substantial impact on private museum founding is found for cumulative private museum closures and the other art field indicators, number of artnews collectors and number of modern and contemporary museums.
 #
-For a more detailed discussion of the control variables see appendix \ref{app_controls}.
+For a more detailed discussion of the control variables see the supplementary materials. 
 
 
 
@@ -1157,12 +1158,12 @@ In particular, up to a value of {{{smorc_lin_flipped}}}/(2*{{{smorc_sqrd}}}) = {
 
 
 #
-This range of a positive association between government spending and private museum founding consists of {{{smorctop_below_CYs_cnt}}} ({{{smorctop_below_CYs_prop}}}%) of the country-years belonging to "DS all IVs"; it also contains {{{smorctop_below_nbr_opened_prop}}}% of covered private museum foundings.
+This range of positive association between government spending and private museum founding consists of {{{smorctop_below_CYs_cnt}}} ({{{smorctop_below_CYs_prop}}}%) of the country-years belonging to "DS all IVs"; it also contains {{{smorctop_below_nbr_opened_prop}}}% of covered private museum foundings.
 #
 It is furthermore worth to consider that since "DS all IVs" consists disproportionately of developed countries, the true proportion of country-years in which higher government expenditure is associated with higher private museum is likely even higher.
 #
 Nevertheless, in the range above this turning point which (in 2020) includes countries prominent for their private museum populations such as Germany ({{{smorc_2020_DEU}}} USD), France ({{{smorc_2020_FRA}}} USD), the Netherlands ({{{smorc_2020_NLD}}} USD) or Switzerland ({{{smorc_2020_CHE}}} USD) increases in government spending are associated with lower rates of private museum founding (and conversely, decreases in government spending with higher rates of private museum founding).
-#
+
 
 These results are not compatible with an exclusive focus on either crowding-out nor signalling.
 #
@@ -1200,7 +1201,7 @@ The negative coefficients of income inequality would then indicate that as socie
 # 
 Increases in wealth inequality however might not be legitimated by meritocracy, as wealth inequality can more easily be seen as resulting not from hard work or talents, but rather from the inheritance of intergenerationally accumulated fortunes.
 #
-While only a small amount of founders of private museum have amassed their wealth by inheritance [[parencite:&Velthuis_etal_2023_boom]], even the founders whose fortune is based on entrepeneurship might feel more compelled to justify it in a more society in which wealth is relatively unevenly distributed compared to one with a more egalitarian distribution, and engage in philanthropic activities such as art museum founding as a result.
+While only a small amount of founders of private museum have amassed their wealth by inheritance [[parencite:&Velthuis_etal_2023_boom]], even the founders whose fortune is based on entrepeneurship might feel more compelled to justify it in a more society in which wealth is relatively unevenly distributed compared to one with a more egalitarian distribution, and engage in philanthropic activities such as museum founding as a result.
 #
 Direct measures of concerns about inequality could be employed to test this explanation, and furthermore investigate the reversed effect of private museum founding reducing dissatisfaction.
 
@@ -1226,7 +1227,7 @@ Consequently, there is little evidence that HNWI rates are substantially positiv
 
 A possible explanation for this might be found when investigating the process of the original argument[fn::Another more technical explanation based on the model specification, in particular the overcontrolling of elite wealth effects with other variables is discussed in \ref{app_mediation} as I consider it less likely].
 #
-The main proponents of the link between HNWI and private museum founding, [[textcite:&Gnyp_2015_collectors, ]][[textcite:&Zorloni_Resch_2016_opportunities]] and to a lesser extent [[textcite:&Walker_2019_collector]], advanced their argument primarily based on research with collectors and existing museums, rather than studying wealth development more broadly.
+The main proponents of the link between HNWI and private museum founding, [[textcite:&Gnyp_2015_collectors]], [[textcite:&Zorloni_Resch_2016_opportunities]] and to a lesser extent [[textcite:&Walker_2019_collector]], based their argument primarily on research with collectors and existing museums, rather than studying wealth development more broadly.
 #
 As such, increase of HNWIs in the art worlds that they do not systematically capture the wealth levels in countries beyond their research scope.  
 #
@@ -1265,11 +1266,11 @@ Results are shown in figure {{{rplt_cntrfctl}}} (the longitudinal changes of the
 #
 Positive values for a variable (e.g. GDP) indicate that in the actual world, more private museums were founded than would have been had the variable stayed at its 2000-2004 level; the change of the variable can thus be understood as having led to an increase in private museum founding.
 #
-In the case of GDP, it can be seen that changes since 2000-2004 are, depending on dataset, responsible for 18 to 75 additional private museums foundings.
+In the case of GDP, it can be seen that changes since 2000-2004 are, depending on dataset, responsible for 15 to 75 additional private museums foundings.
 #
 Conversely, negative values (e.g. for top marginal income tax rates) indicate that by changing in the real world, less private museums are founded than predicted in a world where variables stay at 2000-2004 levels.
 #
-For top marginal tax rates it can thus be seen that if they had stayed at their mean level of 2000-2004, 18 to 40 additional private museums would have been founded (in DS all IVs and DS -CuSp, respectively).
+For top marginal tax rates it can thus be seen that if they had stayed at their mean level of 2000-2004, 20 to 44 additional private museums would have been founded (in DS all IVs and DS -CuSp, respectively).
 # 
 Despite only capturing the within-country variation, this analysis shows that the predictors are substantially associated with private museum founding. 
 
