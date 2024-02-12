@@ -1772,11 +1772,6 @@ While VIFs can be substantial when including squared variables and interactions,
 :CUSTOM_ID: app_velp
 :END:
 
-#+latex: \begin{landscape}
-
-{{{ynkplt_velp}}}
-
-#+latex: \end{landscape}
 
 The within-country changes were analyzed to characterize the development of the longitudinal variables over the observation period.
 #
@@ -1827,5 +1822,10 @@ Finally, GPD and private museum density see similar patterns of almost no declin
 
 
 
+#+latex: \begin{landscape}
+
+{{{ynkplt_velp}}}
+
+#+latex: \end{landscape}
 
 

@@ -1,4 +1,4 @@
-% Created 2024-02-12 ma 15:19
+% Created 2024-02-12 ma 15:49
 % Intended LaTeX compiler: pdflatex
 \documentclass[11pt]{article}
 
@@ -1112,16 +1112,6 @@ While VIFs can be substantial when including squared variables and interactions,
 
 \subsection{Longitudinal development}
 \label{app_velp}
-\begin{landscape}
-
-\begin{figure}[htbp]
-\centering
-\includegraphics[width=24cm]{figures/plt_v27_velp.pdf}
-\caption{\label{fig:velp}Results of regressing longitudinal variables on year}
-\end{figure}
-
-\end{landscape}
-
 The within-country changes were analyzed to characterize the development of the longitudinal variables over the observation period.
 In particular, for each variable a separate regression model was run which regresses the variable in question at lag 0 against year while allowing slopes and intercepts to vary by country (year is set to 0 in 1995, the beginning of the observation period).
 Results are presented in figure \ref{fig:velp}.
@@ -1142,4 +1132,16 @@ While some average non-zero slopes are found (such as a an overall reduction of 
 Fourth, HNWI indicators develop almost never negatively, although most countries see comparatively little growth (this is not a measurement artifact of assigning zero when no quantile is above the HNWI threshold in question as it occurs also at the lowest of 1M, where most country-years have non-zero values).
 Furthermore average increases appear to be driven by a comparatively small number of countries with relatively large increases. 
 Finally, GPD and private museum density see similar patterns of almost no decline with growth being concentrated in a handful of countries, while art collector rates are highly centered around zero, indicating stability (at zero art collectors) for most countries. 
+
+
+
+\begin{landscape}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=24cm]{figures/plt_v27_velp.pdf}
+\caption{\label{fig:velp}Results of regressing longitudinal variables on year}
+\end{figure}
+
+\end{landscape}
 \end{document}
