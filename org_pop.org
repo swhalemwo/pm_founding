@@ -354,7 +354,7 @@ In particular, the rise of private museums has been hypothesized to be associate
 #
 Combining various socio-economic and art field data sources, I conduct quantitative tests of these hypotheses with datasets of {{{nbr_cy_cbn1}}}, {{{nbr_cy_cbn2}}} and {{{nbr_cy_cbn3}}} country years using multilevel negative binomial regression models.
 #
-While I find support for a positive effect of tax incentives, government spending is associated non-monotonically (reverse U-shaped) with private museum founding (not, as hypothesized, negatively). 
+While I find support for a positive effect of tax incentives, government spending is associated non-monotonically (inverse U-shaped) with private museum founding (not, as hypothesized, negatively). 
 #
 Furthermore the effects of inequality are divergent, as a positive association with private museum founding is found for wealth inequality and a negative one for income inequality.
 #
