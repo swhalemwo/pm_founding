@@ -1030,11 +1030,6 @@ The dependent variable of private museum openings is strongly concentrated as we
 Only {{{nbr_nzero_cbn1}}} country-years see at least one private museum founding in "DS all IVs" ({{{prop_nzero_cbn1}}}%), while the other datasets see even lower proportions ({{{prop_nzero_cbn2}}}% for "DS --CuSP" and {{{prop_nzero_cbn3}}}% for "DS --CuSP/TMTIR", respectively).
 
 
-#+latex: \begin{landscape}
-#+INCLUDE: "./tables/tbl:descs_v27.tex" export latex
-#+latex: \end{landscape}
-
-
 
 
 #+latex: \FloatBarrier
@@ -1336,9 +1331,25 @@ Further disentangling these effects, improving measurement precision and elabora
 #+latex: \clearpage
 #+latex: \FloatBarrier
 
+# #+latex: \section{Appendix}
+# * Appendix :ignhead:
+# #+latex: \appendix
+# #+latex: \setcounter{page}{1}
 
-#+latex: \section{Appendix}
-* Appendix :ignhead:
+
+
+** Appendix 
+
+#+latex: \begin{landscape}
+#+INCLUDE: "./tables/tbl:descs_v27.tex" export latex
+#+latex: \end{landscape}
+
+#+latex: \FloatBarrier
+
+
+#+latex: \section{Supplementary online materials}
+* Supplementary online materials :ignhead:
+
 #+latex: \appendix
 #+latex: \setcounter{page}{1}
 
@@ -1441,7 +1452,7 @@ For countries with only P3CG data, the average ratio of all country-years with b
 #
 Amounts are reported in current local currency units and converted to 2021 USD using price indices and purchasing power parity adjusted exchange rates from the World Inequality Database (WID,  [[citeyear:&WID_2021_WID]]).
 #
-I estimate coefficients of the cultural spending variable as well as its squared term to account for potential non-linearities similar to those present in the density dependence paradigm ([[cite:&Hannan_1992_dynamics]];  elaborated in section Control Variables); in particular, the crowding-out argument appears to indicate competition, while the crowding-in argument bears similarities to legitimation. 
+ 
 
 # [fn::An alternative would be to use purchasing power parity exchange rates, which reflect local price levels (as [[textcite:&Blanchet_2017_conversions]] argues, 1 euro or 7 yuan allow the purchase of the same amount of oil on international markets, but different amounts of food in Beijing or Paris). As the art market is however substantially transnational [[parencite:&Velthuis_Curioni_2015_canvases]], and discussion of government spending heavily revolves around acquisition budgets (which are dedicated to the purchase of artworks that often are  international), I consider market exchange rates more appropriate.]
 
