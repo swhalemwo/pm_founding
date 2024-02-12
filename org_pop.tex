@@ -1,4 +1,4 @@
-% Created 2024-02-12 ma 14:19
+% Created 2024-02-12 ma 14:39
 % Intended LaTeX compiler: pdflatex
 \documentclass[11pt]{article}
 
@@ -534,22 +534,21 @@ The datasets effectively cover the period in which the majority of private museu
 \subsubsection*{Variable selection}
 \label{vrbl_slctn}
 While theoretical relations involving the number of HNWIs and inequality have been proposed, concrete operationalizations have been missing.
-For the number of HNWIs, I randomly choose a threshold of 1, 5, 30, 200 million USD, while inequality is first differentiated into wealth and income inequality, for which in turn one of Gini, 10\% share and 1\% share is chosen randomly.
-This choice results in 36 possible variable combinations (4 HNWI variables \texttimes{} 3 income inequality variables \texttimes{} 3 wealth inequality variables). 
+I therefore test all possible variable combinations resulting from different ways of measuring elite wealth (threshold of 1, 5, 30, and 200 million USD), income inequality (Gini coefficient, 10\% share, and 1\% share) and wealth inequality (Gini coefficient, 10\% share, and 1\% share).
+This procedure results in 36 possible variable combinations (4 HNWI variables \texttimes{} 3 income inequality variables \texttimes{} 3 wealth inequality variables). 
 
 
 \subsubsection*{Time lags}
 
 So far there has been limited investigation into the time frames each mechanism needs to take effect.
 For example, a decrease of cultural spending might not become effective immediately as it might take time for collectors to perceive this change repspond accordingly.
-As a misspecified time lag might miss an effect that exists at a different time-lag, I take an exploratory approach and vary the lag of each longitudinal variable between one and five years.
-To obtain comparability between the models when using different time-lags, I limit the country-years to those that have data on all of the five preceding years for all time-lag variations.
+As a misspecified time lag might miss an effect that exists at a different time-lag, I vary the lag of each longitudinal variable between one and five years.
 As a complete exploration of the lag-choice space is not possible (it grows exponentially with the number of longitudinal variables included), I use an optimization procedure:
 For a selection of variables, I first select random starting values for the lags.
-I then select all variables in random order, and for each variable in turn vary the lag by calculating five regression models (see Section Regression specification) identical except for the lag of the variable in question, and keep the best fitting one (characterized by maximum log-likelihood), the lag of which is then used when optimizing the next (randomly chosen) variable.
+I then select all variables in random order, and for each variable vary the lag by calculating five regression models (see Section Regression specification) identical except for the lag of the variable in question, and keep the best fitting one (characterized by maximum log-likelihood), the lag of which is then used when optimizing the next (randomly chosen) variable.
 Lags of squared variables and interactions are fixed to the lag of their main variables.
 If multiple models fit equally well, a lag among these is selected at random.
-This selection of variables in random order followed by lag choice is continued until no further improvement is achieved.
+This selection of variables in random order followed by lag optimization is continued until no further model improvement is achieved.
 While the random starting values and random order of variables help to explore the lag space, models can still be stuck in local optima; I therefore run each model four times, each with a different set of random starting values. 
 
 
