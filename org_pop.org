@@ -501,7 +501,8 @@ Unlike museums founded by foundations (collectives of community members, groups 
 
 Tax incentives have been argued to influence influencing various kinds of charitable or philanthropic behavior in general and private museum founding in particular.
 #
-Tax incentives decrease the net cost of charitable activities, and can thus be expected to shape philanthropic behavior to the extent to which these activities are not unconditional of economic considerations[fn::While themes of disinterestedness and intrinsic passion are strongly present in the self-presentations of founders [[parencite:&Bechtler_Imhof_2018_future;&Duron_2020_rebaudengo]], they might constitute strategic framings to adhere to art market norms [[parencite:&Velthuis_2007_talking]] rather than real motivations guiding actual behavior.]. 
+Tax incentives decrease the net cost of charitable activities, and can thus be expected to shape philanthropic behavior to the extent to which these activities are not unconditional of economic considerations.
+# [fn::While themes of disinterestedness and intrinsic passion are strongly present in the self-presentations of founders [[parencite:&Bechtler_Imhof_2018_future;&Duron_2020_rebaudengo]], they might constitute strategic framings to adhere to art market norms [[parencite:&Velthuis_2007_talking]] rather than real motivations guiding actual behavior.]. 
 #
 Investigating charitable donations more generally, [[textcite:&Peloza_Steel_2005_elasticities]] find in a meta-analysis (primarily of individual behavior in the US) a price-elasticity of donations, i.e. a stronger tendency to make charitable contributions in the presence of financial incentives.
 
@@ -510,27 +511,30 @@ Investigating charitable donations more generally, [[textcite:&Peloza_Steel_2005
 **** pro :ignhead:
 
 Tax incentives, such as exemption of charitable organizations from some taxes and tax deductibility of donations to such organizations, have also been argued to have contribute to the founding of private museums.
+# 
+textcite:&Walker_2019_collector investigates the legal frameworks and tax exemptions that private museums receive in a number of locations such as Australia (p.31), the United States (p.35), Germany (p.29) and Switzerland (p.36), where she generally finds tax incentives to contribute to private museum founding. 
 #
-textcite:&Walker_2019_collector investigates the legal frameworks and tax exemptions that private museums receive in a number of locations.
+She concludes that "the formation of many private museums in the last two decades are directly or indirectly linked to generous tax incentives as they help to offset individual tax burdens and promote arts philanthropy. [...] The generosity and breadth of American, Australian, English and European tax law is a factor in the promotion of private museums" (p.37).
+
 # [fn::A historical argument is also made regarding the precursors of private museums, as tax incentives are also seen as relevant to the establishment of art collections in the gilded age as "the accumulation of expensive European art collections at the turn of the twentieth century was aided by the reduction, and eventual abolition of import tariffs in the US" (p.27).]
 #
-In the case of Australia, she argues that tax reforms which increased tax deductions for donations to charitable organizations played a substantial role in the establishment of private museums: "The founding and funding of TWMA [TarraWarra Museum of Art] was a direct consequence of the changes to Australian tax law. [...] without [a broader range of inducements and approaches], I would suggest a generosity of spirit alone will not result in a substantial philanthropic gift such as TWMA or the founding of other private museums in Australia."
-#
-In the US, the tax code is also argued to "[support] the founding of collector museums" (p.35) through incentives such as exemptions from capital gains tax and tax deductibility of exhibition, insurance, conservation and storage costs.
+# In the case of Australia, she argues that tax reforms which increased tax deductions for donations to charitable organizations played a substantial role in the establishment of private museums: "The founding and funding of TWMA [TarraWarra Museum of Art] was a direct consequence of the changes to Australian tax law. [...] without [a broader range of inducements and approaches], I would suggest a generosity of spirit alone will not result in a substantial philanthropic gift such as TWMA or the founding of other private museums in Australia."
+# #
+# In the US, the tax code is also argued to "[support] the founding of collector museums" (p.35) through incentives such as exemptions from capital gains tax and tax deductibility of exhibition, insurance, conservation and storage costs.
 
 
-For Europe, the effect of tax incentives on founding is less pronounced.
+# For Europe, the effect of tax incentives on founding is less pronounced.
+# #
+# While tax incentives in Germany (p.29) and Switzerland (p.36) are discussed, it is not argued that they constitute a necessary or supportive factor in the establishment of private museums, it is merely mentioned that "[their] complex tax structure is a way for [a] foundation to minimize its tax burden." (p.36).
 #
-While tax incentives in Germany (p.29) and Switzerland (p.36) are discussed, it is not argued that they constitute a necessary or supportive factor in the establishment of private museums, it is merely mentioned that "[their] complex tax structure is a way for [a] foundation to minimize its tax burden." (p.36).
-#
-Nevertheless, a clear overall argument is reached regarding the impact of tax incentives as it is concluded that "the formation of many private museums in the last two decades are directly or indirectly linked to generous tax incentives as they help to offset individual tax burdens and promote arts philanthropy. [...] The generosity and breadth of American, Australian, English and European tax law is a factor in the promotion of private museums" (p.37). 
+ 
 
 
 
 **** contra :ignhead:
 
 # fixme: check sentence structure: list lacking verb?
-The impact of tax incentives does not exclude other motivations, thus arguments which highlight other motivations such as "passion for art" ([[cite:&Zorloni_Resch_2016_opportunities p.7]], [[cite:&Adam_2021_rise p.12]]) or other "personal motivations" [[parencite:&Walker_2019_collector p.144]] do not contradict a facilitative role of tax incentives. 
+Proposing an impact of tax incentives does not imply a profit motive nor the absence of other motivations such as "passion for art" ([[cite:&Zorloni_Resch_2016_opportunities p.7]], [[cite:&Adam_2021_rise p.12]]) or other "personal motivations" [[parencite:&Walker_2019_collector p.144]]. 
 #
 In fact, other motivations (such as the aforementioned passion for the arts, as well as potential reputation gains; cf. [[textcite:&Bekkers_Wiepking_2010_literature;&Bekkers_Wiepking_2011_philanthropic]] for motivations of philanthropic behavior generally) are required as tax incentives only /reduce/ the cost of philanthropic behavior but do not cancel it out completely, let alone produce a financial profit; tax incentives thus may play a supportive role by easing the financial burdens of running a private museum as a consequence of other motivations.
 
