@@ -764,7 +764,9 @@ The single digit code 8 is rather broad, and the more detailed  double digit SNA
 #
 However, data coverage is substantially worse for SNA Code 82, and as there appears to be substantial correlation between Codes 8 and 82 for countries that provide data on both levels, I consider it acceptable to use the broader single-digit Code 8.
 #
-Even with the broader single-digit Code 8, cultural spending constitutes the indicators with the smallest coverage (figure {{{rplt_vrbl_cycnt}}}); I therefore combine as multiple data sources (the exact combination procedure is described in appendix \ref{app_data_processing}.
+Even with the broader single-digit Code 8, cultural spending constitutes the indicator with the smallest coverage (figure {{{rplt_vrbl_cycnt}}}); I therefore combine as multiple data sources (the exact combination procedure is described in appendix \ref{app_data_processing}.
+#
+I estimate coefficients of the cultural spending variable as well as its squared term to account for potential non-linearities similar to those present in the density dependence paradigm ([[cite:&Hannan_1992_dynamics]];  elaborated in section Control Variables); in particular, the crowding-out argument appears to indicate competition, while the crowding-in argument bears similarities to legitimation.
 
 
 **** Inequality
