@@ -825,35 +825,35 @@ I argue that the number of Artnews collectors per country-year constitutes an in
 
 
 **** Density dependence
-Research on organizational populations parencite:&Carroll_1989_density;&Hannan_1992_dynamics has argued that foundings of organization are driven by legitimacy and competition:
+Research on organizational populations (cite:Hannan_1992_dynamics, cf. [[cite:&Carroll_Khessina_2019_demography]] for an overview) has argued that foundings of organization are driven by legitimacy and competition:
 #
 While increasing legitimacy of a new organizational form is argued to encourage new foundings, competition is hypothesized to discourage it.
 #
-Both legitimacy and competition are generally derived from the number of already existing organizations, which is referred to as "density", leading to the label of density-dependence for this paradigm. 
+Both legitimacy and competition are generally derived from the number of already existing organizations, which is referred to as density, leading to the label of density-dependence for this paradigm. 
 
 
-# [[cite:&Bogaert_etal_2014_ecological]] only focuses on first-order effects on founding/survival, but not negative effect of second order effect
-# -> just argue weaker
-# also feels wrong: first-order effect doesn't tell you much, just value if x = 0
-# although i guess if first-order effect is smaller, peak is reached sooner -> legitimacy overall weaker..
+# # [[cite:&Bogaert_etal_2014_ecological]] only focuses on first-order effects on founding/survival, but not negative effect of second order effect
+# # -> just argue weaker
+# # also feels wrong: first-order effect doesn't tell you much, just value if x = 0
+# # although i guess if first-order effect is smaller, peak is reached sooner -> legitimacy overall weaker..
 
-However, density effects have been argued to be weaker for populations of non-profit organizations [[parencite:&Bogaert_etal_2014_ecological]] as these are characterized by demands more diverse and conflicting than the for-profit companies for which the density dependence paradigm was originally developed; in particular the absence of the profit motive is argued to correspond to a weaker legitimation effect. 
-#
-# However, density effects may be limited by the non-profit character of the private museum population:
-# # 
-# The traditional density dependence approach focuses on for-profit companies, where competition takes place over material inputs and/or market shares.
+# However, density effects have been argued to be weaker for populations of non-profit organizations [[parencite:&Bogaert_etal_2014_ecological]] as these are characterized by demands more diverse and conflicting than the for-profit companies for which the density dependence paradigm was originally developed; in particular the absence of the profit motive is argued to correspond to a weaker legitimation effect. 
 # #
-# As such "direct" competition is absent for private museums which are predominantly non-profits and generally operate at a loss [[parencite:&Gnyp_2015_collectors]], density effects may be weaker (cite:&Bogaert_etal_2014_ecological argue this for non-profit organizational populations generally). 
-# 
-Nevertheless, private museums may still compete over audiences [[parencite:&Adam_2021_rise p.14]], which [[textcite:&Frey_Meier_2002_beyeler]] argue are valued both economically (through ticket prices) and symbolically (as validating exhibition choices).
-# 
-Furthermore, the marginal value of a private museum as an instrument of distinction might decrease as more and more founders establish their museums; in this view, the symbolic capital to be gained by private museum founding constitutes the objective to compete for. 
+# # However, density effects may be limited by the non-profit character of the private museum population:
+# # # 
+# # The traditional density dependence approach focuses on for-profit companies, where competition takes place over material inputs and/or market shares.
+# # #
+# # As such "direct" competition is absent for private museums which are predominantly non-profits and generally operate at a loss [[parencite:&Gnyp_2015_collectors]], density effects may be weaker (cite:&Bogaert_etal_2014_ecological argue this for non-profit organizational populations generally). 
+# # 
+# Nevertheless, private museums may still compete over audiences [[parencite:&Adam_2021_rise p.14]], which [[textcite:&Frey_Meier_2002_beyeler]] argue are valued both economically (through ticket prices) and symbolically (as validating exhibition choices).
+# # 
+# Furthermore, the marginal value of a private museum as an instrument of distinction might decrease as more and more founders establish their museums; in this view, the symbolic capital to be gained by private museum founding constitutes the objective to compete for. 
 
 
 
 # While the non-profit character of private museum might lead to weaker density effect sizes than in other for-profit organizational populations, it is still worth to control for.
 #
-I therefore include for each country-year measures based on the number of open private museums, in particular a linear term (which measures legitimacy) and a squared term (which measures competition).
+I therefore include for each country-year measures based on the number of open private museums, in particular a linear term (measuring legitimacy) and a squared term (measuring competition).
 #
 # Both these operationalizations follow the density-dependence literature, and result in competition growing slowly at first, but outpacing legitimacy as the organizational population increases.
 # 
@@ -861,7 +861,7 @@ Given the transnational nature of the art field due to which legitimation and co
 #
 First, I add global linear and squared density measures which are the same for every country in a given year and describe the number of museums open worldwide in a given year.
 #
-Secondly, I add a linear and squared density term based on the private museum population in a country's neighbors; in particular I calculate for each country the neighbor density as the sum of private museum in neighboring countries divided by the total neighbor population (for island countries, countries in the same UN-subregion classification are considered to be the neighbors). 
+Secondly, I add a linear and squared density term based on the private museum population in a country's neighbors; in particular I calculate for each country the neighbor density as the sum of private museum in neighboring countries divided by the total neighbor human population (for island countries, countries in the same subregion based on the UN geoscheme classification system are considered to be the neighbors). 
 
 
 Another variable of the organizational population concerns closures:
