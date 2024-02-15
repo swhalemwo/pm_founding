@@ -2397,7 +2397,8 @@ gen_plt_vif <- function(dt_vif_res, top_coefs) {
     #' values previously generated as part of postestimation
 
     ## add cbn_name
-    dt_vif_res2 <- top_coefs[, unique(.SD), .SDcols = c("mdl_id", "cbn_name")] %>% .[dt_vif_res, on = "mdl_id"] %>%
+    dt_vif_res2 <- top_coefs[, unique(.SD), .SDcols = c("mdl_id", "cbn_name")] %>%
+        .[dt_vif_res, on = "mdl_id"] %>%
         .[, vrbl_unlag := gsub("_lag[1-5]", "", Term)] %>% # generate unlag names
         vvs$hyp_mep_dt[., on = .(vrbl = vrbl_unlag)] %>% # add hypothesees
         .[, vrbl := factor(vrbl, levels = rev(names(vvs$vrbl_lbls)))]
