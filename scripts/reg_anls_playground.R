@@ -2618,9 +2618,85 @@ dev.off()
     
 
 
+## ** inequality test
+
+vrbl_sptinc <- "sptinc992j_p90p100_lag0"
+vrbl_shweal <- "shweal992j_p90p100_lag0"
+
+cbn_dfs_counts_uscld$cbn1 %>% adt %>%
+    .[, .(mean_sptinc = mean(get(vrbl_sptinc)),
+          mean_shweal = mean(get(vrbl_shweal))), iso3c] %$% cor.test(mean_sptinc, mean_shweal)
+
+    ggplot(aes(x=mean_sptinc, y=mean_shweal)) + geom_point()
+
+
+
+library(MASS)
+sigma <- rbind(c( 1.00 , 0.1, -0.2),
+               c( 0.10 , 1.0,  0.8),
+               c(-0.2  , 0.8,  1.00))
+mu <- c(0,0,0)
+
+dt_madeup <- mvrnorm(n=500, mu = mu, Sigma = sigma) %>% adt()
+
+library(GGally)
+ggpairs(dt_madeup)
+
+m1 <- lm(V1 ~ V2, dt_madeup)
+m2 <- lm(V1 ~ V3, dt_madeup)
+m3 <- lm(V1 ~ V2 + V3, dt_madeup)
+
+screenreg(list(m1,m2,m3))
+
+library(texreg)
+
+library(performance)
+
+check_collinearity(m3) %>% plot
+
+dt_pred <- data.table(V2 = c(2, 2, 0), V3 = c(0,2, 0))
+
+dt_pred$V1 <- predict(m3, dt_pred)
+
+lm(V2 ~ V3, dt_madeup) %>% summary
+
+scale(dt_madeup) %>% eigen
+svd(dt_madeup)
+
+
+top_coefs2 <- reg_res_objs$top_coefs
+dt_oucoefchng2 <- reg_res_objs$dt_oucoefchng
+
+reg_res_objs$ou_anls
+## get ineq coefs of OU models (don't need original coefs)
+dt_coefs_ou <- reg_anls_base$ou_objs$coef_df %>% adt %>% .[grepl("ptinc992j|hweal992j", vrbl_name)] 
+
+## get mdl_ids of OU models that vary ineq vrbls
+dt_mdls_ou_ineq <- reg_anls_base$ou_objs$df_reg_anls_cfgs_wide %>% adt %>%
+    .[grepl("ptinc992j|hweal992j", ou_set_title)] %>%
+    .[, .(mdl_id, nonou_id, ou_set_title, cbn_name)]
+
+dt_coefs_ou_ineq2 <- join(dt_mdls_ou_ineq, dt_coefs_ou, on = "mdl_id", how = "left")%>%
+    .[, ou_set_title_unlag := gsub("_lag[0-5]", "",  ou_set_title)] %>%
+    .[, vrbl_name := gsub("_lag[0-5]", "",  vrbl_name)]
+    
+    ## .[, .(coef = mean(coef)), .(ou_set_title_unlag, cbn_name, vrbl_name)]
+
+## coef distribution
+dt_coefs_ou_ineq2 %>%     
+    ggplot(aes(x=coef, y= vrbl_name)) + 
+    geom_point() +
+    geom_errorbarh(mapping = aes(xmin = coef - 1.96*se, xmax = coef + 1.96*se), height = 0.5,
+                   ## position = position_jitter(width = 0, height = 0.4, seed = 3)) +
+                   position = position_dodge2(width = 2)) + 
+    facet_grid(~cbn_name) +
+    geom_vline(xintercept = 0, linetype = "dashed") +
+    geom_label(dt_coefs_ou_ineq2[, .(mean_p = mean(pvalues)), .(cbn_name, vrbl_name)],
+              mapping = aes(x=0.5, y=vrbl_name, label = round(mean_p,2)))
+              
 
     
+## average p-value
 
-
-
-
+    
+    
