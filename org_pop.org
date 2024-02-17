@@ -1344,7 +1344,7 @@ Further disentangling these effects, improving measurement precision and elabora
 
 
 #+Latex: \begin{sloppypar}
-#+Latex: \printbibliography
+#+Latex: \printbibliography[segment=\therefsegment]
 #+Latex: \end{sloppypar}
 
 #+latex: \clearpage
@@ -1836,3 +1836,6 @@ Finally, GPD and private museum density see similar patterns of almost no declin
 #+latex: \end{landscape}
 
 
+#+Latex: \begin{sloppypar}
+#+Latex: \printbibliography[segment=\therefsegment]
+#+Latex: \end{sloppypar}

@@ -1,4 +1,4 @@
-% Created 2024-02-12 ma 19:21
+% Created 2024-02-17 za 18:00
 % Intended LaTeX compiler: pdflatex
 \documentclass[11pt]{article}
 
@@ -53,7 +53,7 @@
 
 \captionsetup{skip=0pt}
 \usepackage[utf8]{inputenc}
-\usepackage[style=apa, backend=biber]{biblatex} 
+\usepackage[style=apa, backend=biber, refsegment=section]{biblatex} 
 \usepackage[english, american]{babel}
 \DeclareLanguageMapping{american}{american-apa}
 \DeclareFieldFormat{apacase}{#1}
@@ -815,7 +815,7 @@ Mediation in particular might be present for density estimates, as the effect of
 Further disentangling these effects, improving measurement precision and elaborating the underlying theoretical mechanisms thus constitute promising approaches for future research. 
 
 \begin{sloppypar}
-\printbibliography
+\printbibliography[segment=\therefsegment]
 \end{sloppypar}
 
 \clearpage
@@ -1148,4 +1148,9 @@ Finally, GPD and private museum density see similar patterns of almost no declin
 \end{figure}
 
 \end{landscape}
+
+
+\begin{sloppypar}
+\printbibliography[segment=\therefsegment]
+\end{sloppypar}
 \end{document}
