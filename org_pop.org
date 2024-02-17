@@ -352,13 +352,13 @@ While multiple hypotheses for the spread of this new form have been raised, syst
 #
 In particular, the rise of private museums has been hypothesized to be associated with tax incentives, reductions in government spending, increasing inequality and increasing elite wealth. 
 #
-Combining various socio-economic and art field data sources, I conduct quantitative tests of these hypotheses with datasets of {{{nbr_cy_cbn1}}}, {{{nbr_cy_cbn2}}} and {{{nbr_cy_cbn3}}} country years using multilevel negative binomial regression models.
+Combining various socio-economic and art field data sources, I conduct quantitative tests of these hypotheses with datasets of {{{nbr_cy_cbn1}}}, {{{nbr_cy_cbn2}}} and {{{nbr_cy_cbn3}}} country-years using multilevel negative binomial regression models.
 #
 While I find support for a positive effect of tax incentives, government spending is associated non-monotonically (inverse U-shaped) with private museum founding (not, as hypothesized, negatively). 
 #
 Furthermore the effects of inequality are divergent, as a positive association with private museum founding is found for wealth inequality and a negative one for income inequality.
 #
-Finally, the effect of elite wealth is primarily small and statistically insignificant. 
+Finally, elite wealth effects are small and mostly statistically insignificant. 
 #
 I conclude with a call for advancing theoretical elaboration and measurement precision to further investigate founding determinants. 
 
@@ -928,7 +928,7 @@ Despite substantial efforts to collect complete data for the relevant variables,
 #
 As excluding a large number of country-years limits the generalizability of findings, I construct multiple datasets each of which strikes a different balance between variable and country-year coverage.
 # 
-In particular, I construct one dataset with all variables ({{{nbr_cy_cbn1}}} country years, {{{nbr_crys_cbn1}}} countries; referred to as "DS all IVs"), one with all variables except cultural spending ({{{nbr_cy_cbn2}}} country years, {{{nbr_crys_cbn2}}} countries; "DS --CuSp"), and one with all variables except cultural spending and top marginal income tax rates ({{{nbr_cy_cbn3}}} country years, {{{nbr_crys_cbn3}}} countries; "DS --CuSp/TMITR").
+In particular, I construct one dataset with all variables ({{{nbr_cy_cbn1}}} country-years, {{{nbr_crys_cbn1}}} countries; referred to as "DS all IVs"), one with all variables except cultural spending ({{{nbr_cy_cbn2}}} country-years, {{{nbr_crys_cbn2}}} countries; "DS --CuSp"), and one with all variables except cultural spending and top marginal income tax rates ({{{nbr_cy_cbn3}}} country-years, {{{nbr_crys_cbn3}}} countries; "DS --CuSp/TMITR").
 #
 In terms of composition, DS all IVs overrepresents Europe and underepresents the Global South, while the other datasets are more balanced (table {{{rtbl_cbn_cpsgn}}}).
 #
@@ -1267,7 +1267,7 @@ Studies of comparative elite wealth spending could help to illucidate how variou
 
 Beyond interpreation of regression coefficients, the substantial association between the predictors and private museum founding can be illustrated by constructing a counterfactual.
 #
-In particular, I hold (separately for each variable) each country at the mean value of the years 2000 to 2004 for the entire time period, predict the number of openings for each country year under this counterfactual scenario using the original coefficients, sum up the predictions for all country years and compare with the observed number of openings.
+In particular, I hold (separately for each variable) each country at the mean value of the years 2000 to 2004 for the entire time period, predict the number of openings for each country year under this counterfactual scenario using the original coefficients, sum up the predictions for all country-years and compare with the observed number of openings.
 #
 Results are shown in figure {{{rplt_cntrfctl}}} (the longitudinal changes of the predictor variables are discussed in the supplementary materials).
 #
@@ -1305,7 +1305,7 @@ Despite only capturing the within-country variation, this analysis shows that th
 # Despite such limitations, this exploratory research constitutes a substantial contribution to the studies of private museums, and opens the ground for further systematic studies into the dynamics of this new organizational population.
 
 
-As the first quantitative analysis of private museum proliferation, this study has critically examined several factors that have been suggested as explanations for the rise of private museums in recent decades.
+As the first quantitative analysis of private museum proliferation, this study has explored several factors that have been suggested as explanations for the rise of private museums in recent decades.
 #
 To some extent the findings are in line with the literature, particularly in the case of tax incentives, which are found to positively contribute to private museum founding.
 #
