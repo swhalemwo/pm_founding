@@ -1165,7 +1165,7 @@ It is furthermore worth to consider that since "DS all IVs" consists disproporti
 Nevertheless, in the range above this turning point which (in 2020) includes countries prominent for their private museum populations such as Germany ({{{smorc_2020_DEU}}} USD), France ({{{smorc_2020_FRA}}} USD), the Netherlands ({{{smorc_2020_NLD}}} USD) or Switzerland ({{{smorc_2020_CHE}}} USD) increases in government spending are associated with lower rates of private museum founding (and conversely, decreases in government spending with higher rates of private museum founding).
 
 
-These results are not compatible with an exclusive focus on either crowding-out nor signalling.
+These results cannot be explained by either perspective (crowding-out and signalling) alone. 
 #
 Instead, it is plausible that both mechanisms operate depending on the level of cultural spending.
 #
@@ -1232,7 +1232,7 @@ In these two datasets, the coefficient of the HNWI population with a wealth larg
 Consequently, there is little evidence that HNWI rates are substantially positively associated with private museum founding, thus rejecting H4.
 
 
-A possible explanation for this might be found when investigating the process of the original argument[fn::Another more technical explanation based on the model specification, in particular the overcontrolling of elite wealth effects with other variables is discussed in the supplementary materials as I consider it less likely.].
+A possible explanation for this might be found when investigating the origin of the original argument[fn::Another more technical explanation based on the model specification, in particular the overcontrolling of elite wealth effects with other variables is discussed in the supplementary materials as I consider it less likely.].
 #
 The main proponents of the link between HNWI and private museum founding, [[textcite:&Gnyp_2015_collectors]], [[textcite:&Zorloni_Resch_2016_opportunities]] and to a lesser extent [[textcite:&Walker_2019_collector]], based their argument primarily on research with collectors and existing museums, rather than studying wealth development more broadly.
 #
