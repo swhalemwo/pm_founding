@@ -1190,10 +1190,17 @@ A 1 SD increase of the income share of the top 10% ({{{sptinc_1SD_cbn1}}}% in 20
 # 
 Conversely, a 1 SD increase of the wealth share of the top 10% ({{{shweal_1SD_cbn1}}}%; a difference in size similar to that between Denmark ({{{shweal_iso3c1}}}%) and the Czech Republic ({{{shweal_iso3c2}}}%) in 2020 in "DS all IVs", or to the longitudinal change in the United States from {{{shweal_lngtd_year1}}} ({{{shweal_lngtd_vlu_year1}}}%) to {{{shweal_lngtd_year2}}} ({{{shweal_lngtd_vlu_year2}}}%)) is associated with an increase in private museum founding rate by a factor of $e$^{{{{shweal_cbn1}}}} = {{{shweal_cbn1_exp}}}.
 #
-There is thus substantial evidence for H3 in regards of wealth inequality, but also strong empirical evidence against a positive association between income inequality and private museum founding. 
+There is thus substantial evidence for H3 in regards of wealth inequality, but also strong empirical evidence against a positive association between income inequality and private museum founding.[fn:: While the inequality coefficients are large, it is necessary to consider that wealth and income inequality developments are often related:
+#
+In DS all IVs, the overall correlation (averaged between all wealth and income inequality variables) is 0.69, and the average within-country correlation is 0.37.
+#
+Therefore an increase in wealth inequality, which raises the rate of private museum founding, is often accompanied by an increase in income inequality, which in turn decreases it.]
 
 
-A possible explanation for this divergence of the effects of wealth and income could be the role of meritocracy.
+
+These diverging effects are unexpected, and due to the exploratory nature of the current study a definite explanation is beyond its scope. 
+# 
+However, a possible explanation for these divergencing wealth and income inequality effects of could be the role of meritocracy.
 #
 [[textcite:&Mijs_2019_paradox]] argues that income inequality in particular increases beliefs in a meritocratic society, which in turn could result in lower demands to justify inequalities towards the economic elites.
 #
@@ -1203,7 +1210,7 @@ Increases in wealth inequality however might not be legitimated by meritocracy, 
 #
 While only a small amount of founders of private museum have amassed their wealth by inheritance [[parencite:&Velthuis_etal_2023_boom]], even the founders whose fortune is based on entrepeneurship might feel more compelled to justify it in a more society in which wealth is relatively unevenly distributed compared to one with a more egalitarian distribution, and engage in philanthropic activities such as museum founding as a result.
 #
-Direct measures of concerns about inequality could be employed to test this explanation, and furthermore investigate the reversed effect of private museum founding reducing dissatisfaction.
+Whether this line of reasoning is able to explain the diverging inequality effects would have to be investigated with more direct measures of concerns about inequality; which could also explore the reversed effect of private museum founding reducing dissatisfaction.
 
 
 # Two additional patterns are visible for both wealth and income inequality: 
