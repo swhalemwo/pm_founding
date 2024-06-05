@@ -86,11 +86,14 @@ get_df_reg <- function(df_anls) {
 
     df_hdi <- get_hdi()
 
+    df_diversity <- gd_diversity()
+
 
     ## combine everything
     dfs_to_combine <- list(df_anls=df_anls, df_hnwi=df_hnwi, df_ineq=df_ineq, df_taxinc=df_taxinc,
                            mow_crssctn=mow_crssctn, mow_cntns=mow_cntns,df_mtr=df_mtr,
-                           df_artnews=df_artnews, df_cult=df_cult, df_hdi = df_hdi)
+                           df_artnews=df_artnews, df_cult=df_cult, df_hdi = df_hdi,
+                           df_diversity = df_diversity)
 
     ## checking that names are unique    
     check_df_name_unqns(dfs_to_combine, skip_var_names = c("iso3c", "year"))

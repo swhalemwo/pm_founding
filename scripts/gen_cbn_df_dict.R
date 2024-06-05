@@ -27,7 +27,10 @@ gen_vrbl_vectors <- function() {
                    "SP.POP.TOTLm",
                    "clctr_cnt_cpaer",
                    "cnt_contemp_1990",
-                   "cnt_contemp_1990_sqrd")
+                   "cnt_contemp_1990_sqrd",
+                   "hief",
+                   "SM.POP.TOTL.ZS")
+    
     ctrl_vars_lngtd <- ctrl_vars[ctrl_vars %!in% crscn_vars]
     ti_vars <- c("tmitr_approx_linear20step", "ti_tmitr_interact")
     cult_spending_vars <- c("smorc_dollar_fxm", "smorc_dollar_fxm_sqrd")
@@ -132,6 +135,8 @@ gen_vrbl_vectors <- function() {
                    "pm_density_global" =  "PM density (global)",
                    "pm_density_global_sqrd" = "PM density^2 (global)", 
                    "nbr_closed_cum_global" = "Nbr. PM closings (cumulative, global)",
+                   "hief" = "Ethnic Fractionalization",
+                   "SM.POP.TOTL.ZS" = "Migrant stock",
                    "ln_s" = "ln(s)",
                    "ln_r" = "ln(r)",
                    all_dens = "density variables",
@@ -209,7 +214,10 @@ gen_vrbl_vectors <- function() {
         c("pm_density_global_sqrd"    = "zcontrols"),
         c("nbr_closed_cum_global"     = "zcontrols"),
         c("all_dens"                  = "zcontrols"), ## also add some ou-sets
-        c("all_dens_close"            = "zcontrols"))
+        c("all_dens_close"            = "zcontrols"),
+        c("hief"                      = "zcontrols"),
+        c("SM.POP.TOTL.ZS"            = "zcontrols"))
+        
         
           
     hyp_mep_dt <- data.table(vrbl = names(hyp_mep), hyp = hyp_mep) %>%

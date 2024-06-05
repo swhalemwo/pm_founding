@@ -117,7 +117,7 @@ gen_cntrfctl <- function(gof_df_cbn, fldr_info) {
     ## get best models
     mdl_id_dt <- gen_mdl_id_dt(gof_df_cbn)
 
-    idx <- mdl_id_dt$mdl_id[5]
+    idx <- mdl_id_dt$mdl_id[3]
     t1 <- Sys.time()
     jj <- gen_preds_given_mdfd_vrbls(idx, fldr_info)
     t2 <- Sys.time()

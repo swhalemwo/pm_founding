@@ -46,7 +46,8 @@ gd_diversity <- function() {
 
     ## migrant stock: fill up with LOCF
     dt_mist <- get_WB_data("SM.POP.TOTL.ZS") %>% adt %>%  
-        .[, SM.POP.TOTL.ZS := nafill(SM.POP.TOTL.ZS, "locf"), by = iso3c] 
+        .[, SM.POP.TOTL.ZS := nafill(SM.POP.TOTL.ZS, "locf"), by = iso3c] %>%
+        .[, country := NULL]
     
     ## dt_mist[iso3c == "DEU"]
 

@@ -2641,7 +2641,7 @@ gen_plt_cfgs <- function() {
             plt_oucoefchng_cbn3 = list(filename = "oucoefchng_cbn3.pdf", width = 14, height = 12,
                                        caption = paste0("Coefficient changes given addition of other variables ",
                                                         "(DS --CuSp/TMITR")),
-            plt_pred_smorc4way = list(filename = "pred_smorc4way.pdf", widht = 17, height = 9,
+            plt_pred_smorc4way = list(filename = "pred_smorc4way.pdf", width = 17, height = 9,
                                       caption = "asdf")
 
         )
@@ -3374,8 +3374,9 @@ gen_nbrs_pred <- function(top_coefs, cbn_dfs_rates_uscld, df_reg, print_examples
     if (print_examples) print(dt_shweal_cprn, n=200)
 
     ## select some countries after inspection
+    ## revision 2: CZE is gone, use Romania instead    
     shweal_cprn_iso3c1 <- "DNK"
-    shweal_cprn_iso3c2 <- "CZE"
+    shweal_cprn_iso3c2 <- "ROU"
 
     ## check there's data on them 
     dt_shweal_cprn_fltrd <- dt_shweal_cprn[iso3c_1 == shweal_cprn_iso3c1 &  iso3c_2 == shweal_cprn_iso3c2]
@@ -4111,6 +4112,7 @@ dt_nbrs %>% print(n=300)
 fwrite(dt_nbrs, paste0(TABLE_DIR, "tbl_nbrs_", fldr_info_optmz$batch_version, ".csv"), quote = F)
 
 print("reg_anls is done")
+
 
 ## dt_nbrs2 <- fread("/home/johannes/Dropbox/phd/papers/org_pop/tables/tbl_nbrs_v75.csv", quote = "")
 ## tail(dt_nbrs2)

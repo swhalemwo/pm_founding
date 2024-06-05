@@ -41,9 +41,11 @@ source(paste0(SCRIPT_DIR, "marginal_tax_rates.R"))
 source(paste0(SCRIPT_DIR, "hdi.R"))
 source(paste0(SCRIPT_DIR, "gen_rates.R"))
 source(paste0(SCRIPT_DIR, "gen_cbn_df_dict.R"))
+source(paste0(SCRIPT_DIR, "diversity.R"))
 
 
 PMDATA_LOCS <- gc_pmdata_locs()
+
 
 df_excl <- create_excel_df(PMDB_FILE, only_pms = F)
 ## df_excl <- create_excel_df(PMDB_FILE, only_pms = T)
