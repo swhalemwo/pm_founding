@@ -80,11 +80,19 @@ OBJS_TO_RDS_WRNGL <- .c(
 
 reg_settings_optmz <- list(
     ## relevant parameters
-    batch_version       = "v30",                #  "v24",         
-    nbr_specs_per_thld  =  1,           #      4,                 
-    lags                =  1:3,         #      1:5,               
-    cbns_to_include     =  "cbn1",      #      paste0("cbn", 1:3),
-    n_vrbl_thld_choices =  4,           #      36,                
+    ## uncomment only one of these
+    ## on laptop
+    ## batch_version       = "v30",   
+    ## nbr_specs_per_thld  =  1,      
+    ## lags                =  1:3,    
+    ## cbns_to_include     =  "cbn1", 
+    ## n_vrbl_thld_choices =  4,      
+    ## for surf
+    batch_version       = "v31",         
+    nbr_specs_per_thld  = 4,                 
+    lags                = 1:5,               
+    cbns_to_include     = paste0("cbn", 1:3),
+    n_vrbl_thld_choices = 36,                
     ## no longer varying
     dvfmts              = c("rates"), 
     vary_vrbl_lag       = F,
