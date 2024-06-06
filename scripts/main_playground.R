@@ -802,3 +802,22 @@ df_anls %>% adt %>% .[, .(mean_pmdens_neigh = mean(pmdens_neigh)), iso3c] %>% .[
 
 ## ** after debugging: actually I think the iso3cxx is intentional, seems to be some check?
 
+
+## ** diversityi stuff
+## two weird drops
+## look at orig, see if they are there already
+dt_hief_prep5 %>% 
+    .[year >= 1990] %>% 
+    ggplot(aes(x=year, y=orig, group = iso3c)) + geom_line() + geom_point() + 
+    facet_wrap(~src)#
+
+                                        # is gone when I change the order in lfnb  (from nocb->locf to locf->nocb)
+## but where do they come from?  maybe order?
+dt_hief_prep5[year == 2020 & src == "nocb" & !is.na(orig)]
+## DEUTSCHLAND
+dt_hief_prep2[iso3c == "DEU"] %>% print(n=80) ## yup seems to be order issue
+
+
+
+## look at example country: AFG
+## i think the issue is that post 2013 it gets imputed, but there should be locf -> need impute all hief stuff
