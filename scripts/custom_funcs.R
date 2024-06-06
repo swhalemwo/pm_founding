@@ -449,9 +449,9 @@ pvlt <- function(dtx, crop = T, landscape = F, ...) {
     ## cmplcmd <- "pdflatex '\\documentclass{article}\\pagestyle{empty}\\begin{document}\\input{prvlt.tex}\\end{document}'"
 
     ## if landscape option: use different base file with landscaped setting
-    texput_file <- "texput.tex"
+    texput_file <- "texput_pvxtbl.tex"
     if (landscape) {
-        texput_file <- "texput_landscape.tex"
+        texput_file <- "texput_landscape_pvxtbl.tex"
     }
 
     print(texput_file)
