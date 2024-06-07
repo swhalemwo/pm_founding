@@ -86,9 +86,25 @@ gd_diversity <- function() {
         .[is.na(hief_lfnb) & !is.na(eth2k), `:=`(hief_lfnb_imptd = predict(r_impt_hief, .SD),
                                                  imptd_hief_lfnb = 1)]
 
+    ## dt_hief_prep3
+    dt_div <- join(dt_mist, dt_hief_prep3, on = c("iso3c", "year"), how = "full")
+    
+    
+    return(atb(dt_div))
+
+}
+
+gp_hief_inspection <- function() {
     ## just look at different imputed
     ## complicated melting and casting
-    dt_hief_prep4 <- dt_hief_prep3 %>% .[, .SD, .SDcols = keep(names(.), ~grepl("hief|iso3c|year", .x))] %>% 
+
+
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
+    1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;
+    
+    dt_div <- gd_diversity() %>% adt
+
+    dt_hief_prep4 <- dt_div %>% .[, .SD, .SDcols = keep(names(.), ~grepl("hief|iso3c|year", .x))] %>% 
         melt(id.vars = c("iso3c", "year"), variable.name = "vrbl", value.name = "vlu") %>%
         .[, status := fifelse(grepl("imptd$", vrbl), "imptd",
                            fifelse(grepl("^imptd", vrbl), "indi", "orig"))] %>% 
@@ -103,34 +119,25 @@ gd_diversity <- function() {
     ## cast to wide
     dt_hief_prep5 <- dt_hief_prep4 %>% data.table::dcast(iso3c + year + src ~ status, value.var = "vlu")
 
-    ## look only "imputed" (final) values (combination of present and imputed), imputationn indi-cated by color
+    ## look only "imputed" (final) values (combination of present and imputed), imputation indi-cated by color
     dt_hief_prep5 %>%
         .[year >= 1990] %>% 
         ggplot(aes(x=year, y=imptd, group = iso3c, color = factor(indi))) + geom_line() +
         facet_wrap(~src)
-    
+
+}
+## gd_diversity()
+
+gn_div_variation <- function() {
+    #' generate number of how much variation of diversity is within countries and how much between
+  
 
     ## xtsum
     dt_hief_prep5[src == "orig" &  year  > 1995 & !is.na(orig)] %>% atb %>% 
         xtsum(orig, iso3c) %>% adt
+    ## only ~5% within variation
     
-    
-    
-        
-    
-    
-
-    dt_hief %>% summary
-    
-
-    dt_div <- join(dt_mist, dt_hief, on = c("iso3c", "year"), how = "full")
-    
-    
-    return(atb(dt_div))
-
-}
-
-## gd_diversity()
+    }
 
 
 exp_diversity_CYdiff <- function() {
@@ -153,6 +160,59 @@ exp_diversity_CYdiff <- function() {
 
     dt_diff[, .N, .(region, src)][order(src, -N)] %>% print(n=300) # by region
 
+}
+
+exp_diversity_vrblcvrg <- function() {
+    if (as.character(match.call()[[1]]) %in% fstd){browser()}
+    1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;
+
+    dt_div <- gd_diversity() %>% adt
+    
+    ## check how good data coverage is for each variable
+    ## need to lag each by 5
+
+    ## set up variable vectors
+    l_vrbls_div <- setdiff(keep(names(dt_div), ~!grepl("^imptd", .x)), c("year", "iso3c"))
+    l_vrbls_div_lag <- map(l_vrbls_div, ~paste0(.x, "_lag", 1:5)) %>% unlist
+
+    
+    dt_div_vrbls_wide <- dt_div %>% copy %>% .[, c(l_vrbls_div_lag) := shift(.SD, n=1:5), iso3c,
+                                               .SDcols = l_vrbls_div] %>%
+        .[, .SD, .SDcols = c("iso3c", "year", l_vrbls_div_lag)] # only use lagged variables
+        ## .[, .SD, .SDcols = patterns("^SM.POP.TOTL.ZS")] %>% print(n=20)
+    
+    ## coverage per country-variable-year
+    dt_cvrg_long <- melt(dt_div_vrbls_wide, id.vars = c("iso3c", "year"),
+                         measure.vars = measure(vrbl, lag, sep = "_lag")) %>%
+        .[, .(cvrd = all(!is.na(value)) + 0), .(iso3c, vrbl, year)]
+
+    ## cast to wide
+    dt_cvrg_wide <- dcast.data.table(dt_cvrg_long, iso3c + year ~ vrbl, value.var = "cvrd")
+
+    ## then combine with cbn_dfs_rates_v27, and see how much of the data is actually covered
+    cbn_dfs_rates_v27 <- readRDS(paste0(PROJECT_DIR, "data/diversity/cbn_dfs_rates_v27.rds")) %>% map(adt)
+
+    
+    ## see which CYs are covered in which combination
+    dt_cvrg_v27 <- imap(cbn_dfs_rates_v27, ~.[, .(iso3c, year, cvrg = 1, src = .y)]) %>% rbindlist %>%
+        dcast.data.table(iso3c + year ~ src, value.var = "cvrg")
+        
+    ## join information together
+    dt_cvrg_cprn <- join(dt_cvrg_long, dt_cvrg_v27, on = c("iso3c", "year")) %>%
+        melt(id.vars = c("iso3c", "year", "vrbl", "cvrd"), value.name = "cvrg27", variable.name = "cbn")
+
+    ## evaluate which variables have best coverage
+    dt_cvrg_cprn[cvrd ==1 & cvrg27 == 1, .N, .(vrbl, cbn)] %>% dcast.data.table(vrbl ~ cbn, value.var = "N") %>%
+        .[, `:=`(sum = Reduce(`+`, .SD)), .SDcols = patterns("^cbn")] %>%
+        .[order(-sum)]
+          
+        
+
+
+}
+
+
+gp_div_accuracy2k <- function() {
 
     ##  look at coverage
     dt_div <- gd_diversity() %>% adt
@@ -161,7 +221,7 @@ exp_diversity_CYdiff <- function() {
         ggplot(aes(x=year, y=vlu, group=iso3c)) + geom_line(show.legend = F) + facet_wrap(~vrbl, scales = "free")
 
     ## check which countries are all NA: hief might just be super lacking
-    l_qog_vrbls <- c("etfra", "eth2k", "hief")
+    l_qog_vrbls <- c("etfra", "eth2k", "hief_orig")
     dt_div_cpltns <- dt_div[year >= 1990, map(.SD, ~all(is.na(.x))+0), iso3c, .SDcols = l_qog_vrbls]
 
     
@@ -172,18 +232,13 @@ exp_diversity_CYdiff <- function() {
     ## mostly agree, could sort out the handful of casese  that don't agree
     dt_div[year == 2000, .SD, .SDcols = c("iso3c", l_qog_vrbls)] %>% melt(id.vars = "iso3c") %>%
         .[., on = "iso3c", allow.cartesian = T] %>%
-        ggplot(aes(x=value, y=i.value)) + geom_point() + facet_grid(variable ~ i.variable) 
+        ggplot(aes(x=value, y=i.value)) + geom_point() +
+        geom_smooth(method = "lm") +
+        facet_grid(variable ~ i.variable)
 
-
-    
-    ## correlations stay high -> 
-
-    
-    
-
-
-
+    ## correlations look good
 }
+
 
 gp_div_accuracy <- function() {
     ## correlation by year

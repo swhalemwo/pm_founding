@@ -86,7 +86,7 @@ get_df_reg <- function(df_anls) {
 
     df_hdi <- get_hdi()
 
-    df_diversity <- gd_diversity()
+    df_diversity <- gd_diversity() %>% select(iso3c, year, hief = hief_lfnb_imptd, SM.POP.TOTL.ZS)
 
 
     ## combine everything

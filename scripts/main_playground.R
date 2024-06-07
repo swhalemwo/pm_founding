@@ -821,3 +821,18 @@ dt_hief_prep2[iso3c == "DEU"] %>% print(n=80) ## yup seems to be order issue
 
 ## look at example country: AFG
 ## i think the issue is that post 2013 it gets imputed, but there should be locf -> need impute all hief stuff
+
+## hunting bugs: why lfnb has lower coverage than nocb/locf?
+    
+dt_cvrg_long[, .N, vrbl]
+dt_cvrg_long[cvrd == 1, .N, vrbl]
+## already lower lfnb coverage there after dt_cvrg_long
+dt_cvrg_wide[hief_lfnb == 0 & hief_nocb == 1 & year > 2000, .N, year] %>% print(n=300)
+
+dt_div[is.na(hief_lfnb) & !is.na(hief_nocb)]
+
+## maybe wierd shifting? don't see how
+dt_div_vrbls_wide[, .SD, .SDcols = patterns("iso3c|^hief_lfnb_lag|^hief_locf_lag")] %>% summary
+## shifting leads to more NAs in lfnb
+## maybe assignment of order with l_vrbls_div_lag construction
+## seems to be the case
