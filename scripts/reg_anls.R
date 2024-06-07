@@ -3376,7 +3376,8 @@ gen_nbrs_pred <- function(top_coefs, cbn_dfs_rates_uscld, df_reg, print_examples
     ## select some countries after inspection
     ## revision 2: CZE is gone, use Romania instead    
     shweal_cprn_iso3c1 <- "DNK"
-    shweal_cprn_iso3c2 <- "ROU"
+    ## shweal_cprn_iso3c2 <- "ROU"
+    shweal_cprn_iso3c2 <- "CZE"
 
     ## check there's data on them 
     dt_shweal_cprn_fltrd <- dt_shweal_cprn[iso3c_1 == shweal_cprn_iso3c1 &  iso3c_2 == shweal_cprn_iso3c2]
