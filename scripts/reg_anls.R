@@ -3833,6 +3833,26 @@ gen_nbrs <- function(df_excl, df_open, cbn_dfs_rates, cbn_dfs_rates_uscld,  df_r
         ## .[, diff := coef - year_mean] %$% hist(diff)
         
 
+    ## generate numbers for ethnic fractionalization
+    cor_hief_eth2k <- cor(adt(dt_diversity)[year == 2000, hief_orig],  adt(dt_diversity)[year == 2000, eth2k],
+                          use = "complete.obs")
+
+    ## hief propp within 1995-2013
+    dt_xtsum <- filter(dt_diversity, year >= 1995, !is.na(hief_orig)) %>%
+        jtls::xtsum(hief_orig, unit = iso3c) %>% adt
+
+    hief_prop_within <- dt_xtsum %>% dcast.data.table(.~Comparison, value.var = "sd") %>% .[, 100*Within/Overall]
+        
+    ## how many countries have hief imputed with eth2k
+    hief_nbr_cry_imputed <- adt(dt_diversity)[imptd_hief_lfnb == 1, fnunique(iso3c)]
+
+    ## tie them together
+    l_hief <- list(
+        cor_hief_eth2k = lnbr(cor_hief_eth2k, digits = 2),
+        hief_prop_within = lnbr(hief_prop_within, digits = 1),
+        hief_nbr_cry_imputed = lnbr(hief_nbr_cry_imputed, digits = 0))
+
+
 
     ## generate the macros for the plot insertions
     dt_pltcfgs <- gen_plt_cfgs() %>% rbindlist(use.names = T) %>%
@@ -3872,14 +3892,14 @@ gen_nbrs <- function(df_excl, df_open, cbn_dfs_rates, cbn_dfs_rates_uscld,  df_r
 
     dt_nbrs_desc_prep <- imap_dfr(res_desc, ~data.table(nbr_name = names(.x),
                                                         nbr_fmt = as.character(unname(.x)), grp = .y)) 
-        
-
+    
     ## start replacing some numbers here with lnbr as well 
     lnbr_res <- list(
         rate_opng_glbl = rate_opng_glbl,
         rate_opng_glbl_yearly = rate_opng_glbl_yearly,
         opng_p1m_glbl_yearly = opng_p1m_glbl_yearly,
-        velp_mean = l_velp_mean)
+        velp_mean = l_velp_mean,
+        hief = l_hief)
 
     dt_lnbr_res <- imap_dfr(lnbr_res, ~rbindlist(.x)[, grp := .y]) %>%
         .[, nbr_fmt := fmt_nbr_flex(nbr, digits)] %>%

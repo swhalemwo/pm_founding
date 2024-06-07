@@ -75,7 +75,8 @@ OBJS_TO_RDS_WRNGL <- .c(
     ## data for nbrs
     df_excl,
     df_open,
-    dt_shweal    
+    dt_shweal,
+    dt_diversity
 )
 
 reg_settings_optmz <- list(
