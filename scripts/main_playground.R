@@ -836,3 +836,17 @@ dt_div_vrbls_wide[, .SD, .SDcols = patterns("iso3c|^hief_lfnb_lag|^hief_locf_lag
 ## shifting leads to more NAs in lfnb
 ## maybe assignment of order with l_vrbls_div_lag construction
 ## seems to be the case
+
+## ** shweal comparison
+
+dt_shweal_v27 <- readRDS("/home/johannes/Dropbox/phd/papers/org_pop/data/explore/dt_shweal_v27.rds")
+
+dt_shweal <- get_wealth_ineq("p90p100", WID_VX) %>% adt
+
+join(dt_shweal, setnames(copy(dt_shweal_v27), "shweal992j_p90p100", "shweal992j_p90p100_v27"),
+     on = c("year", "iso3c")) %>% adt %>% 
+    .[, diff := shweal992j_p90p100 - shweal992j_p90p100_v27] %>% summary
+
+
+## all 0 -> let's go
+     
