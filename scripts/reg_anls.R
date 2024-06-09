@@ -3839,7 +3839,7 @@ gen_nbrs <- function(df_excl, df_open, cbn_dfs_rates, cbn_dfs_rates_uscld,  df_r
 
     ## hief propp within 1995-2013
     dt_xtsum <- filter(dt_diversity, year >= 1995, !is.na(hief_orig)) %>%
-        jtls::xtsum(hief_orig, unit = iso3c) %>% adt
+        xtsum(hief_orig, unit = iso3c) %>% adt
 
     hief_prop_within <- dt_xtsum %>% dcast.data.table(.~Comparison, value.var = "sd") %>% .[, 100*Within/Overall]
         
