@@ -3174,6 +3174,7 @@ gen_nbrs_pred <- function(top_coefs, cbn_dfs_rates_uscld, df_reg, print_examples
         dt_tctt[cbn_name == "cbn3" & vrbl == "Ind.tax.incentives" & msr == "coef"][, dgts := 2],
         dt_tctt[cbn_name == "cbn3" & vrbl == "Ind.tax.incentives" & msr == "coef_exp"][, dgts := 1],
         dt_tctt[cbn_name == "cbn3" & vrbl == "Ind.tax.incentives" & msr == "pvlu"][, dgts := 2],
+        dt_tctt[cbn_name == "cbn2" & vrbl == "ti_tmitr_interact"  & msr == "pvlu"][, dgts := 2],
         dt_tctt[cbn_name == "cbn2" & vrbl == "Ind.tax.incentives" & msr == "coef"][, dgts := 2],
         dt_tctt[cbn_name == "cbn2" & vrbl == "tmitr_approx_linear20step" & msr == "coef"][, dgts := 2],
         dt_tctt[cbn_name == "cbn2" & vrbl == "ti_tmitr_interact" & msr == "coef"][, dgts := 2],

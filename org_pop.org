@@ -130,32 +130,39 @@ dt_nbrs[, .(macro_str = sprintf("#+MACRO: %s %s", nbr_name, nbr_fmt)), grp] %>%
 #+MACRO: velp_quantl75_scld 0.10
 
 
+# hief
+#+MACRO: cor_hief_eth2k 0.84
+#+MACRO: hief_prop_within 7.4
+#+MACRO: hief_nbr_cry_imputed 35
+
+
 # intcpt_info
-#+MACRO: intcpt -4.64
-#+MACRO: intcpt_exp 0.010
+#+MACRO: intcpt -4.67
+#+MACRO: intcpt_exp 0.009
 
 
 # txinctvs
-#+MACRO: Ind_tax_incentives_cbn3_coef 0.68
-#+MACRO: Ind_tax_incentives_cbn3_coef_exp 2.0
-#+MACRO: Ind_tax_incentives_cbn3_pvlu 0.14
-#+MACRO: Ind_tax_incentives_cbn2_coef 0.61
-#+MACRO: tmitr_approx_linear20step_cbn2_coef -0.58
-#+MACRO: ti_tmitr_interact_cbn2_coef 0.94
-#+MACRO: ti_tmitr_interact_cbn2_coef_exp 2.57
-#+MACRO: tmitr_1SD_cbn2 13.5
-#+MACRO: tmitr_neteffct_txdctblt1_cbn2 0.37
-#+MACRO: tmitr_neteffct_txdctblt1_cbn2_exp 1.44
+#+MACRO: Ind_tax_incentives_cbn3_coef 0.91
+#+MACRO: Ind_tax_incentives_cbn3_coef_exp 2.5
+#+MACRO: Ind_tax_incentives_cbn3_pvlu 0.06
+#+MACRO: ti_tmitr_interact_cbn2_pvlu 0.10
+#+MACRO: Ind_tax_incentives_cbn2_coef 0.57
+#+MACRO: tmitr_approx_linear20step_cbn2_coef -0.28
+#+MACRO: ti_tmitr_interact_cbn2_coef 0.70
+#+MACRO: ti_tmitr_interact_cbn2_coef_exp 2.02
+#+MACRO: tmitr_1SD_cbn2 13.4
+#+MACRO: tmitr_neteffct_txdctblt1_cbn2 0.43
+#+MACRO: tmitr_neteffct_txdctblt1_cbn2_exp 1.53
 #+MACRO: tmitr_iso3c1 50
 #+MACRO: tmitr_iso3c2 36
 
 
 # smorc_stats
-#+MACRO: smorc_lin 0.59
-#+MACRO: smorc_lin_flipped -0.59
-#+MACRO: smorc_sqrd -0.65
-#+MACRO: smorc_top_point_std 0.45
-#+MACRO: smorc_top_point 485
+#+MACRO: smorc_lin 0.65
+#+MACRO: smorc_lin_flipped -0.65
+#+MACRO: smorc_sqrd -0.64
+#+MACRO: smorc_top_point_std 0.51
+#+MACRO: smorc_top_point 501
 
 
 # smorc_vlus_2020
@@ -169,7 +176,9 @@ dt_nbrs[, .(macro_str = sprintf("#+MACRO: %s %s", nbr_name, nbr_fmt)), grp] %>%
 #+MACRO: smorc_2020_HRV 521
 #+MACRO: smorc_2020_IRL 529
 #+MACRO: smorc_2020_SGP 541
-#+MACRO: smorc_2020_CZE 634
+#+MACRO: smorc_2020_LTU 584
+#+MACRO: smorc_2020_MLT 589
+#+MACRO: smorc_2020_SVN 595
 #+MACRO: smorc_2020_DEU 661
 #+MACRO: smorc_2020_FRA 678
 #+MACRO: smorc_2020_BEL 689
@@ -186,14 +195,14 @@ dt_nbrs[, .(macro_str = sprintf("#+MACRO: %s %s", nbr_name, nbr_fmt)), grp] %>%
 
 
 # smorc_top_point_stats
-#+MACRO: smorctop_below_CYs_cnt 864
-#+MACRO: smorctop_above_CYs_cnt 377
-#+MACRO: smorctop_below_nbr_opened_cnt 222
-#+MACRO: smorctop_above_nbr_opened_cnt 133
-#+MACRO: smorctop_below_CYs_prop 69.6
-#+MACRO: smorctop_above_CYs_prop 30.4
-#+MACRO: smorctop_below_nbr_opened_prop 62.5
-#+MACRO: smorctop_above_nbr_opened_prop 37.5
+#+MACRO: smorctop_below_CYs_cnt 891
+#+MACRO: smorctop_above_CYs_cnt 350
+#+MACRO: smorctop_below_nbr_opened_cnt 240
+#+MACRO: smorctop_above_nbr_opened_cnt 115
+#+MACRO: smorctop_below_CYs_prop 71.8
+#+MACRO: smorctop_above_CYs_prop 28.2
+#+MACRO: smorctop_below_nbr_opened_prop 67.6
+#+MACRO: smorctop_above_nbr_opened_prop 32.4
 
 
 # shweal_stats
@@ -1133,7 +1142,7 @@ For a more detailed discussion of the control variables see the supplementary ma
 # new version
 The results for tax incentives largely support the hypothesis of tax incentives as a factor contributing to private museum founding:
 #
-In DS all IVs (as well as DS-CuSp), the interaction between tax deductibility of donations and top marginal income tax rates is positive and significant, which indicates that increases in top marginal income tax rates have a larger positive effect in countries where charitable donations are tax deductible than in countries where they are not.
+In DS all IVs, the interaction between tax deductibility of donations and top marginal income tax rates is positive and significant, which indicates that increases in top marginal income tax rates have a larger positive effect in countries where charitable donations are tax deductible than in countries where they are not.
 #
 Figure {{{rplt_pred_taxinc}}} visualizes how the impact of top marginal income tax rates depends on the presence of tax deductibility of donations.
 #
@@ -1141,7 +1150,8 @@ In particular at higher top marginal income tax rates countries with tax deducti
 #
 The option for collectors in these countries to receive substantial tax benefits appears to indeed incentivize them to establish private museums.
 #
-A positive role of tax incentives is further supported by the positive (but insignificant; p = {{{Ind_tax_incentives_cbn3_pvlu}}}) coefficient of tax deductibility of donations in DS --CuSp/TMITR, indicating that countries with tax deductibility of donations see $e$^{{{{Ind_tax_incentives_cbn3_coef}}}} = {{{Ind_tax_incentives_cbn3_coef_exp}}} times more private museum founding than countries without. 
+A positive role of tax incentives is further supported by large positive and marginally significant interaction in DS --CuSp (b={{{ti_tmitr_interact_cbn2_coef}}}, p={{{ti_tmitr_interact_cbn2_pvlu}}}) and the positive, marginally significant (p = {{{Ind_tax_incentives_cbn3_pvlu}}}) coefficient of tax deductibility of donations in DS --CuSp/TMITR, indicating that countries with tax deductibility of donations see $e$^{{{{Ind_tax_incentives_cbn3_coef}}}} = {{{Ind_tax_incentives_cbn3_coef_exp}}} times more private museum founding than countries without. 
+
 
 
 
