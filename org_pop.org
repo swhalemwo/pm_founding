@@ -687,22 +687,23 @@ A hypothesis on elite wealth can thus be formulated as:
 #+label: tbl:data_srcs
 #+caption: Concepts, operationalizations and data sources
 #+attr_latex: :align lp{7cm}l
-|--------------------------------+-----------------------------------------------------------------------------+----------------------------------|
-| Concept                        | Indicator                                                                   | Data source                      |
-|--------------------------------+-----------------------------------------------------------------------------+----------------------------------|
-| Private Museum Fouding         | Number of PM openings                                                       | PM Database                      |
-| Tax Incentives                 | Tax deductibility of donations                                              | Charities Aid Foundation         |
-|                                | Top Marginal Income Tax Rates                                               | Fraser Institute                 |
-| Cultural spending              | Total government expenditure on Culture, Recreation and Religion (COFOG 08) | OECD, UN, Eurostat, IMF          |
-| Inequality                     | Wealth/Income inequality: 10% share, 1% share, Gini                         | World Inequality Database        |
-| Elite Wealth                   | Population above threshold of 1M, 5M, 30M, 200M USD                         | World Inequality Database        |
-| Size                           | Population                                                                  | World Bank                       |
-| Development/art demand         | GDP per capita, GDP per capita growth (%)                                   | World Bank                       |
-| Presence of potential founders | Number of art collectors                                                    | Artnews top200 collector ranking |
-| Museum population              | Number of modern/contemp. art museums                                       | Museums of the World Database    |
-| Density: Legitimacy            | Number of PMs open (country, neighbors, global)                             | PM Database                      |
-| Density: Competition           | Number of PMs open^2 (country, neighbors, global)                           | PM Database                      |
-|--------------------------------+-----------------------------------------------------------------------------+----------------------------------|
+|--------------------------------+-----------------------------------------------------------------------------+----------------------------------------------------------|
+| Concept                        | Indicator                                                                   | Data source                                              |
+|--------------------------------+-----------------------------------------------------------------------------+----------------------------------------------------------|
+| Private Museum Fouding         | Number of PM openings                                                       | PM Database                                              |
+| Tax Incentives                 | Tax deductibility of donations                                              | Charities Aid Foundation                                 |
+|                                | Top Marginal Income Tax Rates                                               | Fraser Institute                                         |
+| Cultural spending              | Total government expenditure on Culture, Recreation and Religion (COFOG 08) | OECD, UN, Eurostat, IMF                                  |
+| Inequality                     | Wealth/Income inequality: 10% share, 1% share, Gini                         | World Inequality Database                                |
+| Elite Wealth                   | Population above threshold of 1M, 5M, 30M, 200M USD                         | World Inequality Database                                |
+| Size                           | Population                                                                  | World Bank                                               |
+| Development/art demand         | GDP per capita, GDP per capita growth (%)                                   | World Bank                                               |
+| Presence of potential founders | Number of art collectors                                                    | Artnews top200 collector ranking                         |
+| Museum population              | Number of modern/contemp. art museums                                       | Museums of the World Database                            |
+| Density: Legitimacy            | Number of PMs open (country, neighbors, global)                             | PM Database                                              |
+| Density: Competition           | Number of PMs open^2 (country, neighbors, global)                           | PM Database                                              |
+| Social Fragmentation           | Ethnic Fractionalization, Migrant Stock                                     | Historical Index of Ethnic Fractionalization, World Bank |
+|--------------------------------+-----------------------------------------------------------------------------+----------------------------------------------------------|
 
 
 Ideally collector-level data would be used to construct collector-year as the unit of analysis, which would allow the investigation of collector decision-making by utilizing collector-level variables. 
@@ -902,6 +903,13 @@ In order to measure both legitimating and competitive effects, I include a linea
 #
 # For the construction of this indicator I exclude all museums that are also private museums.
 
+**** Social Fragmentation
+
+Social fragmentation has been argued to decrease civic engagement parencite:&Costa_Kahn_2003_heterogeneity and public goods provision parencite:&Alesina_Baqir_1999_publicgoods, as it hinders the development of a collective identity [[parencite:&Habyarimana_etal_2009_coethnicity;&Baldassarri_Abascal_2020_diversity]].
+#
+As private museums provide public cultural goods to the local community, potential founders might thus be less eager to engage in the at of founding one in their country is more fragmented.
+#
+I use the Historical Index of Ethnic Fractionalization [[parencite:&Drazanova_2020_HIEF]] and the international migrant stock (the percentage of people living in a country who are not born in it cite:&WB_2024_mist) to control for fragmentation along lines of ethnicity and citizenship, respectively. 
 
 
 ** Analytical Strategy
@@ -1474,6 +1482,15 @@ Amounts are reported in current local currency units and converted to 2021 USD u
  
 
 # [fn::An alternative would be to use purchasing power parity exchange rates, which reflect local price levels (as [[textcite:&Blanchet_2017_conversions]] argues, 1 euro or 7 yuan allow the purchase of the same amount of oil on international markets, but different amounts of food in Beijing or Paris). As the art market is however substantially transnational [[parencite:&Velthuis_Curioni_2015_canvases]], and discussion of government spending heavily revolves around acquisition budgets (which are dedicated to the purchase of artworks that often are  international), I consider market exchange rates more appropriate.]
+
+*** Social Fragmentation
+The Historical Index of Ethnic Fractionalization (HIEF, cite:&Drazanova_2020_HIEF), as well as the underlying Composition of Religious and Ethnig Groups Project [[parencite:&CREG_2012_whitepaper]] provides data coverage only until 2013.
+#
+However, as ethnic group percentages change slowly within countries (only {{{hief_prop_within}}}% of variation from 1995 to 2013 is within-country variation, the remainder being between-country variation), I consider it appropriate to fill up values from 2014 to 2020 by carrying over the 2013 value to be able to include the as many country-years as possible.
+#
+Furthermore, for {{{hief_nbr_cry_imputed}}} countries for which the HIEF dataset is not available, I impute it based on the Ethnic Fractionalization in the year 2000 [[parencite:&Alesina_etal_2003_fractionalization]], as both variables are strongly correlated (r={{{cor_hief_eth2k}}}).
+
+
 
 *** Imputation
 
