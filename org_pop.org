@@ -1099,7 +1099,7 @@ In particular GDP and private museum densities show strong associations across d
 # 
 GDP variables generally show a positive associations while density variables exhibit either an inverse U-shaped relationship compatible with the density-dependence literature (in the case of country and global density) or a weak U-shaped relationship in the case of density of neighboring countries.
 #
-No substantial impact on private museum founding is found for cumulative private museum closures and the other art field indicators, number of artnews collectors and number of modern and contemporary museums.
+No substantial impact on private museum founding is found for social fragmentation variables, cumulative private museum closures, number of artnews collectors and number of modern and contemporary museums.
 #
 For a more detailed discussion of the control variables see the supplementary materials. 
 
@@ -1488,7 +1488,7 @@ The Historical Index of Ethnic Fractionalization (HIEF, cite:&Drazanova_2020_HIE
 #
 However, as ethnic group percentages change slowly within countries (only {{{hief_prop_within}}}% of variation from 1995 to 2013 is within-country variation, the remainder being between-country variation), I consider it appropriate to fill up values from 2014 to 2020 by carrying over the 2013 value to be able to include the as many country-years as possible.
 #
-Furthermore, for {{{hief_nbr_cry_imputed}}} countries for which the HIEF dataset is not available, I impute it based on the Ethnic Fractionalization in the year 2000 [[parencite:&Alesina_etal_2003_fractionalization]], as both variables are strongly correlated (r={{{cor_hief_eth2k}}}).
+Furthermore, for {{{hief_nbr_cry_imputed}}} countries for which the HIEF dataset is not available, I impute it based on the (more complete) variable "Ethnic Fractionalization in the year 2000" [[parencite:&Alesina_etal_2003_fractionalization]], as both variables are strongly correlated (r={{{cor_hief_eth2k}}}).
 
 
 
@@ -1570,7 +1570,7 @@ This between-dataset variation in coefficient size could indicate mediation of G
 Economic growth is also positive and significant in all data sets.
 
 
-*** density dependence :ignhead:
+*** Density Dependence :ignhead:
 
 In all datasets on the country and global level, measures of density (legitimacy) and density squared (competition) correspond to the density-dependence paradigm, i.e. an inverted U-shaped relationship between density and private museum founding (indicated by the significant negative coefficient of the squared density measure on the country and global level for all datasets). 
 #
@@ -1611,6 +1611,14 @@ Furthermore, while prospective founders might ultimately be disincentivized by g
 # #
 # The 
 
+
+*** Social Fragmentation
+While the effects of ethnic fractionalization are not significant in all datasets, they are consistently negative, thus giving some support to the expectation that more fractionalized societies provide lower incentives for civic engagements and public good provision.
+#
+However, this is not the case for the effect of Migrant stock, which is only negative in "DS all IVs", but positive in the other two datasets.
+#
+Possible explanations for these findings might be the measurement of fragmentation on the country-level, whereas these mechanisms likely take place on a more local level, as well as a more complex relationship between fragmentation and pro-social behavior [[parencite:&Baldassarri_Abascal_2020_diversity]].
+#
 
 
 
