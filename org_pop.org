@@ -211,8 +211,8 @@ dt_nbrs[, .(macro_str = sprintf("#+MACRO: %s %s", nbr_name, nbr_fmt)), grp] %>%
 #+MACRO: shweal_iso3c2 57.9
 #+MACRO: shweal_lngtd_vlu_year1 64.1
 #+MACRO: shweal_lngtd_vlu_year2 71.7
-#+MACRO: shweal_cbn1 0.34
-#+MACRO: shweal_cbn1_exp 1.41
+#+MACRO: shweal_cbn1 0.35
+#+MACRO: shweal_cbn1_exp 1.42
 #+MACRO: shweal_lngtd_year1 1991
 #+MACRO: shweal_lngtd_year2 2011
 
@@ -223,8 +223,8 @@ dt_nbrs[, .(macro_str = sprintf("#+MACRO: %s %s", nbr_name, nbr_fmt)), grp] %>%
 #+MACRO: sptinc_iso3c2 39.7
 #+MACRO: sptinc_lngtd_vlu_year1 34.8
 #+MACRO: sptinc_lngtd_vlu_year2 43.5
-#+MACRO: sptinc_cbn1 -0.52
-#+MACRO: sptinc_cbn1_exp 0.59
+#+MACRO: sptinc_cbn1 -0.39
+#+MACRO: sptinc_cbn1_exp 0.67
 #+MACRO: sptinc_lngtd_year1 2010
 #+MACRO: sptinc_lngtd_year2 2017
 
