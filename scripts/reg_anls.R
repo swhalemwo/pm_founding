@@ -2612,7 +2612,7 @@ gen_plt_cfgs <- function() {
                                             "(Gaussian kernel density estimate; bandwidth = 0.1)")),
             plt_velp = list(filename = "velp.pdf", width = 24, height = 16,
                             caption = "Results of regressing longitudinal variables on year"),
-            plt_cntrfctl = list(filename = "cntrfctl.pdf", width = 18, height = 11,
+            plt_cntrfctl = list(filename = "cntrfctl.pdf", width = 18, height = 13,
                                 caption = "Counterfactual simulations"),
             plt_pred_taxinc = list(filename = "pred_taxinc.pdf", width = 14, height = 7.5,
                                    caption = paste0("Tax Incentives and Private Museum Founding: Adjusted ",
@@ -4103,6 +4103,8 @@ pdftk_cmd <- sprintf("cd %s && pdftk %s output plts_%s.pdf", FIG_DIR,
                      paste0(paste0("plt_", fldr_info_optmz$batch_version, "_",
                                    gsub("plt_", "", names(reg_res$plts)), ".pdf"),
                             collapse = " "), fldr_info_optmz$batch_version)
+
+## render_reg_res("plt_cntrfctl", reg_res, batch_version = fldr_info_optmz$batch_version)
 
 plt_inspector(reg_res$plts)
 

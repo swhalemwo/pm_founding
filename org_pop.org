@@ -367,7 +367,7 @@ While I find support for a positive effect of tax incentives, government spendin
 #
 Furthermore the effects of inequality are divergent, as a positive association with private museum founding is found for wealth inequality and a negative one for income inequality.
 #
-Finally, elite wealth effects are small and mostly statistically insignificant. 
+Finally, elite wealth effects are too small, statistically insignificant, and conditional on wealth threshold and dataset to conclude a general relation with private museum founding.
 #
 I conclude with a call for advancing theoretical elaboration and measurement precision to further investigate founding determinants. 
 
@@ -462,7 +462,7 @@ As the quantitative analysis of private museums is still it its infancy, this pa
 #
 In the remainder of the paper, I review the literature on the causes of private museum founding, and describe the data sources used to investigate each mechanism.
 #
-I then report results of regression analyses, which indicate support for a positive effect of tax incentives, an inverse U-shaped relationship with cultural spending, divergent effects of different inequality measures and little support for an effect of elite wealth.
+I then report results of regression analyses, which indicate support for a positive effect of tax incentives, an inverse U-shaped relationship with cultural spending, divergent effects of different inequality measures and little support for a general effect of elite wealth.
 
 # to investigate the impact that each of the main mechanisms
 # (tax incentives, government spending, inequality and elite wealth).
