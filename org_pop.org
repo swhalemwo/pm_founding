@@ -78,17 +78,17 @@ dt_nbrs[, .(macro_str = sprintf("#+MACRO: %s %s", nbr_name, nbr_fmt)), grp] %>%
 
 # popnbrs_p1pm
 #+MACRO: nbr_pop_p_1pm_cbn1 89.5
-#+MACRO: nbr_pop_p_1pm_cbn2 165
-#+MACRO: nbr_pop_p_1pm_cbn3 210
+#+MACRO: nbr_pop_p_1pm_cbn2 163
+#+MACRO: nbr_pop_p_1pm_cbn3 205
 #+MACRO: nbr_pop_p_1pm_cbn_controls 83.1
 
 
 # cvrgnc
-#+MACRO: cvrgd1 210 335
-#+MACRO: cvrgd0 1 780
-#+MACRO: mdlcnt_ttl 212 115
-#+MACRO: cvrgnc_rate 99.2
-#+MACRO: nbr_runs_p_cbn_spec 491
+#+MACRO: cvrgd1 254 251
+#+MACRO: cvrgd0 3 269
+#+MACRO: mdlcnt_ttl 257 520
+#+MACRO: cvrgnc_rate 98.7
+#+MACRO: nbr_runs_p_cbn_spec 596
 
 
 # velp_minmax
@@ -102,22 +102,22 @@ dt_nbrs[, .(macro_str = sprintf("#+MACRO: %s %s", nbr_name, nbr_fmt)), grp] %>%
 
 # rate_opng_glbl
 #+MACRO: rate_opng_glbl_cbn1 0.00430
-#+MACRO: rate_opng_glbl_cbn2 0.00297
-#+MACRO: rate_opng_glbl_cbn3 0.00282
+#+MACRO: rate_opng_glbl_cbn2 0.00298
+#+MACRO: rate_opng_glbl_cbn3 0.00283
 #+MACRO: rate_opng_glbl_cbn_controls 0.00229
 
 
 # rate_opng_glbl_yearly
 #+MACRO: rate_opng_glbl_yearly_cbn1 0.00404
-#+MACRO: rate_opng_glbl_yearly_cbn2 0.00287
-#+MACRO: rate_opng_glbl_yearly_cbn3 0.00273
+#+MACRO: rate_opng_glbl_yearly_cbn2 0.00288
+#+MACRO: rate_opng_glbl_yearly_cbn3 0.00274
 #+MACRO: rate_opng_glbl_yearly_cbn_controls 0.00221
 
 
 # opng_p1m_glbl_yearly
 #+MACRO: opng_p1m_glbl_yearly_cbn1 248
-#+MACRO: opng_p1m_glbl_yearly_cbn2 348
-#+MACRO: opng_p1m_glbl_yearly_cbn3 366
+#+MACRO: opng_p1m_glbl_yearly_cbn2 347
+#+MACRO: opng_p1m_glbl_yearly_cbn3 365
 #+MACRO: opng_p1m_glbl_yearly_cbn_controls 452
 
 
