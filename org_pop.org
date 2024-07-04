@@ -1243,11 +1243,22 @@ Whether this line of reasoning is able to explain the diverging inequality effec
 
 **** HNWI (H4)
 
-Increases in the number of HNWI do not seem to be substantially associated with private museum founding as after controlling for other variables, the HNWI coefficients are firstly comparatively small relative to those of other indicators, secondly not statistically significant and thirdly occasionally negative, in particular in DS -CuSp and DS -CuSP/TMITR).
+
+
+# Increases in the number of HNWI do not seem to be substantially associated with private museum founding as after controlling for other variables, the HNWI coefficients are firstly comparatively small relative to those of other indicators, secondly not statistically significant and thirdly occasionally negative, in particular in DS -CuSp and DS -CuSP/TMITR).
+# #
+# In these two datasets, the coefficient of the HNWI population with a wealth larger than 5 million USD in particular is substantially negative ({{{hnwi_nbr_5M_cbn2_coef}}} and {{{hnwi_nbr_5M_cbn3_coef}}}) and significant (p = {{{hnwi_nbr_5M_cbn2_pvlu}}} and p = {{{hnwi_nbr_5M_cbn3_pvlu}}} for DS -CuSp and DS -CuSP/TMITR, respectively).
+# #
+# Consequently, there is little evidence that HNWI rates are substantially positively associated with private museum founding, thus rejecting H4.
+
+
+HNWI variables show no clear relationship with private museum founding: 
 #
-In these two datasets, the coefficient of the HNWI population with a wealth larger than 5 million USD in particular is substantially negative ({{{hnwi_nbr_5M_cbn2_coef}}} and {{{hnwi_nbr_5M_cbn3_coef}}}) and significant (p = {{{hnwi_nbr_5M_cbn2_pvlu}}} and p = {{{hnwi_nbr_5M_cbn3_pvlu}}} for DS -CuSp and DS -CuSP/TMITR, respectively).
+In "DS all IVs", coefficients for the 1 and 5 million USD thresholds are positive and significant, whereas the higher thresholds are not significant.
 #
-Consequently, there is little evidence that HNWI rates are substantially positively associated with private museum founding, thus rejecting H4.
+In the other datasets, all coefficients are negative, with the 5M threshold significant in "DS --CuSp" and marginally significant in "DS --CuSp/TMITR" (p={{{hnwi_nbr_5M_cbn3_pvlu}}}).
+#
+Taken together, these results provide no conclusive support that HNWI rates generally are substantially positively associated with private museum founding, thus rejecting H4.
 
 
 A possible explanation for this might be found when investigating the origin of the original argument[fn::Another more technical explanation based on the model specification, in particular the overcontrolling of elite wealth effects with other variables is discussed in the supplementary materials as I consider it less likely.].
@@ -1263,12 +1274,15 @@ The fact that substantial wealth is required to found a private museum on first 
 #
 Of all HNWIs, only some will engage in philanthropy, of which only some will engage in art philanthropy, and  an even smaller subset of these will found a private museum.
 #
-The particular ways in which HNWI decide to spend their money might be ultimately depend on a number of other variables to such an extent that a direct link between levels of elite wealth and private museum founding is not observable.
-# 
-There might thus be countries where a positive exists between HNWI numbers and founding rates, yet it does not appear to be a pattern that applies across all countries. 
-# 
-# Some evidence for such speculation is that the HNWI coefficients are positive in "DS all IVs", which 
-Studies of comparative elite wealth spending could help to illucidate how various forms of elite spending are conditional on different structural conditions.
+The particular ways in which HNWI decide to spend their money might be ultimately depend on a number of other variables to such an extent that a general direct link between levels of elite wealth and private museum founding is not observable.
+#
+To improve on the current results where direction, size and significance depends on dataset and wealth threshold, studies of comparative elite wealth spending could help to illucidate how various forms of elite spending are conditional on different structural configurations.
+
+
+# There might thus be countries where a positive exists between HNWI numbers and founding rates, yet it does not appear to be a pattern that applies across all countries. 
+# # 
+# # Some evidence for such speculation is that the HNWI coefficients are positive in "DS all IVs", which 
+# Studies of comparative elite wealth spending could help to illucidate how various forms of elite spending are conditional on different structural conditions.
 
 
 # Overall, cbn_no_cult_spending and cbn_no_cult_spending_and_mitr are more similar in coefficient results than either is to cbn_all. 
