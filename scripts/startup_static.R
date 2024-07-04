@@ -90,7 +90,7 @@ reg_settings_optmz <- list(
     ## cbns_to_include     =  "cbn1", 
     ## n_vrbl_thld_choices =  4,      
     ## -------------- for surf
-    batch_version       = "v35",         
+    batch_version       = "v34",         
     nbr_specs_per_thld  = 4,                 
     lags                = 1:5,               
     cbns_to_include     = paste0("cbn", 1:3),
