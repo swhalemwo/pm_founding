@@ -8,7 +8,7 @@
 #+OPTIONS: h:5
 
 #+BEGIN_SRC R :session calc :exports none :results values drawer :dir /home/johannes/Dropbox/
-dt_nbrs <- fread("/home/johannes/Dropbox/phd/papers/org_pop/misc/tbl_nbrs_v27.csv")
+dt_nbrs <- fread("/home/johannes/Dropbox/phd/papers/org_pop/misc/tbl_nbrs_v34.csv")
 
 dt_nbrs[, .(macro_str = sprintf("#+MACRO: %s %s", nbr_name, nbr_fmt)), grp] %>%
   .[, .(grp_str = paste(macro_str, collapse = "\n")), grp] %>%
@@ -39,38 +39,38 @@ dt_nbrs[, .(macro_str = sprintf("#+MACRO: %s %s", nbr_name, nbr_fmt)), grp] %>%
 
 # cbn_info
 #+MACRO: nbr_cy_cbn1 1241
-#+MACRO: nbr_cy_cbn2 2508
-#+MACRO: nbr_cy_cbn3 3244
+#+MACRO: nbr_cy_cbn2 2474
+#+MACRO: nbr_cy_cbn3 3148
 #+MACRO: nbr_crys_cbn1 85
-#+MACRO: nbr_crys_cbn2 150
-#+MACRO: nbr_crys_cbn3 160
+#+MACRO: nbr_crys_cbn2 147
+#+MACRO: nbr_crys_cbn3 156
 #+MACRO: nbr_opngs_cbn1 355
 #+MACRO: nbr_opngs_cbn2 402
-#+MACRO: nbr_opngs_cbn3 404
+#+MACRO: nbr_opngs_cbn3 403
 #+MACRO: prop_opngs_cvrd_cbn1 0.649
 #+MACRO: prop_opngs_cvrd_cbn2 0.735
-#+MACRO: prop_opngs_cvrd_cbn3 0.739
+#+MACRO: prop_opngs_cvrd_cbn3 0.737
 #+MACRO: perc_opngs_cvrd_cbn1 64.9%
 #+MACRO: perc_opngs_cvrd_cbn2 73.5%
-#+MACRO: perc_opngs_cvrd_cbn3 73.9%
+#+MACRO: perc_opngs_cvrd_cbn3 73.7%
 
 
 # opng_rates_fmt
 #+MACRO: opng_rate_cbn1 0.0112
 #+MACRO: opng_rate_cbn2 0.0061
-#+MACRO: opng_rate_cbn3 0.0048
+#+MACRO: opng_rate_cbn3 0.0049
 
 
 # opng_prop_vlus
 #+MACRO: nbr_zero_cbn1 1 030
 #+MACRO: nbr_nzero_cbn1 211
 #+MACRO: prop_nzero_cbn1 17.0
-#+MACRO: nbr_zero_cbn2 2 256
+#+MACRO: nbr_zero_cbn2 2 222
 #+MACRO: nbr_nzero_cbn2 252
-#+MACRO: prop_nzero_cbn2 10.0
-#+MACRO: nbr_zero_cbn3 2 990
-#+MACRO: nbr_nzero_cbn3 254
-#+MACRO: prop_nzero_cbn3 7.8
+#+MACRO: prop_nzero_cbn2 10.2
+#+MACRO: nbr_zero_cbn3 2 895
+#+MACRO: nbr_nzero_cbn3 253
+#+MACRO: prop_nzero_cbn3 8.0
 #+MACRO: nbr_zero_cbn_controls 5 845
 #+MACRO: nbr_nzero_cbn_controls 298
 #+MACRO: prop_nzero_cbn_controls 4.9
