@@ -615,7 +615,7 @@ Nevertheless, as the crowding-in hypothesis has not been employed in the case of
 
 *** Inequality
 
-Inequalities have been suggested to be related to the proliferation of private museum foundings as well. 
+Furthermore, inequalities have been suggested as a cause of private museum foundings. 
 #
 # this actually is not that explicit either
 # The only explicit argument regarding /inequality/ on its own (separate from the high absolute sums of wealth) is made by [[
@@ -781,7 +781,7 @@ However, data coverage is substantially worse for SNA Code 82, and as there appe
 #
 Even with the broader single-digit Code 8, cultural spending constitutes the indicator with the smallest coverage; I therefore combine as multiple data sources (the exact combination procedure is described in the supplementary materials).
 #
-I estimate coefficients of the cultural spending variable as well as its squared term to account for potential non-linearities similar to those present in the density dependence paradigm ([[cite:&Hannan_1992_dynamics]];  elaborated in section Control Variables); in particular, the crowding-out argument appears to indicate competition, while the crowding-in argument bears similarities to legitimation.
+I estimate coefficients of the cultural spending variable as well as its squared term to account for potential non-linearities similar to those present in the density dependence paradigm ([[cite:&Hannan_1992_dynamics]];  elaborated in section Control Variables); in particular, the crowding-out argument resembles competition, while the crowding-in argument corresponds to legitimation.
 
 
 **** Inequality
@@ -876,7 +876,7 @@ Secondly, I add a linear and squared density term based on the private museum po
 
 Another variable of the organizational population concerns closures:
 # 
-The private museum population has seen substantial numbers of closures with {{{nbr_clsd_wld}}} institutions having been shut down or transformed (cf. [[cite:&Velthuis_Gera_forthcoming_fragility]]), and growing awareness of the fragility of these institutions might in turn make their founding less attractive to founders keen of leaving a mark in history.
+The private museum population has seen substantial numbers of closures with {{{nbr_clsd_wld}}} institutions having been shut down or transformed (cf. [[cite:&Velthuis_Gera_2024_fragility]]), and growing awareness of the fragility of these institutions might in turn make their founding less attractive to founders keen of leaving a mark in history.
 #
 I therefore add a global variable of the number of cumulative museum closures to capture the potential delegitimating effect of the closing of institutions that often are planned as personal legacies [[parencite:&Walker_2019_collector]].[fn::While closings could also be measured on the country-level, the low number of closings would lead to a highly skewed variable, and therefore to coefficients disproportionately reflecting a few countries (in particular Switzerland, the United States and Netherlands, depending on whether the estimator measures closing counts or proportions). I therefore limit myself to measuring the global effect of museum closures.] 
 
@@ -918,7 +918,7 @@ Social fragmentation has been argued to decrease civic engagement parencite:&Cos
 #
 As private museums provide public cultural goods to the local community, potential founders might thus be less eager to engage in the at of founding one in their country is more fragmented.
 #
-I use the Historical Index of Ethnic Fractionalization [[parencite:&Drazanova_2020_HIEF]] and the international migrant stock (the percentage of people living in a country who are not born in it cite:&WB_2024_mist) to control for fragmentation along lines of ethnicity and citizenship, respectively. 
+I use the Historical Index of Ethnic Fractionalization [[parencite:&Drazanova_2020_HIEF]] and the World Bank indicator of a country's international migrant stock (the percentage of people living in a country who are not born in it, cite:&WB_2024_mist) to control for fragmentation along lines of ethnicity and citizenship, respectively. 
 
 
 ** Analytical Strategy
@@ -1009,7 +1009,7 @@ While the random starting values and random order of variables help to explore t
 :ID:       d2d676fc-e644-4815-a06d-906a30c823f0
 :END:
 
-Each regression model is specified as a negative binomial model (which is robust to potential overdispersion of the dependent variable) run using the glmmTMB command [[parencite:&Brooks_etal_2017_glmmTMB]] of R 4.1.2. 
+Each regression model is specified as a negative binomial model (which is robust to potential overdispersion of the dependent variable) run using the glmmTMB command (cite:&Brooks_etal_2017_glmmTMB, 1.1.7) of R 4.1.2. 
 #
 Due to the presence of variables that do not vary across time (tax incentives and museum population) or country (global density) pure fixed effects models are not feasible. 
 #
@@ -1172,7 +1172,7 @@ Government cultural spending is found to have a significant inverse-U shaped ass
 #
 While at lower values the association is positive, the effect decreases at higher levels and eventually turns negative (figure {{{rplt_pred_smorc}}}).
 #
-In particular, up to a value of {{{smorc_lin_flipped}}}/(2*{{{smorc_sqrd}}}) = {{{smorc_top_point_std}}} (corresponding to cultural spending of {{{smorc_top_point}}} USD per capita, approximately the 2020 government cultural spending of Latvia ({{{smorc_2020_LVA}}} USD) or Australia ({{{smorc_2020_AUS}}} USD) an increase in government spending corresponds to a higher predicted likelihood of private museum founding.
+In particular, up to a value of {{{smorc_lin_flipped}}}/(2*{{{smorc_sqrd}}}) = {{{smorc_top_point_std}}} (corresponding to cultural spending of {{{smorc_top_point}}} USD per capita, approximately the 2020 government cultural spending of Latvia ({{{smorc_2020_LVA}}} USD) or Australia ({{{smorc_2020_AUS}}} USD)) an increase in government spending corresponds to a higher predicted likelihood of private museum founding.
 
 
 #
@@ -1305,11 +1305,11 @@ Results are shown in figure {{{rplt_cntrfctl}}} (the longitudinal changes of the
 #
 Positive values for a variable (e.g. GDP) indicate that in the actual world, more private museums were founded than would have been had the variable stayed at its 2000-2004 level; the change of the variable can thus be understood as having led to an increase in private museum founding.
 #
-In the case of GDP, it can be seen that changes since 2000-2004 are, depending on dataset, responsible for 15 to 75 additional private museums foundings.
+In the case of GDP, it can be seen that changes since 2000-2004 are, depending on dataset, responsible for 7 to 65 additional private museums foundings.
 #
 Conversely, negative values (e.g. for top marginal income tax rates) indicate that by changing in the real world, less private museums are founded than predicted in a world where variables stay at 2000-2004 levels.
 #
-For top marginal tax rates it can thus be seen that if they had stayed at their mean level of 2000-2004, 20 to 44 additional private museums would have been founded (in DS all IVs and DS -CuSp, respectively).
+For top marginal tax rates it can thus be seen that if they had stayed at their mean level of 2000-2004, 24 to 52 additional private museums would have been founded (in DS all IVs and DS -CuSp, respectively).
 # 
 Despite only capturing the within-country variation, this analysis shows that the predictors are substantially associated with private museum founding. 
 
@@ -1343,7 +1343,7 @@ To some extent the findings are in line with the literature, particularly in the
 #
 In other domains, this research complicates existing arguments, such as in the case of government spending, which shows an inverse-U shaped relationship (and thus corresponds to crowding-in at lower levels, and crowding out at higher levels), and inequality, where wealth disparities are found to be positively associated with private museum founding, but income inequalities appear to have a negative effect. 
 #
-In yet another area, the increase in numbers of the very wealthy, no substantial relation to private museum founding has been found. 
+In yet another area, the increase in numbers of the very wealthy, no general relation to private museum founding has been found. 
 #
 This study thus substantially advances the understanding of a major art world development of the recent decades.
 
