@@ -1671,16 +1671,10 @@ Possible explanations for these findings might be the measurement of fragmentati
 :CUSTOM_ID: app_llrt
 :END:
 
-# #+label: fig:oneout_llrt_lldiff
-# #+caption: Model fit difference given variable inclusion
-# [[file:figures/plt_v75_oneout_llrt_lldiff.pdf]]
 
 {{{ynkplt_oneout_llrt_lldiff}}}
 
 
-# #+label: fig:oneout_llrt_lldiff
-# #+caption: Significance of model improvement given variable inclusion
-# [[file:figures/plt_v75_oneout_llrt_z.pdf]]
 
 {{{ynkplt_oneout_llrt_z}}}
 
