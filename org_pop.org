@@ -734,9 +734,7 @@ Finally, a number of additional data processing steps are described in the suppl
 
 *** Dependent Variable: Number of private museum foundings per country-year
 
-To document the development of private museums, existing databases of private contemporary art museums citep:LarrysList_2015_report,Independent_collectors,global_private_museum_network_2020_museums,BMW_Independent_Collectors_2018_artguide,vdEerenbeemt_vdWauw_DDD_2016 have been combined.
-#
-Additionally, web research has been conducted by searching in a number of online art media[fn::The media sources used were: Artforum, Artnet, Art Territory, Artsy, My Art Guides, Artnews, Artfcity, Frieze, The Art Wolf, The Art Newspaper, Art Privee, Widewalls, White Hot Magazine and Hyperallergic.] for the term "private museum", "private art museum" and "private contemporary art museum".
+To document the development of private museums, existing databases of private contemporary art museums have been combined; additionally web research has been conducted by searching in a number of online art media for the term "private museum", "private art museum" and "private contemporary art museum"[fn::Databases and online media sources considered are described in more detail in [[citet:&Velthuis_etal_2023_boom]]].
 #
 After recording the names and deleting duplicates, it was investigated using publicly available information whether the organization corresponds to the employed definition of a private museum.
 #
@@ -1361,7 +1359,7 @@ The contributions of this study go beyond constituting the first quantitative an
 #
 Despite such methodological contributions this study is limited by a number of factors. 
 #
-As interest in the organizational form of private museums has risen only recently, data collection has been retrospective (which might be less inclusive than continuous measurements based on for example industry directories) and furthermore been primarily based on English-language media.
+As interest in the organizational form of private museums has risen only recently, data collection has been retrospective (which might be less inclusive than continuous measurements based on industry directories) and primarily based on English-language media.
 #
 Also, multiple predictors are exhibiting substantial limitations in measuring their intended concepts, such as the measure of tax deductibility of donations and non-private art museum populations variables (which are only cross-sectional and in the former case not art-sector specific), the WID HNWI data (making HNWI estimation beyond 200 million USD infeasible) and the Artnews top 200 collector ranking data (which does not capture absolute changes of collector populations).
 #
