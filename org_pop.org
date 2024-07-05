@@ -701,7 +701,7 @@ A hypothesis on elite wealth can thus be formulated as:
 
 #+label: tbl:data_srcs
 #+caption: Concepts, operationalizations and data sources
-#+attr_latex: :align lp{7cm}l
+#+attr_latex: :align lp{7cm}p{5cm}
 |--------------------------------+-----------------------------------------------------------------------------+----------------------------------------------------------|
 | Concept                        | Indicator                                                                   | Data source                                              |
 |--------------------------------+-----------------------------------------------------------------------------+----------------------------------------------------------|
