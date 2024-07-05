@@ -1,8 +1,8 @@
-% Created 2024-02-17 za 20:40
+% Created 2024-07-05 vr 13:00
 % Intended LaTeX compiler: pdflatex
 \documentclass[11pt, authoryear]{elsarticle}
 
-\usepackage[hyphens]{url}                
+\usepackage[hyphens]{url}
 \usepackage{hyperref}
 \usepackage[hyphenbreaks]{breakurl}
 \usepackage{rotating}
@@ -20,85 +20,49 @@
 \usepackage{svg}
 \usepackage[export]{adjustbox}
 
-
 \usepackage{booktabs}
 \usepackage{dcolumn}
 \makeatletter
 \newcolumntype{D}[3]{>{\textfont0=\the\font\DC@{#1}{#2}{#3}}c<{\DC@end}}
 \makeatother
-
-
 \newcolumntype{L}{>{$}l<{$}}
-
-% \usepackage{bibentry}
-
 \sisetup{detect-all}
-
 \sloppy
 \usepackage{scalerel,stackengine}
-
-% \stackMath
-% \newcommand\reallywidehat[1]{%
-% \savestack{\tmpbox}{\stretchto{%
-%   \scaleto{%
-%     \scalerel*[\widthof{\ensuremath{#1}}]{\kern-.6pt\bigwedge\kern-.6pt}%
-%     {\rule[-\textheight/2]{1ex}{\textheight}}%WIDTH-LIMITED BIG WEDGE
-%   }{\textheight}% 
-% }{0.5ex}}%
-% \stackon[1pt]{#1}{\tmpbox}%
-% }
-
 \usepackage{caption}
 \usepackage[draft]{todonotes}
-
 \captionsetup{skip=0pt}
 \usepackage[utf8]{inputenc}
-% \usepackage[style=apa, backend=biber, refsegment=section]{biblatex}
-% \usepackage{natbib}
-% \usepackage[english, american]{babel}
-% \DeclareLanguageMapping{american}{american-apa}
-% \DeclareFieldFormat{apacase}{#1}
-
 \usepackage[T1]{fontenc}
 \usepackage{csquotes}
-
-
-
-
 \usepackage{floatrow}
-
 \usepackage{listings}
 \usepackage{xcolor}
 \usepackage{colortbl}
-
 \lstset{
-  language=R,                    
-  basicstyle=\footnotesize,      
-  numbers=left,                  
-  numberstyle=\tiny\color{gray}, 
-  stepnumber=1,                  
-  numbersep=5pt,                 
-  backgroundcolor=\color{white}, 
-  showspaces=false,              
-  showstringspaces=false,        
-  showtabs=false,                
-  frame=single,                  
-  rulecolor=\color{black},       
-  tabsize=2,                     
-  captionpos=b,                  
-  breaklines=true,               
-  breakatwhitespace=false,       
-  title=\lstname,                
-  keywordstyle=\color{red},     
-  commentstyle=\color{blue},  
-  stringstyle=\color{violet},     
-  escapeinside={\%*}{*)},        
-  morekeywords={*,...}           
-} 
-
-
-
-
+language=R,
+  basicstyle=\footnotesize,
+  numbers=left,
+  numberstyle=\tiny\color{gray},
+  stepnumber=1,
+  numbersep=5pt,
+  backgroundcolor=\color{white},
+  showspaces=false,
+  showstringspaces=false,
+  showtabs=false,
+  frame=single,
+  rulecolor=\color{black},
+  tabsize=2,
+  captionpos=b,
+  breaklines=true,
+  breakatwhitespace=false,
+  title=\lstname,
+  keywordstyle=\color{red},
+  commentstyle=\color{blue},
+  stringstyle=\color{violet},
+  escapeinside={\%*}{*)},
+  morekeywords={*,...}
+}
 \usepackage{crimson}
 \usepackage{microtype}
 
@@ -119,8 +83,7 @@
 \setlist[itemize]{topsep=0pt,itemsep=0pt,parsep=0pt,partopsep=0pt}
 
 \usepackage{multicol}
-\setlength\multicolsep{0pt}
-
+\setlength{\multicolsep}{0pt}
 \usepackage{array}
 \usepackage{caption}
 \usepackage{graphicx}
@@ -136,533 +99,36 @@
 \usepackage{adjustbox}
 \usepackage{hyperref}
 
-
-
 \newlist{propertyList}{itemize}{1}
 \setlist[propertyList]{
-  label=\textbullet,
-  noitemsep,
-  leftmargin=10pt,
-  before=\begin{multicols}{3},
-  after=\end{multicols}
-  }
+label=\textbullet,
+noitemsep,
+leftmargin=10pt,
+before=\begin{multicols}{3},
+after=\end{multicols}
+}
 
 \rfoot {\thepage}
-
+\setlength{\parindent}{1.2cm}
 \listfiles
 
-\begin{filecontents}{refs_poetics3.bib}
-@book{Adam_2021_rise,
-  author = {Adam, Georgina},
-  title = {The Rise and Rise of the Private Art Museum},
-  year = {2021},
-  publisher = {Lund Humphries in association with Sotheby's Institute of Art},
-  address = {London},
-  isbn = {9781848223851},
-}
 
-@book{Adam_2004_philanthropy,
-  author = {Adam, Thomas},
-  title = {Philanthropy, Patronage, and Civil Society: Experiences from Germany, Great Britain, and North America},
-  year = {2004},
-  publisher = {Indiana University Press},
-  address = {Bloomington},
-  isbn = {9780253110862},
-}
-                  
-                  
-
-@book{Bechtler_Imhof_2018_future,
-  author = {Bechtler, Cristina and Imhof, Dora},
-  title = {The Private Museum of the Future},
-  year = {2018},
-  publisher = {JRP Ringier, Les Presses du re{\'e}l},
-  location = {Z{"u}rich Dijon},
-  isbn = {9783037645208},
-}
-
-@article{Bekkers_Wiepking_2010_literature,
-  author = {Bekkers, Ren{\'e} and Wiepking, Pamala},
-  title = {A Literature Review of Empirical Studies of Philanthropy},
-  year = {2010},
-  volume = {40},
-  number = {5},
-  month = {Sep},
-  pages = {924–973},
-  issn = {1552-7395},
-  doi = {10.1177/0899764010380927},
-  url = {http://dx.doi.org/10.1177/0899764010380927},
-  journal = {Nonprofit and Voluntary Sector Quarterly},
-  publisher = {SAGE Publications},
-}
-
-@article{Bekkers_Wiepking_2011_philanthropic,
-  author = {Bekkers, Ren{\'e} and Wiepking, Pamala},
-  title = {Testing Mechanisms for Philanthropic Behaviour},
-  year = {2011},
-  volume = {16},
-  number = {4},
-  month = {Nov},
-  pages = {291–297},
-  issn = {1465-4520},
-  doi = {10.1002/nvsm.428},
-  url = {http://dx.doi.org/10.1002/nvsm.428},
-  journal = {International Journal of Nonprofit and Voluntary Sector Marketing},
-  publisher = {Wiley},
-}
-
-@book{BMW_Independent_Collectors_2018_artguide,
-  author = {{BMW Group} and {Independent Collectors}},
-  title = {The fifth BMW Art Guide by Independent Collectors},
-  year = {2018},
-  publisher = {Hatje Cantz},
-  address = {Munich},
-  isbn = {9783775744997},
-}
-
-@article{Bogaert_etal_2014_ecological,
-  author = {Bogaert, Sandy and Boone, Christophe and Negro, Giacomo and van Witteloostuijn, Arjen},
-  title = {Organizational Form Emergence: A Meta-Analysis of the Ecological Theory of Legitimation},
-  year = {2014},
-  volume = {42},
-  number = {5},
-  month = {Mar},
-  pages = {1344–1373},
-  issn = {1557-1211},
-  doi = {10.1177/0149206314527129},
-  url = {http://dx.doi.org/10.1177/0149206314527129},
-  journal = {Journal of Management},
-  publisher = {SAGE Publications},
-}
-
-@incollection{Boloten_Hacking_2021_foreword,
-  author = {Boloten, Jeffrey and Hacking, Juliett},
-  editor = {Adam, Georgina},
-  title = {The Rise and Rise of the Private Art Museum},
-  year = {2021},
-  booktitle =	 {The Rise and Rise of the Private Art Museum},
-  publisher = {Lund Humphries in association with Sotheby's Institute of Art},
-}
-
-
-@misc{Boucher_2020_solow,
-  title = {Billionaire Sheldon Solow Allegedly Gamed the Tax System for Years With His Inaccessible Art Museum. Now His Widow Will Open It to the Public},
-  url = {https://news.artnet.com/art-world/sheldon-solow-collection-public-museum-1924976},
-  publisher = {Artnet News},
-  author = {Boucher, Brian},
-  year = {2020},
-  month = {Nov},
-}
-
-@book{Bourdieu_1984_distinction,
-  author = {Bourdieu, Pierre},
-  publisher = {Harvard University Press},
-  title = {Distinction: A social critique of the judgement of taste},
-  year = {1984},
-}
-
-@article{Brooks_etal_2017_glmmTMB,
-  author = {Mollie E. Brooks and Kasper Kristensen and Koen J. {van Benthem} and Arni Magnusson and Casper W. Berg and Anders Nielsen and Hans J. Skaug and Martin Maechler and Benjamin M. Bolker},
-  title = {{glmmTMB} Balances Speed and Flexibility Among Packages for Zero-inflated Generalized Linear Mixed Modeling},
-  year = {2017},
-  journal = {The R Journal},
-  doi = {10.32614/RJ-2017-066},
-  pages = {378--400},
-  volume = {9},
-  number = {2},
-}
-
-@misc{Brown_Pes_2018_taxpayers,
-  title = {How Much Should Taxpayers Pay for a Private Museum?},
-  url = {https://news.artnet.com/art-world/louis-vuitton-foundation-fricc-1406812},
-  publisher = {Artnet News},
-  author = {Brown, Kate and Pes, Javier},
-  year = {2018},
-}
-
-@article{Brown_2019_private,
-  title = {Private Influence, Public Goods, and the Future of Art History},
-  volume = {3},
-  url = {https://www.fokum-jams.org/index.php/jams/article/view/86},
-  DOI = {10.23690/jams.v3i1.86},
-  number = {1},
-  journal = {Journal for Art Market Studies},
-  author = {Brown, Kathryn},
-  year = {2019},
-  month = {May},
-}
-
-@incollection{Carroll_Khessina_2019_demography,
-  author = {Carroll, Glenn R. and Khessina, Olga M.},
-  title = {Organizational, Product and Corporate Demography},
-  booktitle = {Handbook of Population},
-  editor = {Poston, Dudley L.},
-  year = {2019},
-  pages = {521-553},
-  issn = {2542-839X},
-  doi = {10.1007/978-3-030-10910-3_21},
-  url = {http://dx.doi.org/10.1007/978-3-030-10910-3_21},
-  ISBN = {9783030109103},
-  publisher = {Springer International Publishing},
-}
-
-@article{Coxe_West_Aiken_2009_count,
-  author = {Coxe, Stefany and West, Stephen G. and Aiken, Leona S.},
-  title = {The Analysis of Count Data: A Gentle Introduction to Poisson Regression and Its Alternatives},
-  year = {2009},
-  volume = {91},
-  number = {2},
-  month = {Feb},
-  pages = {121--136},
-  issn = {1532-7752},
-  doi = {10.1080/00223890802634175},
-  url = {http://dx.doi.org/10.1080/00223890802634175},
-  journal = {Journal of Personality Assessment},
-  publisher = {Informa UK Limited},
-}
-
-@misc{deGruyter_2021_MOW,
-  title = {Museums of the World},
-  author = {{De Gruyter}},
-  year = {2021},
-  doi = {10.1515/mow},
-  url = {http://dx.doi.org/10.1515/mow},
-  publisher = {De Gruyter},
-}
-
-@article{DeNigris_2018_museums,
-  author = {De Nigris, Ornella},
-  title = {Chinese art museums: organisational models and roles in promoting contemporary art},
-  year = {2018},
-  volume = {5},
-  number = {3},
-  month = {Mar},
-  pages = {213–228},
-  issn = {2197-4241},
-  doi = {10.1007/s40636-018-0113-x},
-  url = {http://dx.doi.org/10.1007/s40636-018-0113-x},
-  journal = {International Communication of Chinese Culture},
-  publisher = {Springer Science and Business Media LLC},
-}
-
-@article{DeWit_etal_2018_philanthropy,
-  author = {De Wit, Arjen and Neumayr, Michaela and Handy, Femida and Wiepking, Pamala},
-  title = {Do Government Expenditures Shift Private Philanthropic Donations to Particular Fields of Welfare? Evidence from Cross-country Data},
-  year = {2018},
-  volume = {34},
-  number = {1},
-  month = {Jan},
-  pages = {6–21},
-  issn = {1468-2672},
-  doi = {10.1093/esr/jcx086},
-  url = {http://dx.doi.org/10.1093/esr/jcx086},
-  journal = {European Sociological Review},
-  publisher = {Oxford University Press (OUP)},
-}
-
-@article{diMaggio_1982_boston,
-  author = {DiMaggio, Paul},
-  title = {Cultural entrepreneurship in nineteenth-century Boston: the creation of an organizational base for high culture in America},
-  journal = {Media, Culture \& Society},
-  volume = {4},
-  number = {1},
-  pages = {33-50},
-  year = {1982},
-  doi = {10.1177/016344378200400104},
-  URL = { https://doi.org/10.1177/016344378200400104 },
-  eprint = { https://doi.org/10.1177/016344378200400104 },
-}
-
-@incollection{Durand_2018_jumex,
-  title = {Colección {Jumex} and {Mexico}'s {Art} {Scene}: {The} {Intersection} of {Public} and {Private}},
-  shorttitle = {Colección {Jumex} and {Mexico}'s {Art} {Scene}},
-  booktitle = {Art {Museums} of {Latin} {America}},
-  publisher = {Routledge},
-  author = {Durand, Lassla Esquivel},
-  editor = {Greet, Michele and Tarver, Gina McDaniel},
-  year = {2018},
-  pages = {160--175},
-}
-
-@misc{Eurostat_2022_COFOG,
-  title = {General government expenditure by function (COFOG)},
-  year = {2022},
-  author = {{Eurostat}},
-  url = {https://ec.europa.eu/eurostat/databrowser/view/GOV_10A_EXP\$DV_578/default/table?lang=en},
-}
-
-@misc{Fraser_2022_economic_freedom,
-  title = {Economic Freedom},
-  url = {https://www.fraserinstitute.org/economic-freedom/dataset},
-  year = {2022},
-  author = {{Fraser Institute}},
-}
-
-@book{Giridharadas_2018_winners,
-  author = {Giridharadas, Anand},
-  title = {Winners take all: the elite charade of changing the world},
-  year = {2018},
-  publisher = {Alfred A. Knopf},
-  address = {New York},
-  isbn = {9780451493248},
-}
-
-@misc{global_private_museum_network_2020_museums,
-  author = {{Global Private Museum Network}},
-  title = {Museums},
-  year = {2020},
-  url = {http://globalprivatemuseumnetwork.com/museum},
-}
-
-@phdthesis{Gnyp_2015_collectors,
-  title = {The art world of cosmopolitan collectors: In relation to mediators, institutions and producers},
-  author = {Gnyp, Marta},
-  year = {2015},
-  school = {University of Amsterdam},
-  address = {Amsterdam},
-}
-
-@book{Hannan_1992_dynamics,
-  author = {Hannan, Michael T. and Carroll, Glenn R.},
-  title = {Dynamics of organizational populations : density, legitimation, and competition},
-  year = {1992},
-  publisher = {Oxford University Press},
-  address = {New York},
-  isbn = {0195071913},
-}
-
-@incollection{Hemels_2017_incentives,
-  author = {Hemels, Sigrid},
-  title = {Tax Incentives for Museums and Cultural Heritage},
-  editor = {Hemels, Sigrid and Goto, Kazuko},
-  booktitle = {Tax incentives for the Creative Industries},
-  year = {2017},
-  pages = {107-135},
-  publisher = {Springer},
-  address = {Singapore},
-  isbn = {9789812878328},
-}
-
-@article{Honig_2016_IRS,
-  title = {Internal Revenue Service's Night at the "Private" Museum},
-  author = {Honig, David},
-  journal = {Entertainment, Arts and Sports Law Journal},
-  pages = {27--29},
-  year = {2016},
-  volume = {27},
-  number = {3},
-}
-
-@misc{IMF_2022_GFS,
-  title = {Government Finance Statistics (GFS) - Expenditure by Functions of Government (COFOG)},
-  year = {2022},
-  url = {https://data.imf.org/?sk=5804C5E1-0502-4672-BDCD-671BCDC565A9&cqd=60940208},
-  author = {IMF},
-}
-
-@misc{Independent_collectors,
-  author = {{Independent Collectors}},
-  url = {https://independent-collectors.com/collections/},
-  year = {2020},
-  title = {Collections},
-}
-
-@incollection{KalbCosmo_2020_museum,
-  author = {Kalb Cosmo, Laurie},
-  title = {Private Museums in Twenty-First Century Europe},
-  year = {2020},
-  booktitle = {Museums, Collections and Society - Yearbook 2020},
-  publisher = {Leiden University},
-  editor = {O’Farrell, Holly and ter Keurs, Pieter},
-  pages = {31--58},
-}
-
-
-@article{KohlArenas_2015_selfhelp,
-  ISSN = {00029246},
-  URL = {http://www.jstor.org/stable/43817540},
-  author = {Erica Kohl-Arenas},
-  journal = {The American Journal of Economics and Sociology},
-  number = {4},
-  pages = {796--825},
-  publisher = {[American Journal of Economics and Sociology, Inc., Wiley]},
-  title = {The Self-Help Myth: Towards a Theory of Philanthropy as Consensus Broker},
-  volume = {74},
-  year = {2015},
-}
-
-@misc{LarrysList_2015_report,
-  author = {{Larry's List}},
-  title = {Private Art Museum report},
-  year = {2015},
-  url = {https://www.larryslist.com/report/Private%20Art%20Museum%20Report.pdf},
-}
-
-@book{Lena_2019_entitled,
-  title = {Entitled: Discriminating Tastes and the Expansion of the Arts},
-  author = {Lena, Jennifer C.},
-  isbn = {9780691189840},
-  year = {2019},
-  publisher = {Princeton University Press},
-  location = {Princeton},
-}
-
-@article{Maclean_etal_2021_philanthropy,
-  author = {Maclean, Mairi and Harvey, Charles and Yang, Ruomei and Mueller, Frank},
-  title = {Elite philanthropy in the United States and United Kingdom in the new age of inequalities},
-  year = {2021},
-  month = {Feb},
-  issn = {1468-2370},
-  doi = {10.1111/ijmr.12247},
-  url = {http://dx.doi.org/10.1111/ijmr.12247},
-  journal = {International Journal of Management Reviews},
-  publisher = {Wiley},
-}
-
-@article{Mijs_2019_paradox,
-  author = {Mijs, Jonathan J B},
-  title = {The paradox of inequality: income inequality and belief in meritocracy go hand in hand},
-  journal = {Socio-Economic Review},
-  year = {2019},
-  volume = {19},
-  number = {1},
-  month = {jan},
-  pages = {7–35},
-  issn = {1475-147X},
-  doi = {10.1093/ser/mwy051},
-  url = {http://dx.doi.org/10.1093/ser/mwy051},
-  publisher = {Oxford University Press (OUP)},
-}
-
-@misc{OECD_2022_SNA_TABLE11_ARCHIVE,
-  title = {11. Government expenditure by function (COFOG), 2019 archive},
-  author = {{OECD}},
-  year = {2019},
-  url = {https://stats.oecd.org/Index.aspx?DataSetCode=SNA_TABLE11_ARCHIVE},
-}
-
-@misc{OECD_2022_SNA_TABLE11,
-  title = {11. Government expenditure by function (COFOG)},
-  author = {{OECD}},
-  year = {2022},
-  url = {https://stats.oecd.org/Index.aspx?DataSetCode=SNA_TABLE11},
-}
-
-@article{Peloza_Steel_2005_elasticities,
-  author = {Peloza, John and Steel, Piers},
-  title = {The Price Elasticities of Charitable Contributions: A Meta-Analysis},
-  year = {2005},
-  volume = {24},
-  number = {2},
-  month = {Sep},
-  pages = {260–272},
-  issn = {1547-7207},
-  doi = {10.1509/jppm.2005.24.2.260},
-  url = {http://dx.doi.org/10.1509/jppm.2005.24.2.260},
-  journal = {Journal of Public Policy \& Marketing},
-  publisher = {SAGE Publications},
-}
-
-@techreport{Quick_Kruse_Pickering_2014_philanthropy,
-  title = {Rules to Give By: a Global Philanthropy Legal Environment Index},
-  year = {2014},
-  author = {Quick, Elaine and Kruse, Toni Ann and Pickering, Adam},
-  publisher = {Nexus, McDermot Will \& Emery, Charities Aid Foundation},
-  location = {Washington},
-  institution =  {Nexus},		  
-  url = {https://nexusglobal.org/wp-content/uploads/2018/06/RULES-TO-GIVE-BY-FINAL-Country-Reports-345-page.pdf},
-}
-
-@book{Reich_2018_philantropy,
-  author = {Reich, Rob},
-  title = {Just giving: why philanthropy is failing democracy and how it can do better},
-  year = {2018},
-  publisher = {Princeton University Press},
-  address = {Princeton, New Jersey},
-  isbn = {9780691183497},
-}
-
-@misc{UN_2022_consumption,
-  title = {Table 3.1 Government final consumption expenditure by function at current prices},
-  year = {2022},
-  url = {http://data.un.org/Data.aspx?q=government+consumption+expenditure&d=SNA&f=group_code%3a301},
-  author = {{United Nations}},
-}
-
-@misc{vdEerenbeemt_vdWauw_DDD_2016,
-  title = {Private Museums for Modern and Contemporary Art},
-  publisher = {Volkskrant},
-  url = {https://www.volkskrant.nl/kijkverder/2016/museum/english.html},
-  author = {van den Eerenbeemt, Marc and van der Wauw, Wendy and {Dutch Data Design}},
-  year = {2016},
-}
-
-@article{Velthuis_Gera_forthcoming_fragility,
-  title = {The Fragility of Cultural Philanthropy: Why Private Art Museums Close},
-  author = {Velthuis, Olav and Gera, Marton},
-  year = {forthcoming}
-
-}
-
-@techreport{Velthuis_etal_2023_boom,
-  title = {Beyond the Global Boom: Private Art Museums in the 21st Century},
-  author = {Velthuis, Olav and Kolbe, Kristina and Aengenheyster, Johannes and Friedmann Rozenbaum, Andrea and Gera, Marton and Zhang, Mingxue},
-  url = {https://pure.uva.nl/ws/files/123283652/Private_Museum_Report_UvA_Beyond_the_Global_Boom_2023.pdf},
-  year = {2023},
-  institution = {University of Amsterdam},		  
-  publisher = {Amsterdam Institute for Social Science Research/Amsterdam Business School Research Institute}
-}
-
-@book{Walker_2019_collector,
-  author = {Walker, Georgina},
-  title = {The Private Collector's Museum: Public Good Versus Private Gain},
-  year = {2019},
-  publisher = {Routledge},
-  address = {London, England},
-}
-
-@misc{WID_2021_WID,
-  title = {World Inequality Database},
-  url = {https://wid.world/},
-  year = {2021},
-  author = {{World Inequality Database}},
-}
-
-@incollection{Zorloni_Resch_2016_opportunities,
-  author = {Zorloni, Alessia and Resch, Magnus},
-  title = {Turning Collections into Philanthropic Opportunities},
-  year = {2016},
-  pages = {1–18},
-  issn = {2192-810X},
-  doi = {10.1007/978-3-319-24241-5_1},
-  url = {http://dx.doi.org/10.1007/978-3-319-24241-5_1},
-  isbn = {9783319242415},
-  booktitle = {Art Wealth Management: Managing Private Collections},
-  editor = {Zorloni, Alessia},
-  publisher = {Springer International Publishing},
-}
-
-
+\begin{filecontents}{org_pop.bib}
+\input{org_pop.bib}
 \end{filecontents}
-
-% \addbibresource{refs_poetics3}
-% \bibliography{refs_poetics3.bib}
-
-  
-
-
-\setlength{\parindent}{1.2cm}
-\author{ }
+\author{Johannes }
 \date{\today}
 \title{}
 \hypersetup{
- pdfauthor={ },
+ pdfauthor={Johannes },
  pdftitle={},
  pdfkeywords={},
  pdfsubject={},
- pdfcreator={Emacs 29.1 (Org mode 9.6.7)}, 
+ pdfcreator={Emacs 29.3 (Org mode 9.6.26)}, 
  pdflang={English}}
 \begin{document}
+
+
 
 
 \section*{Structural predictors of private museum founding}
@@ -674,11 +140,11 @@ keywords: Inequality, Organizational Population, Philanthropy, Tax Incentives, P
 
 In the last decades a new organizational population of private museums has seen substantial proliferation.
 While multiple hypotheses for the spread of this new form have been raised, systematic analyses of these have been lacking.
-In particular, the rise of private museums has been hypothesized to be associated with tax incentives, reductions in government spending, increasing inequality and increasing elite wealth. 
-Combining various socio-economic and art field data sources, I conduct quantitative tests of these hypotheses with datasets of 1241, 2508 and 3244 country-years using multilevel negative binomial regression models.
+In particular, the rise of private museums has been hypothesized to stem from tax incentives, reductions in government spending, increasing inequality and increasing elite wealth. 
+Combining various socio-economic and art field data sources, I conduct quantitative tests of these hypotheses with datasets of 1241, 2474 and 3148 country-years using multilevel negative binomial regression models.
 While I find support for a positive effect of tax incentives, government spending is associated non-monotonically (inverse U-shaped) with private museum founding (not, as hypothesized, negatively). 
 Furthermore the effects of inequality are divergent, as a positive association with private museum founding is found for wealth inequality and a negative one for income inequality.
-Finally, elite wealth effects are small and mostly statistically insignificant. 
+Finally, elite wealth effects are too small, statistically insignificant, and conditional on wealth threshold and dataset to conclude a general relation with private museum founding.
 I conclude with a call for advancing theoretical elaboration and measurement precision to further investigate founding determinants. 
 
 
@@ -705,7 +171,7 @@ At the same time, substantial interest in the general population of private muse
 Thus much will be gained from a systematic quantitative test of these different mechanisms.
 As the quantitative analysis of private museums is still it its infancy, this paper should be understood as a first exploratory analysis that hopefully will be refined in the future. 
 In the remainder of the paper, I review the literature on the causes of private museum founding, and describe the data sources used to investigate each mechanism.
-I then report results of regression analyses, which indicate support for a positive effect of tax incentives, an inverse U-shaped relationship with cultural spending, divergent effects of different inequality measures and little support for an effect of elite wealth.
+I then report results of regression analyses, which indicate support for a positive effect of tax incentives, an inverse U-shaped relationship with cultural spending, divergent effects of different inequality measures and little support for a general effect of elite wealth.
 
 
 
@@ -716,7 +182,7 @@ For this study I use "private" to denote being established and governed by a pri
 A "museum" is conceptualized as an organization that possesses a building and a collection of its own (which excludes kunsthalles and exhibition centers), which is sufficiently accessible to the public.
 For the purpose of this research I also only include institutions that focuses on modern or contemporary art, with modern and contemporary art operationalized as art created after 1900.
 This definition, in particular the focus on the private art collector as the primary founder, owner and decision-maker, serves to investigate the phenomenon of personal projects of the people who decide to found them.
-Unlike museums founded by foundations (collectives of community members, groups of art collectors), the private museums in question here are highly individual projects.
+Unlike museums founded by foundations, collectives of community members or groups of art collectors, the private museums in question here are highly individual projects.
 
 
 
@@ -732,16 +198,10 @@ Unlike museums founded by foundations (collectives of community members, groups 
 
 
 
-Tax incentives have been argued to influence influencing various kinds of charitable or philanthropic behavior in general and private museum founding in particular.
-Tax incentives decrease the net cost of charitable activities, and can thus be expected to shape philanthropic behavior to the extent to which these activities are not unconditional of economic considerations.
-Investigating charitable donations more generally, \citet{Peloza_Steel_2005_elasticities} find in a meta-analysis (primarily of individual behavior in the US) a price-elasticity of donations, i.e. a stronger tendency to make charitable contributions in the presence of financial incentives.
 
 
 
-
-
-
-Tax incentives, such as exemption of charitable organizations from some taxes and tax deductibility of donations to such organizations, have also been argued to have contribute to the founding of private museums.
+Tax incentives, which reduce the net cost of the targeted activity, have been argued to influence various kinds of charitable or philanthropic behavior in general \citep{Peloza_Steel_2005_elasticities} and private museum founding in particular: 
 \citet{Walker_2019_collector} investigates the legal frameworks and tax exemptions that private museums receive in a number of locations such as Australia (p.31), the United States (p.35), Germany (p.29) and Switzerland (p.36), where she generally finds tax incentives to contribute to private museum founding. 
 She concludes that "the formation of many private museums in the last two decades are directly or indirectly linked to generous tax incentives as they help to offset individual tax burdens and promote arts philanthropy. [\ldots{}] The generosity and breadth of American, Australian, English and European tax law is a factor in the promotion of private museums" (p.37).
 
@@ -753,11 +213,11 @@ She concludes that "the formation of many private museums in the last two decade
 
 
 Proposing an impact of tax incentives does not imply a profit motive nor the absence of other motivations such as "passion for art" (\citealt[p.7]{Zorloni_Resch_2016_opportunities}, \citealt[p.12]{Adam_2021_rise}) or other "personal motivations" \citep[p.144]{Walker_2019_collector}. 
-In fact, other motivations (such as the aforementioned passion for the arts, as well as potential reputation gains; cf. \citet{Bekkers_Wiepking_2010_literature,Bekkers_Wiepking_2011_philanthropic} for motivations of philanthropic behavior generally) are required as tax incentives only \emph{reduce} the cost of philanthropic behavior but do not cancel it out completely, let alone produce a financial profit; tax incentives thus may play a supportive role by easing the financial burdens of running a private museum as a consequence of other motivations.
+In fact, other motivations (such as the aforementioned passion for the arts, as well as potential reputation gains; cf. \citet{Bekkers_Wiepking_2010_literature} for motivations of philanthropic behavior generally) are required as tax incentives only \emph{reduce} the cost of philanthropic behavior but do not cancel it out completely, let alone produce a financial profit; tax incentives thus may play a supportive role by easing the financial burdens of running a private museum as a consequence of other motivations.
 
 
 However, an different reason why tax incentives might not have noticeable effects might be limited knowledge of and familiarity with them among potential beneficiaries (collectors deliberating the choice of opening a museum), a mechanism which has been argued to negatively affect private museum founding in China \citep[p.222]{DeNigris_2018_museums} and charitable donations in Europe generally \citep{Hemels_2017_incentives}.
-While lack of familiarity might prevent an effect of existing tax incentives, it seems unlikely to be the case here as the topic of tax incentives has been widely covered in publications both scholarly \citep{Walker_2019_collector,Reich_2018_philantropy,Zorloni_Resch_2016_opportunities} and journalistic (e.g. \citealt{Brown_Pes_2018_taxpayers,Boucher_2020_solow,Honig_2016_IRS}).
+While lack of familiarity might prevent an effect of existing tax incentives, it seems unlikely to be the case here as the topic of tax incentives has been widely covered in publications both scholarly \citep{Walker_2019_collector,Zorloni_Resch_2016_opportunities} and journalistic (e.g. \citealt{Brown_Pes_2018_taxpayers,Boucher_2020_solow}).
 Furthermore, the decision to open a private museum is likely receiving more deliberation than smaller acts of philanthropy (such as donations) due to the size of the necessary planning efforts (which sometimes results in the establishment of separate foundations staffed by professionals); it is hence unlikely that during this planning process financing pathways through tax incentives are not explored.
 
 
@@ -780,11 +240,12 @@ Therefore, it seems plausible to assume an influence of tax incentives, leading 
 Another argument for the emergence of private museums has been the decline or absence of state support for the arts. 
 Whereas in the mid-to-late 20th century "wealthy industrialist collectors [\ldots{}] looked to the public museum as a suitable home for their collections" \citep[p.144]{Walker_2019_collector}, declines in cultural spending are argued to have reduced public museum capacities, thus making them less attractive for conserving, displaying and storing donations of private collectors, which in turn leads "many collectors [to] feel that they are better qualified to create their own museums" (ibid, p.145).
 Similarly, \citet{Boloten_Hacking_2021_foreword} argue that "with their inevitably strained resources, public museums often struggle to satisfy the substantial demands of the collector/patron communities on which their collections, and institutions, very much rely. Against this backdrop [\ldots{}] [art collectors] are increasingly turning to bespoke Private Museum solutions" (p.10).
-In particular, limited exhibition space in public museums has been argued to have been contributed to the rise of private museums (\cite[p.217]{Walker_2019_collector}, \cite[p.1]{Zorloni_Resch_2016_opportunities}). 
+In particular, limited exhibition space in public museums has been argued to have been contributed to the rise of private museums (\citealt[p.217]{Walker_2019_collector}, \citealt[p.1]{Zorloni_Resch_2016_opportunities}). 
 
 
 
-Another pathway between low government spending and relatively high private museum founding concerns emerging art fields in developing countries, as it is argued that private individuals are more likely to dedicate philanthropic efforts to the arts there than in places where the cultural sector is already supported by the state \citep{Durand_2018_jumex,Bechtler_Imhof_2018_future,Boloten_Hacking_2021_foreword}, a pattern that could correspond to the founding of gilded age cultural institutions by industrialists in the late 19th/early 20th century \citep{diMaggio_1982_boston,Adam_2004_philanthropy}. 
+Another pathway between low government spending and relatively high private museum founding concerns emerging art fields in developing countries, as it is argued that private individuals are more likely to dedicate philanthropic efforts to the arts there than in places where the cultural sector is already supported by the state \citep{Durand_2018_jumex,Bechtler_Imhof_2018_future,Boloten_Hacking_2021_foreword}, a pattern that could correspond to the founding of gilded age cultural institutions by industrialists in the late 19th/early 20th century \citep{diMaggio_1982_boston}.
+
 
 
 
@@ -807,7 +268,7 @@ Nevertheless, as the crowding-in hypothesis has not been employed in the case of
 \subsubsection*{Inequality}
 
 
-Inequalities have been suggested to be related to the proliferation of private museum foundings as well. 
+Furthermore, inequalities have been suggested as a cause of private museum foundings. 
 \citet{Brown_2019_private} points out parallels to previous periods of wealth accumulation, arguing that "the founding of private museums appeals to the rhetoric of social obligation that sustained the accumulation of capital early in the twentieth century and that induced publics not to object to the rise to power of wealthy classes" (p.15).
 Current times are argued to resemble again the gilded age of the late 19th and early 20th century where "acts of philanthropic giving [\ldots{}] functioned as a means by which to maintain widespread confidence in a socio-economic system that enabled a small social cadre to accrue long-term financial advantage" (p.3). 
 Rising inequality is argued to create a legitimacy deficit, to which the founding of private museums provides a not a substantial solution, but a distraction which despite being superficial seems to be effective nonetheless.
@@ -854,7 +315,7 @@ A hypothesis on elite wealth can thus be formulated as:
 \begin{table}[htbp]
 \caption{\label{tbl:data_srcs}Concepts, operationalizations and data sources}
 \centering
-\begin{tabular}{lp{7cm}l}
+\begin{tabular}{lp{7cm}p{5cm}}
 \hline
 Concept & Indicator & Data source\\
 \hline
@@ -870,6 +331,7 @@ Presence of potential founders & Number of art collectors & Artnews top200 colle
 Museum population & Number of modern/contemp. art museums & Museums of the World Database\\
 Density: Legitimacy & Number of PMs open (country, neighbors, global) & PM Database\\
 Density: Competition & Number of PMs open\textsuperscript{2} (country, neighbors, global) & PM Database\\
+Social Fragmentation & Ethnic Fractionalization, Migrant Stock & Historical Index of Ethnic Fractionalization, World Bank\\
 \hline
 \end{tabular}
 \end{table}
@@ -885,8 +347,7 @@ Finally, a number of additional data processing steps are described in the suppl
 \subsubsection*{Dependent Variable: Number of private museum foundings per country-year}
 
 
-To document the development of private museums, existing databases of private contemporary art museums \citep{LarrysList_2015_report,Independent_collectors,global_private_museum_network_2020_museums,BMW_Independent_Collectors_2018_artguide,vdEerenbeemt_vdWauw_DDD_2016} have been combined.
-Additionally, web research has been conducted by searching in a number of online art media\footnote{The media sources used were: Artforum, Artnet, Art Territory, Artsy, My Art Guides, Artnews, Artfcity, Frieze, The Art Wolf, The Art Newspaper, Art Privee, Widewalls, White Hot Magazine and Hyperallergic.} for the term "private museum", "private art museum" and "private contemporary art museum".
+To document the development of private museums, existing databases of private contemporary art museums have been combined; additionally web research has been conducted by searching in a number of online art media for the term "private museum", "private art museum" and "private contemporary art museum"\footnote{Databases and online media sources considered are described in more detail in \citet{Velthuis_etal_2023_boom}}.
 After recording the names and deleting duplicates, it was investigated using publicly available information whether the organization corresponds to the employed definition of a private museum.
 Following this, additional information about each museum was collected by research assistants, the most relevant for this research being country and opening year.
 Currently, the database includes 547 museums (of which 446 are currently open, the remainder having closed or transformed to the extent that they no longer constitute a private museum), which are located in 64 countries, with the majority being located in Western Europe (136), East Asia (97) and North America (77).
@@ -918,12 +379,12 @@ These organizations use the System of National Accounts (SNA), where Classificat
 The single digit code 8 is rather broad, and the more detailed  double digit SNA code 82 "cultural services" would be preferable to exclude state spending on e.g. sport events, broadcasting, publishing and religion. 
 However, data coverage is substantially worse for SNA Code 82, and as there appears to be substantial correlation between Codes 8 and 82 for countries that provide data on both levels, I consider it acceptable to use the broader single-digit Code 8.
 Even with the broader single-digit Code 8, cultural spending constitutes the indicator with the smallest coverage; I therefore combine as multiple data sources (the exact combination procedure is described in the supplementary materials).
-I estimate coefficients of the cultural spending variable as well as its squared term to account for potential non-linearities similar to those present in the density dependence paradigm (\citealt{Hannan_1992_dynamics};  elaborated in section Control Variables); in particular, the crowding-out argument appears to indicate competition, while the crowding-in argument bears similarities to legitimation.
+I estimate coefficients of the cultural spending variable as well as its squared term to account for potential non-linearities similar to those present in the density dependence paradigm (\citealt{Hannan_1992_dynamics};  elaborated in section Control Variables); in particular, the crowding-out argument resembles competition, while the crowding-in argument corresponds to legitimation.
 
 
 \paragraph*{Inequality}
 
-The \citet{WID_2021_WID} provides Gini coefficients for wealth and pre-tax income\footnote{While data on post-tax income is also available in the WID, its coverage is very limited}.
+The \citet{WID_2021_WID} provides Gini coefficients for wealth and pre-tax income.
 The top 1\% and 10\% wealth and income shares are used as different measures of inequality (the actual process of operationalizing concepts with different measures is described in section Variable selection).
 
 
@@ -954,26 +415,27 @@ Population size is included as an offset (cf. section Regression specification).
 As private museums are founded by collectors, they may be more likely to be founded when more potential founders are present.
 While a complete measure of the art collector population is not feasible (which necessitated the choice of country-year instead of collector-year as the unit of analysis), it is still possible to construct a proxy of the art collector population from the Artnews magazine collector ranking, an index published yearly since 1990 of the 200 art collectors the magazine considers most important.
 As Artnews includes the country of residence of each collector, I construct the collector population indicator for a country-year as the number of collectors included in the Artnews ranking for that country-year.
-Artnews furthermore includes information on the genre(s) of each collector, which allows me to only include collectors who collect modern and contemporary art.
+Artnews furthermore includes information on the genre(s) of each collector, which allows to only include collectors of modern and contemporary art.
 I argue that the number of Artnews collectors per country-year constitutes an indicator of the wider propensity of art collecting in a country (rather than a pool of individuals able to establish a museum) and therefore do not remove art collectors from the index after they have founded a museum (which concerns 141 collectors).
 
 
 
 \paragraph*{Density dependence}
 
-Research on organizational populations (\citealt{Hannan_1992_dynamics}, cf. \cite{Carroll_Khessina_2019_demography} for an overview) has argued that foundings of organization are driven by legitimacy and competition:
+Research on organizational populations (\citealt{Hannan_1992_dynamics}, cf. \citealt{Carroll_Khessina_2019_demography} for an overview) has argued that foundings of organization are driven by legitimacy and competition:
 While increasing legitimacy of a new organizational form is argued to encourage new foundings, competition is hypothesized to discourage it.
 Both legitimacy and competition are generally derived from the number of already existing organizations, which is referred to as density, leading to the label of density-dependence for this paradigm. 
 
 
+
 I therefore include for each country-year measures based on the number of open private museums, in particular a linear term (measuring legitimacy) and a squared term (measuring competition).
-Given the transnational nature of the art field due to which legitimation and competition might not be limited to country borders, I include two measures of density beyond the country.
+Given the transnational nature of the art field due to which legitimation and competition might not be limited to country borders, I include two transnational density measures.
 First, I add global linear and squared density measures which are the same for every country in a given year and describe the number of museums open worldwide in a given year.
 Secondly, I add a linear and squared density term based on the private museum population in a country's neighbors; in particular I calculate for each country the neighbor density as the sum of private museum in neighboring countries divided by the total neighbor human population (for island countries, countries in the same subregion based on the UN geoscheme classification system are considered to be the neighbors). 
 
 
 Another variable of the organizational population concerns closures:
-The private museum population has seen substantial numbers of closures with 101 institutions having been shut down or transformed (cf. \citealt{Velthuis_Gera_forthcoming_fragility}), and growing awareness of the fragility of these institutions might in turn make their founding less attractive to founders keen of leaving a mark in history.
+The private museum population has seen substantial numbers of closures with 101 institutions having been shut down or transformed (cf. \citealt{Velthuis_Gera_2024_fragility}), and growing awareness of the fragility of these institutions might in turn make their founding less attractive to founders keen of leaving a mark in history.
 I therefore add a global variable of the number of cumulative museum closures to capture the potential delegitimating effect of the closing of institutions that often are planned as personal legacies \citep{Walker_2019_collector}.\footnote{While closings could also be measured on the country-level, the low number of closings would lead to a highly skewed variable, and therefore to coefficients disproportionately reflecting a few countries (in particular Switzerland, the United States and Netherlands, depending on whether the estimator measures closing counts or proportions). I therefore limit myself to measuring the global effect of museum closures.} 
 
 
@@ -992,6 +454,12 @@ I thus use the Museums of the World database \citep{deGruyter_2021_MOW} to descr
 As preliminary analyses indicated that the database has not been maintained in recent years (due to a strong decline in museum foundings being covered) I use it only to construct time-invariant indicators of the number of non-private modern and contemporary art museums having opened until 1990.
 In order to measure both legitimating and competitive effects, I include a linear and squared terms.
 
+\paragraph*{Social Fragmentation}
+
+
+Social fragmentation has been argued to decrease civic engagement \citep{Costa_Kahn_2003_heterogeneity} and public goods provision \citep{Alesina_Baqir_1999_publicgoods}, as it hinders the development of a collective identity \citep{Habyarimana_etal_2009_coethnicity,Baldassarri_Abascal_2020_diversity}.
+As private museums provide public cultural goods to the local community, potential founders might thus be less eager to engage in the at of founding one in their country is more fragmented.
+I use the Historical Index of Ethnic Fractionalization \citep{Drazanova_2020_HIEF} and the World Bank indicator of a country's international migrant stock (the percentage of people living in a country who are not born in it, \citealt{WB_2024_mist}) to control for fragmentation along lines of ethnicity and citizenship, respectively. 
 
 
 \subsection*{Analytical Strategy}
@@ -1005,7 +473,7 @@ I address these challenges as follows:
 
 
 % latex table generated in R 4.1.2 by xtable 1.8-4 package
-% Tue Feb  6 20:02:01 2024
+% Sun Jun  9 18:48:41 2024
 \begin{table}[ht]
 \centering
 \begin{tabular}{p{2.5cm}rrrrrr}
@@ -1014,12 +482,12 @@ I address these challenges as follows:
 \cmidrule(r){2-3}\cmidrule(r){4-5}\cmidrule(r){6-7} 
  region & N & Percent & N & Percent & N & Percent \\ 
   \hline
-Africa & 108 &  8.7\% & 622 & 24.8\% & 1 027 & 31.7\% \\ 
-  Asia & 328 & 26.4\% & 602 & 24.0\% & 856 & 26.4\% \\ 
-  Europe & 660 & 53.2\% & 712 & 28.4\% & 773 & 23.8\% \\ 
-  Latin America & 75 &  6.0\% & 462 & 18.4\% & 478 & 14.7\% \\ 
-  North America & 34 &  2.7\% & 47 &  1.9\% & 47 &  1.4\% \\ 
-  Oceania & 36 &  2.9\% & 63 &  2.5\% & 63 &  1.9\% \\ 
+Africa & 108 &  8.7\% & 612 & 24.7\% & 992 & 31.5\% \\ 
+  Asia & 328 & 26.4\% & 597 & 24.1\% & 828 & 26.3\% \\ 
+  Europe & 660 & 53.2\% & 693 & 28.0\% & 740 & 23.5\% \\ 
+  Latin America & 75 &  6.0\% & 462 & 18.7\% & 478 & 15.2\% \\ 
+  North America & 34 &  2.7\% & 47 &  1.9\% & 47 &  1.5\% \\ 
+  Oceania & 36 &  2.9\% & 63 &  2.5\% & 63 &  2.0\% \\ 
    \hline
 \end{tabular}
 \caption{Dataset composition by region} 
@@ -1027,10 +495,10 @@ Africa & 108 &  8.7\% & 622 & 24.8\% & 1 027 & 31.7\% \\
 \end{table}
 Despite substantial efforts to collect complete data for the relevant variables, it was not possible to collect data for all country-years; especially cultural spending and top marginal income tax rate have considerable coverage gaps.
 As excluding a large number of country-years limits the generalizability of findings, I construct multiple datasets each of which strikes a different balance between variable and country-year coverage.
-In particular, I construct one dataset with all variables (1241 country-years, 85 countries; referred to as "DS all IVs"), one with all variables except cultural spending (2508 country-years, 150 countries; "DS --CuSp"), and one with all variables except cultural spending and top marginal income tax rates (3244 country-years, 160 countries; "DS --CuSp/TMITR").
+In particular, I construct one dataset with all variables (1241 country-years, 85 countries; referred to as "DS all IVs"), one with all variables except cultural spending (2474 country-years, 147 countries; "DS --CuSp"), and one with all variables except cultural spending and top marginal income tax rates (3148 country-years, 156 countries; "DS --CuSp/TMITR").
 In terms of composition, DS all IVs overrepresents Europe and underepresents the Global South, while the other datasets are more balanced (table \ref{tbl:cbn_cpsgn}).
 All country-years except for some of Denmark, France and the United States are situated between 2000 and 2020 with country-coverage generally increasing over time (cf. supplementary materials).
-The datasets effectively cover the period in which the majority of private museum founding has taken place and cover 64.9\%, 73.5\% and 73.9\% of foundings, respectively.
+The datasets effectively cover the period in which the majority of private museum founding has taken place and cover 64.9\%, 73.5\% and 73.7\% of foundings, respectively.
 
 \subsubsection*{Variable selection}
 \label{vrbl_slctn}
@@ -1056,7 +524,7 @@ While the random starting values and random order of variables help to explore t
 
 \subsubsection*{Regression specification}
 
-Each regression model is specified as a negative binomial model (which is robust to potential overdispersion of the dependent variable) run using the glmmTMB command \citep{Brooks_etal_2017_glmmTMB} of R 4.1.2. 
+Each regression model is specified as a negative binomial model (which is robust to potential overdispersion of the dependent variable) run using the glmmTMB command in R 4.1.2. 
 Due to the presence of variables that do not vary across time (tax incentives and museum population) or country (global density) pure fixed effects models are not feasible. 
 To account for clustering I instead add random country and year intercepts; coefficients therefore describe both within-country and between-country variation. 
 I furthermore use population as an offset (which estimates founding rate per capita) to allow comparison between countries of different population sizes; all count predictors are therefore first transformed into per capita rates.
@@ -1070,8 +538,8 @@ with \(y_{it}\) as number of private museum foundings in country \(i\) for year 
 
 
 To facilitate convergence and interpretation, all variables except the binary variable of tax deductibility of charitable donations are also rescaled to a mean of 0 and a standard deviation of 1. 
-In total 212 115 models are run, all of which converge successfully. 
-Given 36 variable combinations which are optimized four times with different starting values each per three datasets this results in an average of 491 regression models per variable combination.
+In total 257 520 models are run, all of which converge successfully. 
+Given 36 variable combinations which are optimized four times with different starting values each per three datasets this results in an average of 596 regression models per variable combination.
 
 
 
@@ -1084,10 +552,10 @@ Given 36 variable combinations which are optimized four times with different sta
 Summary statistics for all variables are provided in unscaled form in table \ref{tbl:descs}, providing two relevant insights. 
 Firstly, it can be seen that the smaller datasets, especially "DS all IVs", where countries of the Global North are overrepresented, are characterized by higher rates of HNWIs, lower inequalities, higher GDP per capita and larger populations of museums and collectors of modern and contemporary art.
 The main variable of interest, private museum founding (and consequently private museum densities), is more prevalent in "DS all IVs" as well: 
-For example, while in "DS all IVs" on average each year one private museum is founded per 89.5 million inhabitants (1/0.0112), this rate is substantially lower in "DS --CuSP" and "DS --CuSp/TMITR" with one private museum founding per 165 and 210 million inhabitants, respectively.
+For example, while in "DS all IVs" on average each year one private museum is founded per 89.5 million inhabitants (1/0.0112), this rate is substantially lower in "DS --CuSP" and "DS --CuSp/TMITR" with one private museum founding per 163 and 205 million inhabitants, respectively.
 Secondly, several variables show substantial skew (indicated by high standard deviations compared to the mean), such as cultural spending, GDP and HNWI, art museum and collector rates. 
 The dependent variable of private museum openings is strongly concentrated as well: 
-Only 211 country-years see at least one private museum founding in "DS all IVs" (17.0\%), while the other datasets see even lower proportions (10.0\% for "DS --CuSP" and 7.8\% for "DS --CuSP/TMTIR", respectively).
+Only 211 country-years see at least one private museum founding in "DS all IVs" (17.0\%), while the other datasets see even lower proportions (10.2\% for "DS --CuSP" and 8.0\% for "DS --CuSP/TMTIR", respectively).
 
 
 
@@ -1098,53 +566,55 @@ Only 211 country-years see at least one private museum founding in "DS all IVs" 
 
 
 % latex table generated in R 4.1.2 by xtable 1.8-4 package
-% Tue Feb  6 20:02:01 2024
+% Sun Jun  9 18:48:41 2024
 \begin{table}[ht]
 \centering
 \begin{tabular}{p{0.5mm}p{6cm}D{)}{)}{8)3} D{)}{)}{8)3} D{)}{)}{8)3} }
   \hline 
   &   & \multicolumn{1}{c}{DS all IVs} & \multicolumn{1}{c}{DS --CuSp} & \multicolumn{1}{c}{DS --CuSp/TMITR} \\ 
   \hline
- & Intercept & -4.64 \; (0.60)^{***} & -6.67 \; (0.54)^{***} & -7.00 \; (0.47)^{***} \\ 
+ & Intercept & -4.67 \; (0.60)^{***} & -6.58 \; (0.54)^{***} & -7.05 \; (0.50)^{***} \\ 
    \multicolumn{5}{l}{\textbf{H1: Tax incentives}} \\ 
- & Tax deductibility of donations & .15 \; (0.58) & .61 \; (0.53) & .68 \; (0.46) \\ 
-   & Top Marginal Income Tax Rate & -.69 \; (0.31)^{*} & -.58 \; (0.38) &  \\ 
+ & Tax deductibility of donations & .09 \; (0.59) & .57 \; (0.53) & .91 \; (0.49) \\ 
+   & Top Marginal Income Tax Rate & -.88 \; (0.39)^{*} & -.28 \; (0.41) &  \\ 
    & Tax deductibility *
-Top Marg. Inc. TR & .70 \; (0.33)^{*} & .94 \; (0.41)^{*} &  \\ 
+Top Marg. Inc. TR & .87 \; (0.39)^{*} & .70 \; (0.43) &  \\ 
    \multicolumn{5}{l}{\textbf{H2: Cultural spending}} \\ 
- & Gvt cultural spending & .59 \; (0.16)^{***} &  &  \\ 
-   & Gvt cultural spending$^{2}$ & -.65 \; (0.16)^{***} &  &  \\ 
+ & Gvt cultural spending & .65 \; (0.18)^{***} &  &  \\ 
+   & Gvt cultural spending$^{2}$ & -.64 \; (0.16)^{***} &  &  \\ 
    \multicolumn{5}{l}{\textbf{H3: Income inequality}} \\ 
- & Income share of top 10\% & -.52 \; (0.19)^{**} & -.64 \; (0.21)^{**} & -.77 \; (0.23)^{***} \\ 
-   & Income share of top 1\% & -.75 \; (0.15)^{***} & -.64 \; (0.20)^{**} & -.66 \; (0.20)^{***} \\ 
-   & Gini of pre-tax income & -.24 \; (0.17) & -.50 \; (0.21)^{*} & -.45 \; (0.20)^{*} \\ 
+ & Income share of top 10\% & -.39 \; (0.18)^{*} & -.62 \; (0.22)^{**} & -.71 \; (0.23)^{**} \\ 
+   & Income share of top 1\% & -.68 \; (0.15)^{***} & -.61 \; (0.20)^{**} & -.64 \; (0.20)^{**} \\ 
+   & Gini of pre-tax income & -.21 \; (0.18) & -.48 \; (0.21)^{*} & -.44 \; (0.21)^{*} \\ 
    \multicolumn{5}{l}{\textbf{H3: Wealth inequality}} \\ 
- & Wealth share of top 10\% & .34 \; (0.11)^{**} & .55 \; (0.15)^{***} & .53 \; (0.15)^{***} \\ 
-   & Wealth share of top 1\% & .50 \; (0.12)^{***} & .68 \; (0.18)^{***} & .68 \; (0.18)^{***} \\ 
-   & Gini of net wealth & .21 \; (0.10)^{*} & .37 \; (0.13)^{**} & .35 \; (0.13)^{**} \\ 
+ & Wealth share of top 10\% & .35 \; (0.11)^{**} & .55 \; (0.15)^{***} & .53 \; (0.15)^{***} \\ 
+   & Wealth share of top 1\% & .52 \; (0.12)^{***} & .67 \; (0.18)^{***} & .64 \; (0.17)^{***} \\ 
+   & Gini of net wealth & .21 \; (0.10)^{*} & .36 \; (0.13)^{**} & .33 \; (0.12)^{**} \\ 
    \multicolumn{5}{l}{\textbf{H4: (U/V)HNWIs}} \\ 
- & HNWIs (net worth $\geq$ 1M) & .25 \; (0.13) & -.14 \; (0.14) & -.09 \; (0.12) \\ 
-   & HNWIs (net worth $\geq$ 5M) & .20 \; (0.11) & -.23 \; (0.11)^{*} & -.20 \; (0.10)^{*} \\ 
-   & HNWIs (net worth $\geq$ 30M) & .08 \; (0.10) & -.07 \; (0.09) & -.06 \; (0.08) \\ 
-   & HNWIs (net worth $\geq$ 200M) & -.10 \; (0.10) & -.13 \; (0.09) & -.08 \; (0.07) \\ 
+ & HNWIs (net worth $\geq$ 1M) & .28 \; (0.14)^{*} & -.14 \; (0.14) & -.07 \; (0.12) \\ 
+   & HNWIs (net worth $\geq$ 5M) & .22 \; (0.11)^{*} & -.23 \; (0.11)^{*} & -.19 \; (0.10) \\ 
+   & HNWIs (net worth $\geq$ 30M) & .08 \; (0.10) & -.06 \; (0.09) & -.06 \; (0.08) \\ 
+   & HNWIs (net worth $\geq$ 200M) & -.10 \; (0.10) & -.15 \; (0.09) & -.08 \; (0.07) \\ 
    \multicolumn{5}{l}{\textbf{Controls}} \\ 
- & GDP per cap. & .14 \; (0.21) & .79 \; (0.21)^{***} & .88 \; (0.19)^{***} \\ 
-   & GDP growth & .21 \; (0.08)^{**} & .18 \; (0.08)^{*} & .19 \; (0.09)^{*} \\ 
-   & modern/contemp. art museums (1990) & .31 \; (0.18) & .20 \; (0.33) & .23 \; (0.33) \\ 
-   & modern/contemp. art museums$^{2}$ (1990) & -.09 \; (0.05) & -.06 \; (0.06) & -.05 \; (0.06) \\ 
-   & Collectors in Artnews top 200 collector list & -.09 \; (0.10) & .19 \; (0.10) & .16 \; (0.10) \\ 
-   & PM density (country) & 1.30 \; (0.17)^{***} & .72 \; (0.27)^{**} & .56 \; (0.26)^{*} \\ 
-   & PM density$^{2}$ (country) & -.30 \; (0.08)^{***} & -.19 \; (0.05)^{***} & -.14 \; (0.04)^{**} \\ 
-   & PM density (neighbors) & -.32 \; (0.16)^{*} & .12 \; (0.21) & .12 \; (0.20) \\ 
-   & PM density$^{2}$ (neighbors) & .12 \; (0.05)^{*} & .01 \; (0.04) & .00 \; (0.03) \\ 
-   & PM density (global) & -.32 \; (0.16)^{*} & -.11 \; (0.18) & -.01 \; (0.14) \\ 
-   & PM density$^{2}$ (global) & -.25 \; (0.12)^{*} & -.29 \; (0.12)^{*} & -.25 \; (0.12)^{*} \\ 
-   & Nbr. PM closings (cumulative, global) & -.06 \; (0.16) & -.12 \; (0.17) & -.11 \; (0.14) \\ 
+ & GDP per cap. & .11 \; (0.24) & .61 \; (0.23)^{**} & .74 \; (0.20)^{***} \\ 
+   & GDP growth & .23 \; (0.08)^{**} & .18 \; (0.08)^{*} & .19 \; (0.08)^{*} \\ 
+   & modern/contemp. art museums (1990) & .35 \; (0.20) & .15 \; (0.33) & .35 \; (0.31) \\ 
+   & modern/contemp. art museums$^{2}$ (1990) & -.09 \; (0.05) & -.06 \; (0.07) & -.07 \; (0.05) \\ 
+   & Collectors in Artnews top 200 collector list & -.09 \; (0.10) & .22 \; (0.11)^{*} & .18 \; (0.09) \\ 
+ & PM density (country)         & 1.30 \; (0.17)^{***} & .61 \; (0.28)^{*}   & .53 \; (0.27)^{*}   \\ 
+ & PM density$^{2}$ (country)   & -.30 \; (0.08)^{***} & -.17 \; (0.05)^{**} & -.14 \; (0.04)^{**} \\ 
+ & PM density (neighbors)       & -.34 \; (0.16)^{*}   & .10 \; (0.21)       & .12 \; (0.19)       \\ 
+ & PM density$^{2}$ (neighbors) & .12 \; (0.05)^{*}    & .01 \; (0.04)       & .00 \; (0.03)       \\ 
+ & PM density (global)          & -.29 \; (0.17)       & -.08 \; (0.18)      & -.01 \; (0.14)      \\ 
+ & PM density$^{2}$ (global)    & -.20 \; (0.12)       & -.32 \; (0.13)^{*}  & -.28 \; (0.12)^{*}  \\ 
+   & Nbr. PM closings (cumulative, global) & -.07 \; (0.16) & -.12 \; (0.17) & -.09 \; (0.14) \\ 
+   & Ethnic Fractionalization & -.04 \; (0.08) & -.22 \; (0.16) & -.25 \; (0.16) \\ 
+   & Migrant stock & -.10 \; (0.17) & .33 \; (0.19) & .25 \; (0.16) \\ 
    \hline
- & N & 1241 & 2508 & 3244 \\ 
-   & No. countries & 85 & 150 & 160 \\ 
+ & N & 1241 & 2474 & 3148 \\ 
+   & No. countries & 85 & 147 & 156 \\ 
    & No. years & 26 & 26 & 26 \\ 
-   & Log likelihood & -552.09 & -694.73 & -713.33 \\ 
+   & Log likelihood & -551.69 & -692.10 & -705.61 \\ 
    \hline 
  \multicolumn{4}{l}{\footnotesize{standard errors in parantheses.\textsuperscript{***}p \textless 0.001;\textsuperscript{**}p \textless 0.01;\textsuperscript{*}p \textless 0.05.}}
 \end{tabular}
@@ -1164,7 +634,7 @@ Coefficients can be interpreted as logged multipliers of a country's founding ra
 The coefficients of the control variables indicate that a number of other factors beyond the main processes are associated with private museum founding.
 In particular GDP and private museum densities show strong associations across datasets.
 GDP variables generally show a positive associations while density variables exhibit either an inverse U-shaped relationship compatible with the density-dependence literature (in the case of country and global density) or a weak U-shaped relationship in the case of density of neighboring countries.
-No substantial impact on private museum founding is found for cumulative private museum closures and the other art field indicators, number of artnews collectors and number of modern and contemporary museums.
+No substantial impact on private museum founding is found for social fragmentation variables, cumulative private museum closures, number of artnews collectors and number of modern and contemporary museums.
 For a more detailed discussion of the control variables see the supplementary materials. 
 
 
@@ -1176,16 +646,17 @@ For a more detailed discussion of the control variables see the supplementary ma
 
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=14cm]{plt_v27_pred_taxinc.pdf}
+\includegraphics[width=14cm]{figures/plt_v34_pred_taxinc.pdf}
 \caption{\label{fig:pred_taxinc}Tax Incentives and Private Museum Founding: Adjusted Predictions at the Means (DS all IVs; population 100 mil.; 95\% CI)}
 \end{figure}
 
 The results for tax incentives largely support the hypothesis of tax incentives as a factor contributing to private museum founding:
-In DS all IVs (as well as DS-CuSp), the interaction between tax deductibility of donations and top marginal income tax rates is positive and significant, which indicates that increases in top marginal income tax rates have a larger positive effect in countries where charitable donations are tax deductible than in countries where they are not.
+In DS all IVs, the interaction between tax deductibility of donations and top marginal income tax rates is positive and significant, which indicates that increases in top marginal income tax rates have a larger positive effect in countries where charitable donations are tax deductible than in countries where they are not.
 Figure \ref{fig:pred_taxinc} visualizes how the impact of top marginal income tax rates depends on the presence of tax deductibility of donations.
 In particular at higher top marginal income tax rates countries with tax deductibility of donations see more private museum foundings than countries where charitable donations are not tax deductible.
 The option for collectors in these countries to receive substantial tax benefits appears to indeed incentivize them to establish private museums.
-A positive role of tax incentives is further supported by the positive (but insignificant; p = 0.14) coefficient of tax deductibility of donations in DS --CuSp/TMITR, indicating that countries with tax deductibility of donations see \(e\)\textsuperscript{0.68} = 2.0 times more private museum founding than countries without. 
+A positive role of tax incentives is further supported by large positive and marginally significant interaction in DS --CuSp (b=0.70, p=0.10) and the positive, marginally significant (p = 0.06) coefficient of tax deductibility of donations in DS --CuSp/TMITR, indicating that countries with tax deductibility of donations see \(e\)\textsuperscript{0.91} = 2.5 times more private museum founding than countries without. 
+
 
 
 
@@ -1200,16 +671,16 @@ Despite such minor unexpected results, the combined findings point to tax incent
 
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=14cm]{plt_v27_pred_smorc.pdf}
+\includegraphics[width=14cm]{figures/plt_v34_pred_smorc.pdf}
 \caption{\label{fig:pred_smorc}Goverment Cultural Spending and Private Museum Founding: Adjusted Predictions at the Means (population 100 mil.; 95\% CI)}
 \end{figure}
 
 Government cultural spending is found to have a significant inverse-U shaped association with private museum founding.
 While at lower values the association is positive, the effect decreases at higher levels and eventually turns negative (figure \ref{fig:pred_smorc}).
-In particular, up to a value of -0.59/(2*-0.65) = 0.45 (corresponding to cultural spending of 485 USD per capita, approximately the 2020 government cultural spending of Latvia (468 USD) or Australia (500 USD) an increase in government spending corresponds to a higher predicted likelihood of private museum founding.
+In particular, up to a value of -0.65/(2*-0.64) = 0.51 (corresponding to cultural spending of 501 USD per capita, approximately the 2020 government cultural spending of Latvia (468 USD) or Australia (500 USD)) an increase in government spending corresponds to a higher predicted likelihood of private museum founding.
 
 
-This range of positive association between government spending and private museum founding consists of 864 (69.6\%) of the country-years belonging to "DS all IVs"; it also contains 62.5\% of covered private museum foundings.
+This range of positive association between government spending and private museum founding consists of 891 (71.8\%) of the country-years belonging to "DS all IVs"; it also contains 67.6\% of covered private museum foundings.
 It is furthermore worth to consider that since "DS all IVs" consists disproportionately of developed countries, the true proportion of country-years in which higher government expenditure is associated with higher private museum is likely even higher.
 Nevertheless, in the range above this turning point which (in 2020) includes countries prominent for their private museum populations such as Germany (661 USD), France (678 USD), the Netherlands (782 USD) or Switzerland (806 USD) increases in government spending are associated with lower rates of private museum founding (and conversely, decreases in government spending with higher rates of private museum founding).
 
@@ -1228,8 +699,8 @@ However, little evidence is found for a lack of government spending facilitating
 
 The association between inequality variables and private museum founding is mixed.
 While income inequality is significantly associated with lower founding, wealth inequality variables are positively and significantly associated with the establishment of new private museums. 
-A 1 SD increase of the income share of the top 10\% (8.9\% in 2020 in "DS all IVs", which corresponds approximately to the difference between Sweden (30.8\%) and Canada (39.7\%), or the within-country change in Bulgaria from 2010 (34.8\%) to 2017 (43.5\%)) is associated with a decrease in private museum founding rate by a factor of \(e\)\textsuperscript{-0.52} = 0.59. 
-Conversely, a 1 SD increase of the wealth share of the top 10\% (7.5\%; a difference in size similar to that between Denmark (50.2\%) and the Czech Republic (57.9\%) in 2020 in "DS all IVs", or to the longitudinal change in the United States from 1991 (64.1\%) to 2011 (71.7\%)) is associated with an increase in private museum founding rate by a factor of \(e\)\textsuperscript{0.34} = 1.41.
+A 1 SD increase of the income share of the top 10\% (8.9\% in 2020 in "DS all IVs", which corresponds approximately to the difference between Sweden (30.8\%) and Canada (39.7\%), or the within-country change in Bulgaria from 2010 (34.8\%) to 2017 (43.5\%)) is associated with a decrease in private museum founding rate by a factor of \(e\)\textsuperscript{-0.39} = 0.67. 
+Conversely, a 1 SD increase of the wealth share of the top 10\% (7.5\%; a difference in size similar to that between Denmark (50.2\%) and the Czech Republic (57.9\%) in 2020 in "DS all IVs", or to the longitudinal change in the United States from 1991 (64.1\%) to 2011 (71.7\%)) is associated with an increase in private museum founding rate by a factor of \(e\)\textsuperscript{0.35} = 1.42.
 There is thus substantial evidence for H3 in regards of wealth inequality, but also strong empirical evidence against a positive association between income inequality and private museum founding.\footnote{While the inequality coefficients are large, it is necessary to consider that wealth and income inequality developments are often related:
 In DS all IVs, the overall correlation (averaged between all wealth and income inequality variables) is 0.69, and the average within-country correlation is 0.37.
 Therefore an increase in wealth inequality, which raises the rate of private museum founding, is often accompanied by an increase in income inequality, which in turn decreases it.}
@@ -1250,9 +721,12 @@ Whether this line of reasoning is able to explain the diverging inequality effec
 \paragraph*{HNWI (H4)}
 
 
-Increases in the number of HNWI do not seem to be substantially associated with private museum founding as after controlling for other variables, the HNWI coefficients are firstly comparatively small relative to those of other indicators, secondly not statistically significant and thirdly occasionally negative, in particular in DS -CuSp and DS -CuSP/TMITR).
-In these two datasets, the coefficient of the HNWI population with a wealth larger than 5 million USD in particular is substantially negative (-0.23 and -0.20) and significant (p = 0.042 and p = 0.046 for DS -CuSp and DS -CuSP/TMITR, respectively).
-Consequently, there is little evidence that HNWI rates are substantially positively associated with private museum founding, thus rejecting H4.
+
+
+HNWI variables show no clear relationship with private museum founding: 
+In "DS all IVs", coefficients for the 1 and 5 million USD thresholds are positive and significant, whereas the higher thresholds are not significant.
+In the other datasets, all coefficients are negative, with the 5M threshold significant in "DS --CuSp" and marginally significant in "DS --CuSp/TMITR" (p=0.056).
+Taken together, these results provide no conclusive support that HNWI rates generally are substantially positively associated with private museum founding, thus rejecting H4.
 
 
 A possible explanation for this might be found when investigating the origin of the original argument\footnote{Another more technical explanation based on the model specification, in particular the overcontrolling of elite wealth effects with other variables is discussed in the supplementary materials as I consider it less likely.}.
@@ -1263,9 +737,8 @@ Consequently, such sampling on the dependent variable or selection bias might ha
 
 The fact that substantial wealth is required to found a private museum on first sight makes the argument of an association compelling; yet the overall link between between elite wealth and private museum founding is more remote: 
 Of all HNWIs, only some will engage in philanthropy, of which only some will engage in art philanthropy, and  an even smaller subset of these will found a private museum.
-The particular ways in which HNWI decide to spend their money might be ultimately depend on a number of other variables to such an extent that a direct link between levels of elite wealth and private museum founding is not observable.
-There might thus be countries where a positive exists between HNWI numbers and founding rates, yet it does not appear to be a pattern that applies across all countries. 
-Studies of comparative elite wealth spending could help to illucidate how various forms of elite spending are conditional on different structural conditions.
+The particular ways in which HNWI decide to spend their money might be ultimately depend on a number of other variables to such an extent that a general direct link between levels of elite wealth and private museum founding is not observable.
+To improve on the current results where direction, size and significance depends on dataset and wealth threshold, studies of comparative elite wealth spending could help to illucidate how various forms of elite spending are conditional on different structural configurations.
 
 
 
@@ -1278,7 +751,7 @@ Studies of comparative elite wealth spending could help to illucidate how variou
 
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=18cm]{plt_v27_cntrfctl.pdf}
+\includegraphics[width=18cm]{figures/plt_v34_cntrfctl.pdf}
 \caption{\label{fig:cntrfctl}Counterfactual simulations}
 \end{figure}
 
@@ -1286,9 +759,9 @@ Beyond interpreation of regression coefficients, the substantial association bet
 In particular, I hold (separately for each variable) each country at the mean value of the years 2000 to 2004 for the entire time period, predict the number of openings for each country year under this counterfactual scenario using the original coefficients, sum up the predictions for all country-years and compare with the observed number of openings.
 Results are shown in figure \ref{fig:cntrfctl} (the longitudinal changes of the predictor variables are discussed in the supplementary materials).
 Positive values for a variable (e.g. GDP) indicate that in the actual world, more private museums were founded than would have been had the variable stayed at its 2000-2004 level; the change of the variable can thus be understood as having led to an increase in private museum founding.
-In the case of GDP, it can be seen that changes since 2000-2004 are, depending on dataset, responsible for 15 to 75 additional private museums foundings.
+In the case of GDP, it can be seen that changes since 2000-2004 are, depending on dataset, responsible for 7 to 65 additional private museums foundings.
 Conversely, negative values (e.g. for top marginal income tax rates) indicate that by changing in the real world, less private museums are founded than predicted in a world where variables stay at 2000-2004 levels.
-For top marginal tax rates it can thus be seen that if they had stayed at their mean level of 2000-2004, 20 to 44 additional private museums would have been founded (in DS all IVs and DS -CuSp, respectively).
+For top marginal tax rates it can thus be seen that if they had stayed at their mean level of 2000-2004, 24 to 52 additional private museums would have been founded (in DS all IVs and DS -CuSp, respectively).
 Despite only capturing the within-country variation, this analysis shows that the predictors are substantially associated with private museum founding. 
 
 
@@ -1297,7 +770,7 @@ Despite only capturing the within-country variation, this analysis shows that th
 As the first quantitative analysis of private museum proliferation, this study has explored several factors that have been suggested as explanations for the rise of private museums in recent decades.
 To some extent the findings are in line with the literature, particularly in the case of tax incentives, which are found to positively contribute to private museum founding.
 In other domains, this research complicates existing arguments, such as in the case of government spending, which shows an inverse-U shaped relationship (and thus corresponds to crowding-in at lower levels, and crowding out at higher levels), and inequality, where wealth disparities are found to be positively associated with private museum founding, but income inequalities appear to have a negative effect. 
-In yet another area, the increase in numbers of the very wealthy, no substantial relation to private museum founding has been found. 
+In yet another area, the increase in numbers of the very wealthy, no general relation to private museum founding has been found. 
 This study thus substantially advances the understanding of a major art world development of the recent decades.
 
 
@@ -1305,7 +778,7 @@ This study thus substantially advances the understanding of a major art world de
 
 The contributions of this study go beyond constituting the first quantitative analysis on private museum proliferation and include the combination of an extensive list of data sources, allowing to study the phenomenon in a large number of countries, an innovative modeling strategy sensitive to variations in the time predictors take to act on the dependent variable as well as robust measurement of several key concepts via different operationalizations.
 Despite such methodological contributions this study is limited by a number of factors. 
-As interest in the organizational form of private museums has risen only recently, data collection has been retrospective (which might be less inclusive than continuous measurements based on for example industry directories) and furthermore been primarily based on English-language media.
+As interest in the organizational form of private museums has risen only recently, data collection has been retrospective (which might be less inclusive than continuous measurements based on industry directories) and primarily based on English-language media.
 Also, multiple predictors are exhibiting substantial limitations in measuring their intended concepts, such as the measure of tax deductibility of donations and non-private art museum populations variables (which are only cross-sectional and in the former case not art-sector specific), the WID HNWI data (making HNWI estimation beyond 200 million USD infeasible) and the Artnews top 200 collector ranking data (which does not capture absolute changes of collector populations).
 Additionally, substantial gaps in data coverage of cultural spending (which furthermore is only available at a high level of aggregation) and top marginal income tax rates have so far necessitated the use of multiple datasets.
 While this approach was of substantial value, as it allowed to investigate variables with varying coverage and  allowed to include many countries which had not received much attention by the private museum literature, better coverage of some variables would nevertheless provide even further insights.
@@ -1315,12 +788,9 @@ Finally, further relationships between variables (such as mediation or moderatio
 Mediation in particular might be present for density estimates, as the effect of structural factors might be mediated through the private museum population.
 Further disentangling these effects, improving measurement precision and elaborating the underlying theoretical mechanisms thus constitute promising approaches for future research. 
 
-% \begin{sloppypar}
-% \printbibliography[segment=\therefsegment]
-% \end{sloppypar}
-
 \bibliographystyle{plainnat}
-\bibliography{refs_poetics3.bib}
+\bibliography{org_pop.bib}
+
 
 \clearpage
 \FloatBarrier
@@ -1333,38 +803,40 @@ Further disentangling these effects, improving measurement precision and elabora
 
 \begin{landscape}
 % latex table generated in R 4.1.2 by xtable 1.8-4 package
-% Tue Feb  6 20:02:01 2024
+% Sun Jun  9 18:48:41 2024
 \begin{table}[ht]
 \centering
 \begin{tabular}{p{7cm}llllllllllll}
   \hline 
-  & \multicolumn{4}{c}{DS all IVs (n=1241)} & \multicolumn{4}{c}{DS --CuSp (n=2508)} & \multicolumn{4}{c}{DS --CuSp/TMITR (n=3244)} \\ 
+  & \multicolumn{4}{c}{DS all IVs (n=1241)} & \multicolumn{4}{c}{DS --CuSp (n=2474)} & \multicolumn{4}{c}{DS --CuSp/TMITR (n=3148)} \\ 
 \cmidrule(r){2-5}\cmidrule(r){6-9}\cmidrule(r){10-13}  
  Variable & Mean & SD & Min. & Max. & Mean & SD & Min. & Max. & Mean & SD & Min. & Max. \\ 
   \hline
-Private Museum openings & 0.011 & 0.053 & 0 & 0.865 & 0.006 & 0.039 & 0 & 0.865 & 0.005 & 0.034 & 0 & 0.865 \\ 
-  Tax deductibility of donations & 0.907 & 0.291 & 0 & 1 & 0.774 & 0.419 & 0 & 1 & 0.691 & 0.462 & 0 & 1 \\ 
-  Top Marginal Income Tax Rate (\%) & 35.2 & 14.0 & 0 & 63.5 & 32.2 & 13.5 & 0 & 65 & -- & -- & -- & -- \\ 
+Private Museum openings & 0.011 & 0.053 & 0 & 0.865 & 0.006 & 0.039 & 0 & 0.865 & 0.005 & 0.035 & 0 & 0.865 \\ 
+  Tax deductibility of donations & 0.907 & 0.291 & 0 & 1 & 0.778 & 0.416 & 0 & 1 & 0.698 & 0.459 & 0 & 1 \\ 
+  Top Marginal Income Tax Rate (\%) & 35.2 & 14.0 & 0 & 63.5 & 32.5 & 13.4 & 0 & 65 & -- & -- & -- & -- \\ 
   Gvt cultural spending (millions) & 343 & 312 & 0.287 & 2 021 & -- & -- & -- & -- & -- & -- & -- & -- \\ 
-  Income share of top 10\% (*100) & 40.4 & 8.89 & 26.5 & 69.6 & 45.5 & 9.58 & 26.5 & 70.8 & 45.9 & 9.22 & 26.5 & 71.6 \\ 
-  Income share of top 1\% (*100) & 14.0 & 4.47 & 6.04 & 29.7 & 16.3 & 5.32 & 6.04 & 44.9 & 16.3 & 5.25 & 6.04 & 44.9 \\ 
-  Gini of pre-tax income (*100) & 51.5 & 8.63 & 35.9 & 78.1 & 56.4 & 9.05 & 35.9 & 78.1 & 56.9 & 8.63 & 35.9 & 78.1 \\ 
-  Wealth share of top 10\% (*100) & 60.6 & 7.55 & 42.0 & 90.9 & 63.2 & 7.88 & 42.0 & 90.9 & 63.3 & 7.76 & 42.0 & 90.9 \\ 
-  Wealth share of top 1\% (*100) & 27.2 & 7.78 & 12.1 & 58.2 & 30.0 & 8.25 & 12.1 & 58.2 & 30.1 & 8.15 & 12.1 & 58.2 \\ 
-  Gini of net wealth (*100) & 75.6 & 6.20 & 57.7 & 95 & 77.4 & 6.30 & 57.7 & 95 & 77.5 & 6.18 & 57.7 & 95 \\ 
-  HNWIs (net worth $\geq$ 1M) & 14 556 & 21 001 & 16.4 & 142 766 & 7 871 & 16 519 & 13.5 & 142 766 & 6 156 & 14 873 & 0 & 142 766 \\ 
-  HNWIs (net worth $\geq$ 5M) & 989 & 1 624 & 0 & 12 420 & 546 & 1 246 & 0 & 12 420 & 429 & 1 117 & 0 & 12 420 \\ 
-  HNWIs (net worth $\geq$ 30M) & 54.8 & 109 & 0 & 966 & 30.7 & 81.4 & 0 & 966 & 24.1 & 72.7 & 0 & 966 \\ 
-  HNWIs (net worth $\geq$ 200M) & 5.75 & 9.81 & 0 & 80.4 & 3.13 & 7.62 & 0 & 80.4 & 2.45 & 6.84 & 0 & 80.4 \\ 
-  GDP per cap. (thousands) & 26.5 & 24.9 & 0.453 & 135 & 16.2 & 21.1 & 0.277 & 135 & 13.3 & 19.6 & 0.253 & 135 \\ 
-  GDP growth (\%) & 2.09 & 3.64 & -15.2 & 23.3 & 1.74 & 4.38 & -36.8 & 43.8 & 2.09 & 5.10 & -47.9 & 97.0 \\ 
-  Population (millions) & 66.5 & 204 & 0.087 & 1 411 & 53.9 & 170 & 0.087 & 1 411 & 44.2 & 151 & 0.081 & 1 411 \\ 
-  modern/contemp. art museums (1990) & 0.730 & 1.01 & 0 & 5.21 & 0.412 & 0.814 & 0 & 5.21 & 0.330 & 0.738 & 0 & 5.21 \\ 
-  Collectors in Artnews top 200 collector list & 0.069 & 0.248 & 0 & 2.23 & 0.036 & 0.178 & 0 & 2.23 & 0.028 & 0.157 & 0 & 2.23 \\ 
-  PM density (country) & 0.170 & 0.278 & 0 & 1.73 & 0.091 & 0.214 & 0 & 1.73 & 0.071 & 0.192 & 0 & 1.73 \\ 
-  PM density (neighbors) & 0.111 & 0.153 & 0 & 0.740 & 0.066 & 0.120 & 0 & 0.740 & 0.053 & 0.109 & 0 & 0.740 \\ 
-  PM density (global) & 295 & 107 & 68 & 429 & 300 & 107 & 68 & 429 & 284 & 108 & 68 & 429 \\ 
-  Nbr. PM closings (cumulative, global) & 22.6 & 23.5 & 1 & 75 & 24.2 & 24.3 & 1 & 75 & 20.8 & 23.2 & 1 & 75 \\ 
+  Income share of top 10\% (*100) & 40.4 & 8.89 & 26.5 & 69.6 & 45.6 & 9.60 & 26.5 & 70.8 & 46.1 & 9.27 & 26.5 & 71.6 \\ 
+  Income share of top 1\% (*100) & 14.0 & 4.47 & 6.04 & 29.7 & 16.3 & 5.33 & 6.04 & 44.9 & 16.4 & 5.21 & 6.04 & 44.9 \\ 
+  Gini of pre-tax income (*100) & 51.5 & 8.63 & 35.9 & 78.1 & 56.5 & 9.10 & 35.9 & 78.1 & 57.0 & 8.71 & 35.9 & 78.1 \\ 
+  Wealth share of top 10\% (*100) & 60.6 & 7.55 & 42.0 & 90.9 & 63.3 & 7.90 & 42.0 & 90.9 & 63.4 & 7.78 & 42.0 & 90.9 \\ 
+  Wealth share of top 1\% (*100) & 27.2 & 7.78 & 12.1 & 58.2 & 30.1 & 8.28 & 12.1 & 58.2 & 30.2 & 8.16 & 12.1 & 58.2 \\ 
+  Gini of net wealth (*100) & 75.6 & 6.20 & 57.7 & 95 & 77.5 & 6.33 & 57.7 & 95 & 77.5 & 6.20 & 57.7 & 95 \\ 
+  HNWIs (net worth $\geq$ 1M) & 14 556 & 21 001 & 16.4 & 142 766 & 7 977 & 16 608 & 13.5 & 142 766 & 6 338 & 15 061 & 0 & 142 766 \\ 
+  HNWIs (net worth $\geq$ 5M) & 989 & 1 624 & 0 & 12 420 & 554 & 1 253 & 0 & 12 420 & 441 & 1 132 & 0 & 12 420 \\ 
+  HNWIs (net worth $\geq$ 30M) & 54.8 & 109 & 0 & 966 & 31.1 & 81.9 & 0 & 966 & 24.8 & 73.7 & 0 & 966 \\ 
+  HNWIs (net worth $\geq$ 200M) & 5.75 & 9.81 & 0 & 80.4 & 3.17 & 7.66 & 0 & 80.4 & 2.52 & 6.93 & 0 & 80.4 \\ 
+  GDP per cap. (thousands) & 26.5 & 24.9 & 0.453 & 135 & 16.3 & 21.2 & 0.277 & 135 & 13.6 & 19.8 & 0.253 & 135 \\ 
+  GDP growth (\%) & 2.09 & 3.64 & -15.2 & 23.3 & 1.74 & 4.32 & -36.8 & 43.8 & 2.10 & 5.03 & -47.9 & 97.0 \\ 
+  Population (millions) & 66.5 & 204 & 0.087 & 1 411 & 54.5 & 171 & 0.087 & 1 411 & 45.3 & 153 & 0.081 & 1 411 \\ 
+  modern/contemp. art museums (1990) & 0.730 & 1.01 & 0 & 5.21 & 0.416 & 0.819 & 0 & 5.21 & 0.338 & 0.748 & 0 & 5.21 \\ 
+  Collectors in Artnews top 200 collector list & 0.069 & 0.248 & 0 & 2.23 & 0.037 & 0.179 & 0 & 2.23 & 0.029 & 0.159 & 0 & 2.23 \\ 
+  PM density (country) & 0.170 & 0.278 & 0 & 1.73 & 0.092 & 0.215 & 0 & 1.73 & 0.072 & 0.194 & 0 & 1.73 \\ 
+  PM density (neighbors) & 0.111 & 0.153 & 0 & 0.740 & 0.067 & 0.121 & 0 & 0.740 & 0.055 & 0.110 & 0 & 0.740 \\ 
+  PM density (global) & 295 & 107 & 68 & 429 & 299 & 107 & 68 & 429 & 283 & 108 & 68 & 429 \\ 
+  Nbr. PM closings (cumulative, global) & 22.6 & 23.5 & 1 & 75 & 23.9 & 24.2 & 1 & 75 & 20.7 & 23.2 & 1 & 75 \\ 
+  Ethnic Fractionalization & 0.348 & 0.209 & 0.020 & 0.860 & 0.434 & 0.248 & 0.010 & 0.890 & 0.454 & 0.252 & 0.010 & 0.890 \\ 
+  Migrant stock & 9.68 & 10.8 & 0.063 & 73.6 & 7.57 & 10.5 & 0.040 & 73.6 & 6.95 & 9.93 & 0.040 & 73.6 \\ 
    \hline \multicolumn{13}{l}{\footnotesize{all country-level count variables are per million population; all monetary amounts are 2021 USD}}
 \end{tabular}
 \caption{Summary Statistics} 
@@ -1373,8 +845,4 @@ Private Museum openings & 0.011 & 0.053 & 0 & 0.865 & 0.006 & 0.039 & 0 & 0.865 
 \end{landscape}
 
 \FloatBarrier
-
-
-
 \end{document}
-
