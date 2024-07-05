@@ -1,6 +1,8 @@
+% Created 2024-07-05 vr 05:56
+% Intended LaTeX compiler: pdflatex
 \documentclass[11pt, authoryear]{elsarticle}
 
-\usepackage[hyphens]{url}                
+\usepackage[hyphens]{url}
 \usepackage{hyperref}
 \usepackage[hyphenbreaks]{breakurl}
 \usepackage{rotating}
@@ -18,40 +20,49 @@
 \usepackage{svg}
 \usepackage[export]{adjustbox}
 
-
 \usepackage{booktabs}
 \usepackage{dcolumn}
 \makeatletter
 \newcolumntype{D}[3]{>{\textfont0=\the\font\DC@{#1}{#2}{#3}}c<{\DC@end}}
 \makeatother
-
 \newcolumntype{L}{>{$}l<{$}}
-
-% \usepackage{bibentry}
-
 \sisetup{detect-all}
-
 \sloppy
 \usepackage{scalerel,stackengine}
-
 \usepackage{caption}
 \usepackage[draft]{todonotes}
-
 \captionsetup{skip=0pt}
 \usepackage[utf8]{inputenc}
-
 \usepackage[T1]{fontenc}
 \usepackage{csquotes}
-
-
-
-
 \usepackage{floatrow}
-
 \usepackage{listings}
 \usepackage{xcolor}
 \usepackage{colortbl}
-
+\lstset{
+language=R,
+basicstyle=\footnotesize,
+numbers=left,
+numberstyle=\tiny\color{gray},
+stepnumber=1,
+numbersep=5pt,
+backgroundcolor=\color{white},
+showspaces=false,
+showstringspaces=false,
+showtabs=false,
+frame=single,
+rulecolor=\color{black},
+tabsize=2,
+captionpos=b,
+breaklines=true,
+breakatwhitespace=false,
+title=\lstname,
+keywordstyle=\color{red},
+commentstyle=\color{blue},
+stringstyle=\color{violet},
+escapeinside={\%*}{*)},
+morekeywords={*,...}
+}
 \usepackage{crimson}
 \usepackage{microtype}
 
@@ -73,7 +84,6 @@
 
 \usepackage{multicol}
 \setlength\multicolsep{0pt}
-
 \usepackage{array}
 \usepackage{caption}
 \usepackage{graphicx}
@@ -89,70 +99,39 @@
 \usepackage{adjustbox}
 \usepackage{hyperref}
 
-
 \newlist{propertyList}{itemize}{1}
 \setlist[propertyList]{
-  label=\textbullet,
-  noitemsep,
-  leftmargin=10pt,
-  before=\begin{multicols}{3},
-  after=\end{multicols}
-  }
+label=\textbullet,
+noitemsep,
+leftmargin=10pt,
+before=\begin{multicols}{3},
+after=\end{multicols}
+}
 
 \rfoot {\thepage}
-
+\setlength{\parindent}{1.2cm}
 \listfiles
 
-\begin{filecontents}{refs_poetics_sup.bib}
-@misc{Blanchet_2017_conversions,
-  title = {Prices and currency conversions in WID.world},
-  author = {Blanchet, Thomas},
-  url = {https://wid.world/document/convert-wid-world-series/},
-  year = {2017},
-}
 
-@article{Luedecke_etal_2021_performance,
-  author = {Lüdecke, Daniel and Ben-Shachar, Mattan and Patil, Indrajeet and Waggoner, Philip and Makowski, Dominique},
-  title = {performance: An R Package for Assessment, Comparison and Testing of Statistical Models},
-  journal = {Journal of Open Source Software},
-  year = {2021},
-  volume = {6},
-  number = {60},
-  month = {Apr},
-  pages = {3139},
-  issn = {2475-9066},
-  doi = {10.21105/joss.03139},
-  url = {http://dx.doi.org/10.21105/joss.03139},
-  publisher = {The Open Journal},
-}
-
-@misc{WID_2021_WID,
-  title = {World Inequality Database},
-  url = {https://wid.world/},
-  year = {2021},
-  author = {{World Inequality Database}},
-}
-
+\begin{filecontents}{refs_sup.bib}
+\input{sup_materials.bib}
 \end{filecontents}
-
-
-\setlength{\parindent}{1.2cm}
-\author{ }
+\author{Johannes }
 \date{\today}
 \title{}
 \hypersetup{
- pdfauthor={ },
+ pdfauthor={Johannes },
  pdftitle={},
  pdfkeywords={},
  pdfsubject={},
- pdfcreator={Emacs 29.1 (Org mode 9.6.7)}, 
+ pdfcreator={Emacs 29.3 (Org mode 9.6.26)}, 
  pdflang={English}}
 \begin{document}
 
 
 
-\section*{Supplementary online materials}
 
+\section{Supplementary online materials}
 
 
 \appendix
@@ -169,7 +148,7 @@
 \label{app_data_coverage}
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=18cm]{plt_v27_vrbl_cycnt.pdf}
+\includegraphics[width=18cm]{figures/plt_v34_vrbl_cycnt.pdf}
 \caption{\label{fig:vrbl_cycnt}Number of countries with per year per variable}
 \end{figure}
 
@@ -177,7 +156,7 @@
 
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=18cm]{plt_v27_cbn_cycnt.pdf}
+\includegraphics[width=18cm]{figures/plt_v34_cbn_cycnt.pdf}
 \caption{\label{fig:cbn_cycnt}Number of countries per year per variable combination}
 \end{figure}
 
@@ -203,6 +182,14 @@ As the overall goal is to create a complete picture of government expenditure, T
 For countries where TLYCG and P3CG series have some overlap and years exist with P3CG data but not TLYCG data, a country-specific scaler to convert P3CG to TLYCG is constructed from overlapping years, which is then used to impute TLYCG for the years in which only P3CG data is available.
 For countries with only P3CG data, the average ratio of all country-years with both P3CG and TLYCG data is chosen to impute TLYCG (as on average P3CG is 58\% of TLYCG, the average scaler is 1/0.58 = 1.72). 
 Amounts are reported in current local currency units and converted to 2021 USD using price indices and purchasing power parity adjusted exchange rates from the World Inequality Database (WID,  \citeyear{WID_2021_WID}).
+
+\subsubsection{Social Fragmentation}
+
+The Historical Index of Ethnic Fractionalization (HIEF, \cite{Drazanova_2020_HIEF}), as well as the underlying Composition of Religious and Ethnic Groups Project \citep{CREG_2012_whitepaper} provides data coverage only until 2013.
+However, as ethnic group percentages change slowly within countries (only 7.4\% of variation from 1995 to 2013 is within-country variation, the remainder being between-country variation), I consider it appropriate to fill up values from 2014 to 2020 by carrying over the 2013 value to be able to include the as many country-years as possible.
+Furthermore, for 35 countries for which the HIEF dataset is not available, I impute it based on the (more complete) variable "Ethnic Fractionalization in the year 2000" \citep{Alesina_etal_2003_fractionalization}, as both variables are strongly correlated (r=0.84).
+
+
 
 \subsubsection{Imputation}
 
@@ -242,7 +229,7 @@ Since the number of Artnews collectors is a discrete count variable it is unable
 
 
 The coefficient of GDP per capita is generally positive. 
-In the two larger datasets, it is significant and also substantially larger with values of 0.79 and 0.88 for "DS --CuSp" and "DS --CuSP/TMITR" respectively, compared to 0.14 for "DS all IVs".
+In the two larger datasets, it is significant and also substantially larger with values of 0.61 and 0.74 for "DS --CuSp" and "DS --CuSP/TMITR" respectively, compared to 0.11 for "DS all IVs".
 This between-dataset variation in coefficient size could indicate mediation of GDP through cultural spending (cf. appendix \ref{app_mediation} and figure \ref{fig:oucoefchng}); however further investigation would be required to more clearly determine the mechanism at play. 
 Economic growth is also positive and significant in all data sets.
 
@@ -250,14 +237,20 @@ Economic growth is also positive and significant in all data sets.
 
 
 
-In all datasets on the country and global level, measures of density (legitimacy) and density squared (competition) correspond to the density-dependence paradigm, i.e. an inverted U-shaped relationship between density and private museum founding (indicated by the significant negative coefficient of the squared density measure on the country and global level for all datasets). 
+In all datasets on the country level, and in all but "DS all IVs" on the global level, measures of density (legitimacy) and density squared (competition) correspond to the density-dependence paradigm, i.e. an inverted U-shaped relationship between density and private museum founding (indicated by the significant negative coefficient of the squared density measure on the country and global level). 
 Private museum founding thus is generally compatible with the density dependence paradigm, according to which potential founders are motivated by their peers' decision to establish a private museum up to the point where private museum numbers increased to the extent that additional founding does not appear advantageous anymore.
 However, density in neighboring countries does not fit this trend.
 While the coefficients are insignificant in the two larger datasets, in DS all IVs it describes a U-shaped relationship, corresponding to higher rates of founding at the extreme ends of the scale.
-Given the right-skewed distribution of neighbor density increasing density in neighboring countries primarily decreases private museum founding in the focal country.
+Given the right-skewed distribution of neighbor density, increasing density in neighboring countries primarily decreases private museum founding in the focal country.
 Furthermore, while prospective founders might ultimately be disincentivized by growing private museum numbers, there is no evidence for a demotivating effect of museum closures, as the coefficient of the cumulative number of museum closures is not significant.
 
 
+
+\subsubsection{Social Fragmentation}
+
+While the effects of ethnic fractionalization are not significant in all datasets, they are consistently negative, thus giving some support to the expectation that more fractionalized societies provide lower incentives for civic engagements and public good provision.
+However, this is not the case for the effect of Migrant stock, which is only negative in "DS all IVs", but positive in the other two datasets.
+Possible explanations for these findings might be the measurement of fragmentation on the country-level, whereas these mechanisms likely take place on a more local level, as well as a more complex relationship between fragmentation and pro-social behavior \citep{Baldassarri_Abascal_2020_diversity}.
 
 
 
@@ -270,7 +263,7 @@ Furthermore, while prospective founders might ultimately be disincentivized by g
 \label{app_coefdrbn}
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=18cm]{plt_v27_coef_violin.pdf}
+\includegraphics[width=18cm]{figures/plt_v34_coef_violin.pdf}
 \caption{\label{fig:coef_violin}Distribution of coefficient point estimates (Gaussian kernel density estimate; bandwidth = 0.04)}
 \end{figure}
 
@@ -281,14 +274,15 @@ Furthermore, while prospective founders might ultimately be disincentivized by g
 \label{app_llrt}
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=18cm]{plt_v27_oneout_llrt_lldiff.pdf}
+\includegraphics[width=18cm]{figures/plt_v34_oneout_llrt_lldiff.pdf}
 \caption{\label{fig:oneout_llrt_lldiff}Model improvement given variable inclusion (Gaussian kernel density estimate; bandwidth = 0.4)}
 \end{figure}
 
 
+
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=18cm]{plt_v27_oneout_llrt_z.pdf}
+\includegraphics[width=18cm]{figures/plt_v34_oneout_llrt_z.pdf}
 \caption{\label{fig:oneout_llrt_z}Distribution of Z-score of log-likelihood ratio test p-value (Gaussian kernel density estimate; bandwidth = 0.1)}
 \end{figure}
 
@@ -297,7 +291,7 @@ For each dataset there are 36 models (due to variables choices for HWNI (4 diffe
 For each variable in each of these models a reduced model is constructed by removing the variable in question and comparing model fit to the full model.
 If a variable has a squared term or interaction, it is removed together with the main term.
 Furthermore additional reduced models is constructed, namely one without the four density variables (country and global density linear and squared), as well as one without the density variables and closings.
-Given that the datasets differ in their number of variables, a different number of reduced models is calculated per dataset, in particular 684 for "DS all IVs", 612 for "DS --CuSp", and 540 for "DS --CuSp/TMITR". 
+Given that the datasets differ in their number of variables, a different number of reduced models is calculated per dataset, in particular 834 for "DS all IVs", 792 for "DS --CuSp", and 720 for "DS --CuSp/TMITR". 
 The lags of the reduced models are not optimized due to computational limitations. 
 
 
@@ -307,8 +301,6 @@ Furthermore, a likelihood ratio test (\(LR = 2[LL_{reduced} - LL_{full}]\)) is c
 The likelihood ratio statistic follows a Chi-square distribution; its corresponding p-value was converted to a z-score to facilitate interpretation.
 The distribution of z-scores per variable and dataset is shown in figure \ref{fig:oneout_llrt_z}.
 Both analysis correspond in large parts to the results of the main regression analysis insofar as variables with significant coefficient correspond to significant and/or substantial model improvements.
-There are however a few exceptions, such as tax deductibility of donations in "DS -CuSp/TMITR", GDP per capita in "DS all IVs" as well as some inequality variables in "DS all IVs" in which a significant coefficient does not always correspond to a significant model improvement. 
-
 \FloatBarrier
 
 
@@ -330,7 +322,7 @@ This unexpected pattern (as well as the divergent inequality in general) clearly
 
 Secondly, a number of variables appear to partly mediate GDP.
 The coefficient of GDP decreases as other variables are added, which indicates that part of the effect is mediated through these variables.
-This in particular concerns the effects of density, tax incentives and cultural spending, and to a lesser extent the effect of inequalities (for "DS --CuSp" and "DS --CuSp/TMITR") and some HNWI measures (for "DS all IVs").
+This in particular concerns the effects of density, tax incentives and cultural spending, and to a lesser extent the effect some HNWI measures for "DS all IVs".
 Conversly, adding GDP to a model in which it was not included before reduces the coefficients of HNWIs and museums of modern/contemporary art.
 
 
@@ -344,7 +336,7 @@ Exploring the various cases of potential mediation (or other forms of variable r
 
 Next to the substantial argument for the insignifiance of elite wealth effects proposed in the main text, namely a theoretical expectation based on selection bias, a more technical possibility is that HNWI effects might be controlled away by other variables that also measure HWNI rates, such as GDP per capita, Artnews collector rates, wealth inequality or private museum density.
 The evidence for this is strongest in the case of GDP, as its addition shrinks HNWI coefficients in the two larger datasets (figure \ref{fig:oucoefchng}).
-However since in the full model the HNWI coefficients are negative the addition of GDP does not reduce the strength of the association from substantial to negative, but rather from unsubstantial to negative and (marginally) significant. 
+However since in the full model the HNWI coefficients are predominantly negative the addition of GDP does not reduce the strength of the association from substantial to negative, but rather from unsubstantial to negative and (marginally) significant. 
 Furthermore, little evidence of HNWI coefficient change exists following the addition of wealth inequality and Artnews collectors, and even less for private museum density the addition of which actually marginally increases the HNWI coefficients.
 As the models which form the basis for figure \ref{fig:oucoefchng} exclude only one variable at a time, it cannot be ruled out completely that a different specification without any variables that might also capture the elite wealth mechanism might result in substantial main HWNI effects.
 However, the overall relative small size of coefficient changes by single variable exclusion does not provide strong evidence for overcontrolling as the explanation of insignificant HNWI effects. 
@@ -354,7 +346,7 @@ However, the overall relative small size of coefficient changes by single variab
 
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=24cm]{plt_v27_oucoefchng.pdf}
+\includegraphics[width=24cm]{figures/plt_v34_oucoefchng.pdf}
 \caption{\label{fig:oucoefchng}Coefficient changes given addition of other variables}
 \end{figure}
 
@@ -367,7 +359,7 @@ However, the overall relative small size of coefficient changes by single variab
 \label{app_lagchoice}
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=18cm]{plt_v27_lag_dens.pdf}
+\includegraphics[width=18cm]{figures/plt_v34_lag_dens.pdf}
 \caption{\label{fig:lag_dens}Lag choice distribution}
 \end{figure}
 
@@ -382,7 +374,7 @@ It furthermore seems to be the case that the HNWI coefficients (which are not si
 \label{app_vif}
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=18cm]{plt_v27_vif.pdf}
+\includegraphics[width=18cm]{figures/plt_v34_vif.pdf}
 \caption{\label{fig:vif}Distribution of VIF estimates (Gaussian kernel density estimate; bandwidth = 0.1)}
 \end{figure}
 
@@ -390,7 +382,7 @@ It furthermore seems to be the case that the HNWI coefficients (which are not si
 VIFs were calculated for the best-fitting model of each variable set and dataset (108 models in total given 1 of 4 HWNI variables \texttimes{} 1 of 3 income inequality variables \texttimes{} 1 of 3 wealth inequality variables \texttimes{} 1 of 3 datasets) using the R \texttt{performance} package \citep{Luedecke_etal_2021_performance}. 
 As squared variables and interactions can result in high VIFs without substantial collinearity, I calculate VIFs once for the full model and once after excluding squared variables and interactions.
 Figure \ref{fig:vif} shows the distribution of the variance inflation factors.
-While VIFs can be substantial when including squared variables and interactions, no multicollinearity issues are present when focusing only on the linear variables (all VIFs < 10, all VIFs except global density (which after removing squared variables is still based on the same data as global density) < 5).
+While VIFs can be substantial when including squared variables and interactions, no multicollinearity issues are present when focusing only on the linear variables (all VIFs < 10, all VIFs except global density (which after removing squared variables is still based on the same data as global density) and GDP per capita in "DS all IVs" < 5).
 
 
 
@@ -419,22 +411,18 @@ Finally, GPD and private museum density see similar patterns of almost no declin
 
 
 
+
 \begin{landscape}
 
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=24cm]{plt_v27_velp.pdf}
+\includegraphics[width=24cm]{figures/plt_v34_velp.pdf}
 \caption{\label{fig:velp}Results of regressing longitudinal variables on year}
 \end{figure}
 
 \end{landscape}
 
 
-% \begin{sloppypar}
-% \printbibliography[segment=\therefsegment]
-% \end{sloppypar}
-
 \bibliographystyle{plainnat}
-\bibliography{refs_poetics_sup.bib}
-
+\bibliography{sup_materials.bib}
 \end{document}

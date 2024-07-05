@@ -345,9 +345,13 @@ dt_nbrs[, .(macro_str = sprintf("#+MACRO: %s %s", nbr_name, nbr_fmt)), grp] %>%
 #+MACRO: rtbl_cbn_cpsgn \ref{tbl:cbn_cpsgn}
 :end:
 
+#+LATEX_HEADER: \begin{filecontents}{refs_sup.bib}
+#+LATEX_HEADER: \input{sup_materials.bib}
+#+LATEX_HEADER: \end{filecontents}
 
-#+latex: \section{Supplementary online materials}
-* Supplementary online materials :ignhead:
+
+
+* Supplementary online materials 
 
 #+latex: \appendix
 #+latex: \setcounter{page}{1}
@@ -456,11 +460,11 @@ Amounts are reported in current local currency units and converted to 2021 USD u
 # [fn::An alternative would be to use purchasing power parity exchange rates, which reflect local price levels (as [[textcite:&Blanchet_2017_conversions]] argues, 1 euro or 7 yuan allow the purchase of the same amount of oil on international markets, but different amounts of food in Beijing or Paris). As the art market is however substantially transnational [[parencite:&Velthuis_Curioni_2015_canvases]], and discussion of government spending heavily revolves around acquisition budgets (which are dedicated to the purchase of artworks that often are  international), I consider market exchange rates more appropriate.]
 
 *** Social Fragmentation
-The Historical Index of Ethnic Fractionalization (HIEF, cite:&Drazanova_2020_HIEF), as well as the underlying Composition of Religious and Ethnig Groups Project [[parencite:&CREG_2012_whitepaper]] provides data coverage only until 2013.
+The Historical Index of Ethnic Fractionalization (HIEF, cite:&Drazanova_2020_HIEF), as well as the underlying Composition of Religious and Ethnic Groups Project [[citep:&CREG_2012_whitepaper]] provides data coverage only until 2013.
 #
 However, as ethnic group percentages change slowly within countries (only {{{hief_prop_within}}}% of variation from 1995 to 2013 is within-country variation, the remainder being between-country variation), I consider it appropriate to fill up values from 2014 to 2020 by carrying over the 2013 value to be able to include the as many country-years as possible.
 #
-Furthermore, for {{{hief_nbr_cry_imputed}}} countries for which the HIEF dataset is not available, I impute it based on the (more complete) variable "Ethnic Fractionalization in the year 2000" [[parencite:&Alesina_etal_2003_fractionalization]], as both variables are strongly correlated (r={{{cor_hief_eth2k}}}).
+Furthermore, for {{{hief_nbr_cry_imputed}}} countries for which the HIEF dataset is not available, I impute it based on the (more complete) variable "Ethnic Fractionalization in the year 2000" [[citep:&Alesina_etal_2003_fractionalization]], as both variables are strongly correlated (r={{{cor_hief_eth2k}}}).
 
 
 
@@ -490,7 +494,7 @@ While imputed closing years are likely not always accurate, the resulting densit
 #
 A number of observations have been excluded for various reasons:
 #
-The exchange rates for Zimbabwe and Venezuela were deemed unrealistic (Venezuela is discussed by [[textcite:&Blanchet_2017_conversions]]); both countries were therefore excluded.
+The exchange rates for Zimbabwe and Venezuela were deemed unrealistic (Venezuela is discussed by [[citet:&Blanchet_2017_conversions]]); both countries were therefore excluded.
 #
 The HNWI indicators for the United Arab Emirates, Saudi Arabia and Qatar display a strong decline between 2000 and 2010 of which both the starting value and the strength of the decline are extremely high (starting at several standard deviations above the mean and declining to average values) and hence likely caused by data issues; the countries are therefore excluded. 
 #
@@ -589,7 +593,7 @@ While the effects of ethnic fractionalization are not significant in all dataset
 #
 However, this is not the case for the effect of Migrant stock, which is only negative in "DS all IVs", but positive in the other two datasets.
 #
-Possible explanations for these findings might be the measurement of fragmentation on the country-level, whereas these mechanisms likely take place on a more local level, as well as a more complex relationship between fragmentation and pro-social behavior [[parencite:&Baldassarri_Abascal_2020_diversity]].
+Possible explanations for these findings might be the measurement of fragmentation on the country-level, whereas these mechanisms likely take place on a more local level, as well as a more complex relationship between fragmentation and pro-social behavior [[citep:&Baldassarri_Abascal_2020_diversity]].
 #
 
 
@@ -753,7 +757,7 @@ It furthermore seems to be the case that the HNWI coefficients (which are not si
 {{{ynkplt_vif}}}
 
 
-VIFs were calculated for the best-fitting model of each variable set and dataset (108 models in total given 1 of 4 HWNI variables \times 1 of 3 income inequality variables \times 1 of 3 wealth inequality variables \times 1 of 3 datasets) using the R =performance= package [[parencite:&Luedecke_etal_2021_performance]]. 
+VIFs were calculated for the best-fitting model of each variable set and dataset (108 models in total given 1 of 4 HWNI variables \times 1 of 3 income inequality variables \times 1 of 3 wealth inequality variables \times 1 of 3 datasets) using the R =performance= package [[citep:&Luedecke_etal_2021_performance]]. 
 # 
 As squared variables and interactions can result in high VIFs without substantial collinearity, I calculate VIFs once for the full model and once after excluding squared variables and interactions.
 # 
@@ -828,6 +832,18 @@ Finally, GPD and private museum density see similar patterns of almost no declin
 #+latex: \end{landscape}
 
 
-#+Latex: \begin{sloppypar}
-#+Latex: \printbibliography[segment=\therefsegment]
-#+Latex: \end{sloppypar}
+# #+Latex: \begin{sloppypar}
+# #+Latex: \printbibliography[segment=\therefsegment]
+# #+Latex: \end{sloppypar}
+
+#+LATEX: \bibliographystyle{plainnat}
+#+LATEX: \bibliography{sup_materials.bib}
+
+
+
+
+
+
+
+
+
