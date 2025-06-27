@@ -187,8 +187,6 @@ dt_pinault %>% head %>% adf
 library(haven)
 df_bvd <- read_sas("/home/johannes/Downloads/test4.sas7bdat")
 
-pass <- "{SAS002}E2DE3C1F47177E042B981B5917E72D0A1C60B13029F5E6E6"
-my_username <- "johannesae"
 
 
 res <- dbSendQuery(wrds,"select date,dji from DJONES.DJDAILY (obs=10)")
